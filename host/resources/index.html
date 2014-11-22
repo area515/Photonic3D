@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CW Host</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+	<!--link rel="stylesheet/less" href="less/bootstrap.less" type="text/css" /-->
+	<!--link rel="stylesheet/less" href="less/responsive.less" type="text/css" /-->
+	<!--script src="js/less-1.3.3.min.js"></script-->
+	<!--append ‘#!watch’ to the browser URL, then refresh the page. -->
+	
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/style.css" rel="stylesheet">
+
+  <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+  <!--[if lt IE 9]>
+    <script src="js/html5shiv.js"></script>
+  <![endif]-->
+
+  <!-- Fav and touch icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/apple-touch-icon-144-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="img/apple-touch-icon-114-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="img/apple-touch-icon-72-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" href="img/apple-touch-icon-57-precomposed.png">
+  <!-- <link rel="shortcut icon" href="img/favicon.png"> -->
+  <link rel="shortcut icon" href="img/cwlogo_dl.ico">
+  
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="js/scripts.js"></script>
+
+
+
+
+
+
+<script type="text/javascript">
+
+
+
+
+	$( document ).ready(function() {
+    	console.log( "ready!" );
+
+$(':file').change(function(){
+    var file = this.files[0];
+    var name = file.name;
+    var size = file.size;
+    var type = file.type;
+    //Your validation
+});
+alert("here1");
+$(':button').click(function(){
+	alert("here");
+    var formData = new FormData($('form')[0]);
+    $.ajax({
+        url: 'http://localhost:9091/services/files/upload',  //Server script to process data
+        type: 'POST',
+        xhr: function() {  // Custom XMLHttpRequest
+            var myXhr = $.ajaxSettings.xhr();
+            if(myXhr.upload){ // Check if upload property exists
+                myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
+            }
+            return myXhr;
+        },
+        //Ajax events
+        //beforeSend: beforeSendHandler,
+        success: completeHandler,
+        error: errorHandler,
+        // Form data
+        data: formData,
+        //Options to tell jQuery not to process data or worry about content-type.
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+});
+
+
+    	console.log("onready document complete");
+    });
+
+var completeHandler = function(data){
+	alert("complete");
+}
+var errorHandler = function(data){
+	alert("Error");
+}
+
+
+function progressHandlingFunction(e){
+    if(e.lengthComputable){
+        $('progress').attr({value:e.loaded,max:e.total});
+    }
+}
+
+
+	// start job
+	// /services/machine/start + name
+	function startJob(){
+		// get name of selection
+		var jobName = $('#selectsourcedir option:selected'); 
+		alert(jobName);
+		request('/machine/start/' + jobName);
+	}
+
+	// general function to consume service
+	function request(buttonValue){
+		$.ajax({
+			type: 'GET',
+			url: '/services' + buttonValue,
+			dataType: "json",
+			success: function(data){
+				console.log(JSON.stringify(data));
+			}
+			
+		});
+	}
+
+
+	// stop job
+	// /services/machine/stop
+
+	// get status
+	// /services/machine/status
+
+	// move zaxis 
+	// /services/machine/movez/ + dist
+
+	// movex
+	// /services/machine/movex/
+
+	// movey
+	// /services/machine/movey
+
+	// enable motors
+	// /services/machine/motorson
+
+	// disable motors
+	// /services/machine/motorsoff
+
+	// get total slices
+	// /services/machine/totalslices
+
+	// get current slices
+	// /services/machine/currentslice
+
+	// Files
+
+	// Post upload
+	// /services/files/upload
+
+	// Get all files
+	// /services/files/list
+
+
+
+	function general(value){
+
+		$.ajax({
+			type: 'GET',
+			url: '/services/machine/stop',
+			dataType: "json",
+			success: function(data){
+				console.log(JSON.stringify(data));
+			}
+			
+		});
+
+	}
+
+
+</script>
+
+</head>
+
+<body>
+<div class="container">
+	<div class="row clearfix">
+		<div class="col-md-12 column">
+			<nav class="navbar navbar-default navbar-static-top" role="navigation">
+				<div class="navbar-header">
+					<!--  <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button> <a class="navbar-brand" href="http://www.envisionlabs.net/">Brand</a> -->
+					<!--  <button type="button" class="navbar-toggle navbar-brand" data-toggle="collapse">
+					 <i class="icon-user icon-white"></i>
+					 </button> <a class="navbar-brand" href="http://www.envisionlabs.net/"></a> -->
+				</div>
+				
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav">
+						<li class="active">
+							<a href="https://github.com/Pacmanfan/UVDLPSlicerController">Creation Workhop</a>
+						</li>
+						<li>
+							<a href="https://github.com/area515/">source</a>
+						</li>
+						<li>
+							<a href="http://www.buildyourownsla.com/forum/">support</a>
+						</li>
+
+						<!-- <li class="dropdown">
+							 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown<strong class="caret"></strong></a>
+							<ul class="dropdown-menu">
+								<li>
+									<a href="#">Action</a>
+								</li>
+								<li>
+									<a href="#">Another action</a>
+								</li>
+								<li>
+									<a href="#">Something else here</a>
+								</li>
+								<li class="divider">
+								</li>
+								<li>
+									<a href="#">Separated link</a>
+								</li>
+								<li class="divider">
+								</li>
+								<li>
+									<a href="#">One more separated link</a>
+								</li>
+							</ul>
+						</li> -->
+
+					</ul>
+
+					<!-- <form class="navbar-form navbar-left" role="search">
+						<div class="form-group">
+							<input type="text" class="form-control">
+						</div> <button type="submit" class="btn btn-default">Submit</button>
+					</form> -->
+					
+					<ul class="nav navbar-nav navbar-right">
+
+						<!-- <li>
+							<a href="#">Link</a>
+						</li> -->
+
+						<!-- <li class="dropdown">
+							 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown<strong class="caret"></strong></a>
+							<ul class="dropdown-menu">
+								<li>
+									<a href="#">Action</a>
+								</li>
+								<li>
+									<a href="#">Another action</a>
+								</li>
+								<li>
+									<a href="#">Something else here</a>
+								</li>
+								<li class="divider">
+								</li>
+								<li>
+									<a href="#">Separated link</a>
+								</li>
+							</ul>
+						</li> -->
+
+					</ul>
+				</div>
+				
+			</nav>
+			<div class="jumbotron well">
+				<!-- <h1>
+					Hello!
+				</h1> -->
+				<p>
+					Use the controls below to interact with your machine.
+				</p>
+				<!-- <p>
+					<a class="btn btn-primary btn-large" href="#">Learn more</a>
+				</p> -->
+			</div>
+
+
+			<div class="row clearfix">
+				<form enctype="multipart/form-data">
+    					<input name="file" type="file" />
+    					<input type="button" value="Upload" />
+					</form>
+					<progress></progress>
+
+
+			</div>
+
+
+			<div class="row clearfix">
+
+			
+				<div class="col-md-2 column">
+					<h3 class="text-center">Z-Axis</h3>
+					<button type="button" class="btn btn-block btn-success" value="/machine/movez/10.0" onclick="request(this.value)">10.0</button>
+					<button type="button" class="btn btn-block btn-success" value="/machine/movez/1.0" onclick="request(this.value)">1.0</button>
+					<button type="button" class="btn btn-block btn-success" value="/machine/movez/.025" onclick="request(this.value)">.025</button> 
+					<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-.025" onclick="request(this.value)">-.025</button>
+					<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-1.0" onclick="request(this.value)">-1.0</button>
+					<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-10.0" onclick="request(this.value)">-10.0</button>
+				</div>
+				<div class="col-md-2 column">
+					<h3 class="text-center">Apeture</h3>
+					<button type="button" class="btn btn-block btn-success" value="/machine/movex" onclick="request(this.value)">Open</button>
+					<button type="button" class="btn btn-block btn-danger" value="/machine/movey" onclick="request(this.value)">Close</button>
+				</div>
+
+
+
+				<div class="col-md-2 column">
+
+					<h3 class="text-center">Status</h3>
+	  				<div class="col-md-12">
+	  					<input id="textinput" name="textinput" type="text" placeholder="Unknown" readonly class="form-control input-md text-center">	
+	  				</div>
+
+	  				<h3 class="text-center">Progress</h3>
+
+	  				<div id="progresslabel" class="text-center">Slices</div>
+	  				<p id="progresstext" class="text-center">100/302</p>
+
+	  				<div class="progress active progress-striped">
+						<div class="progress-bar progress-success"></div>
+					</div>
+
+
+
+				</div>
+
+
+
+				<div class="col-md-6 column">
+
+					
+
+
+				</div>
+			</div> <!-- end of all columns-->
+
+
+
+
+		</div>
+	</div>
+</div>
+</body>
+</html>

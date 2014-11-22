@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="resources"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="libs/jetty/javax.annotation-api-1.2.jar"/>
+	<classpathentry kind="lib" path="libs/jetty/jetty-all-9.2.3.v20140905.jar"/>
+	<classpathentry kind="lib" path="libs/jetty/servlet-api-3.1.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/apache-mime4j-0.6.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/httpcore-4.2.5.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jackson-annotations-2.4.1.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jackson-core-2.4.1.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jackson-core-asl-1.9.12.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jackson-databind-2.4.1.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jackson-jaxrs-1.9.12.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jackson-jaxrs-base-2.4.1.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jackson-jaxrs-json-provider-2.4.1.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jackson-mapper-asl-1.9.12.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jackson-module-jaxb-annotations-2.4.1.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jackson-xc-1.9.12.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jaxb-api-2.2.7.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/jaxrs-api-3.0.9.Final.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/resteasy-jackson2-provider-3.0.9.Final.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/resteasy-jaxrs-3.0.9.Final.jar"/>
+	<classpathentry kind="lib" path="libs/resteasy/resteasy-multipart-provider-3.0.9.Final.jar"/>
+	<classpathentry kind="lib" path="libs/commons-cli-1.2/commons-cli-1.2.jar"/>
+	<classpathentry kind="lib" path="libs/commons-codec-1.9/commons-codec-1.9.jar"/>
+	<classpathentry kind="lib" path="libs/commons-io-2.4/commons-io-2.4.jar"/>
+	<classpathentry kind="lib" path="libs/commons-logging-1.2/commons-logging-1.2.jar"/>
+	<classpathentry kind="lib" path="libs/rxtx/RXTXcomm.zip"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
