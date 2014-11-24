@@ -52,12 +52,12 @@ $(':file').change(function(){
     var type = file.type;
     //Your validation
 });
-alert("here1");
+alert("here5");
 $(':button').click(function(){
 	alert("here");
     var formData = new FormData($('form')[0]);
     $.ajax({
-        url: 'http://localhost:9091/services/files/upload',  //Server script to process data
+        url: '/services/files/upload',  //Server script to process data
         type: 'POST',
         xhr: function() {  // Custom XMLHttpRequest
             var myXhr = $.ajaxSettings.xhr();
@@ -278,11 +278,7 @@ function progressHandlingFunction(e){
 
 
 			<div class="row clearfix">
-				<form enctype="multipart/form-data">
-    					<input name="file" type="file" />
-    					<input type="button" value="Upload" />
-					</form>
-					<progress></progress>
+				<!-- row was here -->
 
 
 			</div>
@@ -332,7 +328,11 @@ function progressHandlingFunction(e){
 
 				<div class="col-md-6 column">
 
-					
+					<form enctype="multipart/form-data">
+    					<input name="file" type="file" />
+    					<input type="button" value="Upload" />
+					</form>
+					<progress></progress>
 
 
 				</div>
