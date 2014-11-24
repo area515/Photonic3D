@@ -17,6 +17,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.commons.io.FileUtils;
 import org.area515.resinprinter.server.HostProperties;
@@ -65,8 +66,15 @@ public class FileService {
 
 	                String output = "File saved to server location : " + fileName;
 
+	                ResponseBuilder response = Response.status(200);
+	                response.header("Access-Control-Allow-Origin", "*");
+	                response.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
+	                response.header("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
+	                response.header("Access-Control-Max-Age", "1728000");
+	                response.entity(output);
+	          return response.build();      
 //	                Response.status(200).header("Access-Control-Allow-Origin", "*");
-			return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(output).build();
+			//return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(output).build();
 		}
 
 		// Parse Content-Disposition header to get the original file name
