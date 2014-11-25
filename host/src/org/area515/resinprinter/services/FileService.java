@@ -28,10 +28,6 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 @Path("files")
 public class FileService {
  
-	
-	
-	 private static final String SERVER_UPLOAD_LOCATION_FOLDER = HostProperties.getSourceDir();
-
 		@POST
 		@Path("/upload")
 		@Consumes("multipart/form-data")
@@ -54,9 +50,9 @@ public class FileService {
 					// Handle the body of that part with an InputStream
 					InputStream istream = inputPart.getBody(InputStream.class,null);
 
-					fileName = SERVER_UPLOAD_LOCATION_FOLDER + fileName;
+//					fileName = SERVER_UPLOAD_LOCATION_FOLDER + fileName;
 
-					saveFile(istream,fileName);
+					saveFile(istream,new File(HostProperties.getUploadDir(), fileName).getAbsolutePath());
 
 				  } catch (IOException e) {
 					e.printStackTrace();
@@ -67,14 +63,14 @@ public class FileService {
 	                String output = "File saved to server location : " + fileName;
 
 	                ResponseBuilder response = Response.status(200);
-	                response.header("Access-Control-Allow-Origin", "*");
-	                response.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
-	                response.header("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
-	                response.header("Access-Control-Max-Age", "1728000");
-	                response.entity(output);
-	          return response.build();      
-//	                Response.status(200).header("Access-Control-Allow-Origin", "*");
-			//return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(output).build();
+//	                response.header("Access-Control-Allow-Origin", "*");
+//	                response.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
+//	                response.header("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
+//	                response.header("Access-Control-Max-Age", "1728000");
+//	                response.entity(output);
+//	          return response.build();      
+////	                Response.status(200).header("Access-Control-Allow-Origin", "*");
+			return Response.status(200).entity(output).build();
 		}
 
 		// Parse Content-Disposition header to get the original file name
@@ -195,8 +191,8 @@ public class FileService {
     @Produces(MediaType.APPLICATION_JSON)
     public Files getProjects() throws IOException {
     	System.out.println("Getting projects");
-    	System.out.println(HostProperties.Instance().getSourceDir());
-    	File dir = new File(HostProperties.Instance().getSourceDir());
+    	System.out.println(HostProperties.Instance().getUploadDir());
+    	File dir = new File(HostProperties.Instance().getUploadDir());
     	System.out.println(dir.exists());
     	
 		String[] extensions = new String[] { "zip" };

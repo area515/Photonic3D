@@ -37,11 +37,9 @@ public class Main {
 		 * Initialize application
 		 * Start server
 		 */
-		
-		
-		Server server = new Server(9091);
 
-		
+		Server server = new Server(9091);
+		 
 		/*
 		 * Setup ResourceHandler for html files
 		 */

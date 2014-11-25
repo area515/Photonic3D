@@ -59,7 +59,7 @@ public class MachineService {
  	if (JobManager.Status != MachineAction.RUNNING) {
 			
 			// Create job
-			File selectedFile = new File(HostProperties.Instance().getSourceDir(),name);
+			File selectedFile = new File(HostProperties.Instance().getUploadDir(),java.net.URLDecoder.decode(name, "UTF-8"));//name);
 			
 			// Delete and Create handled in jobManager
 			JobManager jobManager = null;
@@ -77,7 +77,7 @@ public class MachineService {
 //			Runnable worker = new GCodeParseThread(jobManager);//jobManager.getGCode());
 			executor.execute(worker);
 			DisplayManager.Instance().ShowBlank();
-			JobManager.Status = MachineAction.STOPPED;
+//			JobManager.Status = MachineAction.STOPPED;
 			System.out.println("Finished parsing Gcode file");
 			System.out.println("Exiting");
 			
