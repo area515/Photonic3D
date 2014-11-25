@@ -29,6 +29,7 @@ public class DisplayManager {
 	
 	private DisplayManager(){
 		setup();
+		ShowBlank();
 	}
 	
 	GraphicsEnvironment ge;
@@ -60,6 +61,7 @@ public class DisplayManager {
     Cursor invisibleCursor = toolkit.createCustomCursor(cursorImage, hotSpot, "InvisibleCursor");        
     window.setCursor(invisibleCursor);
 //    setCursor(invisibleCursor);
+    ShowBlank();
 	}
 
 	public void Show(BufferedImage bImage){

@@ -190,23 +190,25 @@ public class FileService {
     @Path("list")
     @Produces(MediaType.APPLICATION_JSON)
     public Files getProjects() throws IOException {
-    	System.out.println("Getting projects");
-    	System.out.println(HostProperties.Instance().getUploadDir());
+//    	System.out.println("Getting projects");
+//    	System.out.println(HostProperties.Instance().getUploadDir());
     	File dir = new File(HostProperties.Instance().getUploadDir());
-    	System.out.println(dir.exists());
-    	
+//    	System.out.println(dir.exists());
+    	if("Vault user:".contains("")){
+    		
+    	}
 		String[] extensions = new String[] { "zip" };
 		
 		List<File> files = (List<File>) FileUtils.listFiles(dir, extensions, true);
 		ArrayList<String> names = new ArrayList<String>();
 		for(File file : files){
-			System.out.println("Found file: " + file.getAbsolutePath());
+//			System.out.println("Found file: " + file.getAbsolutePath());
 			names.add(file.getName());
 		}
-		for(String name: names){
-			System.out.println("Project Name: " + name);
-		}
-		if(names.isEmpty()){System.out.println("Didn't find any files in the directory");}
+//		for(String name: names){
+//			System.out.println("Project Name: " + name);
+//		}
+//		if(names.isEmpty()){System.out.println("Didn't find any files in the directory");}
     	Files projects = new Files(names);
     	
         return projects;
