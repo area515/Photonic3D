@@ -90,11 +90,11 @@
 
 		$("#refreshstatusbutton").click(function( event ){
 			event.preventDefault();
-			//alert("Refreshing status");
+			// alert("Refreshing status");
 
 			// Update status
 			$.ajax({
-				type: 'GET',
+				type: 'GET', 
 				url: '/services/machine/status',
 				dataType: "json",
 				success: function(data){
@@ -155,10 +155,11 @@
 		$( "#refreshfilesbutton" ).trigger( "click" );
 		$( "#refreshstatusbutton" ).trigger( "click" );
 
-		setInterval(function() {
-    		$( "#refreshfilesbutton" ).trigger( "click" );
-			$( "#refreshstatusbutton" ).trigger( "click" );
-		}, 1000);
+		// setInterval(function() {
+		// 	// alert("Timer fire");
+  //   		$( "#refreshfilesbutton" ).trigger( "click" );
+		// 	$( "#refreshstatusbutton" ).trigger( "click" );
+		// }, 1000);
 
     	console.log("onready document complete");
     });
@@ -184,17 +185,51 @@ function progressHandlingFunction(e){
 			url: '/services/files/list',
 			dataType: "json",
 			success: function(data){
-				
-			$('#filesselect').find('option').remove().end();
+			
+				// var currentFiles = $('#filesselect').find('option').attr('value');
+				// alert(currentFiles.size());
+				// $.each(currentFiles,function(index,value){
+				// 	alert("Curent file: " + value);
+				// });
+				alert("Updating1");
+				var currentFiles = [];
+			 	$('select#filesselect').find('option').each(function() {
+    				// alert($(this).text());
+    				currentFiles.push($(this).text());
+    			});
 
+			 	var newFiles = [];
 				$.each(data.names, function( index, filename ) {
- 					//alert( index + ": " + filename );
- 					$('#filesselect').append($("<option/>", {
-        				value: filename,
-        				text: filename
-    				}));
+ 					newFiles.push(filename);
 				});
-			}
+				alert("Updating2");
+				if($(currentFiles).not(newFiles).length != 0 && $(newFiles).not(currentFiles).length != 0){
+					alert("New files and old files are not the same, updating upload list");
+					$('#filesselect').find('option').remove().end();
+
+					$.each(data.names, function( index, filename ) {
+ 						//alert( index + ": " + filename );
+ 						$('#filesselect').append($("<option/>", {
+        					value: filename,
+        					text: filename
+    					}));
+					});
+				}
+				else{
+					alert("Files are the same, not updating");
+				}
+				alert("Updating3");
+			}	
+
+			 // currentFiles.forEach(function(entry){
+			 // 	alert(entry);
+			 // })
+			
+
+			 
+
+
+			
 			
 		});
 	}
