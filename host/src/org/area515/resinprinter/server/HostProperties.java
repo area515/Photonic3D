@@ -1,8 +1,11 @@
 package org.area515.resinprinter.server;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
+
+import org.apache.commons.io.FileUtils;
 
 public class HostProperties {
 
@@ -17,7 +20,7 @@ public class HostProperties {
 	public HostProperties() throws IOException{HostProperties.init();}
 	
 	static String uploadDir = "";
-	public static String getSourceDir(){
+	public static String getUploadDir(){
 		return uploadDir;
 	}
 	static String printDir = "";
@@ -38,8 +41,11 @@ public class HostProperties {
 //		fakeSerial = true;
 		
 		printDir = "C:\\nonsync\\personal\\ResinPrinterHost\\printdir";
-		uploadDir = "C:\\nonsync\\personal\\ResinPrinterHost\\sourcedir";
+		uploadDir = "C:\\nonsync\\personal\\ResinPrinterHost\\uploads";
 		fakeSerial = true;
+		
+		if(!new File(printDir).exists()){FileUtils.forceMkdir(new File(printDir));}
+		if(!new File(uploadDir).exists()){FileUtils.forceMkdir(new File(uploadDir));}
 		
 		System.out.println("WorkingDir: " + printDir);
 		System.out.println("SourceDir: " + uploadDir);

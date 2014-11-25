@@ -44,41 +44,121 @@
 
 	$( document ).ready(function() {
     	console.log( "ready!" );
+    	$(':button').click(function (event) {
+    		event.preventDefault();
+    	});
+		$('progress').attr({value:0,max:1});
 
-$(':file').change(function(){
-    var file = this.files[0];
-    var name = file.name;
-    var size = file.size;
-    var type = file.type;
-    //Your validation
-});
-alert("here5");
-$(':button').click(function(){
-	alert("here");
-    var formData = new FormData($('form')[0]);
-    $.ajax({
-        url: '/services/files/upload',  //Server script to process data
-        type: 'POST',
-        xhr: function() {  // Custom XMLHttpRequest
-            var myXhr = $.ajaxSettings.xhr();
-            if(myXhr.upload){ // Check if upload property exists
-                myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
-            }
-            return myXhr;
-        },
-        //Ajax events
-        //beforeSend: beforeSendHandler,
-        success: completeHandler,
-        error: errorHandler,
-        // Form data
-        data: formData,
-        //Options to tell jQuery not to process data or worry about content-type.
-        cache: false,
-        contentType: false,
-        processData: false
-    });
-});
 
+		$(':file').change(function(){
+    		var file = this.files[0];
+    		var name = file.name;
+    		var size = file.size;
+    		var type = file.type;
+    		//Your validation
+		});
+
+		//alert("here5");
+
+
+		$("#uploadbutton").click(function( event ){
+			event.preventDefault();
+			//alert("here");
+    		var formData = new FormData($('form')[0]);
+    		$.ajax({
+        		url: '/services/files/upload',  //Server script to process data
+        		type: 'POST',
+        		xhr: function() {  // Custom XMLHttpRequest
+            		var myXhr = $.ajaxSettings.xhr();
+            		if(myXhr.upload){ // Check if upload property exists
+                		myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
+            		}
+            		return myXhr;
+        		},
+        		//Ajax events
+        		//beforeSend: beforeSendHandler,
+        		success: completeHandler,
+        		error: errorHandler,
+        		// Form data
+        		data: formData,
+        		//Options to tell jQuery not to process data or worry about content-type.
+        		cache: false,
+        		contentType: false,
+        		processData: false
+    		});
+		});
+
+		$("#refreshstatusbutton").click(function( event ){
+			event.preventDefault();
+			//alert("Refreshing status");
+
+			// Update status
+			$.ajax({
+				type: 'GET',
+				url: '/services/machine/status',
+				dataType: "json",
+				success: function(data){
+					//alert("Data" + data.message);
+					console.log(JSON.stringify(data));
+					$("#statustext").attr("placeholder", data.message);
+					//alert("Data changed");
+				}
+			
+			});
+
+			// Update status
+			$.ajax({
+				type: 'GET',
+				url: '/services/machine/currentslice',
+				dataType: "json",
+				success: function(data2){
+					//alert("Data " + data2.message);
+					var currentslice = data2.message;
+					//alert("Current Slice: " + parseInt(currentslice));
+
+					if(currentslice === "-1"){
+						$("#progresstext").text("0/0");
+						$("#sliceprogress").attr({value:0,max:1});
+					}else{
+						$.ajax({
+							type: 'GET',
+							url: '/services/machine/totalslices',
+							dataType: "json",
+							success: function(data3){
+								var totalslices = data3.message;
+								$("#progresstext").text(currentslice + "/" + totalslices);
+								$("#sliceprogress").attr({value:parseInt(currentslice),max:parseInt(totalslices)});
+							} // end of success two
+			
+						});// end of ajax 
+					} // end of else
+
+				} // end of success one
+			
+			}); // end of outer ajax call
+
+
+		}); // end of refreshstatusbutton click
+
+
+		$("#refreshfilesbutton").click(function( event ){
+			event.preventDefault();
+			refreshFiles();
+		});
+
+		$("#startbutton").click(function(event){
+			event.preventDefault();
+			alert("start");
+			startjob();
+		});
+
+		$( "#refreshfilesbutton" ).trigger( "click" );
+		$( "#refreshstatusbutton" ).trigger( "click" );
+
+		setInterval(function() {
+    		$( "#refreshfilesbutton" ).trigger( "click" );
+			$( "#refreshstatusbutton" ).trigger( "click" );
+		}, 1000);
 
     	console.log("onready document complete");
     });
@@ -93,22 +173,46 @@ var errorHandler = function(data){
 
 function progressHandlingFunction(e){
     if(e.lengthComputable){
-        $('progress').attr({value:e.loaded,max:e.total});
+        $('#uploadprogress').attr({value:e.loaded,max:e.total});
     }
 }
 
 
+	function refreshFiles(){
+		$.ajax({
+			type: 'GET',
+			url: '/services/files/list',
+			dataType: "json",
+			success: function(data){
+				
+			$('#filesselect').find('option').remove().end();
+
+				$.each(data.names, function( index, filename ) {
+ 					//alert( index + ": " + filename );
+ 					$('#filesselect').append($("<option/>", {
+        				value: filename,
+        				text: filename
+    				}));
+				});
+			}
+			
+		});
+	}
+
 	// start job
 	// /services/machine/start + name
-	function startJob(){
+	function startjob(){
 		// get name of selection
-		var jobName = $('#selectsourcedir option:selected'); 
+		var jobName = $('#filesselect option:selected').val(); 
 		alert(jobName);
-		request('/machine/start/' + jobName);
+		var requestValue = '/machine/start/' + encodeURIComponent(jobName);
+		alert(requestValue);
+		request(requestValue);
 	}
 
 	// general function to consume service
 	function request(buttonValue){
+		//event.preventDefault();
 		$.ajax({
 			type: 'GET',
 			url: '/services' + buttonValue,
@@ -119,44 +223,6 @@ function progressHandlingFunction(e){
 			
 		});
 	}
-
-
-	// stop job
-	// /services/machine/stop
-
-	// get status
-	// /services/machine/status
-
-	// move zaxis 
-	// /services/machine/movez/ + dist
-
-	// movex
-	// /services/machine/movex/
-
-	// movey
-	// /services/machine/movey
-
-	// enable motors
-	// /services/machine/motorson
-
-	// disable motors
-	// /services/machine/motorsoff
-
-	// get total slices
-	// /services/machine/totalslices
-
-	// get current slices
-	// /services/machine/currentslice
-
-	// Files
-
-	// Post upload
-	// /services/files/upload
-
-	// Get all files
-	// /services/files/list
-
-
 
 	function general(value){
 
@@ -172,6 +238,23 @@ function progressHandlingFunction(e){
 
 	}
 
+	function updateStatus(){
+
+		// Update status
+		$.ajax({
+			type: 'GET',
+			url: '/services/machine/status',
+			dataType: "json",
+			success: function(data){
+				//alert("Data" + data.message);
+				console.log(JSON.stringify(data));
+			}
+			
+		});
+
+	}
+
+
 
 </script>
 
@@ -183,10 +266,7 @@ function progressHandlingFunction(e){
 		<div class="col-md-12 column">
 			<nav class="navbar navbar-default navbar-static-top" role="navigation">
 				<div class="navbar-header">
-					<!--  <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button> <a class="navbar-brand" href="http://www.envisionlabs.net/">Brand</a> -->
-					<!--  <button type="button" class="navbar-toggle navbar-brand" data-toggle="collapse">
-					 <i class="icon-user icon-white"></i>
-					 </button> <a class="navbar-brand" href="http://www.envisionlabs.net/"></a> -->
+
 				</div>
 				
 				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -195,85 +275,24 @@ function progressHandlingFunction(e){
 							<a href="https://github.com/Pacmanfan/UVDLPSlicerController">Creation Workhop</a>
 						</li>
 						<li>
-							<a href="https://github.com/area515/">source</a>
+							<a href="https://github.com/area515/Creation-Workshop-Host">source</a>
 						</li>
 						<li>
 							<a href="http://www.buildyourownsla.com/forum/">support</a>
 						</li>
 
-						<!-- <li class="dropdown">
-							 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown<strong class="caret"></strong></a>
-							<ul class="dropdown-menu">
-								<li>
-									<a href="#">Action</a>
-								</li>
-								<li>
-									<a href="#">Another action</a>
-								</li>
-								<li>
-									<a href="#">Something else here</a>
-								</li>
-								<li class="divider">
-								</li>
-								<li>
-									<a href="#">Separated link</a>
-								</li>
-								<li class="divider">
-								</li>
-								<li>
-									<a href="#">One more separated link</a>
-								</li>
-							</ul>
-						</li> -->
-
 					</ul>
-
-					<!-- <form class="navbar-form navbar-left" role="search">
-						<div class="form-group">
-							<input type="text" class="form-control">
-						</div> <button type="submit" class="btn btn-default">Submit</button>
-					</form> -->
 					
 					<ul class="nav navbar-nav navbar-right">
-
-						<!-- <li>
-							<a href="#">Link</a>
-						</li> -->
-
-						<!-- <li class="dropdown">
-							 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown<strong class="caret"></strong></a>
-							<ul class="dropdown-menu">
-								<li>
-									<a href="#">Action</a>
-								</li>
-								<li>
-									<a href="#">Another action</a>
-								</li>
-								<li>
-									<a href="#">Something else here</a>
-								</li>
-								<li class="divider">
-								</li>
-								<li>
-									<a href="#">Separated link</a>
-								</li>
-							</ul>
-						</li> -->
 
 					</ul>
 				</div>
 				
 			</nav>
 			<div class="jumbotron well">
-				<!-- <h1>
-					Hello!
-				</h1> -->
 				<p>
 					Use the controls below to interact with your machine.
 				</p>
-				<!-- <p>
-					<a class="btn btn-primary btn-large" href="#">Learn more</a>
-				</p> -->
 			</div>
 
 
@@ -308,7 +327,7 @@ function progressHandlingFunction(e){
 
 					<h3 class="text-center">Status</h3>
 	  				<div class="col-md-12">
-	  					<input id="textinput" name="textinput" type="text" placeholder="Unknown" readonly class="form-control input-md text-center">	
+	  					<input id="statustext" name="textinput" type="text" placeholder="Unknown" readonly class="form-control input-md text-center">	
 	  				</div>
 
 	  				<h3 class="text-center">Progress</h3>
@@ -316,10 +335,15 @@ function progressHandlingFunction(e){
 	  				<div id="progresslabel" class="text-center">Slices</div>
 	  				<p id="progresstext" class="text-center">100/302</p>
 
-	  				<div class="progress active progress-striped">
-						<div class="progress-bar progress-success"></div>
-					</div>
+					<progress id="sliceprogress" style="width:100%"></progress>
 
+	  				<!-- <div class="progress active progress-striped">
+						<div class="progress-bar progress-success"></div>
+					</div> -->
+					
+					<div>
+					<button id="refreshstatusbutton" name="singlebutton" class="btn btn-primary btn-block">Refresh Status</button>
+					</div>
 
 
 				</div>
@@ -327,12 +351,48 @@ function progressHandlingFunction(e){
 
 
 				<div class="col-md-6 column">
+					<form class="form-horizontal">
+						<fieldset>
 
-					<form enctype="multipart/form-data">
-    					<input name="file" type="file" />
-    					<input type="button" value="Upload" />
+							<!-- Form Name -->
+							<legend>Upload Section</legend>
+
+							<!-- Select Multiple -->
+							<div class="form-group">
+							  <label class="col-md-4 control-label" for="selectmultiple">Uploads</label>
+							  <div class="col-md-8">
+							    <select id="filesselect" name="selectmultiple" class="form-control block-level" multiple="multiple">
+							      <option value="1">Option one</option>
+							      <option value="2">Option two</option>
+							    </select>
+							  </div>
+							</div>
+
+							<!-- Button (Double) -->
+							<div class="form-group">
+							  <label class="col-md-4 control-label" for="button1id">Actions</label>
+							  <div class="col-md-8">
+							    <button id="startbutton" name="button1id" class="btn btn-success btn-block">Start</button>
+							    <button id="button2id" name="button2id" class="btn btn-danger btn-block" value="/machine/stop" onclick="request(this.value)">Stop</button>
+							    <button id="refreshfilesbutton" name="singlebutton" class="btn btn-primary btn-block">Refresh uploads</button>
+							  </div>
+							</div>
+
+							<form enctype="multipart/form-data">
+							<label class="col-md-4 control-label" for="filebutton">Upload</label>
+							<div class="col-md-8">
+		    					<input id="filebutton" name="file" type="file" />
+		    					<input id="uploadbutton" type="button" value="Upload" />
+		    				</div>
+							</form>
+							<label class="col-md-4 control-label" for="uploadprogress">Upload Progress</label>
+							<div class="col-md-8">
+							<progress id="uploadprogress" style="width:100%"></progress>
+							</div>
+
+						</fieldset>
 					</form>
-					<progress></progress>
+
 
 
 				</div>
