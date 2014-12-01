@@ -197,7 +197,7 @@ public class FileService {
     	if("Vault user:".contains("")){
     		
     	}
-		String[] extensions = new String[] { "zip" };
+		String[] extensions = new String[] { "zip", "cws" };
 		
 		List<File> files = (List<File>) FileUtils.listFiles(dir, extensions, true);
 		ArrayList<String> names = new ArrayList<String>();
