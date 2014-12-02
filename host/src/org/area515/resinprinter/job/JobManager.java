@@ -6,7 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -48,10 +50,10 @@ public class JobManager {
 	}
 
 	// Directory containing gcode file and all images
-	File unpackDir;
-	public File getUnpackDir() {
-		return unpackDir;
-	}
+//	File unpackDir;
+//	public File getUnpackDir() {
+//		return unpackDir;
+//	}
 	
 	// Gcode file
 	File gCode;
@@ -78,7 +80,7 @@ public class JobManager {
 		setupJob();
 	}
 
-	private void setupJob() throws IOException {
+	private void setupJob() throws IOException, JobManagerException {
 
 		if (getWorkingDir().exists()) {
 			FileUtils.deleteDirectory(getWorkingDir());
@@ -87,7 +89,34 @@ public class JobManager {
 		unpackDir();
 	}
 
-	private void unpackDir() throws IOException {
+	private File findGcodeFile(File root) throws JobManagerException{
+	
+            String[] extensions = {"gcode"};
+            boolean recursive = true;
+
+            //
+            // Finds files within a root directory and optionally its
+            // subdirectories which match an array of extensions. When the
+            // extensions is null all files will be returned.
+            //
+            // This method will returns matched file as java.io.File
+            //
+            List<File> files = new ArrayList<File>(FileUtils.listFiles(root, extensions, recursive));
+
+           if (files.size() > 1){
+            	throw new JobManagerException("More than one gcode file exists in print directory");
+            }else if (files.size() == 0){
+            	throw new JobManagerException("Gcode file was not found in print directory");
+            }
+           
+           return files.get(0);
+         
+        
+		
+		
+	}
+	
+	private void unpackDir() throws IOException, JobManagerException {
 		ZipFile zipFile = null;
 		InputStream in = null;
 		OutputStream out = null;
@@ -110,10 +139,10 @@ public class JobManager {
 			}
 			String basename = FilenameUtils.removeExtension(getJob().getName());
 			System.out.println("BaseName: " + FilenameUtils.removeExtension(basename));
-			this.unpackDir = new File(getWorkingDir(),basename+ ".slice");
-			this.gCode = new File(getUnpackDir(),basename + ".gcode");
-			System.out.println("Unpacked Dir: " + getUnpackDir().getAbsolutePath());
-			System.out.println("Exists: " + getUnpackDir().exists());
+//			this.unpackDir = new File(getWorkingDir(),basename+ ".slice");
+			this.gCode = findGcodeFile(getWorkingDir());//new File(getUnpackDir(),basename + ".gcode");
+//			System.out.println("Unpacked Dir: " + getUnpackDir().getAbsolutePath());
+//			System.out.println("Exists: " + getUnpackDir().exists());
 			System.out.println("GCode file: " + getGCode().getAbsolutePath());
 			System.out.println("Exists: " + getGCode().exists());
 		} catch (IOException ioe) {
