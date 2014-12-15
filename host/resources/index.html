@@ -148,7 +148,7 @@
 
 		$("#startbutton").click(function(event){
 			event.preventDefault();
-			alert("start");
+			//alert("start");
 			startjob();
 		});
 
@@ -165,10 +165,10 @@
     });
 
 var completeHandler = function(data){
-	alert("complete");
+	//alert("complete");
 }
 var errorHandler = function(data){
-	alert("Error");
+	//alert("Error");
 }
 
 
@@ -191,7 +191,7 @@ function progressHandlingFunction(e){
 				// $.each(currentFiles,function(index,value){
 				// 	alert("Curent file: " + value);
 				// });
-				alert("Updating1");
+				//alert("Updating1");
 				var currentFiles = [];
 			 	$('select#filesselect').find('option').each(function() {
     				// alert($(this).text());
@@ -202,9 +202,9 @@ function progressHandlingFunction(e){
 				$.each(data.names, function( index, filename ) {
  					newFiles.push(filename);
 				});
-				alert("Updating2");
+				//alert("Updating2");
 				if($(currentFiles).not(newFiles).length != 0 && $(newFiles).not(currentFiles).length != 0){
-					alert("New files and old files are not the same, updating upload list");
+					//alert("New files and old files are not the same, updating upload list");
 					$('#filesselect').find('option').remove().end();
 
 					$.each(data.names, function( index, filename ) {
@@ -216,9 +216,9 @@ function progressHandlingFunction(e){
 					});
 				}
 				else{
-					alert("Files are the same, not updating");
+					//alert("Files are the same, not updating");
 				}
-				alert("Updating3");
+				//alert("Updating3");
 			}	
 
 			 // currentFiles.forEach(function(entry){
@@ -239,9 +239,9 @@ function progressHandlingFunction(e){
 	function startjob(){
 		// get name of selection
 		var jobName = $('#filesselect option:selected').val(); 
-		alert(jobName);
+		//alert(jobName);
 		var requestValue = '/machine/start/' + encodeURIComponent(jobName);
-		alert(requestValue);
+		//alert(requestValue);
 		request(requestValue);
 	}
 
@@ -340,7 +340,15 @@ function progressHandlingFunction(e){
 
 			<div class="row clearfix">
 
-			
+				<div class="col-md-2 column">
+				<h3 class="text-center">Motors</h3>
+					<button type="button" class="btn btn-block btn-success" value="/machine/motorson" onclick="request(this.value)">Enable</button>
+					<button type="button" class="btn btn-block btn-danger" value="/machine/motorsoff" onclick="request(this.value)">Disable</button>
+					<h3 class="text-center">Apeture</h3>
+					<button type="button" class="btn btn-block btn-success" value="/machine/movex" onclick="request(this.value)">Open</button>
+					<button type="button" class="btn btn-block btn-danger" value="/machine/movey" onclick="request(this.value)">Close</button>
+				</div>
+
 				<div class="col-md-2 column">
 					<h3 class="text-center">Z-Axis</h3>
 					<button type="button" class="btn btn-block btn-success" value="/machine/movez/10.0" onclick="request(this.value)">10.0</button>
@@ -350,14 +358,7 @@ function progressHandlingFunction(e){
 					<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-1.0" onclick="request(this.value)">-1.0</button>
 					<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-10.0" onclick="request(this.value)">-10.0</button>
 				</div>
-				<div class="col-md-2 column">
-					<h3 class="text-center">Apeture</h3>
-					<button type="button" class="btn btn-block btn-success" value="/machine/movex" onclick="request(this.value)">Open</button>
-					<button type="button" class="btn btn-block btn-danger" value="/machine/movey" onclick="request(this.value)">Close</button>
-				</div>
-
-
-
+				
 				<div class="col-md-2 column">
 
 					<h3 class="text-center">Status</h3>
