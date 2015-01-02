@@ -27,6 +27,6 @@
 	<classpathentry kind="lib" path="libs/commons-codec-1.9/commons-codec-1.9.jar"/>
 	<classpathentry kind="lib" path="libs/commons-io-2.4/commons-io-2.4.jar"/>
 	<classpathentry kind="lib" path="libs/commons-logging-1.2/commons-logging-1.2.jar"/>
-	<classpathentry kind="lib" path="libs/rxtx/RXTXcomm.zip"/>
-	<classpathentry kind="output" path="bin"/>
+	<classpathentry kind="lib" path="libs/rxtx/RXTXcomm.jar"/>
+	<classpathentry kind="output" path="srcbin"/>
 </classpath>
