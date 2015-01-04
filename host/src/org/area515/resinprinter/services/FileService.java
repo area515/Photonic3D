@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.commons.io.FileUtils;
+import org.area515.resinprinter.job.JobManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.services.domain.Files;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -27,7 +28,6 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
  
 @Path("files")
 public class FileService {
- 
 		@POST
 		@Path("/upload")
 		@Consumes("multipart/form-data")
@@ -51,8 +51,9 @@ public class FileService {
 					InputStream istream = inputPart.getBody(InputStream.class,null);
 
 //					fileName = SERVER_UPLOAD_LOCATION_FOLDER + fileName;
+					File newUploadFile = new File(HostProperties.Instance().getUploadDir(), fileName);
 
-					saveFile(istream,new File(HostProperties.getUploadDir(), fileName).getAbsolutePath());
+					saveFile(istream, newUploadFile.getAbsolutePath());
 
 				  } catch (IOException e) {
 					e.printStackTrace();
@@ -192,7 +193,7 @@ public class FileService {
     public Files getProjects() throws IOException {
 //    	System.out.println("Getting projects");
 //    	System.out.println(HostProperties.Instance().getUploadDir());
-    	File dir = new File(HostProperties.Instance().getUploadDir());
+    	File dir = HostProperties.Instance().getUploadDir();
 //    	System.out.println(dir.exists());
     	if("Vault user:".contains("")){
     		

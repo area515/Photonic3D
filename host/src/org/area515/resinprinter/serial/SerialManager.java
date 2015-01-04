@@ -1,221 +1,127 @@
 package org.area515.resinprinter.serial;
 
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.util.Enumeration;
+import gnu.io.CommPortIdentifier;
+import gnu.io.ConsoleCommPortIdentifier;
+import gnu.io.ConsoleSerialPort;
+import gnu.io.NoSuchPortException;
+import gnu.io.PortInUseException;
+import gnu.io.SerialPort;
+import gnu.io.UnsupportedCommOperationException;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.area515.resinprinter.display.AlreadyAssignedException;
+import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.server.HostProperties;
 
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
-import gnu.io.SerialPortEvent;
-import gnu.io.SerialPortEventListener;
+public class SerialManager {
+	private static SerialManager INSTANCE = null;
+	
+	private ConcurrentHashMap<PrintJob, CommPortIdentifier> serialPortsByPrintJob = new ConcurrentHashMap<PrintJob, CommPortIdentifier>();
+	private ConcurrentHashMap<CommPortIdentifier, PrintJob> printJobsBySerialPort = new ConcurrentHashMap<CommPortIdentifier, PrintJob>();
 
-public class SerialManager implements SerialPortEventListener {
-	private static SerialManager serialManager = null;
-
-	public static SerialManager Instance() throws IOException {
-		if (serialManager == null) {
-			serialManager = new SerialManager();
-		}
-		return serialManager;
-	}
-	
-	private SerialManager() throws IOException{
-		if(HostProperties.Instance().getFakeSerial()){
-			setupFakeSerial();
-		}else{
-			initialize();
-		}
-	}
-	
-	private void setupFakeSerial(){
-		responseData="";
-		System.out.println("SerialManager: setup complete");
-	}
-	
-	public void sendFakeSerial(String command){
-		System.out.println("Writing serial: " + command);
-		responseData = "*" + command + "*";
-		System.out.println("Received reply: " + responseData);
-	}
-	
-	/*
-	 * Custom
-	 * http://marc.info/?l=rxtx&m=135092551225124&w=2
-	 */
-	private final Object responseSync = new Object();
-	private String responseData;
-	public String getResponseData(){return responseData;}
-	
-	 public void send(String cmd) throws IOException, InterruptedException {
-		 if(HostProperties.Instance().getFakeSerial()){
-			SerialManager.Instance().sendFakeSerial(cmd); 
-		 }else{
-	        synchronized (responseSync) {
-	            output.write(cmd.getBytes());
-	            output.write("\n".getBytes());
-	            responseSync.wait();
-	            // when we reach this line a valid response is available in
-	            // responseData field
-	            System.out.println("Response: " + responseData);
-	            
-	            // read responseData here and throw exception on error
-	            // or return results ... whatever
-	        }
-		 }
-	    }
-	
-	 private class Callback implements SerialPortEventListener {
-
-//	        private byte[] readBuff = new byte[256];
-
-	        @Override
-	        public void serialEvent(SerialPortEvent spe) {
-	            synchronized (responseSync) {
-	                if (spe.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
-//	                    try {
-	                    	
-	                    	try {
-	            				String inputLine=input.readLine();
-	            				System.out.println(inputLine);
-	            				responseData = inputLine;
-	            			} catch (Exception e) {
-	            				System.err.println(e.toString());
-	            			}
-//	                        int av = input.available();
-//	                        int read = input.read(readBuff, 0, av);
-	                        // parse readBuff from 0 to read-1 for packet end
-	                        // append data to responseData
-
-	                        // when packet end reached:
-	                        responseSync.notifyAll();
-	                        // this will wake the waiting thread at putAtCommand
-//	                    } catch (IOException ex) {
-//	                        // handle exception
-//	                    }
-	                }
-	            }
-	        }
-	    }
-	 
-	 
-	 /*
-	  * End Custom
-	  */
-	SerialPort serialPort;
-        /** The port we're normally going to use. */
-	private static final String PORT_NAMES[] = { 
-			"/dev/tty.usbserial-A9007UX1", // Mac OS X
-                        "/dev/ttyACM0", // Raspberry Pi
-			"/dev/ttyUSB0", // Linux
-			"COM3", // Windows
-	};
-	/**
-	* A BufferedReader which will be fed by a InputStreamReader 
-	* converting the bytes into characters 
-	* making the displayed results codepage independent
-	*/
-	private BufferedReader input;
-	/** The output stream to the port */
-	private OutputStream output;
 	/** Milliseconds to block while waiting for port open */
 	private static final int TIME_OUT = 2000;
 	/** Default bits per second for COM port. */
 	private static final int DATA_RATE = 9600;
+	
+	public static SerialManager Instance() {
+		if (INSTANCE == null) {
+			INSTANCE = new SerialManager();
+		}
+		return INSTANCE;
+	}
+	
+	private SerialManager() {
+	}
+	
+	public void assignSerialPort(PrintJob job, CommPortIdentifier identifier) throws AlreadyAssignedException, InappropriateDeviceException {
+		if (identifier.getPortType() != CommPortIdentifier.PORT_SERIAL) {
+			throw new InappropriateDeviceException(identifier + " is not a serial port");
+		}
+		
+		CommPortIdentifier otherIdentifier = serialPortsByPrintJob.putIfAbsent(job, identifier);
+		if (otherIdentifier != null) {
+			throw new AlreadyAssignedException("Job already assigned to this SerialPort:" + otherIdentifier, otherIdentifier);
+		}
+		
+		PrintJob otherPrintJob = printJobsBySerialPort.putIfAbsent(identifier, job);
+		if (otherPrintJob != null && !otherPrintJob.isManual()) {
+			serialPortsByPrintJob.remove(job);
+			throw new AlreadyAssignedException("SerialPort already assigned to this job:" + otherPrintJob, otherPrintJob);
+		}
+		
+		try {
+			SerialPort serialPort = null;
+			if (identifier instanceof ConsoleCommPortIdentifier) {
+				serialPort = new ConsoleSerialPort();
+			} else {
+				// open serial port, and use class name for the appName.
+				serialPort = (SerialPort)identifier.open(job.getJobFile().getName(), TIME_OUT);
+				
+				// set port parameters
+				serialPort.setSerialPortParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+			}
 
-	public void initialize() {
-                // the next line is for Raspberry Pi and 
-                // gets us into the while loop and was suggested here was suggested http://www.raspberrypi.org/phpBB3/viewtopic.php?f=81&t=32186
-                System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyACM0");
-
-		CommPortIdentifier portId = null;
-		Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
-
-		//First, Find an instance of serial port as set in PORT_NAMES.
-		while (portEnum.hasMoreElements()) {
-			CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
-			for (String portName : PORT_NAMES) {
-				if (currPortId.getName().equals(portName)) {
-					portId = currPortId;
-					break;
+			job.setSerialPort(serialPort);
+		} catch (PortInUseException e) {
+			//TODO: I don't have the PrintJob already assigned, I'd need another hashmap for that.
+			throw new AlreadyAssignedException("Comport already assigned to job:" + e.currentOwner, (PrintJob)null);
+		} catch (UnsupportedCommOperationException e) {
+			throw new InappropriateDeviceException("Port doesn't support an open or setting of port parameters:" + identifier, e);
+		} catch (IOException e) {
+			throw new InappropriateDeviceException("Problem getting streams from serialPort:" + identifier, e);
+		}
+	}
+	
+	public CommPortIdentifier getSerialDevice(String comport) throws InappropriateDeviceException {
+		if (comport.equals(ConsoleCommPortIdentifier.NAME)) {
+			for (CommPortIdentifier current : getSerialDevices()) {
+				if  (current.getName().equals(ConsoleCommPortIdentifier.NAME)) {
+					return current;
 				}
 			}
 		}
-		if (portId == null) {
-			System.out.println("Could not find COM port.");
-			return;
-		}
-
+		
 		try {
-			// open serial port, and use class name for the appName.
-			serialPort = (SerialPort) portId.open(this.getClass().getName(),
-					TIME_OUT);
-
-			// set port parameters
-			serialPort.setSerialPortParams(DATA_RATE,
-					SerialPort.DATABITS_8,
-					SerialPort.STOPBITS_1,
-					SerialPort.PARITY_NONE);
-
-			// open the streams
-			input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
-			output = serialPort.getOutputStream();
-
-			// add event listeners
-//			serialPort.addEventListener(this);
-			serialPort.addEventListener(new Callback());
-			serialPort.notifyOnDataAvailable(true);
-			
-//			output.write("Hello\n".getBytes());
-//			serialPort.
-		} catch (Exception e) {
-			System.err.println(e.toString());
+			return CommPortIdentifier.getPortIdentifier(comport);
+		} catch (NoSuchPortException e) {
+			throw new InappropriateDeviceException("CommPort doesn't exist:" + comport, e);
 		}
+	}
+	
+	public List<CommPortIdentifier> getSerialDevices() {
+		List<CommPortIdentifier> idents = new ArrayList<CommPortIdentifier>();
+		Enumeration<CommPortIdentifier> identifiers = CommPortIdentifier.getPortIdentifiers();
+		while (identifiers.hasMoreElements()) {
+			CommPortIdentifier identifier = identifiers.nextElement();
+			if (identifier.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+				idents.add(identifier);
+			}
+		}
+		
+		if (HostProperties.Instance().getFakeSerial()) {
+			ConsoleCommPortIdentifier consolePort = new ConsoleCommPortIdentifier();
+			idents.add(consolePort);
+		}
+		
+		return idents;
 	}
 	
 	/**
 	 * This should be called when you stop using the port.
 	 * This will prevent port locking on platforms like Linux.
 	 */
-	public synchronized void close() {
-		if (serialPort != null) {
-			serialPort.removeEventListener();
-			serialPort.close();
-		}
-	}
-
-	/**
-	 * Handle an event on the serial port. Read the data and print it.
-	 */
-	public synchronized void serialEvent(SerialPortEvent oEvent) {
-		if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
-			try {
-				String inputLine=input.readLine();
-				System.out.println(inputLine);
-			} catch (Exception e) {
-				System.err.println(e.toString());
-			}
-		}
-		// Ignore all the other eventTypes, but you should consider the other ones.
-	}
-
-	public static void main(String[] args) throws Exception {
-		SerialManager main = new SerialManager();
-		main.initialize();
-		Thread t=new Thread() {
-			public void run() {
-				//the following line will keep this app alive for 1000 seconds,
-				//waiting for events to occur and responding to them (printing incoming messages to console).
-				try {Thread.sleep(1000000);} catch (InterruptedException ie) {}
-			}
-		};
+	public void removeAssignment(PrintJob job) {
+		if (job == null)
+			return;
 		
-		t.start();
-		System.out.println("Started");
+		serialPortsByPrintJob.remove(job);
 	}
-	
 }

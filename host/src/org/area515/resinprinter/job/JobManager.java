@@ -9,86 +9,92 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.server.HostProperties;
 
 public class JobManager {
-
-	public enum MachineAction {
-		RUNNING, STOPPED
-	}
-
-	public static MachineAction Status = MachineAction.STOPPED;
-
-	// Total slices
-	private static AtomicInteger totalSlices = new AtomicInteger();
-	public static int getTotalSlices(){return JobManager.totalSlices.get();}
-	public static void setTotalSlices(int totalSlices){JobManager.totalSlices.set(totalSlices);}
+	private static JobManager INSTANCE;
 	
-	// Showing current slice
-	private static AtomicInteger currentSlice = new AtomicInteger();
-	public static int getCurrentSlice(){return JobManager.currentSlice.get();}
-	public static void setCurrentSlice(int currentSlice){JobManager.currentSlice.set(currentSlice);}
+	private ExecutorService EXECUTOR = Executors.newScheduledThreadPool(10);
+	private ConcurrentHashMap<String, PrintJob> printJobsByName = new ConcurrentHashMap<String, PrintJob>();
 	
-	
-	// Archive file 
-	File job;
-	public File getJob() {
-		return job;
-	}
-
-	// Base direcotry where the archive will be unpacked
-	File workingDir;
-	public File getWorkingDir() {
-		return workingDir;
-	}
-
-	// Directory containing gcode file and all images
-//	File unpackDir;
-//	public File getUnpackDir() {
-//		return unpackDir;
-//	}
-	
-	// Gcode file
-	File gCode;
-	public File getGCode(){
-		return gCode;
-	}
-
-	public JobManager(File selectedArchive)
-			throws JobManagerException, IOException {
-
-		this.job = selectedArchive;
-		this.workingDir = new File(HostProperties.Instance().getWorkingDir());
-
-		if (!getJob().exists()) {
-			throw new JobManagerException("Selected job does not exist");
+	public static JobManager Instance() {
+		if (INSTANCE == null) {
+			INSTANCE = new JobManager();
 		}
-		if (!getJob().isFile()) {
-			throw new JobManagerException("Selected job is not a file");
+		return INSTANCE;
+	}
+
+	private JobManager() {
+	}
+	
+	public PrintJob createJob(File archiveJob) throws JobManagerException {
+		PrintJob newJob = new PrintJob(archiveJob);
+		PrintJob otherJob = printJobsByName.putIfAbsent(newJob.getJobFile().getName(), newJob);
+		if (otherJob != null) {
+			throw new JobManagerException("The selected job is already running");
 		}
 		
-		JobManager.setCurrentSlice(0);
-		JobManager.setTotalSlices(0);
+		File extractDirectory = new File(HostProperties.Instance().getWorkingDir(), archiveJob.getName() + "extract");
+
+		if (!archiveJob.exists()) {
+			printJobsByName.remove(archiveJob.getName());
+			throw new JobManagerException("The selected job does not exist");
+		}
+		if (!archiveJob.isFile()) {
+			printJobsByName.remove(archiveJob.getName());
+			throw new JobManagerException("The selected job is not a file");
+		}
 		
-		setupJob();
-	}
+		newJob.setCurrentSlice(0);
+		newJob.setTotalSlices(0);
 
-	private void setupJob() throws IOException, JobManagerException {
-
-		if (getWorkingDir().exists()) {
-			FileUtils.deleteDirectory(getWorkingDir());
+		if (extractDirectory.exists()) {
+			try {
+				FileUtils.deleteDirectory(extractDirectory);
+			} catch (IOException e) {
+				throw new JobManagerException("Couldn't clean directory for new job:" + extractDirectory, e);
+			}
 		}
 
-		unpackDir();
+		try {
+			unpackDir(newJob, extractDirectory);
+		} catch (IOException e) {
+			throw new JobManagerException("Couldn't unpack new job:" + archiveJob + " into working directory:" + extractDirectory);
+		}
+		
+		//TODO: Needs to clean up after itself!
+		return newJob;
 	}
 
+	public Future<JobStatus> startJob(PrintJob job) {
+		Callable<JobStatus> worker = new GCodeParseThread(job);
+		return EXECUTOR.submit(worker);
+	}
+	
+	public PrintJob getJob(String jobId) {
+		return printJobsByName.get(jobId);
+	}
+	
+	public void removeJob(PrintJob job) {
+		if (job == null)
+			return;
+		
+		printJobsByName.remove(job.getJobFile().getName());
+	}
+	
 	private File findGcodeFile(File root) throws JobManagerException{
 	
             String[] extensions = {"gcode"};
@@ -116,16 +122,16 @@ public class JobManager {
 		
 	}
 	
-	private void unpackDir() throws IOException, JobManagerException {
+	private void unpackDir(PrintJob job, File extractDirectory) throws IOException, JobManagerException {
 		ZipFile zipFile = null;
 		InputStream in = null;
 		OutputStream out = null;
 		try {
-			zipFile = new ZipFile(getJob());
+			zipFile = new ZipFile(job.getJobFile());
 			Enumeration<? extends ZipEntry> entries = zipFile.entries();
 			while (entries.hasMoreElements()) {
 				ZipEntry entry = entries.nextElement();
-				File entryDestination = new File(getWorkingDir(), entry.getName());
+				File entryDestination = new File(extractDirectory, entry.getName());
 				entryDestination.getParentFile().mkdirs();
 				if (entry.isDirectory())
 					entryDestination.mkdirs();
@@ -133,23 +139,21 @@ public class JobManager {
 					in = zipFile.getInputStream(entry);
 					out = new FileOutputStream(entryDestination);
 					IOUtils.copy(in, out);
-
+					IOUtils.closeQuietly(in);
+					IOUtils.closeQuietly(out);
 				}
-
 			}
-			String basename = FilenameUtils.removeExtension(getJob().getName());
+			String basename = FilenameUtils.removeExtension(job.getJobFile().getName());
 			System.out.println("BaseName: " + FilenameUtils.removeExtension(basename));
 //			this.unpackDir = new File(getWorkingDir(),basename+ ".slice");
-			this.gCode = findGcodeFile(getWorkingDir());//new File(getUnpackDir(),basename + ".gcode");
+			job.setGCodeFile(findGcodeFile(extractDirectory));//new File(getUnpackDir(),basename + ".gcode");
 //			System.out.println("Unpacked Dir: " + getUnpackDir().getAbsolutePath());
 //			System.out.println("Exists: " + getUnpackDir().exists());
-			System.out.println("GCode file: " + getGCode().getAbsolutePath());
-			System.out.println("Exists: " + getGCode().exists());
+			//System.out.println("GCode file: " + getGCode().getAbsolutePath());
+			//System.out.println("Exists: " + getGCode().exists());
 		} catch (IOException ioe) {
 			throw ioe;
 		} finally {
-			IOUtils.closeQuietly(in);
-			IOUtils.closeQuietly(out);
 			zipFile.close();
 		}
 
