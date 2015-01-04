@@ -38,22 +38,23 @@ public class DisplayManager {
 		if (otherDevice != null) {
 			throw new AlreadyAssignedException("Job already assigned to:" + otherDevice.getIDstring(), otherDevice);
 		}
-
-		PrintJob otherJob = jobsByDevice.putIfAbsent(device, newJob);
-		if (otherJob != null) {
-			devicesByJob.remove(device);
-			throw new AlreadyAssignedException("Display already assigned to:" + otherJob, otherJob);
-		}
 		
+		/*TODO: Doesn't work in Linux it goes into simulated full screen mode, not exclusive mode
 		if (!device.isFullScreenSupported()) {
 			throw new InappropriateDeviceException("Full screen not supported");
-		}
+		}*/
 		
 		//kill the window decorations
 		JFrame window = new JFrame();
 		window.setUndecorated(true);
 		device.setFullScreenWindow(window);
 		newJob.setGraphicsData(window, device.getDefaultConfiguration());
+		
+		PrintJob otherJob = jobsByDevice.putIfAbsent(device, newJob);
+		if (otherJob != null) {
+			devicesByJob.remove(device);
+			throw new AlreadyAssignedException("Display already assigned to:" + otherJob, otherJob);
+		}
 		
 		// hide mouse in full screen
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
