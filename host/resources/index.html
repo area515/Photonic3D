@@ -131,7 +131,7 @@
 
 	var uploadCompleteHandler = function(data){
 		refreshFiles();
-		refreshStatus();
+		//TODO: Can't refresh status because you might not have a file selected: refreshStatus();
 	}
 	
 	var errorHandler = function(xhr, ajaxOptions, thrownError) {

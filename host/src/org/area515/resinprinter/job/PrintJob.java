@@ -211,6 +211,9 @@ public class PrintJob {
 	}
 	
 	public String toString() {
+		if (graphicsConfiguration == null) {
+			return jobFile.getName() + " (No Display)";
+		}
 		return jobFile.getName() + " assigned to:" + graphicsConfiguration.getDevice().getIDstring();
 	}
 
