@@ -2,12 +2,23 @@
 <project name="Packaging Generator" default="BuildCWH">
 	<target name="BuildCWH" description="build cwh.zip">
 		<buildnumber/>
-		<jar destfile="cwh-0.${build.number}.zip">
+		<property name="deployedZipFile" value="cwh-0.${build.number}.zip"/>
+		<echo file="bin/install.sh" append="false">#!/bin/bash
+			
+rm -r cwh
+mkdir cwh
+cd cwh
+wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/${deployedZipFile}
+unzip ${deployedZipFile}
+chmod 777 ${deployedZipFile}
+rm ${deployedZipFile}</echo>
+		<jar destfile="${deployedZipFile}">
 			<zipfileset dir="srcbin" includes="**/*.class"/>
 			<zipfileset dir="srcbin" includes="**/*.properties"/>
 			<zipfileset dir="os" prefix="os" includes="**/*"/>
 			<zipfileset dir="bin" includes="**/*"/>
 			<zipfileset dir="resources" prefix="resources" includes="**/*"/>
+			<zipfileset dir="Machines" prefix="Machines" includes="**/*"/>
 			<zipfileset dir="libs\commons-cli-1.2" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\commons-codec-1.9" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\commons-io-2.4" prefix="lib" includes="**/*"/>

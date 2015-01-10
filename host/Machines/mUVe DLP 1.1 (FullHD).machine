@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<MachineConfig FileVersion="0">
+    <PlatformXSize>0</PlatformXSize>
+    <PlatformYSize>0</PlatformYSize>
+    <PlatformZSize>0</PlatformZSize>
+    <MaxXFeedRate>0</MaxXFeedRate>
+    <MaxYFeedRate>0</MaxYFeedRate>
+    <MaxZFeedRate>0</MaxZFeedRate>
+    <XRenderSize>0</XRenderSize>
+    <YRenderSize>0</YRenderSize>
+    <MotorsDriverConfig>
+        <DriverType>eGENERIC</DriverType>
+        <ComPortSettings>
+            <PortName>Console Testing</PortName>
+            <Speed>115200</Speed>
+            <Databits>8</Databits>
+            <Parity>None</Parity>
+            <Stopbits>One</Stopbits>
+            <Handshake>None</Handshake>
+        </ComPortSettings>
+    </MotorsDriverConfig>
+    <MonitorDriverConfig>
+        <DLP_X_Res>0</DLP_X_Res>
+        <DLP_Y_Res>0</DLP_Y_Res>
+        <MonitorID>DISPLAY1</MonitorID>
+        <OSMonitorID>\Display0</OSMonitorID>
+        <DisplayCommEnabled>false</DisplayCommEnabled>
+        <MonitorTop>0</MonitorTop>
+        <MonitorLeft>0</MonitorLeft>
+        <MonitorRight>0</MonitorRight>
+        <MonitorBottom>0</MonitorBottom>
+        <UseMask>false</UseMask>
+    </MonitorDriverConfig>
+</MachineConfig>
