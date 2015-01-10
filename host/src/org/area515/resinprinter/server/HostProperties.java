@@ -25,7 +25,7 @@ public class HostProperties {
 	private static HostProperties INSTANCE = null;
 	private static String MACHINE_EXTENSION = ".machine";
 	
-	private File machineDir = new File(System.getProperty("user.dir"), "machines");
+	private File machineDir = new File(System.getProperty("user.dir"), "Machines");
 	private File uploadDir;
 	private File printDir;
 	private boolean fakeSerial = false;
