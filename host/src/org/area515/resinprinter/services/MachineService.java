@@ -3,7 +3,6 @@ package org.area515.resinprinter.services;
 //http://www.javatutorials.co.in/jax-rs-2-jersey-file-upload-example/
 
 import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
 
 import java.awt.GraphicsDevice;
 import java.io.File;
@@ -21,17 +20,35 @@ import javax.ws.rs.core.MediaType;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.gcode.eGENERICGCodeControl;
 import org.area515.resinprinter.job.JobManager;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
-import org.area515.resinprinter.job.ManualControl;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.printer.PrinterConfiguration;
+import org.area515.resinprinter.printer.PrinterConfiguration.ComPortSettings;
+import org.area515.resinprinter.printer.PrinterConfiguration.MonitorDriverConfig;
+import org.area515.resinprinter.printer.PrinterConfiguration.MotorsDriverConfig;
+import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
 
 @Path("machine")
 public class MachineService {
-	
+	 @GET
+	 @Path("printers")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public List<String> getPrinters() {
+		 List<PrinterConfiguration> identifiers = HostProperties.Instance().getPrinterConfigurations();
+		 List<String> identifierStrings = new ArrayList<String>();
+		 for (PrinterConfiguration current : identifiers) {
+			 identifierStrings.add(current.getName());
+		 }
+		 
+		 return identifierStrings;
+	 }
+	 
 	 @GET
 	 @Path("ports")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -57,7 +74,131 @@ public class MachineService {
 		 
 		 return deviceStrings;
 	 }
+	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  * 
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException
+	  */
+	 @GET
+	 @Path("createprinter/{printername}/{display}/{comport}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse createPrinter(@PathParam("printername") String jobid, @PathParam("display") String displayId, @PathParam("comport") String comport) {
+		//TODO: This data needs to be set by the user interface...
+		//========================================================
+		PrinterConfiguration currentConfiguration = new PrinterConfiguration();
+		ComPortSettings settings = new ComPortSettings();
+		settings.setPortName(comport);
+		settings.setDatabits(8);
+		settings.setHandshake("None");
+		settings.setStopbits("One");
+		settings.setParity("None");
+		settings.setSpeed(115200);
+		MotorsDriverConfig motors = new MotorsDriverConfig();
+		motors.setComPortSettings(settings);
+		MonitorDriverConfig monitor = new MonitorDriverConfig();
+		currentConfiguration.setMotorsDriverConfig(motors);
+		currentConfiguration.setMonitorDriverConfig(monitor);
+		currentConfiguration.setOSMonitorID(displayId);
+		currentConfiguration.setName(jobid);
+		//=========================================================
+		try {
+			HostProperties.Instance().addPrinterConfiguration(currentConfiguration);
+			return new MachineResponse("create", true, currentConfiguration.getName() + "");
+		} catch (AlreadyAssignedException e) {
+			e.printStackTrace();
+			return new MachineResponse("create", false, "Already assigned:" + e.getMessage());
+		}
+	 }
+	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  * 
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException
+	  */
+	 @GET
+	 @Path("deleteprinter/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse createPrinter(@PathParam("printername") String printerName) {
+			try {
+				Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
+				if (currentPrinter != null) {
+					throw new InappropriateDeviceException("Can't delete printer when it's started:" + printerName);
+				}
 
+				PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
+				if (currentConfiguration == null) {
+					throw new InappropriateDeviceException("No printer with that name:" + printerName);
+				}				
+				
+				HostProperties.Instance().removePrinterConfiguration(currentConfiguration);
+				return new MachineResponse("delete", true, printerName + "");
+			} catch (InappropriateDeviceException e) {
+				e.printStackTrace();
+				return new MachineResponse("delete", false, "Illegal argument passed to method:" + e.getMessage());
+			}
+	 }
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  * 
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException
+	  */
+	 @GET
+	 @Path("startprinter/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse startPrinter(@PathParam("printername") String printerName) {
+		Printer printer = null;
+		try {
+			PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
+			if (currentConfiguration == null) {
+				throw new InappropriateDeviceException("No printer with that name:" + printerName);
+			}
+			
+			printer = PrinterManager.Instance().startPrinter(currentConfiguration);
+			return new MachineResponse("start", true, printer.getName() + "");
+		} catch (JobManagerException e) {
+			e.printStackTrace();
+			return new MachineResponse("start", false, "Problem creating job:" + e.getMessage());
+		} catch (AlreadyAssignedException e) {
+			e.printStackTrace();
+			return new MachineResponse("start", false, "Device already used:" + e.getMessage());
+		} catch (InappropriateDeviceException e) {
+			e.printStackTrace();
+			return new MachineResponse("start", false, "Illegal argument passed to method:" + e.getMessage());
+		}
+	 }	 
+	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  * 
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException
+	  */
+	 @GET
+	 @Path("stopprinter/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse stopPrinter(@PathParam("printername") String printerName) {
+		try {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				throw new InappropriateDeviceException("This printer isn't started:" + printerName);
+			}
+			
+			PrinterManager.Instance().stopPrinter(printer);
+			return new MachineResponse("start", true, printerName + "");
+		} catch (InappropriateDeviceException e) {
+			e.printStackTrace();
+			return new MachineResponse("start", false, "Illegal argument passed to method:" + e.getMessage());
+		}
+	 }
+	 
 	 /**
 	  * Method handling HTTP GET requests. The returned object will be sent
 	  * to the client as "text/plain" media type.
@@ -66,9 +207,9 @@ public class MachineService {
 	  * @throws IOException 
 	  */
 	 @GET
-	 @Path("start/{jobid}/{display}/{comport}")
+	 @Path("startjob/{jobid}/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse start(@PathParam("jobid") String jobid, @PathParam("display") String displayId, @PathParam("comport") String comportId) {
+	 public MachineResponse start(@PathParam("jobid") String jobid, @PathParam("printername") String printername) {
 		// Create job
 		File selectedFile = new File(HostProperties.Instance().getUploadDir(), jobid); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
 		
@@ -76,48 +217,26 @@ public class MachineService {
 		PrintJob printJob = null;
 		try {
 			printJob = JobManager.Instance().createJob(selectedFile);
-			GraphicsDevice graphicsDevice = DisplayManager.Instance().getDisplayDevice(displayId);
-			if (graphicsDevice == null) {
-				throw new JobManagerException("Couldn't find graphicsDevice called:" + displayId);
+			Printer printer = PrinterManager.Instance().getPrinter(printername);
+			if (printer == null) {
+				return new MachineResponse("start", false, "Printer not found:" + printername);
 			}
 			
-			DisplayManager.Instance().assignDisplay(printJob, graphicsDevice);
-			CommPortIdentifier port = SerialManager.Instance().getSerialDevice(comportId);
-			if (port == null) {
-				throw new JobManagerException("Couldn't find communications device called:" + comportId);
-			}
-			
-			SerialManager.Instance().assignSerialPort(printJob, port);
-			Future<JobStatus> status = JobManager.Instance().startJob(printJob);
-			
-			//if you want to wait for the job to end, call  ideastatus.get();  but that seems like a bad idea
-			
+			Future<JobStatus> status = JobManager.Instance().startJob(printJob, printer);
 			return new MachineResponse("start", true, printJob.getId() + "");
 		} catch (JobManagerException e) {
 			JobManager.Instance().removeJob(printJob);
-			DisplayManager.Instance().removeAssignment(printJob);
-			SerialManager.Instance().removeAssignment(printJob);
-			if (printJob != null) {
-				printJob.close();
-			}
+			PrinterManager.Instance().removeAssignment(printJob);
 			e.printStackTrace();
 			return new MachineResponse("start", false, "Problem creating job:" + e.getMessage());
 		} catch (AlreadyAssignedException e) {
 			JobManager.Instance().removeJob(printJob);
-			DisplayManager.Instance().removeAssignment(printJob);
-			SerialManager.Instance().removeAssignment(printJob);
-			if (printJob != null) {
-				printJob.close();
-			}
+			PrinterManager.Instance().removeAssignment(printJob);
 			e.printStackTrace();
 			return new MachineResponse("start", false, "Device already used:" + e.getMessage());
 		} catch (InappropriateDeviceException e) {
 			JobManager.Instance().removeJob(printJob);
-			DisplayManager.Instance().removeAssignment(printJob);
-			SerialManager.Instance().removeAssignment(printJob);
-			if (printJob != null) {
-				printJob.close();
-			}
+			PrinterManager.Instance().removeAssignment(printJob);
 			e.printStackTrace();
 			return new MachineResponse("start", false, "Illegal argument passed to method:" + e.getMessage());
 		}
@@ -138,7 +257,7 @@ public class MachineService {
 		if (job == null) {
 			return new MachineResponse("stop", false, "Job:" + jobId + " not active");
 		}
-		job.setStatus(JobStatus.Cancelled);
+		job.getPrinter().setStatus(JobStatus.Cancelled);
 	 	return new MachineResponse("stop", true, "");
 	 }	 
 	 
@@ -158,7 +277,7 @@ public class MachineService {
 			return new MachineResponse("togglepause", false, "Job:" + jobId + " not active");
 		}
 		
-		return new MachineResponse("togglepause", true, job.togglePause() + "");
+		return new MachineResponse("togglepause", true, job.getPrinter().togglePause() + "");
 	 }
 	 
 	 /**
@@ -169,15 +288,34 @@ public class MachineService {
 	  * @throws IOException 
 	  */
 	 @GET
-	 @Path("status/{jobid}")
+	 @Path("jobstatus/{jobid}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse status(@PathParam("jobid") String jobId) {
+	 public MachineResponse getJobStatus(@PathParam("jobid") String jobId) {
 		PrintJob job = JobManager.Instance().getJob(jobId);
 		if (job == null) {
 			return new MachineResponse("status", false, "Job:" + jobId + " not active");
 		}
 
-		return new MachineResponse("status", true, job.getStatus() + "");
+		return new MachineResponse("status", true, job.getPrinter().getStatus() + "");
+	 }	 
+	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  *
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException 
+	  */
+	 @GET
+	 @Path("printerstatus/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getPrinterStatus(@PathParam("printername") String printerName) {
+		Printer printer = PrinterManager.Instance().getPrinter(printerName);
+		if (printer == null) {
+			return new MachineResponse("status", false, "Printer:" + printerName + " not found");
+		}
+
+		return new MachineResponse("status", true, printer.getStatus() + "");
 	 }
 	 
 	 /**
@@ -211,7 +349,7 @@ public class MachineService {
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse getCurrentSlice(@PathParam("jobid") String jobId) {
 		 PrintJob job = JobManager.Instance().getJob(jobId);
-		 if(job != null && job.isPrintInProgress()){
+		 if(job != null) {
 			 return new MachineResponse("getcurrentslice", true, String.valueOf(job.getCurrentSlice()));
 		 } else {
 			 return new MachineResponse("getcurrentslice", true, "-1");
@@ -226,67 +364,7 @@ public class MachineService {
 	 
 	 
 	 
-	 //Z Axis Up
-	 //MachineControl.cmdUp_Click()
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("zaxisup/{comport}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse zAxisUp(@PathParam("comport") String comport) {
-			PrintJob job = new PrintJob();
-			try {
-				SerialManager.Instance().assignSerialPort(job, SerialManager.Instance().getSerialDevice(comport));
-				new ManualControl(job).cmdUp_Click();
-				return new MachineResponse("zaxisup", true, "");
-			} catch (AlreadyAssignedException e) {
-				e.printStackTrace();
-				return new MachineResponse("zaxisup", false, e.getMessage());
-			} catch (InappropriateDeviceException e) {
-				e.printStackTrace();
-				return new MachineResponse("zaxisup", false, e.getMessage());
-			} finally {
-				job.close();
-				SerialManager.Instance().removeAssignment(job);
-			}
-	 }
-	 
-	 //Z Axis Down
-	 //MachineControl.cmdDown_Click()
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("zaxisdown/{comport}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse zAxisDown(@PathParam("comport") String comport) {
-			PrintJob job = new PrintJob();
-			try {
-				SerialManager.Instance().assignSerialPort(job, SerialManager.Instance().getSerialDevice(comport));
-				new ManualControl(job).cmdDown_Click();
-				return new MachineResponse("zaxisdown", true, "");
-			} catch (AlreadyAssignedException e) {
-				e.printStackTrace();
-				return new MachineResponse("zaxisdown", false, e.getMessage());
-			} catch (InappropriateDeviceException e) {
-				e.printStackTrace();
-				return new MachineResponse("zaxisdown", false, e.getMessage());
-			} finally {
-				job.close();
-				SerialManager.Instance().removeAssignment(job);
-			}
-	 }
-	 
-	 //X Axis Move (sedgwick open apeture)
+	 //X Axis Move (sedgwick open aperature)
 	 //MachineControl.cmdMoveX()
 	 /**
 	  * Method handling HTTP GET requests. The returned object will be sent
@@ -296,27 +374,19 @@ public class MachineService {
 	  * @throws IOException 
 	  */
 	 @GET
-	 @Path("movex/{comport}")
+	 @Path("movex/{distance}/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse moveX(@PathParam("comport") String comport) {
-			PrintJob job = new PrintJob();
-			try {
-				SerialManager.Instance().assignSerialPort(job, SerialManager.Instance().getSerialDevice(comport));
-				new ManualControl(job).cmdMoveX();
-				return new MachineResponse("movex", true, "");
-			} catch (AlreadyAssignedException e) {
-				e.printStackTrace();
-				return new MachineResponse("movex", false, e.getMessage());
-			} catch (InappropriateDeviceException e) {
-				e.printStackTrace();
-				return new MachineResponse("movex", false, e.getMessage());
-			} finally {
-				job.close();
-				SerialManager.Instance().removeAssignment(job);
+	 public MachineResponse moveX(@PathParam("distance") String dist, @PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("movex", false, "Printer not started:" + printerName);
 			}
+			
+			new eGENERICGCodeControl(printer).cmdMoveX(Double.parseDouble(dist));
+			return new MachineResponse("movex", true, "");
 	 }
 	 
-	 //Y Axis Move (sedgwick close apeture)
+	 //Y Axis Move (sedgwick close aperature)
 	 //MachineControl.cmdMoveY()
 	 /**
 	  * Method handling HTTP GET requests. The returned object will be sent
@@ -326,24 +396,16 @@ public class MachineService {
 	  * @throws IOException 
 	  */
 	 @GET
-	 @Path("movey/{comport}")
+	 @Path("movey/{distance}/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse moveY(@PathParam("comport") String comport) {
-			PrintJob job = new PrintJob();
-			try {
-				SerialManager.Instance().assignSerialPort(job, SerialManager.Instance().getSerialDevice(comport));
-				new ManualControl(job).cmdMoveY();
-				return new MachineResponse("movey", true, "");
-			} catch (AlreadyAssignedException e) {
-				e.printStackTrace();
-				return new MachineResponse("movey", false, e.getMessage());
-			} catch (InappropriateDeviceException e) {
-				e.printStackTrace();
-				return new MachineResponse("movey", false, e.getMessage());
-			} finally {
-				job.close();
-				SerialManager.Instance().removeAssignment(job);
+	 public MachineResponse moveY(@PathParam("distance") String dist, @PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("movey", false, "Printer not started:" + printerName);
 			}
+			
+			new eGENERICGCodeControl(printer).cmdMoveY(Double.parseDouble(dist));
+			return new MachineResponse("movey", true, "");
 	 }
 	 
 	 //Z Axis Move(double dist)
@@ -362,24 +424,16 @@ public class MachineService {
 	  * @throws IOException 
 	  */
 	 @GET
-	 @Path("movez/{distance}/{comport}")
+	 @Path("movez/{distance}/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse moveZ(@PathParam("distance") String dist, @PathParam("comport") String comport) {
-			PrintJob job = new PrintJob();
-			try {
-				SerialManager.Instance().assignSerialPort(job, SerialManager.Instance().getSerialDevice(comport));
-				new ManualControl(job).cmdMoveZ(Double.parseDouble(dist));
-				return new MachineResponse("movez", true, dist);
-			} catch (AlreadyAssignedException e) {
-				e.printStackTrace();
-				return new MachineResponse("movez", false, e.getMessage());
-			} catch (InappropriateDeviceException e) {
-				e.printStackTrace();
-				return new MachineResponse("movez", false, e.getMessage());
-			} finally {
-				job.close();
-				SerialManager.Instance().removeAssignment(job);
+	 public MachineResponse moveZ(@PathParam("distance") String dist, @PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("movez", false, "Printer not started:" + printerName);
 			}
+			
+			new eGENERICGCodeControl(printer).cmdMoveZ(Double.parseDouble(dist));
+			return new MachineResponse("movez", true, dist);
 	 }
 	 
 	 // Enable Motors
@@ -392,26 +446,77 @@ public class MachineService {
 	  * @throws IOException 
 	  */
 	 @GET
-	 @Path("motorson/{comport}")
+	 @Path("motorson/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse motorsOn(@PathParam("comport") String comport) {
-			PrintJob job = new PrintJob();
-			try {
-				SerialManager.Instance().assignSerialPort(job, SerialManager.Instance().getSerialDevice(comport));
-				new ManualControl(job).cmdMotorsOn();
-				return new MachineResponse("motorsOn", true, "");
-			} catch (AlreadyAssignedException e) {
-				e.printStackTrace();
-				return new MachineResponse("motorsOn", false, e.getMessage());
-			} catch (InappropriateDeviceException e) {
-				e.printStackTrace();
-				return new MachineResponse("motorsOn", false, e.getMessage());
-			} finally {
-				job.close();
-				SerialManager.Instance().removeAssignment(job);
+	 public MachineResponse motorsOn(@PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("motorson", false, "Printer not started:" + printerName);
 			}
+			
+			new eGENERICGCodeControl(printer).cmdMotorsOn();
+			return new MachineResponse("motorson", true, "");
 	 }
 	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  *
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException 
+	  */
+	 @GET
+	 @Path("homez/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse homeZ(@PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("homez", false, "Printer not started:" + printerName);
+			}
+			
+			new eGENERICGCodeControl(printer).cmd_ZHome();
+			return new MachineResponse("homez", true, "");
+	 }
+	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  *
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException 
+	  */
+	 @GET
+	 @Path("homex/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse homeX(@PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("homex", false, "Printer not started:" + printerName);
+			}
+			
+			new eGENERICGCodeControl(printer).cmd_XHome();
+			return new MachineResponse("homex", true, "");
+	 }	 
+	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  *
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException 
+	  */
+	 @GET
+	 @Path("homey/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse homeY(@PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("homey", false, "Printer not started:" + printerName);
+			}
+			
+			new eGENERICGCodeControl(printer).cmd_YHome();
+			return new MachineResponse("homey", true, "");
+	 }	 
 	 // Disable Motors
 	 //MachineControl.cmdMotorsOff()
 	 /**
@@ -422,80 +527,15 @@ public class MachineService {
 	  * @throws IOException 
 	  */
 	 @GET
-	 @Path("motorsoff/{comport}")
+	 @Path("motorsoff/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse motorsOff(@PathParam("comport") String comport) {
-			PrintJob job = new PrintJob();
-			try {
-				SerialManager.Instance().assignSerialPort(job, SerialManager.Instance().getSerialDevice(comport));
-				new ManualControl(job).cmdMotorsOff();
-				return new MachineResponse("motorsoff", true, "");
-			} catch (AlreadyAssignedException e) {
-				e.printStackTrace();
-				return new MachineResponse("motorsoff", false, e.getMessage());
-			} catch (InappropriateDeviceException e) {
-				e.printStackTrace();
-				return new MachineResponse("motorsoff", false, e.getMessage());
-			} finally {
-				job.close();
-				SerialManager.Instance().removeAssignment(job);
+	 public MachineResponse motorsOff(@PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("motorsoff", false, "Printer not started:" + printerName);
 			}
+			
+			new eGENERICGCodeControl(printer).cmdMotorsOff();
+			return new MachineResponse("motorsoff", true, "");
 	 }
-	 
-	 //MachineControl.cmdGetZRate()
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("getzrate/{comport}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse getZRate(@PathParam("comport") String comport) {
-			PrintJob job = new PrintJob();
-			try {
-				SerialManager.Instance().assignSerialPort(job, SerialManager.Instance().getSerialDevice(comport));
-				return new MachineResponse("getzrate", true, new ManualControl(job).getZRate() + "");
-			} catch (AlreadyAssignedException e) {
-				e.printStackTrace();
-				return new MachineResponse("getzrate", false, e.getMessage());
-			} catch (InappropriateDeviceException e) {
-				e.printStackTrace();
-				return new MachineResponse("getzrate", false, e.getMessage());
-			} finally {
-				job.close();
-				SerialManager.Instance().removeAssignment(job);
-			}
-	 }
-	 
-	 //MachineControl.cmdGetXYRate()
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("getxyrate/{comport}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse getXYRate(@PathParam("comport") String comport) {
-			PrintJob job = new PrintJob();
-			try {
-				SerialManager.Instance().assignSerialPort(job, SerialManager.Instance().getSerialDevice(comport));
-				return new MachineResponse("getxyrate", true, new ManualControl(job).getXYRate() + "");
-			} catch (AlreadyAssignedException e) {
-				e.printStackTrace();
-				return new MachineResponse("getxyrate", false, e.getMessage());
-			} catch (InappropriateDeviceException e) {
-				e.printStackTrace();
-				return new MachineResponse("getxyrate", false, e.getMessage());
-			} finally {
-				job.close();
-				SerialManager.Instance().removeAssignment(job);
-			}
-	 }
-
 }

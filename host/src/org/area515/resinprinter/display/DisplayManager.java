@@ -6,7 +6,6 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,13 +13,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.JFrame;
 
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.printer.Printer;
 
 public class DisplayManager {
 	private static DisplayManager INSTANCE = null;
 	
 	private GraphicsEnvironment ge = null;
-	private ConcurrentHashMap<GraphicsDevice, PrintJob> jobsByDevice = new ConcurrentHashMap<GraphicsDevice, PrintJob>();
-	private ConcurrentHashMap<PrintJob, GraphicsDevice> devicesByJob = new ConcurrentHashMap<PrintJob, GraphicsDevice>();
+	private ConcurrentHashMap<GraphicsDevice, Printer> printersByGraphicsDevice = new ConcurrentHashMap<GraphicsDevice, Printer>();
+	private ConcurrentHashMap<Printer, GraphicsDevice> graphicsDevicesByPrinter = new ConcurrentHashMap<Printer, GraphicsDevice>();
 
 	public static DisplayManager Instance() {
 		if (INSTANCE == null) {
@@ -33,10 +33,10 @@ public class DisplayManager {
 		ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 	}
 
-	public void assignDisplay(PrintJob newJob, GraphicsDevice device) throws AlreadyAssignedException, InappropriateDeviceException {
-		GraphicsDevice otherDevice = devicesByJob.putIfAbsent(newJob, device);
+	public void assignDisplay(Printer newPrinter, GraphicsDevice device) throws AlreadyAssignedException, InappropriateDeviceException {
+		GraphicsDevice otherDevice = graphicsDevicesByPrinter.putIfAbsent(newPrinter, device);
 		if (otherDevice != null) {
-			throw new AlreadyAssignedException("Job already assigned to:" + otherDevice.getIDstring(), otherDevice);
+			throw new AlreadyAssignedException("Printer already assigned to:" + otherDevice.getIDstring(), otherDevice);
 		}
 		
 		/*TODO: Doesn't work in Linux it goes into simulated full screen mode, not exclusive mode
@@ -44,17 +44,18 @@ public class DisplayManager {
 			throw new InappropriateDeviceException("Full screen not supported");
 		}*/
 		
+
+		Printer otherJob = printersByGraphicsDevice.putIfAbsent(device, newPrinter);
+		if (otherJob != null) {
+			graphicsDevicesByPrinter.remove(newPrinter);
+			throw new AlreadyAssignedException("Display already assigned to:" + otherJob, otherJob);
+		}
+		
 		//kill the window decorations
 		JFrame window = new JFrame();
 		window.setUndecorated(true);
 		device.setFullScreenWindow(window);
-		newJob.setGraphicsData(window, device.getDefaultConfiguration());
-		
-		PrintJob otherJob = jobsByDevice.putIfAbsent(device, newJob);
-		if (otherJob != null) {
-			devicesByJob.remove(device);
-			throw new AlreadyAssignedException("Display already assigned to:" + otherJob, otherJob);
-		}
+		newPrinter.setGraphicsData(window, device.getDefaultConfiguration());
 		
 		// hide mouse in full screen
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
@@ -62,7 +63,7 @@ public class DisplayManager {
 	    BufferedImage cursorImage = new BufferedImage(1, 1, BufferedImage.TRANSLUCENT); 
 	    Cursor invisibleCursor = toolkit.createCustomCursor(cursorImage, hotSpot, "InvisibleCursor");        
 	    window.setCursor(invisibleCursor);
-		newJob.showBlankImage();
+		newPrinter.showBlankImage();
 	}
 	
 	public List<GraphicsDevice> getDisplayDevices() {
@@ -78,18 +79,22 @@ public class DisplayManager {
 		}
 		
 		return newDevice;
+	}	
+	
+	public GraphicsDevice getDisplayDevice(int index) throws InappropriateDeviceException {
+		return ge.getScreenDevices()[index];
 	}
 	
-	public void removeAssignment(PrintJob job){
+	public void removeAssignment(Printer job){
 		if (job == null)
 			return;
 		
-		devicesByJob.remove(job);
+		graphicsDevicesByPrinter.remove(job);
 		
 		GraphicsDevice device = job.getGraphicsDevice();
 		if (device == null)
 			return;
 		
-		jobsByDevice.remove(device);
+		printersByGraphicsDevice.remove(device);
 	}
 }
