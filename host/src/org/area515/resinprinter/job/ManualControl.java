@@ -8,9 +8,7 @@ import org.area515.resinprinter.serial.SerialManager;
 /// This class is the go-between for sending gcode commands to the Device interface
 /// This is here so delegate functions can be bound not to a GUI control for control of the printer
 /// </summary>
-public class ManualControl
-{
-    private static ManualControl m_instance = null;
+public class ManualControl {
 
     // define some rates 
     private double m_rateXY;
@@ -19,15 +17,19 @@ public class ManualControl
     private double m_distE;
     private double m_distZ; // how far in Z to move
     private double m_distXY; // the X/Y distance to move
-
-    private ManualControl()
-    {
+    
+    private PrintJob printJob;
+    
+    public ManualControl(PrintJob printJob) {
+    	this.printJob = printJob;
+    	
         m_rateXY = 200;
         m_rateZ = 200;
         m_rateE = 10;
         m_distE = 20;
         m_distZ = 10;
         m_distXY = 10;
+        
 //        Load(); // load the current values
 //        RegisterCallbacks();
     }
@@ -84,22 +86,7 @@ public class ManualControl
     
     public double getEDist(){return m_distE;}
     public void setEDist(double distE){this.m_distE = distE;}
-//    public double EDist
-//    {
-//        get { return m_distE; }
-//        set { m_distE = value; Save(); }
-//    }
     
-    
-    public static ManualControl Instance()
-    {
-        if (m_instance == null)
-        {
-            m_instance = new ManualControl();
-        }
-        return m_instance;
-
-    }
 //    public bool Load()
 //    {
 //        return false;
@@ -132,41 +119,32 @@ public class ManualControl
 //    }
 
 
-    void SendGcode(String cmd)
-    {
-        try
-        {
-        	SerialManager.Instance().send(cmd);
-//            if (DevInterface.Connected == true)
-//            {
-//                DevInterface.SendCommandToDevice(cmd);
-//            }
-        }
-        catch (Exception ex)
-        {
-        	System.out.println(ex);
-//            DebugLogger.Instance().LogError(ex);
+    private void sendGcode(String cmd) {
+        try {
+        	printJob.sendAndWaitForResponse(cmd);
+        } catch (Exception ex) {
+        	ex.printStackTrace();
         }
     }
 
     void cmd_XHome()
     {
-        SendGcode("G28 X0\r\n");
+        sendGcode("G28 X0\r\n");
     }
 
     void cmd_YHome()
     {
-        SendGcode("G28 Y0\r\n");
+        sendGcode("G28 Y0\r\n");
     }
 
     void cmd_ZHome()
     {
-        SendGcode("G28 Z0\r\n");
+        sendGcode("G28 Z0\r\n");
     }
 
     void cmd_HomeAll()
     {
-        SendGcode("G28\r\n");
+        sendGcode("G28\r\n");
     }
 
 
@@ -218,7 +196,7 @@ public class ManualControl
         {
             //double dist = double.Parse(txtdist.Text);
             //DevInterface.Move(m_distZ, m_rateZ); // (movecommand); MODIFIED //SO
-            SendGcode("U\r\n");
+            sendGcode("U\r\n");
         }
         catch (Exception ex)
         {
@@ -236,7 +214,7 @@ public class ManualControl
         {
             //m_distZ *= -1.0;
             //DevInterface.Move(m_distZ * -1.0d, m_rateZ); // (movecommand);
-            SendGcode("J\r\n");
+            sendGcode("J\r\n");
         }
         catch (Exception ex)
         {
@@ -249,7 +227,7 @@ public class ManualControl
         try
         {
 
-            SendGcode("O\r\n");
+            sendGcode("O\r\n");
             //double dist = (double)e;
             //DevInterface.MoveX(dist, m_rateXY); // (movecommand);
         }
@@ -263,7 +241,7 @@ public class ManualControl
     {
         try
         {
-            SendGcode("C\r\n");
+            sendGcode("C\r\n");
             //double dist = (double)e;
             //DevInterface.MoveY(dist, m_rateXY); // (movecommand);
         }
@@ -280,27 +258,27 @@ public class ManualControl
 //            double dist = (double)e;
             if (dist > .024 && dist < .026)
             { // small reverse 
-                SendGcode("Y\r\n");
+                sendGcode("Y\r\n");
             }
             if (dist == 1.0)
             { // medium reverse
-                SendGcode("U\r\n");
+                sendGcode("U\r\n");
             }
             if (dist == 10.0)
             { // large reverse
-                SendGcode("I\r\n");
+                sendGcode("I\r\n");
             }
             if (dist < -.024 && dist > -.026)
             { // small forward
-                SendGcode("H\r\n");
+                sendGcode("H\r\n");
             }
             if (dist == -1.0)
             {  // medium forward
-                SendGcode("J\r\n");
+                sendGcode("J\r\n");
             }
             if (dist == -10.0)
             {  // large forward
-                SendGcode("K\r\n");
+                sendGcode("K\r\n");
             }
 
 
@@ -323,20 +301,13 @@ public class ManualControl
 //            DebugLogger.Instance().LogRecord(ex.Message);
 //        }
 //    }
-    public void cmdMotorsOn() throws IOException, InterruptedException
-    {
-        //string gcode = "M17\r\n";
-        String gcode = "E\r\n";
-//        UVDLPApp.Instance().m_deviceinterface.SendCommandToDevice(gcode);
-        SerialManager.Instance().send(gcode);
+    public void cmdMotorsOn()    {
+    	sendGcode("E\r\n");
     }
 
-    public void cmdMotorsOff() throws IOException, InterruptedException
+    public void cmdMotorsOff()
     {
-        //string gcode = "M18\r\n";
-        String gcode = "D\r\n";
-//        UVDLPApp.Instance().m_deviceinterface.SendCommandToDevice(gcode);
-        SerialManager.Instance().send(gcode);
+        sendGcode("D\r\n");
     }
 
 
