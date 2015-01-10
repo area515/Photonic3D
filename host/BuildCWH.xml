@@ -10,7 +10,7 @@ mkdir cwh
 cd cwh
 wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/${deployedZipFile}
 unzip ${deployedZipFile}
-chmod 777 ${deployedZipFile}
+chmod 777 start.sh
 rm ${deployedZipFile}</echo>
 		<jar destfile="${deployedZipFile}">
 			<zipfileset dir="srcbin" includes="**/*.class"/>
