@@ -3,7 +3,7 @@
 	<target name="BuildCWH" description="build cwh.zip">
 		<buildnumber/>
 		<property name="deployedZipFile" value="cwh-0.${build.number}.zip"/>
-		<echo file="bin/install.sh" append="false">#!/bin/bash
+		<echo file="cleannetworkinstall.sh" append="false">#!/bin/bash
 			
 rm -r cwh
 mkdir cwh
