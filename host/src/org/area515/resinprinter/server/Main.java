@@ -1,20 +1,12 @@
 package org.area515.resinprinter.server;
 
-import java.io.File;
-
-import org.area515.resinprinter.display.DisplayManager;
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
-import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.resource.Resource;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 /*
@@ -71,11 +63,8 @@ public class Main {
         server.setHandler(handlers);
 
         
-        // Initialize application
-        HostProperties.init();
-		DisplayManager.Instance();
-		
-		
+        //Initialization is bad pattern
+        
 		try {
 			server.start();
 			server.join();

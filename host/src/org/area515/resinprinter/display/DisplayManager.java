@@ -1,80 +1,95 @@
 package org.area515.resinprinter.display;
 
-import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.GradientPaint;
-import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
-import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 
-public class DisplayManager {
+import org.area515.resinprinter.job.PrintJob;
 
-	private static DisplayManager m_instance = null;
-	private static BufferedImage blank = null;
+public class DisplayManager {
+	private static DisplayManager INSTANCE = null;
+	
+	private GraphicsEnvironment ge = null;
+	private ConcurrentHashMap<GraphicsDevice, PrintJob> jobsByDevice = new ConcurrentHashMap<GraphicsDevice, PrintJob>();
+	private ConcurrentHashMap<PrintJob, GraphicsDevice> devicesByJob = new ConcurrentHashMap<PrintJob, GraphicsDevice>();
+
 	public static DisplayManager Instance() {
-		if (m_instance == null) {
-			m_instance = new DisplayManager();
+		if (INSTANCE == null) {
+			INSTANCE = new DisplayManager();
 		}
-		return m_instance;
+		return INSTANCE;
 	}
 	
 	private DisplayManager(){
-		setup();
-		ShowBlank();
-	}
-	
-	GraphicsEnvironment ge;
-	GraphicsConfiguration gc;
-	GraphicsDevice device;
-	JFrame window;
-	Graphics2D graphics;
-	
-	private void setup(){
-	 ge = GraphicsEnvironment
-				.getLocalGraphicsEnvironment();
-	gc = ge.getDefaultScreenDevice()
-				.getDefaultConfiguration();
-		
-	device = ge.getDefaultScreenDevice();
-	window = new JFrame();
-		System.out.println(device.isFullScreenSupported());
-		window.setUndecorated(true);
-		device.setFullScreenWindow(window);
-		
-	graphics = (Graphics2D) window.getGraphics();	
-	blank = new BufferedImage(1024, 768,
-		    BufferedImage.TYPE_BYTE_BINARY);
-	
-	// hide mouse in full screen
-	Toolkit toolkit = Toolkit.getDefaultToolkit();
-    Point hotSpot = new Point(0,0);
-    BufferedImage cursorImage = new BufferedImage(1, 1, BufferedImage.TRANSLUCENT); 
-    Cursor invisibleCursor = toolkit.createCustomCursor(cursorImage, hotSpot, "InvisibleCursor");        
-    window.setCursor(invisibleCursor);
-//    setCursor(invisibleCursor);
-    ShowBlank();
+		ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 	}
 
-	public void Show(BufferedImage bImage){
-	
-		graphics.drawImage(bImage,null,0,0);
+	public void assignDisplay(PrintJob newJob, GraphicsDevice device) throws AlreadyAssignedException, InappropriateDeviceException {
+		GraphicsDevice otherDevice = devicesByJob.putIfAbsent(newJob, device);
+		if (otherDevice != null) {
+			throw new AlreadyAssignedException("Job already assigned to:" + otherDevice.getIDstring(), otherDevice);
+		}
+		
+		/*TODO: Doesn't work in Linux it goes into simulated full screen mode, not exclusive mode
+		if (!device.isFullScreenSupported()) {
+			throw new InappropriateDeviceException("Full screen not supported");
+		}*/
+		
+		//kill the window decorations
+		JFrame window = new JFrame();
+		window.setUndecorated(true);
+		device.setFullScreenWindow(window);
+		newJob.setGraphicsData(window, device.getDefaultConfiguration());
+		
+		PrintJob otherJob = jobsByDevice.putIfAbsent(device, newJob);
+		if (otherJob != null) {
+			devicesByJob.remove(device);
+			throw new AlreadyAssignedException("Display already assigned to:" + otherJob, otherJob);
+		}
+		
+		// hide mouse in full screen
+		Toolkit toolkit = Toolkit.getDefaultToolkit();
+	    Point hotSpot = new Point(0,0);
+	    BufferedImage cursorImage = new BufferedImage(1, 1, BufferedImage.TRANSLUCENT); 
+	    Cursor invisibleCursor = toolkit.createCustomCursor(cursorImage, hotSpot, "InvisibleCursor");        
+	    window.setCursor(invisibleCursor);
+		newJob.showBlankImage();
 	}
 	
-	public void ShowBlank(){
-		graphics.drawImage(blank,null,0,0);
+	public List<GraphicsDevice> getDisplayDevices() {
+		return Arrays.asList(ge.getScreenDevices());
+	}
+
+	public GraphicsDevice getDisplayDevice(String deviceId) throws InappropriateDeviceException {
+		GraphicsDevice newDevice = null;
+		for (GraphicsDevice currentDevice : ge.getScreenDevices()) {
+			if (currentDevice.getIDstring().equals(deviceId)) {
+				newDevice = currentDevice;
+			}
+		}
+		
+		return newDevice;
 	}
 	
-	public void Close(){
-		window.dispose();
-		graphics.dispose();
+	public void removeAssignment(PrintJob job){
+		if (job == null)
+			return;
+		
+		devicesByJob.remove(job);
+		
+		GraphicsDevice device = job.getGraphicsDevice();
+		if (device == null)
+			return;
+		
+		jobsByDevice.remove(device);
 	}
 }
