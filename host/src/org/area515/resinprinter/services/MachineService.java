@@ -7,6 +7,7 @@ import gnu.io.CommPortIdentifier;
 import java.awt.GraphicsDevice;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -20,7 +21,6 @@ import javax.ws.rs.core.MediaType;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.gcode.eGENERICGCodeControl;
 import org.area515.resinprinter.job.JobManager;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
@@ -390,7 +390,7 @@ public class MachineService {
 			}
 			
 			printer.getGCodeControl().executeSetRelativePositioning();
-			return new MachineResponse("movex", true, printer.getGCodeControl().executeMoveX(Double.parseDouble(dist)));
+			return new MachineResponse("movex", true, printer.getGCodeControl().executeMoveX(Double.parseDouble(dist)) );
 	 }
 	 
 	 //Y Axis Move (sedgwick close aperature)

@@ -58,7 +58,7 @@
 		$("#uploadbutton").click(function( event ){
 			event.preventDefault();
 			//alert("here");
-    		var formData = new FormData($('form')[0]);
+    		var formData = new FormData($('#uploadform')[0]);
     		$.ajax({
         		url: '/services/files/upload',  //Server script to process data
         		type: 'POST',
@@ -594,22 +594,20 @@
 								    <button id="refreshprinterbutton" name="button4id" class="btn btn-primary btn-block">Refresh Controls</button>
 								  </div>
 								</div>
-	
-								<form enctype="multipart/form-data">
-								<label class="col-md-4 control-label" for="filebutton">Upload</label>
-								<div class="col-md-8">
-			    					<input id="filebutton" name="file" type="file" />
-			    					<input id="uploadbutton" type="button" value="Upload" />
-			    				</div>
-								</form>
-								<label class="col-md-4 control-label" for="uploadprogress">Upload Progress</label>
-								<div class="col-md-8">
-								<progress id="uploadprogress" style="width:100%"></progress>
-								</div>
-	
 							</fieldset>
 						</form>
-					</div>
+						<form id="uploadform" enctype="multipart/form-data">
+							<label class="col-md-4 control-label" for="filebutton">Upload</label>
+							<div class="col-md-8">
+		    					<input id="filebutton" name="file" type="file" />
+		    					<input id="uploadbutton" type="button" value="Upload" />
+		    				</div>
+						</form>
+						<label class="col-md-4 control-label" for="uploadprogress">Upload Progress</label>
+						<div class="col-md-8">
+							<progress id="uploadprogress" style="width:100%"></progress>
+						</div>
+				   </div>
 			</div>
 		</div>
 	</div>
