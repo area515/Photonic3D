@@ -21,17 +21,16 @@ public abstract class GCodeControl {
     }
     
     /**
-     * Unfortunately the welcome mat isn't like gcode responses. Instead, the prints seem to go on forever without an indication of 
-     * when they are going to stop. I'll read until about 750 milliseconds go by. I'm hoping that's enough...
+     * Unfortunately the welcome mat isn't like gcode responses. Instead, the reads seem to go on forever without an indication of 
+     * when they are going to stop. I'm hoping our read timeout is long enough to cover the time that it takes to dump the welcome mat.
      * 
      * @return
      * @throws IOException
      */
     public String readWelcome() throws IOException {
-    	long currentTime = System.currentTimeMillis();
     	StringBuilder builder = new StringBuilder();
     	String currentLine = null;
-    	while ((currentLine = printer.readLine(false)) != null || System.currentTimeMillis() - currentTime < 2000) {
+    	while ((currentLine = printer.readLine(false)) != null) {
     		if (currentLine != null) {
         		builder.append(currentLine);
     		}
