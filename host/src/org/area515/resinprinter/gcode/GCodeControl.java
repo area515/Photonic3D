@@ -1,5 +1,7 @@
 package org.area515.resinprinter.gcode;
 
+import java.io.IOException;
+
 import org.area515.resinprinter.printer.Printer;
 
 public abstract class GCodeControl {
@@ -9,39 +11,63 @@ public abstract class GCodeControl {
     	this.printer = printer;
     }
 	
-    void sendGcode(String cmd) {
+    String sendGcode(String cmd) {
         try {
-        	printer.sendAndWaitForResponse(cmd);
+        	return printer.sendGCodeAndWaitForResponseForever(cmd);
         } catch (InterruptedException ex) {
         	ex.printStackTrace();
+        	return "Interrupted!";
         }
     }
-
-    public void cmdMoveX(double dist) {
-    	sendGcode(String.format("G1 X%1.3f\r\n", dist));
+    
+    /**
+     * Unfortunately the welcome mat isn't like gcode responses. Instead, the prints seem to go on forever without an indication of 
+     * when they are going to stop. I'll read until about 750 milliseconds go by. I'm hoping that's enough...
+     * 
+     * @return
+     * @throws IOException
+     */
+    public String readWelcome() throws IOException {
+    	long currentTime = System.currentTimeMillis();
+    	StringBuilder builder = new StringBuilder();
+    	String currentLine = null;
+    	while ((currentLine = printer.readLine(false)) != null || System.currentTimeMillis() - currentTime < 2000) {
+    		if (currentLine != null) {
+        		builder.append(currentLine);
+    		}
+    	}
+    	
+    	return builder.toString();
     }
-    public void cmdMoveY(double dist) {
-    	sendGcode(String.format("G1 Y%1.3f\r\n", dist));
+    
+    public String executeSetRelativePositioning() {
+    	return sendGcode("G91\r\n");
     }
-    public void cmdMoveZ(double dist) {
-    	sendGcode(String.format("G1 Z%1.3f\r\n", dist));
+    public String executeMoveX(double dist) {
+    	return sendGcode(String.format("G1 X%1.3f\r\n", dist));
     }
-    public void cmdMotorsOn() {
-    	sendGcode("M17\r\n");
+    public String executeMoveY(double dist) {
+    	return sendGcode(String.format("G1 Y%1.3f\r\n", dist));
     }
-    public void cmdMotorsOff() {
-    	sendGcode("M18\r\n");
+    public String executeMoveZ(double dist) {
+    	return sendGcode(String.format("G1 Z%1.3f\r\n", dist));
     }
-    public void cmd_XHome() {
-        sendGcode("G28 X\r\n");
+    public String executeMotorsOn() {
+    	return sendGcode("M17\r\n");
     }
-    public void cmd_YHome() {
-        sendGcode("G28 Y\r\n");
+    public String executeMotorsOff() {
+    	return sendGcode("M18\r\n");
     }
-    public void cmd_ZHome() {
-        sendGcode("G28 Z\r\n");
+    public String executeXHome() {
+        return sendGcode("G28 X\r\n");
     }
-    public void cmd_HomeAll() {
-        sendGcode("G28\r\n");
+    public String executeYHome() {
+        return sendGcode("G28 Y\r\n");
+    }
+    public String executeZHome() {
+        return sendGcode("G28 Z\r\n");
+    }
+    public String executeHomeAll() {
+        return sendGcode("G28\r\n");
     }
 }
