@@ -31,21 +31,22 @@ public class GCodeParseThread implements Callable<JobStatus> {
 	public JobStatus call() {
 		System.out.println(Thread.currentThread().getName() + " Start");
 		printer.setStatus(JobStatus.Printing);
-		File gCode = printJob.getGCodeFile();
+		File gCodeFile = printJob.getGCodeFile();
 		BufferedReader stream = null;
 		BufferedImage bimage = null;
 
 		try {
-			System.out.println("Parsing file:" + gCode);
-			stream = new BufferedReader(new FileReader(gCode));
+			System.out.println("Parsing file:" + gCodeFile);
+			int padLength = determinePadLength(gCodeFile);
+			stream = new BufferedReader(new FileReader(gCodeFile));
 			String currentLine;
 			Integer sliceCount = null;
 			Pattern slicePattern = Pattern.compile("\\s*;\\s*<\\s*Slice\\s*>\\s*(\\d+|blank)\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern delayPattern = Pattern.compile("\\s*;\\s*<\\s*Delay\\s*>\\s*(\\d+)\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern sliceCountPattern = Pattern.compile("\\s*;\\s*Number\\s*of\\s*Slices\\s*=\\s*(\\d+)\\s*", Pattern.CASE_INSENSITIVE);
+			Pattern gCodePattern = Pattern.compile("\\s*([^;]+)\\s*;?.*", Pattern.CASE_INSENSITIVE);
 			
 			while ((currentLine = stream.readLine()) != null && printer.isPrintInProgress()) {
-				if (currentLine.startsWith(";")) {
 					Matcher matcher = slicePattern.matcher(currentLine);
 					if (matcher.matches()) {
 						if (sliceCount == null) {
@@ -64,12 +65,12 @@ public class GCodeParseThread implements Callable<JobStatus> {
 							}
 							int incoming = Integer.parseInt(matcher.group(1));
 							printJob.setCurrentSlice(incoming);
-							String imageNumber = String.format("%0" + padLength(sliceCount) + "d", incoming);
-							File imageLocation = new File(gCode.getParentFile(), FilenameUtils.removeExtension(gCode.getName()) + imageNumber + ".png");
+							String imageNumber = String.format("%0" + padLength + "d", incoming);
+							File imageLocation = new File(gCodeFile.getParentFile(), FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png");
 							//FileInputStream imageStream = new FileInputStream(imageLocation);
 							bimage = ImageIO.read(imageLocation);
 							//try {imageStream.close();} catch (IOException e) {}
-							System.out.println("Show picture: " + FilenameUtils.removeExtension(gCode.getName()) + imageNumber + ".png");
+							System.out.println("Show picture: " + FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png");
 
 							printer.showImage(bimage);
 						}
@@ -94,14 +95,14 @@ public class GCodeParseThread implements Callable<JobStatus> {
 						System.out.println(sliceCount);
 						continue;
 					}
+					matcher = gCodePattern.matcher(currentLine);
+					if (matcher.matches()) {
+						printer.sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(matcher.group(1).trim() + "\r\n");
+						continue;
+					}
 					
 					// print out comments
-					System.out.println(currentLine);
-				} else {
-					System.out.println("gcode: " + currentLine);
-					
-					printer.sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(currentLine + "\r\n");
-				}
+					System.out.println("Ignored line:" + currentLine);
 			}
 			
 			printer.setStatus(JobStatus.Completed);			
@@ -126,22 +127,25 @@ public class GCodeParseThread implements Callable<JobStatus> {
 			if (bimage != null) {
 				bimage.flush();
 			}
-			//Don't need to close the printer
+			//Don't need to close the printer or dissassociate the serial and display devices
 			//printer.close();
+			//SerialManager.Instance().removeAssignment(printer);
+			//DisplayManager.Instance().removeAssignment(printer);
 			JobManager.Instance().removeJob(printJob);
-			SerialManager.Instance().removeAssignment(printer);
-			DisplayManager.Instance().removeAssignment(printer);
 			PrinterManager.Instance().removeAssignment(printJob);
 			System.out.println(Thread.currentThread().getName() + " ended.");
 		}
 	}
 
-	public Integer padLength(Integer number) {
-		if (number == null) {
-			return null;
+	public int determinePadLength(File gCode) throws FileNotFoundException {
+		File currentFile = null;
+		for (int t = 1; t < 10; t++) {
+			currentFile = new File(gCode.getParentFile(), FilenameUtils.removeExtension(gCode.getName()) + String.format("%0" + t + "d", 0) + ".png");
+			if (currentFile.exists()) {
+				return t;
+			}
 		}
-		return number.toString().length() + 1;
-
+		
+		throw new FileNotFoundException(currentFile + "");
 	}
-
 }
