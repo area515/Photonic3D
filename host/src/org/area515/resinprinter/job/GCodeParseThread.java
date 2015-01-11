@@ -105,7 +105,7 @@ public class GCodeParseThread implements Callable<JobStatus> {
 					System.out.println("Ignored line:" + currentLine);
 			}
 			
-			printer.setStatus(JobStatus.Completed);			
+			printer.setStatus(JobStatus.Completed);
 			return printer.getStatus();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
