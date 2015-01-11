@@ -3,7 +3,7 @@
 	<target name="BuildCWH" description="build cwh.zip">
 		<buildnumber/>
 		<property name="deployedZipFile" value="cwh-0.${build.number}.zip"/>
-		<echo file="cleannetworkinstall.sh" append="false">#!/bin/bash
+		<echo file="networkinstall.sh" append="false">#!/bin/bash
 
 rm -r cwh
 mkdir cwh
@@ -19,7 +19,6 @@ rm ${deployedZipFile}</echo>
 			<zipfileset dir="os" prefix="os" includes="**/*"/>
 			<zipfileset dir="bin" includes="**/*"/>
 			<zipfileset dir="resources" prefix="resources" includes="**/*"/>
-			<zipfileset dir="Machines" prefix="Machines" includes="**/*"/>
 			<zipfileset dir="libs\commons-cli-1.2" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\commons-codec-1.9" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\commons-io-2.4" prefix="lib" includes="**/*"/>
