@@ -92,12 +92,12 @@ public class GCodeParseThread implements Callable<JobStatus> {
 					if (matcher.matches()) {
 						sliceCount = Integer.parseInt(matcher.group(1));
 						printJob.setTotalSlices(sliceCount);
-						System.out.println(sliceCount);
+						System.out.println("Found:" + sliceCount + " slices");
 						continue;
 					}
 					matcher = gCodePattern.matcher(currentLine);
 					if (matcher.matches()) {
-						printer.sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(matcher.group(1).trim() + "\r\n");
+						System.out.println("Printer Response:" + printer.sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(matcher.group(1).trim() + "\r\n"));
 						continue;
 					}
 					
@@ -131,6 +131,7 @@ public class GCodeParseThread implements Callable<JobStatus> {
 			//printer.close();
 			//SerialManager.Instance().removeAssignment(printer);
 			//DisplayManager.Instance().removeAssignment(printer);
+			printer.showBlankImage();
 			JobManager.Instance().removeJob(printJob);
 			PrinterManager.Instance().removeAssignment(printJob);
 			System.out.println(Thread.currentThread().getName() + " ended.");
