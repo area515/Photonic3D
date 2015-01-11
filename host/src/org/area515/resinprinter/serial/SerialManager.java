@@ -66,7 +66,7 @@ public class SerialManager {
 			} else {
 				// open serial port, and use class name for the appName.
 				serialPort = (SerialPort)identifier.open(printer.getName(), TIME_OUT);
-				
+				serialPort.enableReceiveTimeout(TIME_OUT);
 				// set port parameters
 				ComPortSettings settings = printer.getConfiguration().getMotorsDriverConfig().getComPortSettings();
 				int parity = 0;
