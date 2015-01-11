@@ -38,7 +38,11 @@ public class FileService {
 			Map<String, List<InputPart>> formParts = input.getFormDataMap();
 
 			List<InputPart> inPart = formParts.get("file");
-
+			if (inPart == null) {
+				System.out.println("No file specified in multipart mime!");
+				return Response.status(500).build();
+			}
+			
 			for (InputPart inputPart : inPart) {
 
 				 try {
