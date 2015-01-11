@@ -382,8 +382,8 @@ public class MachineService {
 				return new MachineResponse("movex", false, "Printer not started:" + printerName);
 			}
 			
-			new eGENERICGCodeControl(printer).cmdMoveX(Double.parseDouble(dist));
-			return new MachineResponse("movex", true, "");
+			printer.getGCodeControl().executeSetRelativePositioning();
+			return new MachineResponse("movex", true, printer.getGCodeControl().executeMoveX(Double.parseDouble(dist)));
 	 }
 	 
 	 //Y Axis Move (sedgwick close aperature)
@@ -404,8 +404,8 @@ public class MachineService {
 				return new MachineResponse("movey", false, "Printer not started:" + printerName);
 			}
 			
-			new eGENERICGCodeControl(printer).cmdMoveY(Double.parseDouble(dist));
-			return new MachineResponse("movey", true, "");
+			printer.getGCodeControl().executeSetRelativePositioning();
+			return new MachineResponse("movey", true, printer.getGCodeControl().executeMoveY(Double.parseDouble(dist)));
 	 }
 	 
 	 //Z Axis Move(double dist)
@@ -431,9 +431,91 @@ public class MachineService {
 			if (printer == null) {
 				return new MachineResponse("movez", false, "Printer not started:" + printerName);
 			}
+
+
+			printer.getGCodeControl().executeSetRelativePositioning();
+			String response = printer.getGCodeControl().executeMoveZ(Double.parseDouble(dist));
+			return new MachineResponse("movez", true, response);
+	 }
+	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  *
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException 
+	  */
+	 @GET
+	 @Path("homez/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse homeZ(@PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("homez", false, "Printer not started:" + printerName);
+			}
+
+			printer.getGCodeControl().executeSetRelativePositioning();
+			return new MachineResponse("homez", true, printer.getGCodeControl().executeZHome());
+	 }
+	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  *
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException 
+	  */
+	 @GET
+	 @Path("homex/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse homeX(@PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("homex", false, "Printer not started:" + printerName);
+			}
 			
-			new eGENERICGCodeControl(printer).cmdMoveZ(Double.parseDouble(dist));
-			return new MachineResponse("movez", true, dist);
+			printer.getGCodeControl().executeSetRelativePositioning();
+			return new MachineResponse("homex", true, printer.getGCodeControl().executeXHome());
+	 }	 
+	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  *
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException 
+	  */
+	 @GET
+	 @Path("homey/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse homeY(@PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("homey", false, "Printer not started:" + printerName);
+			}
+			
+			printer.getGCodeControl().executeSetRelativePositioning();
+			return new MachineResponse("homey", true, printer.getGCodeControl().executeYHome());
+	 }	 
+	 // Disable Motors
+	 //MachineControl.cmdMotorsOff()
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  *
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException 
+	  */
+	 @GET
+	 @Path("motorsoff/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse motorsOff(@PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("motorsoff", false, "Printer not started:" + printerName);
+			}
+			
+			return new MachineResponse("motorsoff", true, printer.getGCodeControl().executeMotorsOff());
 	 }
 	 
 	 // Enable Motors
@@ -454,88 +536,6 @@ public class MachineService {
 				return new MachineResponse("motorson", false, "Printer not started:" + printerName);
 			}
 			
-			new eGENERICGCodeControl(printer).cmdMotorsOn();
-			return new MachineResponse("motorson", true, "");
-	 }
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("homez/{printername}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse homeZ(@PathParam("printername") String printerName) {
-			Printer printer = PrinterManager.Instance().getPrinter(printerName);
-			if (printer == null) {
-				return new MachineResponse("homez", false, "Printer not started:" + printerName);
-			}
-			
-			new eGENERICGCodeControl(printer).cmd_ZHome();
-			return new MachineResponse("homez", true, "");
-	 }
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("homex/{printername}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse homeX(@PathParam("printername") String printerName) {
-			Printer printer = PrinterManager.Instance().getPrinter(printerName);
-			if (printer == null) {
-				return new MachineResponse("homex", false, "Printer not started:" + printerName);
-			}
-			
-			new eGENERICGCodeControl(printer).cmd_XHome();
-			return new MachineResponse("homex", true, "");
-	 }	 
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("homey/{printername}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse homeY(@PathParam("printername") String printerName) {
-			Printer printer = PrinterManager.Instance().getPrinter(printerName);
-			if (printer == null) {
-				return new MachineResponse("homey", false, "Printer not started:" + printerName);
-			}
-			
-			new eGENERICGCodeControl(printer).cmd_YHome();
-			return new MachineResponse("homey", true, "");
-	 }	 
-	 // Disable Motors
-	 //MachineControl.cmdMotorsOff()
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("motorsoff/{printername}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse motorsOff(@PathParam("printername") String printerName) {
-			Printer printer = PrinterManager.Instance().getPrinter(printerName);
-			if (printer == null) {
-				return new MachineResponse("motorsoff", false, "Printer not started:" + printerName);
-			}
-			
-			new eGENERICGCodeControl(printer).cmdMotorsOff();
-			return new MachineResponse("motorsoff", true, "");
+			return new MachineResponse("motorson", true, printer.getGCodeControl().executeMotorsOn());
 	 }
 }

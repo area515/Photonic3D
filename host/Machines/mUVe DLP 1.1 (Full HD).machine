@@ -11,7 +11,7 @@
     <MotorsDriverConfig>
         <DriverType>eGENERIC</DriverType>
         <ComPortSettings>
-            <PortName>Console Testing</PortName>
+            <PortName>COM3</PortName>
             <Speed>115200</Speed>
             <Databits>8</Databits>
             <Parity>None</Parity>

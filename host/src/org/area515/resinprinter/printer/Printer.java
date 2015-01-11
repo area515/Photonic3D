@@ -10,9 +10,9 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -35,7 +35,7 @@ public class Printer {
 
 	//For Serial Port
 	private SerialPort serialPort;
-	private BufferedReader input;
+	private InputStream input;
 	private OutputStream output;
 	
 	//For Job Status
@@ -45,6 +45,7 @@ public class Printer {
 	
 	//GCode
 	private GCodeControl gCodeControl;
+	private ReentrantLock gCodeLock = new ReentrantLock();
 	
 	public Printer(PrinterConfiguration configuration) throws InappropriateDeviceException {
 		this.configuration = configuration;
@@ -126,21 +127,61 @@ public class Printer {
 		this.serialPort = serialPort;
 		
 		// open the streams
-		input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
+		input = serialPort.getInputStream();
 		output = serialPort.getOutputStream();
+		
+		//Read the welcome mat
+		try {
+			System.out.println(getGCodeControl().readWelcome());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	//synchronized allows us to send manual commands to the printer
-	public synchronized void sendAndWaitForResponse(String gcode) throws InterruptedException {
+	public String readLine(boolean returnIfPrintNotInProgress) throws IOException {
+		gCodeLock.lock();
+		try {
+			StringBuilder builder = new StringBuilder();
+			
+			int value = -1;
+			do {
+				value = input.read();
+				if (value > -1) {
+					builder.append((char)value);
+				}
+			} while ((value > -1 && value != '\n') || (returnIfPrintNotInProgress && value == -1 && isPrintInProgress()));
+			if (builder.length() == 0) {
+				return null;
+			}
+			return builder.toString();
+		} finally {
+			gCodeLock.unlock();
+		}
+	}
+	
+	//synchronized allows us to send manual commands to the printer
+	public String sendGCodeAndWaitForResponseForever(String gcode) throws InterruptedException {
+		gCodeLock.lock();
 		try {
 			output.write(gcode.getBytes());
-			
-			int value = input.read();
-			while ((value == -1 || value != '\n') && status == JobStatus.Printing) {
-				value = input.read();
-			}
+			return readLine(false);
 		} catch (IOException e) {
 			throw new InterruptedException("IO problem reading from device");
+		} finally {
+			gCodeLock.unlock();
+		}
+	}
+	
+	public String sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(String gcode) throws InterruptedException {
+		gCodeLock.lock();
+		try {
+			output.write(gcode.getBytes());
+			return readLine(true);
+		} catch (IOException e) {
+			throw new InterruptedException("IO problem reading from device");
+		} finally {
+			gCodeLock.unlock();
 		}
 	}
 	
@@ -183,6 +224,10 @@ public class Printer {
 	}
 	public void setConfiguration(PrinterConfiguration configuration) {
 		this.configuration = configuration;
+	}
+
+	public GCodeControl getGCodeControl() {
+		return gCodeControl;
 	}
 
 	public String toString() {

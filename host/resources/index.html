@@ -412,6 +412,8 @@
 			$('#errorModalBody').text(data.message);
 			$('#errorModal').modal();
 			$("#statustext").attr("placeholder", "Error");
+		} else {
+			$("#statustext").attr("placeholder", data.message);
 		}
 		
 		return data.response;
@@ -494,7 +496,7 @@
 						<button type="button" class="btn btn-block btn-danger" value="/machine/motorsoff" onclick="requestForPrinter(this.value)">Disable</button>
 					</div>
 
-					<div class="col-md-2 column">
+					<div class="col-md-4 column">
 						<h3 class="text-center">Job Status</h3>
 						<div class="col-md-12">
 							<input id="statustext" name="textinput" type="text" placeholder="Unknown" readonly class="form-control input-md text-center">

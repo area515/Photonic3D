@@ -82,11 +82,11 @@ public class SerialManager {
 					parity = SerialPort.PARITY_SPACE;
 				}				
 				int stopBits = 0;
-				if (settings.getParity().equals("One")) {
+				if (settings.getStopbits().equalsIgnoreCase("One") || settings.getStopbits().equals("1")) {
 					stopBits = SerialPort.STOPBITS_1;
-				} else if (settings.getParity().equals("1.5")) {
+				} else if (settings.getStopbits().equals("1.5")) {
 					stopBits = SerialPort.STOPBITS_1_5;
-				} else if (settings.getParity().equals("Two")) {
+				} else if (settings.getStopbits().equalsIgnoreCase("Two") || settings.getStopbits().equals("2")) {
 					stopBits = SerialPort.STOPBITS_2;
 				}
 				serialPort.setSerialPortParams((int)settings.getSpeed(), settings.getDatabits(), stopBits, parity);
@@ -96,7 +96,7 @@ public class SerialManager {
 		} catch (PortInUseException e) {
 			throw new AlreadyAssignedException("Comport already assigned another process:" + e.currentOwner, (Printer)null);
 		} catch (UnsupportedCommOperationException e) {
-			throw new InappropriateDeviceException("Port doesn't support an open or setting of port parameters:" + identifier, e);
+			throw new InappropriateDeviceException("Port doesn't support an open or setting of port parameters:" + identifier.getName(), e);
 		} catch (IOException e) {
 			throw new InappropriateDeviceException("Problem getting streams from serialPort:" + identifier, e);
 		}
@@ -144,6 +144,9 @@ public class SerialManager {
 		if (printer == null)
 			return;
 		
-		serialPortsByPrinter.remove(printer);
+		CommPortIdentifier identifier = serialPortsByPrinter.remove(printer);
+		if (identifier != null) {
+			printersBySerialPort.remove(identifier);
+		}
 	}
 }

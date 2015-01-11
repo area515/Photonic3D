@@ -1,5 +1,7 @@
 package org.area515.resinprinter.gcode;
 
+import java.io.IOException;
+
 import org.area515.resinprinter.printer.Printer;
 
 /// <summary>
@@ -11,40 +13,50 @@ public class SedgwickGCodeControl extends GCodeControl {
 		super(printer);
 	}
 
-    public void cmdMoveX(double dist) {
-    	sendGcode("O\r\n");
+    public String executeMoveX(double dist) {
+    	return sendGcode("O\r\n");
     }
 
-    public void cmdMoveY(double dist) {
-    	sendGcode("C\r\n");
+    public String executeMoveY(double dist) {
+    	return sendGcode("C\r\n");
     }
 
-    public void cmdMoveZ(double dist) {
+    public String executeMoveZ(double dist) {
         if (dist > .024 && dist < .026) { // small reverse 
-            sendGcode("Y\r\n");
-        }
-        if (dist == 1.0) { // medium reverse
-            sendGcode("U\r\n");
+            return sendGcode("Y\r\n");
         }
         if (dist == 10.0) { // large reverse
-            sendGcode("I\r\n");
+            return sendGcode("I\r\n");
         }
         if (dist < -.024 && dist > -.026) { // small forward
-            sendGcode("H\r\n");
+            return sendGcode("H\r\n");
         }
         if (dist == -1.0) {  // medium forward
-            sendGcode("J\r\n");
+            return sendGcode("J\r\n");
         }
         if (dist == -10.0) {  // large forward
-            sendGcode("K\r\n");
+            return sendGcode("K\r\n");
         }
+        //if (dist == 1.0) { // medium reverse
+            return sendGcode("U\r\n");
+        //}
     }
 
-    public void cmdMotorsOn() {
-    	sendGcode("E\r\n");
+    public String executeSetRelativePositioning() {
+    	return "\r\n";
+    }
+    
+    //Sedgwick doesn't have a welcome mat
+    @Override
+    public String readWelcome() throws IOException {
+    	return null;
+    }
+    
+    public String executeMotorsOn() {
+    	return sendGcode("E\r\n");
     }
 
-    public void cmdMotorsOff(){
-        sendGcode("D\r\n");
+    public String executeMotorsOff(){
+        return sendGcode("D\r\n");
     }
 }

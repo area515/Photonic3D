@@ -100,7 +100,7 @@ public class GCodeParseThread implements Callable<JobStatus> {
 				} else {
 					System.out.println("gcode: " + currentLine);
 					
-					printer.sendAndWaitForResponse(currentLine + "\r\n");
+					printer.sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(currentLine + "\r\n");
 				}
 			}
 			
