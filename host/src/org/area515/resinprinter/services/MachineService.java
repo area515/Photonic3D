@@ -123,7 +123,7 @@ public class MachineService {
 	 @GET
 	 @Path("deleteprinter/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse createPrinter(@PathParam("printername") String printerName) {
+	 public MachineResponse deletePrinter(@PathParam("printername") String printerName) {
 			try {
 				Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
 				if (currentPrinter != null) {
@@ -190,7 +190,14 @@ public class MachineService {
 			if (printer == null) {
 				throw new InappropriateDeviceException("This printer isn't started:" + printerName);
 			}
-			
+			if (printer.isPrintInProgress()) {
+				throw new InappropriateDeviceException("Can't stop printer while a job is in progress");
+			}
+			DisplayManager.Instance().removeAssignment(printer);
+			SerialManager.Instance().removeAssignment(printer);
+			if (printer != null) {
+				printer.close();
+			}
 			PrinterManager.Instance().stopPrinter(printer);
 			return new MachineResponse("start", true, printerName + "");
 		} catch (InappropriateDeviceException e) {

@@ -4,7 +4,7 @@
 		<buildnumber/>
 		<property name="deployedZipFile" value="cwh-0.${build.number}.zip"/>
 		<echo file="cleannetworkinstall.sh" append="false">#!/bin/bash
-			
+
 rm -r cwh
 mkdir cwh
 cd cwh

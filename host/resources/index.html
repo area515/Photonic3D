@@ -226,17 +226,7 @@
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
-				$("#portSelect option").each(function() {
-				    $(this).remove();
-				   });
-				
-				$.each(data, function( index, portName ) {
-						//alert( index + ": " + filename );
-						$('#portSelect').append($("<option/>", {
-    					value: portName,
-    					text: portName
-					}));
-				});
+				retainSelectionAndPopulate("portSelect", data)
 			}
 		});
 	}
@@ -248,17 +238,7 @@
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
-				$("#displaySelect option").each(function() {
-				    $(this).remove();
-				});
-				
-				$.each(data, function( index, displayName ) {
-						//alert( index + ": " + filename );
-						$('#displaySelect').append($("<option/>", {
-    					value: displayName,
-    					text: displayName
-					}));
-				});
+				retainSelectionAndPopulate("displaySelect", data);
 			}
 		});
 	}
@@ -270,16 +250,7 @@
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
-				$("#filesselect option").each(function() {
-				    $(this).remove();
-				   });
-				
-				$.each(data.names, function( index, filename ) {
-						$('#filesselect').append($("<option/>", {
-    					value: filename,
-    					text: filename
-					}));
-				});
+				retainSelectionAndPopulate("filesselect", data.names);
 			}
 		});
 	}
@@ -291,20 +262,31 @@
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
-				$("#printerSelect option").each(function() {
-				    $(this).remove();
-				   });
-				
-				$.each(data, function( index, printer ) {
-						$('#printerSelect').append($("<option/>", {
-    					value: printer,
-    					text: printer
-					}));
-				});
+				retainSelectionAndPopulate("printerSelect", data);
 			}
 		});
 	}
-
+	
+	function retainSelectionAndPopulate(selectListbox, data) {
+		var retainSelectedOptions = [];
+		$("#" + selectListbox + " option").each(function() {
+		    $(this).remove();
+		    if (this.selected) {
+		    	retainSelectedOptions.push(this.text);
+		    }
+		});
+		
+		$.each(data, function( index, name ) {
+			$("#" + selectListbox).append(
+				$("<option/>", {
+					value: name,
+					text: name, 
+					selected:$.inArray(name, retainSelectedOptions)?null:true}
+				)
+			);
+		});
+	}
+	
 	function createPrinterAndUpdatePrinters() {
 		var printerName = $('#newPrinterNameText').val(); 
 		var display = $('#displaySelect option:selected').val();
