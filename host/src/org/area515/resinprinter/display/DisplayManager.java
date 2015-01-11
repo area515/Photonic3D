@@ -85,13 +85,13 @@ public class DisplayManager {
 		return ge.getScreenDevices()[index];
 	}
 	
-	public void removeAssignment(Printer job){
-		if (job == null)
+	public void removeAssignment(Printer printer){
+		if (printer == null)
 			return;
 		
-		graphicsDevicesByPrinter.remove(job);
+		graphicsDevicesByPrinter.remove(printer);
 		
-		GraphicsDevice device = job.getGraphicsDevice();
+		GraphicsDevice device = printer.getGraphicsDevice();
 		if (device == null)
 			return;
 		

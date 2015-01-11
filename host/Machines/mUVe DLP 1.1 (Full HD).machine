@@ -20,8 +20,8 @@
         </ComPortSettings>
     </MotorsDriverConfig>
     <MonitorDriverConfig>
-        <DLP_X_Res>0</DLP_X_Res>
-        <DLP_Y_Res>0</DLP_Y_Res>
+        <DLP_X_Res>1600</DLP_X_Res>
+        <DLP_Y_Res>900</DLP_Y_Res>
         <MonitorID>DISPLAY1</MonitorID>
         <OSMonitorID>\Display0</OSMonitorID>
         <DisplayCommEnabled>false</DisplayCommEnabled>
