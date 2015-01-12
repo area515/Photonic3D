@@ -104,7 +104,13 @@ public class HostProperties {
 		if (configurations != null) {
 			return new ArrayList<PrinterConfiguration>(configurations.values());
 		}
-
+		
+		if (!machineDir.exists()) {
+			if (!machineDir.mkdirs()) {
+				throw new IllegalArgumentException("Couldn't create machine directory:" + machineDir);
+			}
+		}
+		
 		configurations = new ConcurrentHashMap<String, PrinterConfiguration>();
 		File machineFiles[] = machineDir.listFiles(new FilenameFilter() {
 			@Override
