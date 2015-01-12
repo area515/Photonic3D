@@ -66,11 +66,10 @@ public class GCodeParseThread implements Callable<JobStatus> {
 							int incoming = Integer.parseInt(matcher.group(1));
 							printJob.setCurrentSlice(incoming);
 							String imageNumber = String.format("%0" + padLength + "d", incoming);
-							File imageLocation = new File(gCodeFile.getParentFile(), FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png");
-							//FileInputStream imageStream = new FileInputStream(imageLocation);
-							bimage = ImageIO.read(imageLocation);
-							//try {imageStream.close();} catch (IOException e) {}
-							System.out.println("Show picture: " + FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png");
+							String imageFilename = FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png";
+							File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
+							bimage = ImageIO.read(imageFile);
+							System.out.println("Show picture: " + imageFilename);
 
 							printer.showImage(bimage);
 						}
@@ -81,8 +80,9 @@ public class GCodeParseThread implements Callable<JobStatus> {
 					matcher = delayPattern.matcher(currentLine);
 					if (matcher.matches()) {
 						try {
-							System.out.println("Sleep");
+							System.out.println("Sleep" + matcher.group(1));
 							Thread.sleep(Integer.parseInt(matcher.group(1)));
+							System.out.println("Sleep complete");
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
@@ -97,7 +97,10 @@ public class GCodeParseThread implements Callable<JobStatus> {
 					}
 					matcher = gCodePattern.matcher(currentLine);
 					if (matcher.matches()) {
-						System.out.println("Printer Response:" + printer.sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(matcher.group(1).trim() + "\r\n"));
+						String gCode = matcher.group(1).trim();
+						System.out.println("Send GCode:" + gCode);
+						gCode = printer.sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(gCode + "\r\n");
+						System.out.println("Printer Response:" + gCode);
 						continue;
 					}
 					
