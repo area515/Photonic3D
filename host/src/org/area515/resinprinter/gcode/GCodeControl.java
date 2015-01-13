@@ -14,26 +14,43 @@ public abstract class GCodeControl {
     String sendGcode(String cmd) {
         try {
         	return printer.sendGCodeAndWaitForResponseForever(cmd);
-        } catch (InterruptedException ex) {
+        } catch (Exception ex) {
         	ex.printStackTrace();
         	return "Interrupted!";
         }
     }
     
     /**
-     * Unfortunately the welcome mat isn't like gcode responses. Instead, the reads seem to go on forever without an indication of 
-     * when they are going to stop. I'm hoping our read timeout is long enough to cover the time that it takes to dump the welcome mat.
+     * Unfortunately this chitchat isn't like gcode responses. Instead, the reads seem to go on forever without an indication of 
+     * when they are going to stop. 
      * 
      * @return
      * @throws IOException
      */
-    public String readWelcome() throws IOException {
+    public String readWelcomeChitChat() throws IOException {
     	StringBuilder builder = new StringBuilder();
     	String currentLine = null;
     	while ((currentLine = printer.readLine(false)) != null) {
     		if (currentLine != null) {
         		builder.append(currentLine);
     		}
+    	}
+    	
+    	String g90Response = "";
+    	int g90ResponsesSent = 0;
+    	while (!g90Response.matches("[Oo][Kk].*")) {
+    		if (g90Response != null) {
+    			builder.append(g90Response);
+    		}
+    		
+    		//This sets the device into absolute positioning mode which is the default anyway
+	    	g90Response = sendGcode("G90\r\n");
+	    	g90ResponsesSent++;
+    	}
+    	
+    	//We start at 1 because we should have already gotten one good response in the above loop
+    	for (int t = 1; t < g90ResponsesSent; t++) {
+    		printer.readLine(false);
     	}
     	
     	return builder.toString();
