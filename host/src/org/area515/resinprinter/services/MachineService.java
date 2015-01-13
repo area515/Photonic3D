@@ -106,10 +106,10 @@ public class MachineService {
 		//=========================================================
 		try {
 			HostProperties.Instance().addPrinterConfiguration(currentConfiguration);
-			return new MachineResponse("create", true, currentConfiguration.getName() + "");
+			return new MachineResponse("create", true, "Created:" + currentConfiguration.getName() + "");
 		} catch (AlreadyAssignedException e) {
 			e.printStackTrace();
-			return new MachineResponse("create", false, "Already assigned:" + e.getMessage());
+			return new MachineResponse("create", false, e.getMessage());
 		}
 	 }
 	 
@@ -136,10 +136,10 @@ public class MachineService {
 				}				
 				
 				HostProperties.Instance().removePrinterConfiguration(currentConfiguration);
-				return new MachineResponse("delete", true, printerName + "");
+				return new MachineResponse("delete", true, "Deleted:" + printerName);
 			} catch (InappropriateDeviceException e) {
 				e.printStackTrace();
-				return new MachineResponse("delete", false, "Illegal argument passed to method:" + e.getMessage());
+				return new MachineResponse("delete", false, e.getMessage());
 			}
 	 }
 	 /**
@@ -161,16 +161,10 @@ public class MachineService {
 			}
 			
 			printer = PrinterManager.Instance().startPrinter(currentConfiguration);
-			return new MachineResponse("start", true, printer.getName() + "");
-		} catch (JobManagerException e) {
+			return new MachineResponse("start", true, "Started:" + printer.getName() + "");
+		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
 			e.printStackTrace();
-			return new MachineResponse("start", false, "Problem creating job:" + e.getMessage());
-		} catch (AlreadyAssignedException e) {
-			e.printStackTrace();
-			return new MachineResponse("start", false, "Device already used:" + e.getMessage());
-		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
-			return new MachineResponse("start", false, "Illegal argument passed to method:" + e.getMessage());
+			return new MachineResponse("start", false, e.getMessage());
 		}
 	 }	 
 	 
@@ -199,10 +193,10 @@ public class MachineService {
 				printer.close();
 			}
 			PrinterManager.Instance().stopPrinter(printer);
-			return new MachineResponse("start", true, printerName + "");
+			return new MachineResponse("stop", true, "Stopped:" + printerName);
 		} catch (InappropriateDeviceException e) {
 			e.printStackTrace();
-			return new MachineResponse("start", false, "Illegal argument passed to method:" + e.getMessage());
+			return new MachineResponse("stop", false, e.getMessage());
 		}
 	 }
 	 
@@ -226,26 +220,16 @@ public class MachineService {
 			printJob = JobManager.Instance().createJob(selectedFile);
 			Printer printer = PrinterManager.Instance().getPrinter(printername);
 			if (printer == null) {
-				return new MachineResponse("start", false, "Printer not found:" + printername);
+				throw new InappropriateDeviceException("Printer not started:" + printername);
 			}
 			
 			Future<JobStatus> status = JobManager.Instance().startJob(printJob, printer);
-			return new MachineResponse("start", true, printJob.getId() + "");
-		} catch (JobManagerException e) {
+			return new MachineResponse("start", true, "Started:" + printJob.getId());
+		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
 			JobManager.Instance().removeJob(printJob);
 			PrinterManager.Instance().removeAssignment(printJob);
 			e.printStackTrace();
-			return new MachineResponse("start", false, "Problem creating job:" + e.getMessage());
-		} catch (AlreadyAssignedException e) {
-			JobManager.Instance().removeJob(printJob);
-			PrinterManager.Instance().removeAssignment(printJob);
-			e.printStackTrace();
-			return new MachineResponse("start", false, "Device already used:" + e.getMessage());
-		} catch (InappropriateDeviceException e) {
-			JobManager.Instance().removeJob(printJob);
-			PrinterManager.Instance().removeAssignment(printJob);
-			e.printStackTrace();
-			return new MachineResponse("start", false, "Illegal argument passed to method:" + e.getMessage());
+			return new MachineResponse("start", false, e.getMessage());
 		}
  	}
  
@@ -265,7 +249,7 @@ public class MachineService {
 			return new MachineResponse("stop", false, "Job:" + jobId + " not active");
 		}
 		job.getPrinter().setStatus(JobStatus.Cancelled);
-	 	return new MachineResponse("stop", true, "");
+	 	return new MachineResponse("stop", true, "Stopped:" + jobId);
 	 }	 
 	 
 	 /**
@@ -284,7 +268,8 @@ public class MachineService {
 			return new MachineResponse("togglepause", false, "Job:" + jobId + " not active");
 		}
 		
-		return new MachineResponse("togglepause", true, job.getPrinter().togglePause() + "");
+		JobStatus status = job.getPrinter().togglePause();
+		return new MachineResponse("togglepause", true, "Job:" + jobId + " " + status);
 	 }
 	 
 	 /**
@@ -303,7 +288,7 @@ public class MachineService {
 			return new MachineResponse("status", false, "Job:" + jobId + " not active");
 		}
 
-		return new MachineResponse("status", true, job.getPrinter().getStatus() + "");
+		return new MachineResponse("status", true, "Job:" + jobId + " " + job.getPrinter().getStatus());
 	 }	 
 	 
 	 /**
@@ -319,10 +304,10 @@ public class MachineService {
 	 public MachineResponse getPrinterStatus(@PathParam("printername") String printerName) {
 		Printer printer = PrinterManager.Instance().getPrinter(printerName);
 		if (printer == null) {
-			return new MachineResponse("status", false, "Printer:" + printerName + " not found");
+			return new MachineResponse("status", false, "Printer:" + printerName + " not started");
 		}
 
-		return new MachineResponse("status", true, printer.getStatus() + "");
+		return new MachineResponse("status", true, "Printer:" + printerName + " " + printer.getStatus());
 	 }
 	 
 	 /**
@@ -359,7 +344,7 @@ public class MachineService {
 		 if(job != null) {
 			 return new MachineResponse("getcurrentslice", true, String.valueOf(job.getCurrentSlice()));
 		 } else {
-			 return new MachineResponse("getcurrentslice", true, "-1");
+			 return new MachineResponse("getcurrentslice", false, "Job:" + jobId + " not active");
 		 }
 	 }
 	 
@@ -386,11 +371,11 @@ public class MachineService {
 	 public MachineResponse moveX(@PathParam("distance") String dist, @PathParam("printername") String printerName) {
 			Printer printer = PrinterManager.Instance().getPrinter(printerName);
 			if (printer == null) {
-				return new MachineResponse("movex", false, "Printer not started:" + printerName);
+				return new MachineResponse("movex", false, "Printer:" + printerName + " not started");
 			}
 			
 			printer.getGCodeControl().executeSetRelativePositioning();
-			return new MachineResponse("movex", true, printer.getGCodeControl().executeMoveX(Double.parseDouble(dist)) );
+			return new MachineResponse("movex", true, printer.getGCodeControl().executeMoveX(Double.parseDouble(dist)));
 	 }
 	 
 	 //Y Axis Move (sedgwick close aperature)
@@ -408,7 +393,7 @@ public class MachineService {
 	 public MachineResponse moveY(@PathParam("distance") String dist, @PathParam("printername") String printerName) {
 			Printer printer = PrinterManager.Instance().getPrinter(printerName);
 			if (printer == null) {
-				return new MachineResponse("movey", false, "Printer not started:" + printerName);
+				return new MachineResponse("movey", false, "Printer:" + printerName + " not started");
 			}
 			
 			printer.getGCodeControl().executeSetRelativePositioning();
@@ -436,7 +421,7 @@ public class MachineService {
 	 public MachineResponse moveZ(@PathParam("distance") String dist, @PathParam("printername") String printerName) {
 			Printer printer = PrinterManager.Instance().getPrinter(printerName);
 			if (printer == null) {
-				return new MachineResponse("movez", false, "Printer not started:" + printerName);
+				return new MachineResponse("movez", false, "Printer:" + printerName + " not started");
 			}
 
 
@@ -458,7 +443,7 @@ public class MachineService {
 	 public MachineResponse homeZ(@PathParam("printername") String printerName) {
 			Printer printer = PrinterManager.Instance().getPrinter(printerName);
 			if (printer == null) {
-				return new MachineResponse("homez", false, "Printer not started:" + printerName);
+				return new MachineResponse("homez", false, "Printer:" + printerName + " not started");
 			}
 
 			printer.getGCodeControl().executeSetRelativePositioning();
@@ -478,7 +463,7 @@ public class MachineService {
 	 public MachineResponse homeX(@PathParam("printername") String printerName) {
 			Printer printer = PrinterManager.Instance().getPrinter(printerName);
 			if (printer == null) {
-				return new MachineResponse("homex", false, "Printer not started:" + printerName);
+				return new MachineResponse("homex", false, "Printer:" + printerName + " not started");
 			}
 			
 			printer.getGCodeControl().executeSetRelativePositioning();
@@ -498,7 +483,7 @@ public class MachineService {
 	 public MachineResponse homeY(@PathParam("printername") String printerName) {
 			Printer printer = PrinterManager.Instance().getPrinter(printerName);
 			if (printer == null) {
-				return new MachineResponse("homey", false, "Printer not started:" + printerName);
+				return new MachineResponse("homey", false, "Printer:" + printerName + " not started");
 			}
 			
 			printer.getGCodeControl().executeSetRelativePositioning();
@@ -519,7 +504,7 @@ public class MachineService {
 	 public MachineResponse motorsOff(@PathParam("printername") String printerName) {
 			Printer printer = PrinterManager.Instance().getPrinter(printerName);
 			if (printer == null) {
-				return new MachineResponse("motorsoff", false, "Printer not started:" + printerName);
+				return new MachineResponse("motorsoff", false, "Printer:" + printerName + " not started");
 			}
 			
 			return new MachineResponse("motorsoff", true, printer.getGCodeControl().executeMotorsOff());
@@ -540,7 +525,7 @@ public class MachineService {
 	 public MachineResponse motorsOn(@PathParam("printername") String printerName) {
 			Printer printer = PrinterManager.Instance().getPrinter(printerName);
 			if (printer == null) {
-				return new MachineResponse("motorson", false, "Printer not started:" + printerName);
+				return new MachineResponse("motorson", false, "Printer:" + printerName + " not started");
 			}
 			
 			return new MachineResponse("motorson", true, printer.getGCodeControl().executeMotorsOn());
