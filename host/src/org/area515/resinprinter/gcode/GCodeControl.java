@@ -36,9 +36,9 @@ public abstract class GCodeControl {
     		}
     	}
     	
-    	String g90Response = "";
+    	String g90Response = null;
     	int g90ResponsesSent = 0;
-    	while (!g90Response.matches("[Oo][Kk].*")) {
+    	while (g90Response == null || !g90Response.matches("[Oo][Kk].*")) {
     		if (g90Response != null) {
     			builder.append(g90Response);
     		}
