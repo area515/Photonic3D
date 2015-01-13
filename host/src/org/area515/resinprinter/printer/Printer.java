@@ -94,8 +94,9 @@ public class Printer {
 			if (this.status != JobStatus.Paused) {
 				return this.status;
 			}
-			
+			System.out.println("Print has been paused.");
 			jobContinued.await();
+			System.out.println("Print has resumed.");
 			return this.status;
 		} catch (InterruptedException e) {
 			e.printStackTrace();//Normal if os is shutting us down
@@ -132,7 +133,7 @@ public class Printer {
 		
 		//Read the welcome mat
 		try {
-			System.out.println(getGCodeControl().readWelcome());
+			System.out.println("Firmware Welcome chitchat:" + getGCodeControl().readWelcomeChitChat());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -161,25 +162,21 @@ public class Printer {
 	}
 	
 	//synchronized allows us to send manual commands to the printer
-	public String sendGCodeAndWaitForResponseForever(String gcode) throws InterruptedException {
+	public String sendGCodeAndWaitForResponseForever(String gcode) throws IOException {
 		gCodeLock.lock();
 		try {
 			output.write(gcode.getBytes());
 			return readLine(false);
-		} catch (IOException e) {
-			throw new InterruptedException("IO problem reading from device");
 		} finally {
 			gCodeLock.unlock();
 		}
 	}
 	
-	public String sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(String gcode) throws InterruptedException {
+	public String sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(String gcode) throws IOException {
 		gCodeLock.lock();
 		try {
 			output.write(gcode.getBytes());
 			return readLine(true);
-		} catch (IOException e) {
-			throw new InterruptedException("IO problem reading from device");
 		} finally {
 			gCodeLock.unlock();
 		}

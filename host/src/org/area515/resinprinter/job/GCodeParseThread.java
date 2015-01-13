@@ -100,7 +100,7 @@ public class GCodeParseThread implements Callable<JobStatus> {
 						String gCode = matcher.group(1).trim();
 						System.out.println("Send GCode:" + gCode);
 						gCode = printer.sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(gCode + "\r\n");
-						System.out.println("Printer Response:" + gCode);
+						System.out.print("Printer Response:" + gCode);
 						continue;
 					}
 					
@@ -114,9 +114,6 @@ public class GCodeParseThread implements Callable<JobStatus> {
 			e.printStackTrace();
 			return JobStatus.Failed;
 		} catch (IOException e) {
-			e.printStackTrace();
-			return JobStatus.Failed;
-		} catch (InterruptedException e) {
 			e.printStackTrace();
 			return JobStatus.Failed;
 		} finally {

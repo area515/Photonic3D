@@ -48,7 +48,7 @@ public class SedgwickGCodeControl extends GCodeControl {
     
     //Sedgwick doesn't have a welcome mat
     @Override
-    public String readWelcome() throws IOException {
+    public String readWelcomeChitChat() throws IOException {
     	return null;
     }
     
