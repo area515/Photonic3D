@@ -5,17 +5,18 @@ import gnu.io.CommPortIdentifier;
 import java.awt.GraphicsDevice;
 
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.printer.Printer;
 
 public class AlreadyAssignedException extends Exception {
 	private static final long serialVersionUID = 5346661559747947463L;
 
-	private PrintJob assignedJob;
+	private Printer printer;
 	private GraphicsDevice graphicsDevice;
 	private CommPortIdentifier comPort;
 	
-	public AlreadyAssignedException(String message, PrintJob assignedJob) {
+	public AlreadyAssignedException(String message, Printer printer) {
 		super(message);
-		this.assignedJob = assignedJob;
+		this.printer = printer;
 	}
 	
 	public AlreadyAssignedException(String message, CommPortIdentifier comPort) {
@@ -28,11 +29,15 @@ public class AlreadyAssignedException extends Exception {
 		this.graphicsDevice = graphicsDevice;
 	}
 
-	public PrintJob getAssignedJob() {
-		return assignedJob;
+	public Printer getPrinter() {
+		return printer;
 	}
 	
 	public GraphicsDevice getGraphicsDevice() {
 		return graphicsDevice;
+	}
+
+	public CommPortIdentifier getComPort() {
+		return comPort;
 	}
 }

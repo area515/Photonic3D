@@ -62,16 +62,11 @@ public class Main {
         handlers.setHandlers(new Handler[] { serviceContext, resource_handler, new DefaultHandler() });
         server.setHandler(handlers);
 
-        
-        //Initialization is bad pattern
-        
 		try {
 			server.start();
 			server.join();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		
 	}
 }

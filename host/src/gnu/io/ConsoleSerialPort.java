@@ -8,13 +8,15 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PushbackInputStream;
 import java.util.TooManyListenersException;
 
 import org.apache.commons.codec.binary.StringUtils;
 import org.eclipse.jetty.util.StringUtil;
 
 public class ConsoleSerialPort extends SerialPort {
-
+	private PushbackInputStream inputStream;
+	
 	@Override
 	public void addEventListener(SerialPortEventListener arg0)
 			throws TooManyListenersException {
@@ -325,12 +327,8 @@ public class ConsoleSerialPort extends SerialPort {
 
 	@Override
 	public InputStream getInputStream() throws IOException {
-		byte[] eols = new byte[1000000];
-		for (int x = 0; x < eols.length; x++) {
-			eols[x] = '\n';
-		}
-		
-		return new ByteArrayInputStream(eols);
+		inputStream = new PushbackInputStream(new ByteArrayInputStream("The welcome mat\r\n".getBytes()));
+		return inputStream;
 	}
 
 	@Override
@@ -345,6 +343,7 @@ public class ConsoleSerialPort extends SerialPort {
 			@Override
 			public void write(int b) throws IOException {
 				System.out.write(b);
+				inputStream.unread("ok\r\n".getBytes());
 			}
 		};
 	}
