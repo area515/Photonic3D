@@ -18,13 +18,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.printer.PrinterConfiguration.ComPortSettings;
 import org.area515.resinprinter.server.HostProperties;
 
 public class SerialManager {
 	private static SerialManager INSTANCE = null;
 	
-	private ConcurrentHashMap<PrintJob, CommPortIdentifier> serialPortsByPrintJob = new ConcurrentHashMap<PrintJob, CommPortIdentifier>();
-	private ConcurrentHashMap<CommPortIdentifier, PrintJob> printJobsBySerialPort = new ConcurrentHashMap<CommPortIdentifier, PrintJob>();
+	private ConcurrentHashMap<Printer, CommPortIdentifier> serialPortsByPrinter = new ConcurrentHashMap<Printer, CommPortIdentifier>();
+	private ConcurrentHashMap<CommPortIdentifier, Printer> printersBySerialPort = new ConcurrentHashMap<CommPortIdentifier, Printer>();
 
 	/** Milliseconds to block while waiting for port open */
 	private static final int TIME_OUT = 2000;
@@ -41,19 +43,19 @@ public class SerialManager {
 	private SerialManager() {
 	}
 	
-	public void assignSerialPort(PrintJob job, CommPortIdentifier identifier) throws AlreadyAssignedException, InappropriateDeviceException {
+	public void assignSerialPort(Printer printer, CommPortIdentifier identifier) throws AlreadyAssignedException, InappropriateDeviceException {
 		if (identifier.getPortType() != CommPortIdentifier.PORT_SERIAL) {
 			throw new InappropriateDeviceException(identifier + " is not a serial port");
 		}
 		
-		CommPortIdentifier otherIdentifier = serialPortsByPrintJob.putIfAbsent(job, identifier);
+		CommPortIdentifier otherIdentifier = serialPortsByPrinter.putIfAbsent(printer, identifier);
 		if (otherIdentifier != null) {
 			throw new AlreadyAssignedException("Job already assigned to this SerialPort:" + otherIdentifier, otherIdentifier);
 		}
 		
-		PrintJob otherPrintJob = printJobsBySerialPort.putIfAbsent(identifier, job);
-		if (otherPrintJob != null && !otherPrintJob.isManual()) {
-			serialPortsByPrintJob.remove(job);
+		Printer otherPrintJob = printersBySerialPort.putIfAbsent(identifier, printer);
+		if (otherPrintJob != null) {
+			serialPortsByPrinter.remove(printer);
 			throw new AlreadyAssignedException("SerialPort already assigned to this job:" + otherPrintJob, otherPrintJob);
 		}
 		
@@ -63,18 +65,38 @@ public class SerialManager {
 				serialPort = new ConsoleSerialPort();
 			} else {
 				// open serial port, and use class name for the appName.
-				serialPort = (SerialPort)identifier.open(job.getJobFile().getName(), TIME_OUT);
-				
+				serialPort = (SerialPort)identifier.open(printer.getName(), TIME_OUT);
+				serialPort.enableReceiveTimeout(TIME_OUT);
 				// set port parameters
-				serialPort.setSerialPortParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+				ComPortSettings settings = printer.getConfiguration().getMotorsDriverConfig().getComPortSettings();
+				int parity = 0;
+				if (settings.getParity().equals("None")) {
+					parity = SerialPort.PARITY_NONE;
+				} else if (settings.getParity().equals("Even")) {
+					parity = SerialPort.PARITY_EVEN;
+				} else if (settings.getParity().equals("Mark")) {
+					parity = SerialPort.PARITY_MARK;
+				} else if (settings.getParity().equals("Odd")) {
+					parity = SerialPort.PARITY_ODD;
+				} else if (settings.getParity().equals("Space")) {
+					parity = SerialPort.PARITY_SPACE;
+				}				
+				int stopBits = 0;
+				if (settings.getStopbits().equalsIgnoreCase("One") || settings.getStopbits().equals("1")) {
+					stopBits = SerialPort.STOPBITS_1;
+				} else if (settings.getStopbits().equals("1.5")) {
+					stopBits = SerialPort.STOPBITS_1_5;
+				} else if (settings.getStopbits().equalsIgnoreCase("Two") || settings.getStopbits().equals("2")) {
+					stopBits = SerialPort.STOPBITS_2;
+				}
+				serialPort.setSerialPortParams((int)settings.getSpeed(), settings.getDatabits(), stopBits, parity);
 			}
 
-			job.setSerialPort(serialPort);
+			printer.setSerialPort(serialPort);
 		} catch (PortInUseException e) {
-			//TODO: I don't have the PrintJob already assigned, I'd need another hashmap for that.
-			throw new AlreadyAssignedException("Comport already assigned to job:" + e.currentOwner, (PrintJob)null);
+			throw new AlreadyAssignedException("Comport already assigned another process:" + e.currentOwner, (Printer)null);
 		} catch (UnsupportedCommOperationException e) {
-			throw new InappropriateDeviceException("Port doesn't support an open or setting of port parameters:" + identifier, e);
+			throw new InappropriateDeviceException("Port doesn't support an open or setting of port parameters:" + identifier.getName(), e);
 		} catch (IOException e) {
 			throw new InappropriateDeviceException("Problem getting streams from serialPort:" + identifier, e);
 		}
@@ -118,10 +140,13 @@ public class SerialManager {
 	 * This should be called when you stop using the port.
 	 * This will prevent port locking on platforms like Linux.
 	 */
-	public void removeAssignment(PrintJob job) {
-		if (job == null)
+	public void removeAssignment(Printer printer) {
+		if (printer == null)
 			return;
 		
-		serialPortsByPrintJob.remove(job);
+		CommPortIdentifier identifier = serialPortsByPrinter.remove(printer);
+		if (identifier != null) {
+			printersBySerialPort.remove(identifier);
+		}
 	}
 }
