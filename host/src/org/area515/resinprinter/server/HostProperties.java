@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,6 +17,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.io.FileUtils;
+import org.area515.resinprinter.discover.Advertiser;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.Printer;
@@ -30,6 +32,7 @@ public class HostProperties {
 	private File printDir;
 	private boolean fakeSerial = false;
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
+	private List<Class<Advertiser>> advertisementClasses = new ArrayList<Class<Advertiser>>();
 	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
@@ -54,6 +57,19 @@ public class HostProperties {
 			printDirString = props.getProperty("printdir");
 			uploadDirString = props.getProperty("uploaddir");
 			fakeSerial = new Boolean(props.getProperty("fakeserial", "false"));
+			for (Entry<Object, Object> currentProperty : props.entrySet()) {
+				String currentPropertyString = currentProperty.getKey() + "";
+				if (currentPropertyString.startsWith("advertise")) {
+					currentPropertyString = currentPropertyString.replace("advertise", "");
+					if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
+						try {
+							advertisementClasses.add((Class<Advertiser>)Class.forName(currentPropertyString));
+						} catch (ClassNotFoundException e) {
+							System.out.println("Failed to load advertiser:" + currentPropertyString);
+						}
+					}
+				}
+			}
 		}
 		
 		if (printDirString == null) {
@@ -98,6 +114,10 @@ public class HostProperties {
 	
 	public boolean getFakeSerial(){
 		return fakeSerial;
+	}
+	
+	public List<Class<Advertiser>> getAdvertisers() {
+		return advertisementClasses;
 	}
 	
 	public List<PrinterConfiguration> getPrinterConfigurations() {
