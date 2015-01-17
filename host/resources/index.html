@@ -389,6 +389,19 @@
 		});
 	}
 
+	function applyErrorIfNecessaryWithTimestamp(data) {
+		if (!data.response) {
+			$('#errorModalBody').text(data.message);
+			$('#errorModal').modal();
+			$("#statustext").attr("placeholder", "Error");
+		} else {
+			var d = new Date();
+			$("#statustext").attr("placeholder", d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds() + " " + d.getMilliseconds() + " " + data.message);
+		}
+		
+		return data.response;
+	}	
+	
 	function applyErrorIfNecessary(data) {
 		if (!data.response) {
 			$('#errorModalBody').text(data.message);
@@ -493,19 +506,7 @@
 						</div>
 					</div>
 					<div class="col-md-1 column">
-						<h3 class="text-center">Z Axis</h3>
-						<button type="button" class="btn btn-primary btn-block" value="/machine/homez" onclick="requestForPrinter(this.value)">Home Z</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movez/50.0" onclick="requestForPrinter(this.value)">50.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movez/10.0" onclick="requestForPrinter(this.value)">10.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movez/1.0" onclick="requestForPrinter(this.value)">1.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movez/.025" onclick="requestForPrinter(this.value)">.025</button> 
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-.025" onclick="requestForPrinter(this.value)">-.025</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-1.0" onclick="requestForPrinter(this.value)">-1.0</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-10.0" onclick="requestForPrinter(this.value)">-10.0</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-50.0" onclick="requestForPrinter(this.value)">-50.0</button>
-					</div>
-					<div class="col-md-1 column">
-						<h3 class="text-center">X Axis</h3>
+						<h3 class="text-center">X</h3>
 						<button type="button" class="btn btn-primary btn-block" value="/machine/homex" onclick="requestForPrinter(this.value)">Home X</button>
 						<button type="button" class="btn btn-block btn-success" value="/machine/movex/50.0" onclick="requestForPrinter(this.value)">50.0</button>
 						<button type="button" class="btn btn-block btn-success" value="/machine/movex/10.0" onclick="requestForPrinter(this.value)">10.0</button>
@@ -517,7 +518,7 @@
 						<button type="button" class="btn btn-block btn-danger" value="/machine/movex/-50.0" onclick="requestForPrinter(this.value)">-50.0</button>
 					</div>
 					<div class="col-lg-1 column">
-						<h3 class="text-center">Y Axis</h3>
+						<h3 class="text-center">Y</h3>
 						<button type="button" class="btn btn-primary btn-block" value="/machine/homey" onclick="requestForPrinter(this.value)">Home Y</button>
 						<button type="button" class="btn btn-block btn-success" value="/machine/movey/50.0" onclick="requestForPrinter(this.value)">50.0</button>
 						<button type="button" class="btn btn-block btn-success" value="/machine/movey/10.0" onclick="requestForPrinter(this.value)">10.0</button>
@@ -527,6 +528,18 @@
 						<button type="button" class="btn btn-block btn-danger" value="/machine/movey/-1.0" onclick="requestForPrinter(this.value)">-1.0</button>
 						<button type="button" class="btn btn-block btn-danger" value="/machine/movey/-10.0" onclick="requestForPrinter(this.value)">-10.0</button>
 						<button type="button" class="btn btn-block btn-danger" value="/machine/movey/-50.0" onclick="requestForPrinter(this.value)">-50.0</button>
+					</div>
+					<div class="col-md-1 column">
+						<h3 class="text-center">Z</h3>
+						<button type="button" class="btn btn-primary btn-block" value="/machine/homez" onclick="requestForPrinter(this.value)">Home Z</button>
+						<button type="button" class="btn btn-block btn-success" value="/machine/movez/50.0" onclick="requestForPrinter(this.value)">50.0</button>
+						<button type="button" class="btn btn-block btn-success" value="/machine/movez/10.0" onclick="requestForPrinter(this.value)">10.0</button>
+						<button type="button" class="btn btn-block btn-success" value="/machine/movez/1.0" onclick="requestForPrinter(this.value)">1.0</button>
+						<button type="button" class="btn btn-block btn-success" value="/machine/movez/.025" onclick="requestForPrinter(this.value)">.025</button> 
+						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-.025" onclick="requestForPrinter(this.value)">-.025</button>
+						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-1.0" onclick="requestForPrinter(this.value)">-1.0</button>
+						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-10.0" onclick="requestForPrinter(this.value)">-10.0</button>
+						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-50.0" onclick="requestForPrinter(this.value)">-50.0</button>
 					</div>
 				</div>
 				<div class="row clearfix">					
