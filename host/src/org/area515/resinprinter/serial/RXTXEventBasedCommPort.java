@@ -22,6 +22,16 @@ public class RXTXEventBasedCommPort extends RXTXCommPort implements SerialPortEv
 	
 	public void init(SerialPort serialPort) throws TooManyListenersException {
 		serialPort.addEventListener(this);
+		serialPort.notifyOnBreakInterrupt(true);
+		serialPort.notifyOnCarrierDetect(true);
+		serialPort.notifyOnCTS(true);
+		serialPort.notifyOnDataAvailable(true);
+		serialPort.notifyOnDSR(true);
+		serialPort.notifyOnFramingError(true);
+		serialPort.notifyOnOutputEmpty(true);
+		serialPort.notifyOnOverrunError(true);
+		serialPort.notifyOnParityError(true);
+		serialPort.notifyOnRingIndicator(true);
 	}
 	
 	private boolean waitForDataAvailable() {
