@@ -108,9 +108,9 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 			if (value > -1) {
 				builder.append((char)value);
 			}
-		} while (System.currentTimeMillis() - startTime < waitForGCodeTimeout || 
-				(value > -1 && value != '\n') || 
-				(printer != null && value == -1 && printer.isPrintInProgress()));
+		} while ((System.currentTimeMillis() - startTime < waitForGCodeTimeout || 
+				(printer != null && value == -1 && printer.isPrintInProgress())) 
+				&& (value > -1 && value != '\n'));
 		if (builder.length() == 0) {
 			return null;
 		}
