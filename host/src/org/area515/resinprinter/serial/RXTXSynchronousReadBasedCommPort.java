@@ -21,13 +21,13 @@ public class RXTXSynchronousReadBasedCommPort implements SerialCommunicationsPor
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private SerialPort serialPort;
-	private long timeout = 0;
+	private long waitForGCodeTimeout = 0;
 	
 	@Override
 	public void open(String printerName, int timeout, ComPortSettings settings) throws AlreadyAssignedException, InappropriateDeviceException {
 		String portName = settings.getPortName();
 		try {
-			this.timeout = timeout * 3;
+			this.waitForGCodeTimeout = 1000 * 60 * 2;//Maximum time for a single gcode to execute.
 			CommPortIdentifier identifier = CommPortIdentifier.getPortIdentifier(portName);
 			// open serial port, and use class name for the appName.
 			serialPort = (SerialPort)identifier.open(printerName, timeout);
@@ -102,7 +102,7 @@ public class RXTXSynchronousReadBasedCommPort implements SerialCommunicationsPor
 			if (value > -1) {
 				builder.append((char)value);
 			}
-		} while (System.currentTimeMillis() - startTime < timeout &&
+		} while (System.currentTimeMillis() - startTime < waitForGCodeTimeout &&
 				((value > -1 && value != '\n') || (printer != null && value == -1 && printer.isPrintInProgress())));
 		if (builder.length() == 0) {
 			return null;
