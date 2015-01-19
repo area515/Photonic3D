@@ -21,6 +21,7 @@ public class RXTXEventBasedCommPort extends RXTXCommPort implements SerialPortEv
 	private boolean isConsumerAvailable = false;
 	
 	public void init(SerialPort serialPort) throws TooManyListenersException {
+		serialPort.addEventListener(this);
 		serialPort.notifyOnBreakInterrupt(true);
 		serialPort.notifyOnCarrierDetect(true);
 		serialPort.notifyOnCTS(true);
@@ -31,7 +32,6 @@ public class RXTXEventBasedCommPort extends RXTXCommPort implements SerialPortEv
 		serialPort.notifyOnOverrunError(true);
 		serialPort.notifyOnParityError(true);
 		serialPort.notifyOnRingIndicator(true);
-		serialPort.addEventListener(this);
 	}
 	
 	private boolean waitForDataAvailable() {
