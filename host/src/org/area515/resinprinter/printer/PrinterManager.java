@@ -19,6 +19,7 @@ import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.services.MachineResponse;
@@ -119,7 +120,7 @@ public class PrinterManager {
 			DisplayManager.Instance().assignDisplay(printer, graphicsDevice);
 			
 			String comportId = printer.getConfiguration().getMotorsDriverConfig().getComPortSettings().getPortName();
-			CommPortIdentifier port = SerialManager.Instance().getSerialDevice(comportId);
+			SerialCommunicationsPort port = SerialManager.Instance().getSerialDevice(comportId);
 			if (port == null) {
 				throw new JobManagerException("Couldn't find communications device called:" + comportId);
 			}
@@ -127,27 +128,21 @@ public class PrinterManager {
 			SerialManager.Instance().assignSerialPort(printer, port);
 			printersByName.put(printer.getName(), printer);
 			return printer;
-		} catch (JobManagerException e) {
+		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
 			DisplayManager.Instance().removeAssignment(printer);
 			SerialManager.Instance().removeAssignment(printer);
 			if (printer != null) {
 				printer.close();
 			}
 			throw e;
-		} catch (AlreadyAssignedException e) {
+		} catch (Exception e) {
+			e.printStackTrace();
 			DisplayManager.Instance().removeAssignment(printer);
 			SerialManager.Instance().removeAssignment(printer);
 			if (printer != null) {
 				printer.close();
 			}
-			throw e;
-		} catch (InappropriateDeviceException e) {
-			DisplayManager.Instance().removeAssignment(printer);
-			SerialManager.Instance().removeAssignment(printer);
-			if (printer != null) {
-				printer.close();
-			}
-			throw e;
+			throw new InappropriateDeviceException("Internal error on server");
 		}
 	}
 	
