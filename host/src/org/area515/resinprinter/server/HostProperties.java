@@ -2,6 +2,8 @@ package org.area515.resinprinter.server;
 
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,9 +21,13 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.commons.io.FileUtils;
 import org.area515.resinprinter.discover.Advertiser;
 import org.area515.resinprinter.display.AlreadyAssignedException;
+import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
+import org.area515.resinprinter.serial.SerialCommunicationsPort;
+import org.area515.resinprinter.serial.SerialManager;
+import org.area515.resinprinter.services.MachineService;
 
 public class HostProperties {
 	private static HostProperties INSTANCE = null;
@@ -31,8 +37,10 @@ public class HostProperties {
 	private File uploadDir;
 	private File printDir;
 	private boolean fakeSerial = false;
+	private boolean fakedisplay = false;
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
 	private List<Class<Advertiser>> advertisementClasses = new ArrayList<Class<Advertiser>>();
+	private Class<SerialCommunicationsPort> serialPortClass;
 	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
@@ -41,11 +49,24 @@ public class HostProperties {
 		return INSTANCE;
 	}
 	
-	public HostProperties() {
+	private HostProperties() {
 		String printDirString = null;
 		String uploadDirString = null;
 		
-		InputStream stream = HostProperties.class.getClassLoader().getResourceAsStream("config.properties");
+		InputStream stream = null;
+		File configPropertiesInMachinesDirectory = new File(machineDir, "config.properties");
+		if (configPropertiesInMachinesDirectory.exists()) {
+			try {
+				stream = new FileInputStream(configPropertiesInMachinesDirectory);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		if (stream == null) {
+			stream = HostProperties.class.getClassLoader().getResourceAsStream("config.properties");
+		}
+		
 		if (stream != null) {
 			Properties props = new Properties();
 			try {
@@ -57,6 +78,7 @@ public class HostProperties {
 			printDirString = props.getProperty("printdir");
 			uploadDirString = props.getProperty("uploaddir");
 			fakeSerial = new Boolean(props.getProperty("fakeserial", "false"));
+			fakedisplay = new Boolean(props.getProperty("fakedisplay", "false"));
 			for (Entry<Object, Object> currentProperty : props.entrySet()) {
 				String currentPropertyString = currentProperty.getKey() + "";
 				if (currentPropertyString.startsWith("advertise")) {
@@ -69,6 +91,14 @@ public class HostProperties {
 						}
 					}
 				}
+			}
+			
+			String serialCommClass = null;
+			try {
+				serialCommClass = props.getProperty("SerialCommunicationsImplementation", "org.area515.resinprinter.serial.RXTXSynchronousReadBasedCommPort");
+				serialPortClass = (Class<SerialCommunicationsPort>)Class.forName(serialCommClass);
+			} catch (ClassNotFoundException e) {
+				System.out.println("Failed to load SerialCommunicationsImplementation:" + serialCommClass);
 			}
 		}
 		
@@ -116,6 +146,14 @@ public class HostProperties {
 		return fakeSerial;
 	}
 	
+	public boolean getFakeDisplay(){
+		return fakedisplay;
+	}
+	
+	public Class<SerialCommunicationsPort> getSerialCommunicationsClass() {
+		return serialPortClass;
+	}
+	
 	public List<Class<Advertiser>> getAdvertisers() {
 		return advertisementClasses;
 	}
@@ -125,13 +163,16 @@ public class HostProperties {
 			return new ArrayList<PrinterConfiguration>(configurations.values());
 		}
 		
+		configurations = new ConcurrentHashMap<String, PrinterConfiguration>();
+
 		if (!machineDir.exists()) {
 			if (!machineDir.mkdirs()) {
 				throw new IllegalArgumentException("Couldn't create machine directory:" + machineDir);
 			}
+			
+			MachineService.INSTANCE.createPrinter("Autodetected Printer", DisplayManager.LAST_AVAILABLE_DISPLAY, SerialManager.FIRST_AVAILABLE_PORT);
 		}
 		
-		configurations = new ConcurrentHashMap<String, PrinterConfiguration>();
 		File machineFiles[] = machineDir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
