@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 
+import javax.swing.JOptionPane;
+
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.UpnpServiceImpl;
 import org.fourthline.cling.model.message.header.STAllHeader;
@@ -29,6 +31,10 @@ public class Main {
 			Thread.currentThread().sleep(100);
 		}
 		upnpService.shutdown();
+		if (uri == null) {
+			JOptionPane.showMessageDialog(null, "Couldn't find your printer on this network. Is it possible that your printer is advertising on a different network?", "Couldn't Find Printer", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 		
 		if (Desktop.isDesktopSupported()) {
 			Desktop.getDesktop().browse(uri);
