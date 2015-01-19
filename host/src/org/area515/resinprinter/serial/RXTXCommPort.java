@@ -103,17 +103,29 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 		StringBuilder builder = new StringBuilder();
 		
 		int value = -1;
-		do {
+		while (true) {
 			value = inputStream.read();
 			if (value > -1) {
 				builder.append((char)value);
 			}
-		} while ((System.currentTimeMillis() - startTime < waitForGCodeTimeout && 
-				(printer == null || (printer != null && value == -1 && printer.isPrintInProgress()))) ||
-				(value > -1 && value != '\n')); //If we are reading chars then we should keep reading regardless of any other criteria
+			if (value == '\n') {//If we have read a line, then we've done our job
+				break;
+			}
+			if (value > -1) {//If we get a character, then keep reading
+				continue;
+			}
+			if (System.currentTimeMillis() - startTime > waitForGCodeTimeout) { //If we've timed out, get out.
+				break;
+			}
+			if (printer != null && !printer.isPrintInProgress()) {//Stop if they have asked us to quit printing
+				break;
+			}
+		}
+		
 		if (builder.length() == 0) {
 			return null;
 		}
+		
 		return builder.toString();
 	}
 }
