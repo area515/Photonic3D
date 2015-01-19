@@ -18,6 +18,7 @@ public class RXTXSynchronousReadBasedCommPort extends RXTXCommPort implements Se
 			if (response != null) {
 				builder.append(response);
 			}
+			System.out.println("lineRead:" + response);
 		}
 		
 		return builder.toString();
