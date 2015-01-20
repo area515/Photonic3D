@@ -2,36 +2,26 @@ package org.area515.resinprinter.serial;
 
 
 import gnu.io.CommPortIdentifier;
-import gnu.io.ConsoleCommPortIdentifier;
-import gnu.io.ConsoleSerialPort;
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.SerialPort;
-import gnu.io.UnsupportedCommOperationException;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.printer.PrinterConfiguration.ComPortSettings;
 import org.area515.resinprinter.server.HostProperties;
 
 public class SerialManager {
 	private static SerialManager INSTANCE = null;
-	
-	private ConcurrentHashMap<Printer, CommPortIdentifier> serialPortsByPrinter = new ConcurrentHashMap<Printer, CommPortIdentifier>();
-	private ConcurrentHashMap<CommPortIdentifier, Printer> printersBySerialPort = new ConcurrentHashMap<CommPortIdentifier, Printer>();
+	public static final String FIRST_AVAILABLE_PORT = "First available serial port";
+	private ConcurrentHashMap<Printer, SerialCommunicationsPort> serialPortsByPrinter = new ConcurrentHashMap<Printer, SerialCommunicationsPort>();
+	private ConcurrentHashMap<SerialCommunicationsPort, Printer> printersBySerialPort = new ConcurrentHashMap<SerialCommunicationsPort, Printer>();
 
 	/** Milliseconds to block while waiting for port open */
 	private static final int TIME_OUT = 2000;
-	/** Default bits per second for COM port. */
-	private static final int DATA_RATE = 9600;
 	
 	public static SerialManager Instance() {
 		if (INSTANCE == null) {
@@ -43,12 +33,19 @@ public class SerialManager {
 	private SerialManager() {
 	}
 	
-	public void assignSerialPort(Printer printer, CommPortIdentifier identifier) throws AlreadyAssignedException, InappropriateDeviceException {
-		if (identifier.getPortType() != CommPortIdentifier.PORT_SERIAL) {
-			throw new InappropriateDeviceException(identifier + " is not a serial port");
+	public void assignSerialPort(Printer printer, SerialCommunicationsPort identifier) throws AlreadyAssignedException, InappropriateDeviceException {
+		if (identifier.getName().equals(FIRST_AVAILABLE_PORT)) {
+			ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
+			Collections.reverse(identifiers);
+			for (CommPortIdentifier currentIdentifier : identifiers) {
+				SerialCommunicationsPort check = getSerialDevice(currentIdentifier.getName());
+				if (!printersBySerialPort.containsKey(check)) {
+					identifier = check;
+				}
+			}
 		}
 		
-		CommPortIdentifier otherIdentifier = serialPortsByPrinter.putIfAbsent(printer, identifier);
+		SerialCommunicationsPort otherIdentifier = serialPortsByPrinter.putIfAbsent(printer, identifier);
 		if (otherIdentifier != null) {
 			throw new AlreadyAssignedException("Job already assigned to this SerialPort:" + otherIdentifier, otherIdentifier);
 		}
@@ -59,77 +56,46 @@ public class SerialManager {
 			throw new AlreadyAssignedException("SerialPort already assigned to this job:" + otherPrintJob, otherPrintJob);
 		}
 		
-		try {
-			SerialPort serialPort = null;
-			if (identifier instanceof ConsoleCommPortIdentifier) {
-				serialPort = new ConsoleSerialPort();
-			} else {
-				// open serial port, and use class name for the appName.
-				serialPort = (SerialPort)identifier.open(printer.getName(), TIME_OUT);
-				serialPort.enableReceiveTimeout(TIME_OUT);
-				// set port parameters
-				ComPortSettings settings = printer.getConfiguration().getMotorsDriverConfig().getComPortSettings();
-				int parity = 0;
-				if (settings.getParity().equals("None")) {
-					parity = SerialPort.PARITY_NONE;
-				} else if (settings.getParity().equals("Even")) {
-					parity = SerialPort.PARITY_EVEN;
-				} else if (settings.getParity().equals("Mark")) {
-					parity = SerialPort.PARITY_MARK;
-				} else if (settings.getParity().equals("Odd")) {
-					parity = SerialPort.PARITY_ODD;
-				} else if (settings.getParity().equals("Space")) {
-					parity = SerialPort.PARITY_SPACE;
-				}				
-				int stopBits = 0;
-				if (settings.getStopbits().equalsIgnoreCase("One") || settings.getStopbits().equals("1")) {
-					stopBits = SerialPort.STOPBITS_1;
-				} else if (settings.getStopbits().equals("1.5")) {
-					stopBits = SerialPort.STOPBITS_1_5;
-				} else if (settings.getStopbits().equalsIgnoreCase("Two") || settings.getStopbits().equals("2")) {
-					stopBits = SerialPort.STOPBITS_2;
-				}
-				serialPort.setSerialPortParams((int)settings.getSpeed(), settings.getDatabits(), stopBits, parity);
-			}
-
-			printer.setSerialPort(serialPort);
-		} catch (PortInUseException e) {
-			throw new AlreadyAssignedException("Comport already assigned another process:" + e.currentOwner, (Printer)null);
-		} catch (UnsupportedCommOperationException e) {
-			throw new InappropriateDeviceException("Port doesn't support an open or setting of port parameters:" + identifier.getName(), e);
-		} catch (IOException e) {
-			throw new InappropriateDeviceException("Problem getting streams from serialPort:" + identifier, e);
-		}
+		identifier.open(printer.getName(), TIME_OUT, printer.getConfiguration().getMotorsDriverConfig().getComPortSettings());
+		printer.setSerialPort(identifier);
 	}
 	
-	public CommPortIdentifier getSerialDevice(String comport) throws InappropriateDeviceException {
-		if (comport.equals(ConsoleCommPortIdentifier.NAME)) {
-			for (CommPortIdentifier current : getSerialDevices()) {
-				if  (current.getName().equals(ConsoleCommPortIdentifier.NAME)) {
-					return current;
-				}
+	public SerialCommunicationsPort getSerialDevice(String comport) throws InappropriateDeviceException {
+		for (SerialCommunicationsPort current : getSerialDevices()) {
+			if  (current.getName().equals(comport)) {
+				return current;
 			}
 		}
 		
-		try {
-			return CommPortIdentifier.getPortIdentifier(comport);
-		} catch (NoSuchPortException e) {
-			throw new InappropriateDeviceException("CommPort doesn't exist:" + comport, e);
+		if (comport.equals(FIRST_AVAILABLE_PORT)) {
+			return new CustomCommPort(FIRST_AVAILABLE_PORT);
 		}
+		
+		throw new InappropriateDeviceException("CommPort doesn't exist:" + comport);
 	}
 	
-	public List<CommPortIdentifier> getSerialDevices() {
-		List<CommPortIdentifier> idents = new ArrayList<CommPortIdentifier>();
+	public List<SerialCommunicationsPort> getSerialDevices() {
+		List<SerialCommunicationsPort> idents = new ArrayList<SerialCommunicationsPort>();
 		Enumeration<CommPortIdentifier> identifiers = CommPortIdentifier.getPortIdentifiers();
 		while (identifiers.hasMoreElements()) {
 			CommPortIdentifier identifier = identifiers.nextElement();
 			if (identifier.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-				idents.add(identifier);
+				Class<SerialCommunicationsPort> communicationsClass = HostProperties.Instance().getSerialCommunicationsClass();
+				SerialCommunicationsPort comPortInstance;
+				try {
+					comPortInstance = communicationsClass.newInstance();
+					comPortInstance.setName(identifier.getName());
+					idents.add(comPortInstance);
+				} catch (InstantiationException | IllegalAccessException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		
+		idents.add(new CustomCommPort(FIRST_AVAILABLE_PORT));
+
 		if (HostProperties.Instance().getFakeSerial()) {
-			ConsoleCommPortIdentifier consolePort = new ConsoleCommPortIdentifier();
+			ConsoleCommPort consolePort = new ConsoleCommPort();
 			idents.add(consolePort);
 		}
 		
@@ -144,7 +110,7 @@ public class SerialManager {
 		if (printer == null)
 			return;
 		
-		CommPortIdentifier identifier = serialPortsByPrinter.remove(printer);
+		SerialCommunicationsPort identifier = serialPortsByPrinter.remove(printer);
 		if (identifier != null) {
 			printersBySerialPort.remove(identifier);
 		}

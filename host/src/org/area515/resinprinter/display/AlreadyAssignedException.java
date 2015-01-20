@@ -4,22 +4,22 @@ import gnu.io.CommPortIdentifier;
 
 import java.awt.GraphicsDevice;
 
-import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.serial.SerialCommunicationsPort;
 
 public class AlreadyAssignedException extends Exception {
 	private static final long serialVersionUID = 5346661559747947463L;
 
 	private Printer printer;
 	private GraphicsDevice graphicsDevice;
-	private CommPortIdentifier comPort;
+	private SerialCommunicationsPort comPort;
 	
 	public AlreadyAssignedException(String message, Printer printer) {
 		super(message);
 		this.printer = printer;
 	}
 	
-	public AlreadyAssignedException(String message, CommPortIdentifier comPort) {
+	public AlreadyAssignedException(String message, SerialCommunicationsPort comPort) {
 		super(message);
 		this.comPort = comPort;
 	}
@@ -37,7 +37,7 @@ public class AlreadyAssignedException extends Exception {
 		return graphicsDevice;
 	}
 
-	public CommPortIdentifier getComPort() {
+	public SerialCommunicationsPort getComPort() {
 		return comPort;
 	}
 }

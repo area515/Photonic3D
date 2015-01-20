@@ -1,5 +1,11 @@
 package org.area515.resinprinter.server;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.URI;
+import java.util.Enumeration;
+
+import org.area515.resinprinter.discover.BroadcastManager;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.DefaultHandler;
@@ -20,7 +26,7 @@ public class Main {
 
 	public static void main(String[] args) throws Exception {
 
-
+		int port = 9091; //TODO: get from HostProperties.Instance();
 		/*
 		 * Sequence
 		 * Setup ResourceHandler for html files
@@ -30,7 +36,7 @@ public class Main {
 		 * Start server
 		 */
 
-		Server server = new Server(9091);
+		final Server server = new Server(port);
 		 
 		/*
 		 * Setup ResourceHandler for html files
@@ -62,6 +68,44 @@ public class Main {
         handlers.setHandlers(new Handler[] { serviceContext, resource_handler, new DefaultHandler() });
         server.setHandler(handlers);
 
+        String externallyAccessableIP = null;//TODO: get from HostProperties.Instance()
+		if (externallyAccessableIP == null) {
+			//Don't do this: 127.0.0.1 on Linux!
+			//getSetup().externallyAccessableIP = InetAddress.getLocalHost().getHostAddress();
+			
+			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+			while (interfaces.hasMoreElements()) {
+				NetworkInterface currentInterface = interfaces.nextElement();
+				if (currentInterface.isLoopback() || currentInterface.isVirtual()) {
+					continue;
+				}
+				
+				Enumeration<InetAddress> addresses = currentInterface.getInetAddresses();
+				while (addresses.hasMoreElements()) {
+					InetAddress address = addresses.nextElement();
+					if (address.getAddress().length == 4) {//Make sure it's ipv4
+						externallyAccessableIP = address.getHostAddress();
+					}
+				}
+			}
+		}
+		
+		BroadcastManager.start(new URI("http://" + externallyAccessableIP + ":" + port));
+		
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				//BroadcastManager.stop();
+				try {
+					server.stop();
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+					server.destroy();
+				}
+			}
+		});
+		
 		try {
 			server.start();
 			server.join();

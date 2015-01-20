@@ -1,0 +1,1 @@
+java -Djava.library.path=os/win64 -cp lib/*;. org.area515.resinprinter.server.Main

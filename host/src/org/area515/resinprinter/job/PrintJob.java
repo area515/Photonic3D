@@ -8,8 +8,14 @@ import org.area515.resinprinter.printer.Printer;
 
 public class PrintJob {
 
-	private AtomicInteger totalSlices = new AtomicInteger();
-	private AtomicInteger currentSlice = new AtomicInteger();
+	private volatile int totalSlices = 0;
+	private volatile int currentSlice = 0;
+	private volatile long currentSliceTime = 0;
+	private volatile long startTime = 0;
+	private volatile int exposureTime = 0;
+	private volatile double zLiftSpeed = 0;
+	private volatile double zLiftDistance = 0;
+	private volatile boolean exposureTimeOverriden = false;
 	
 	private UUID id = UUID.randomUUID();
 	private File jobFile;
@@ -28,6 +34,13 @@ public class PrintJob {
 		return jobFile;
 	}
 	
+	public long getStartTime() {
+		return startTime;
+	}
+	public void setStartTime(long startTime) {
+		this.startTime = startTime;
+	}
+
 	public File getGCodeFile(){
 		return gCodeFile;
 	}	
@@ -36,25 +49,61 @@ public class PrintJob {
 	}
 	
 	public int getTotalSlices(){
-		return totalSlices.get();
+		return totalSlices;
 	}
-	
 	public void setTotalSlices(int totalSlices){
-		this.totalSlices.set(totalSlices);
-	}
-	public int getCurrentSlice(){
-		return currentSlice.get();
+		this.totalSlices = totalSlices;
 	}
 	
+	public int getCurrentSlice(){
+		return currentSlice;
+	}
 	public void setCurrentSlice(int currentSlice){
-		this.currentSlice.set(currentSlice);
+		this.currentSlice = currentSlice;
 	}
 
+	public long getCurrentSliceTime(){
+		return currentSliceTime;
+	}
+	public void setCurrentSliceTime(long currentSliceTime) {
+		this.currentSliceTime = currentSliceTime;
+	}
+	
 	public void setPrinter(Printer printer) {
 		this.printer = printer;
 	}
 	public Printer getPrinter() {
 		return printer;
+	}
+	
+	public int getExposureTime() {
+		return exposureTime;
+	}
+	public void setExposureTime(int exposureTime) {
+		this.exposureTime = exposureTime;
+	}
+	
+	public double getZLiftSpeed() {
+		return zLiftSpeed;
+	}
+	public void setZLiftSpeed(double zLiftSpeed) {
+		this.zLiftSpeed = zLiftSpeed;
+	}
+	
+	public double getZLiftDistance() {
+		return zLiftDistance;
+	}
+	public void setZLiftDistance(double zLiftDistance) {
+		this.zLiftDistance = zLiftDistance;
+	}
+	
+	public void overrideExposureTime(int exposureTime) {
+		this.exposureTime = exposureTime;
+		exposureTimeOverriden = true;
+	}
+	
+	public boolean isExposureTimeOverriden() {
+		return exposureTimeOverriden;
 	}
 	
 	public String toString() {

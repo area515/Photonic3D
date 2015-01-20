@@ -1,22 +1,57 @@
 package org.area515.resinprinter.gcode;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.serial.SerialCommunicationsPort;
 
 public abstract class GCodeControl {
     private Printer printer;
+    private SerialCommunicationsPort port;
+    private ReentrantLock gCodeLock = new ReentrantLock();
     
     public GCodeControl(Printer printer) {
     	this.printer = printer;
+    	//Don't do this it MUST be lazy loaded!
+    	//this.port = printer.getSerialPort();
     }
 	
-    String sendGcode(String cmd) {
+    private SerialCommunicationsPort getSerialPort() {
+    	if (port == null) {
+    		port = printer.getSerialPort();
+    	}
+    	
+    	return port;
+    }
+    public String sendGcode(String cmd) {
+		gCodeLock.lock();
         try {
-        	return printer.sendGCodeAndWaitForResponseForever(cmd);
-        } catch (Exception ex) {
+        	if (!cmd.endsWith("\n")) {
+        		cmd += "\n";
+        	}
+        	
+        	getSerialPort().write(cmd);
+        	return getSerialPort().readUntilOkOrStoppedPrinting(null);
+        } catch (IOException ex) {
         	ex.printStackTrace();
-        	return "Interrupted!";
+        	return "IO Problem!";
+        } finally {
+        	gCodeLock.unlock();
+        }
+    }
+    
+    public String sendGcodeReturnIfPrinterStops(String cmd) throws IOException {
+		gCodeLock.lock();
+        try {
+        	if (!cmd.endsWith("\n")) {
+        		cmd += "\n";
+        	}
+        	
+        	getSerialPort().write(cmd);
+        	return getSerialPort().readUntilOkOrStoppedPrinting(printer);
+        } finally {
+        	gCodeLock.unlock();
         }
     }
     
@@ -28,34 +63,11 @@ public abstract class GCodeControl {
      * @throws IOException
      */
     public String readWelcomeChitChat() throws IOException {
-    	StringBuilder builder = new StringBuilder();
-    	String currentLine = null;
-    	while ((currentLine = printer.readLine(false)) != null) {
-    		if (currentLine != null) {
-        		builder.append(currentLine);
-    		}
-    	}
-    	
-    	String g90Response = null;
-    	int g90ResponsesSent = 0;
-    	while (g90Response == null || !g90Response.matches("(?is:ok.*)")) {
-    		if (g90Response != null) {
-    			builder.append(g90Response);
-    		}
-    		
-    		//This sets the device into absolute positioning mode which is the default anyway
-	    	g90Response = sendGcode("G90\r\n");
-	    	g90ResponsesSent++;
-    	}
-    	
-    	//We start at 1 because we should have already gotten one good response in the above loop
-    	for (int t = 1; t < g90ResponsesSent; t++) {
-    		printer.readLine(false);
-    	}
-    	
-    	return builder.toString();
+    	return executeSetAbsolutePositioning();
     }
-    
+    public String executeSetAbsolutePositioning() {
+    	return sendGcode("G91\r\n");
+    }
     public String executeSetRelativePositioning() {
     	return sendGcode("G91\r\n");
     }

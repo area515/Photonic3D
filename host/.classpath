@@ -27,6 +27,13 @@
 	<classpathentry kind="lib" path="libs/commons-codec-1.9/commons-codec-1.9.jar"/>
 	<classpathentry kind="lib" path="libs/commons-io-2.4/commons-io-2.4.jar"/>
 	<classpathentry kind="lib" path="libs/commons-logging-1.2/commons-logging-1.2.jar"/>
-	<classpathentry kind="lib" path="libs/rxtx/RXTXcomm.jar"/>
+	<classpathentry kind="lib" path="libs/rxtx/RXTXcomm.jar" sourcepath="/3rdPartySource/src"/>
+	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/cling-core-2.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/cling-support-2.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/httpclient-4.3.3.jar"/>
+	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/httpcore-4.3.2.jar"/>
+	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/seamless-http-1.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/seamless-util-1.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/seamless-xml-1.0-alpha3.jar"/>
 	<classpathentry kind="output" path="srcbin"/>
 </classpath>
