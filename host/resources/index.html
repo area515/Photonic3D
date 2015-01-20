@@ -184,7 +184,7 @@
     		error: errorHandler,
 			success: function(data){
 				if (applyErrorIfNecessary(data, false, false)) {
-					$("#exposureTimeText").attr("value", data.message);
+					$("#exposureTimeText").val(data.message);
 				}
 			}
 		});
@@ -197,7 +197,7 @@
     		error: errorHandler,
 			success: function(data){
 				if (applyErrorIfNecessary(data, false, false)) {
-					$("#liftSpeedText").attr("value", data.message);
+					$("#liftSpeedText").val(data.message);
 				}
 			}
 		});
@@ -210,7 +210,7 @@
     		error: errorHandler,
 			success: function(data){
 				if (applyErrorIfNecessary(data, false, false)) {
-					$("#liftDistanceText").attr("value", data.message);
+					$("#liftDistanceText").val(data.message);
 				}
 			}
 		});
@@ -385,7 +385,7 @@
 			exposureTime += parseInt(incrementTime);
 		}
 		
-		$("#exposureTimeText").attr("value", exposureTime);
+		$("#exposureTimeText").val(exposureTime);
 		
 		var requestValue = '/machine/exposuretime/' + encodeURIComponent(jobName) + "/" + encodeURIComponent(exposureTime);
 
@@ -409,7 +409,7 @@
 			pixels += parseInt(incrementPixels);
 		}
 		
-		$("#calibrationPixelsText").attr("value", pixels);
+		$("#calibrationPixelsText").val(pixels);
 		
 		var requestValue = '/machine/showcalibrationscreen/' + encodeURIComponent(printerName) + "/" + encodeURIComponent(pixels);
 
@@ -420,17 +420,18 @@
 		var printerName = $('#printerSelect option:selected').val(); 
 		var liftSpeed = parseFloat($('#liftSpeedText').val());
 		var liftDistance = parseFloat($('#liftDistanceText').val());
-		var liftPause = parseInt($('#liftPauseText').val());
+		//var liftPause = parseInt($('#liftPauseText').val());
+		
 		var gCode = "M650";
 		
 		if (incrementTimeLiftDistance != null) {
 			liftDistance += parseFloat(incrementTimeLiftDistance);
-			$("#liftDistanceText").attr("value", liftDistance);
+			$("#liftDistanceText").val(liftDistance + "");
 			gCode += " D" + liftDistance;
 		}
 		if (incrementTimeLiftSpeed != null) {
 			liftSpeed += parseFloat(incrementTimeLiftSpeed);
-			$("#liftSpeedText").attr("value", liftSpeed);
+			$("#liftSpeedText").val(liftSpeed + "");
 			gCode += " S" + liftSpeed;
 		}
 		if (incrementLiftPause != null) {
