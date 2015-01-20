@@ -13,10 +13,8 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FilenameUtils;
-import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterManager;
-import org.area515.resinprinter.serial.SerialManager;
 
 public class GCodeParseThread implements Callable<JobStatus> {
 	private PrintJob printJob = null;
@@ -34,7 +32,8 @@ public class GCodeParseThread implements Callable<JobStatus> {
 		File gCodeFile = printJob.getGCodeFile();
 		BufferedReader stream = null;
 		BufferedImage bimage = null;
-
+		printJob.setStartTime(System.currentTimeMillis());
+		long startOfLastImageDisplay = -1;
 		try {
 			System.out.println("Parsing file:" + gCodeFile);
 			int padLength = determinePadLength(gCodeFile);
@@ -43,6 +42,8 @@ public class GCodeParseThread implements Callable<JobStatus> {
 			Integer sliceCount = null;
 			Pattern slicePattern = Pattern.compile("\\s*;\\s*<\\s*Slice\\s*>\\s*(\\d+|blank)\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern delayPattern = Pattern.compile("\\s*;\\s*<\\s*Delay\\s*>\\s*(\\d+)\\s*", Pattern.CASE_INSENSITIVE);
+			Pattern liftSpeedPattern = Pattern.compile(   "\\s*;\\s*\\(?\\s*Z\\s*Lift\\s*Feed\\s*Rate\\s*=\\s*([\\d\\.]+)\\s*(?:[Mm]{2}?/[Ss])?\\s*\\)?\\s*", Pattern.CASE_INSENSITIVE);
+			Pattern liftDistancePattern = Pattern.compile("\\s*;\\s*\\(?\\s*Lift\\s*Distance\\s*=\\s*([\\d\\.]+)\\s*(?:[Mm]{2})?\\s*\\)?\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern sliceCountPattern = Pattern.compile("\\s*;\\s*Number\\s*of\\s*Slices\\s*=\\s*(\\d+)\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern gCodePattern = Pattern.compile("\\s*([^;]+)\\s*;?.*", Pattern.CASE_INSENSITIVE);
 			
@@ -60,6 +61,11 @@ public class GCodeParseThread implements Callable<JobStatus> {
 							//This is the perfect time to wait for a pause if one is required.
 							printer.waitForPauseIfRequired();
 						} else {
+							if (startOfLastImageDisplay > -1) {
+								printJob.setCurrentSliceTime(System.currentTimeMillis() - startOfLastImageDisplay);
+							}
+							startOfLastImageDisplay = System.currentTimeMillis();
+							
 							if (bimage != null) {
 								bimage.flush();
 							}
@@ -73,21 +79,27 @@ public class GCodeParseThread implements Callable<JobStatus> {
 
 							printer.showImage(bimage);
 						}
-						
 						continue;
 					}
 					
 					matcher = delayPattern.matcher(currentLine);
 					if (matcher.matches()) {
 						try {
-							System.out.println("Sleep" + matcher.group(1));
-							Thread.sleep(Integer.parseInt(matcher.group(1)));
+							int sleepTime = Integer.parseInt(matcher.group(1));
+							if (printJob.isExposureTimeOverriden()) {
+								sleepTime = printJob.getExposureTime();
+							} else {
+								printJob.setExposureTime(sleepTime);
+							}
+							System.out.println("Sleep:" + sleepTime);
+							Thread.sleep(sleepTime);
 							System.out.println("Sleep complete");
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
 						continue;
 					}
+					
 					matcher = sliceCountPattern.matcher(currentLine);
 					if (matcher.matches()) {
 						sliceCount = Integer.parseInt(matcher.group(1));
@@ -95,11 +107,35 @@ public class GCodeParseThread implements Callable<JobStatus> {
 						System.out.println("Found:" + sliceCount + " slices");
 						continue;
 					}
+					
+					matcher = liftSpeedPattern.matcher(currentLine);
+					if (matcher.matches()) {
+						double liftSpeed = Double.parseDouble(matcher.group(1));
+						printJob.setZLiftSpeed(liftSpeed);
+						System.out.println("Found:lift speed of:" + String.format("%1.3f", liftSpeed));
+						continue;
+					}
+					
+					matcher = liftDistancePattern.matcher(currentLine);
+					if (matcher.matches()) {
+						double liftDistance = Double.parseDouble(matcher.group(1));
+						printJob.setZLiftDistance(liftDistance);
+						System.out.println("Found:lift distance of:" + String.format("%1.3f", liftDistance));
+						continue;
+					}
+					
 					matcher = gCodePattern.matcher(currentLine);
 					if (matcher.matches()) {
 						String gCode = matcher.group(1).trim();
 						System.out.println("Send GCode:" + gCode);
-						gCode = printer.sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(gCode + "\r\n");
+
+						for (int t = 0; t < 3; t++) {
+							gCode = printer.getGCodeControl().sendGcodeReturnIfPrinterStops(gCode);
+							if (gCode != null) {
+								break;
+							}
+							System.out.println("Printer timed out:" + t);
+						}
 						System.out.print("Printer Response:" + gCode);
 						continue;
 					}
@@ -109,6 +145,7 @@ public class GCodeParseThread implements Callable<JobStatus> {
 			}
 			
 			printer.setStatus(JobStatus.Completed);
+			System.out.println("Job Complete:" + Thread.currentThread().getName());
 			return printer.getStatus();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

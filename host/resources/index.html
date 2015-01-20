@@ -38,7 +38,6 @@
 
 
 <script type="text/javascript">
-
 	$( document ).ready(function() {
     	console.log( "ready!" );
     	$(':button').click(function (event) {
@@ -55,7 +54,7 @@
     		//Your validation
 		});
 		
-		$("#uploadbutton").click(function( event ){
+		$("#uploadfilebutton").click(function( event ){
 			event.preventDefault();
 			//alert("here");
     		var formData = new FormData($('#uploadform')[0]);
@@ -88,10 +87,10 @@
 
 		$("#refreshprinterbutton").click(function( event ){
 			event.preventDefault();
-			refreshFiles();
-			refreshPorts();
-			refreshDisplays();
-			refreshPrinters();
+			refreshListbox('/services/files/list', "filesselect")
+			refreshListbox('/services/machine/ports', "portSelect");
+			refreshListbox('/services/machine/displays', "displaySelect");
+			refreshListbox('/services/machine/printers', "printerSelect");
 		});
 
 		$("#startjobbutton").click(function(event){
@@ -119,24 +118,30 @@
 			stopPrinterAndUpdatePrinters();
 		});
 		
-		$("#pausebutton").click(function(event){
+		$("#pausejobbutton").click(function(event){
 			event.preventDefault();
 			togglePause();
 		});		
 		
-		$("#stopbutton").click(function(event){
+		$("#stopjobbutton").click(function(event){
 			event.preventDefault();
 			stopjob();
 			refreshStatus();
+		});		
+		
+		$("#deletejobbutton").click(function(event){
+			event.preventDefault();
+			deletefile();
+			refreshListbox('/services/files/list', "filesselect")
 		});
 
-		refreshPorts();
+		refreshListbox('/services/machine/ports', "portSelect");
 		
-		refreshDisplays();
+		refreshListbox('/services/machine/displays', "displaySelect");
 
-		refreshFiles();
+		refreshListbox('/services/files/list', "filesselect")
 		
-		refreshPrinters();
+		refreshListbox('/services/machine/printers', "printerSelect");
 		
 		//$( "#refreshfilesbutton" ).trigger( "click" );
 		//$( "#refreshstatusbutton" ).trigger( "click" );
@@ -151,7 +156,7 @@
     });
 
 	var uploadCompleteHandler = function(data){
-		refreshFiles();
+		refreshListbox('/services/files/list', "filesselect")
 		//TODO: Can't refresh status because you might not have a file selected: refreshStatus();
 	}
 	
@@ -159,6 +164,7 @@
 		$('#errorModalBody').text("Problem communicating with host printer. (http:" + xhr.status + ")");
 		$('#errorModal').modal();
 		$("#statustext").attr("placeholder", "Error");
+		$("body").css("cursor", "default");
 	}
 	
 	function progressHandlingFunction(e){
@@ -169,21 +175,46 @@
 
 	function refreshStatus() {
 		var jobName = $('#filesselect option:selected').val(); 
-
-		// Update status
+		
+		// Update DLP exposure time.
 		$.ajax({
 			type: 'GET', 
-			url: '/services/machine/jobstatus/' + encodeURIComponent(jobName),
+			url: '/services/machine/exposuretime/' + encodeURIComponent(jobName),
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
-				if (applyErrorIfNecessary(data)) {
-					$("#statustext").attr("placeholder", data.message);
+				if (applyErrorIfNecessary(data, false, false)) {
+					$("#exposureTimeText").val(data.message);
 				}
 			}
-		
 		});
-
+		
+		// Update DLP lift speed
+		$.ajax({
+			type: 'GET', 
+			url: '/services/machine/zliftspeed/' + encodeURIComponent(jobName),
+			dataType: "json",
+    		error: errorHandler,
+			success: function(data){
+				if (applyErrorIfNecessary(data, false, false)) {
+					$("#liftSpeedText").val(data.message);
+				}
+			}
+		});
+		
+		// Update DLP lift distance
+		$.ajax({
+			type: 'GET', 
+			url: '/services/machine/zliftdistance/' + encodeURIComponent(jobName),
+			dataType: "json",
+    		error: errorHandler,
+			success: function(data){
+				if (applyErrorIfNecessary(data, false, false)) {
+					$("#liftDistanceText").val(data.message);
+				}
+			}
+		});
+		
 		// Update status
 		$.ajax({
 			type: 'GET',
@@ -191,7 +222,7 @@
 			dataType: "json",
     		error: errorHandler,
 			success: function(currentSliceData){
-				if (applyErrorIfNecessary(currentSliceData)) {
+				if (applyErrorIfNecessary(currentSliceData, false, false)) {
 					var currentslice = currentSliceData.message;
 	
 					if (currentslice === "-1") {
@@ -206,63 +237,47 @@
 							success: function(totalSliceData){
 								var totalslices = totalSliceData.message;
 								
-								$("#progresstext").text(currentslice + "/" + totalslices);
-								$("#sliceprogress").attr({value:parseInt(currentslice), max:parseInt(totalslices)});
-							} // end of success two
-			
-						});// end of ajax 
+								$.ajax({
+									type: 'GET', 
+									url: '/services/machine/currentslicetime/' + encodeURIComponent(jobName),
+									dataType: "json",
+						    		error: errorHandler,
+									success: function(data){
+										if (data.message === "0") {
+											$("#statustext").attr("placeholder", "Time Left:Unknown");
+										} else {
+											var timeLeft = (parseInt(totalslices) - parseInt(currentslice)) * parseInt(data.message);
+											var hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+											timeLeft -= hoursLeft * 60 * 60 * 1000;
+											var minutesLeft = Math.floor(timeLeft / (60 * 1000));
+											timeLeft -= minutesLeft * 60 * 1000;
+											var secondsLeft = Math.floor(timeLeft / 1000);
+											var displayString = hoursLeft > 0? hoursLeft + " hours": "";
+											displayString += minutesLeft > 0 || hoursLeft > 0? " " + minutesLeft + " minutes": "";
+											displayString += secondsLeft > 0 || minutesLeft > 0 || hoursLeft > 0? " " + minutesLeft + " seconds": "";
+											
+											$("#statustext").attr("placeholder", "Approximate time Left: " + displayString);
+										}
+										$("#progresstext").text(currentslice + "/" + totalslices);
+										$("#sliceprogress").attr({value:parseInt(currentslice), max:parseInt(totalslices)});
+									} //end of seccess for currentSliceTime
+								});//end of ajax currentSliceTime
+							} //end of success for totalSliceData
+						});//end of ajax totalSliceData
 					} // end of else
-				}
-
-			} // end of success one
-		
-		}); // end of outer ajax call
-	}
+				} // end of applyErrorIfNecessary if
+			} // end of success for currentSlice
+		}); // end of ajax currentSlice
+	}//end of refressStatus
 	
-	function refreshPorts() {
+	function refreshListbox(serviceUrl, listbox) {
 		$.ajax({
 			type: 'GET',
-			url: '/services/machine/ports',
+			url: serviceUrl,
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
-				retainSelectionAndPopulate("portSelect", data)
-			}
-		});
-	}
-	
-	function refreshDisplays() {
-		$.ajax({
-			type: 'GET',
-			url: '/services/machine/displays',
-			dataType: "json",
-    		error: errorHandler,
-			success: function(data){
-				retainSelectionAndPopulate("displaySelect", data);
-			}
-		});
-	}
-	
-	function refreshFiles(){
-		$.ajax({
-			type: 'GET',
-			url: '/services/files/list',
-			dataType: "json",
-    		error: errorHandler,
-			success: function(data){
-				retainSelectionAndPopulate("filesselect", data.names);
-			}
-		});
-	}
-	
-	function refreshPrinters(){
-		$.ajax({
-			type: 'GET',
-			url: '/services/machine/printers',
-			dataType: "json",
-    		error: errorHandler,
-			success: function(data){
-				retainSelectionAndPopulate("printerSelect", data);
+				retainSelectionAndPopulate(listbox, data)
 			}
 		});
 	}
@@ -321,21 +336,29 @@
 		requestAndUpdatePrinters(requestValue);
 	}
 	
+	function deletefile() {
+		var jobName = $('#filesselect option:selected').val(); 
+		
+		var requestValue = '/files/delete/' + encodeURIComponent(jobName);
+
+		requestAndUpdateFiles(requestValue);
+	}
+	
 	function startjob(){
 		var jobName = $('#filesselect option:selected').val(); 
 		var printerName = $('#printerSelect option:selected').val();
 		
 		var requestValue = '/machine/startjob/' + encodeURIComponent(jobName) + "/" + encodeURIComponent(printerName);
 
-		requestAndUpdateStatus(requestValue);
+		request(requestValue, true);
 	}
 	
 	function stopjob(){
 		var jobName = $('#filesselect option:selected').val(); 
 		
-		var requestValue = '/machine/stop/' + encodeURIComponent(jobName);
+		var requestValue = '/machine/stopjob/' + encodeURIComponent(jobName);
 
-		requestAndUpdateStatus(requestValue);
+		request(requestValue, true);
 	}
 
 	function togglePause() {
@@ -344,58 +367,157 @@
 		
 		var requestValue = '/machine/togglepause/' + encodeURIComponent(jobName);
 
-		requestAndUpdateStatus(requestValue);
+		request(requestValue, true);
+	}
+
+	function sendGCode() {
+		var gcode = $('#sendGcodeText').val();
+
+		requestForPrinter('gcode', encodeURIComponent(gcode));
+	}
+	
+	function sendExposureTime(incrementTime) {
+		var jobName = $('#filesselect option:selected').val(); 
+		var exposureTime = parseInt($('#exposureTimeText').val());
+		if (isNaN(exposureTime)) {
+			exposureTime = parseInt(incrementTime);
+		} else {
+			exposureTime += parseInt(incrementTime);
+		}
+		
+		$("#exposureTimeText").val(exposureTime);
+		
+		var requestValue = '/machine/exposuretime/' + encodeURIComponent(jobName) + "/" + encodeURIComponent(exposureTime);
+
+		request(requestValue, false);
+	}
+	
+	function showblankscreen() {
+		var printerName = $('#printerSelect option:selected').val(); 
+		
+		var requestValue = '/machine/showblankscreen/' + encodeURIComponent(printerName);
+
+		request(requestValue, false);
+	}
+	
+	function showCalibrationScreen(incrementPixels) {
+		var printerName = $('#printerSelect option:selected').val(); 
+		var pixels = parseInt($('#calibrationPixelsText').val());
+		if (isNaN(pixels)) {
+			pixels = parseInt(incrementPixels);
+		} else {
+			pixels += parseInt(incrementPixels);
+		}
+		
+		$("#calibrationPixelsText").val(pixels);
+		
+		var requestValue = '/machine/showcalibrationscreen/' + encodeURIComponent(printerName) + "/" + encodeURIComponent(pixels);
+
+		request(requestValue, false);
+	}
+	
+	function sendMuve1GCode(incrementTimeLiftDistance, incrementTimeLiftSpeed, incrementLiftPause) {
+		var printerName = $('#printerSelect option:selected').val(); 
+		var liftSpeed = parseFloat($('#liftSpeedText').val());
+		var liftDistance = parseFloat($('#liftDistanceText').val());
+		//var liftPause = parseInt($('#liftPauseText').val());
+		
+		var gCode = "M650";
+		
+		if (incrementTimeLiftDistance != null) {
+			liftDistance += parseFloat(incrementTimeLiftDistance);
+			$("#liftDistanceText").val(liftDistance + "");
+			gCode += " D" + liftDistance;
+		}
+		if (incrementTimeLiftSpeed != null) {
+			liftSpeed += parseFloat(incrementTimeLiftSpeed);
+			$("#liftSpeedText").val(liftSpeed + "");
+			gCode += " S" + liftSpeed;
+		}
+		if (incrementLiftPause != null) {
+			liftPause += incrementLiftPause;
+			gCode += " P" + parseInt(liftPause);
+		}
+		
+		var requestValue = '/machine/gcode/' + encodeURIComponent(printerName) + "/" + gCode;
+
+		request(requestValue, false);
 	}
 	
 	function requestAndUpdatePrinters(requestValue) {
+		$("body").css("cursor", "wait");
 		$.ajax({
 			type: 'GET',
 			url: '/services' + requestValue,
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
-				if (applyErrorIfNecessary(data)) {
-					refreshPrinters();
+				if (applyErrorIfNecessary(data, true, false)) {
+					refreshListbox('/services/machine/printers', "printerSelect");
 				}
 			}
 		});
 	}	
 	
-	function requestAndUpdateStatus(requestValue) {
+	function requestAndUpdateFiles(requestValue) {
+		$("body").css("cursor", "wait");
 		$.ajax({
 			type: 'GET',
 			url: '/services' + requestValue,
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
-				if (applyErrorIfNecessary(data)) {
+				if (applyErrorIfNecessary(data, true, false)) {
+					refreshListbox('/services/files/list', "filesselect")
+				}
+			}
+		});
+	}
+	
+	function request(requestValue, updateStatus) {
+		$("body").css("cursor", "wait");
+		$.ajax({
+			type: 'GET',
+			url: '/services' + requestValue,
+			dataType: "json",
+    		error: errorHandler,
+			success: function(data){
+				if (applyErrorIfNecessary(data, true, false) && updateStatus) {
 					refreshStatus();
 				}
 			}
 		});
 	}
 	
-	function requestForPrinter(requestValue){
-		var commPort = $('#printerSelect option:selected').val();
+	function requestForPrinter(command, parameters){
+		var printerName = $('#printerSelect option:selected').val();
 		
+		$("body").css("cursor", "wait");
 		$.ajax({
 			type: 'GET',
-			url: '/services' + requestValue + "/" + encodeURIComponent(commPort),
+			url: '/services/machine/' + command + "/" + encodeURIComponent(printerName) + (parameters != null?'/' + parameters: ""),
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
-				applyErrorIfNecessary(data);
+				applyErrorIfNecessary(data, true, true);
 			}
 		});
 	}
+	
+	function applyErrorIfNecessary(data, showMessageOnSuccess, applyTimestamp) {
+		$("body").css("cursor", "default");
 
-	function applyErrorIfNecessary(data) {
 		if (!data.response) {
 			$('#errorModalBody').text(data.message);
 			$('#errorModal').modal();
 			$("#statustext").attr("placeholder", "Error");
-		} else {
-			$("#statustext").attr("placeholder", data.message);
+		} else if (showMessageOnSuccess) {
+			if (applyTimestamp) {
+				var d = new Date();
+				$("#statustext").attr("placeholder", d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds() + " " + d.getMilliseconds() + " " + data.message);
+			} else {
+				$("#statustext").attr("placeholder", data.message);
+			}
 		}
 		
 		return data.response;
@@ -406,6 +528,7 @@
 </head>
 
 <body>
+<!-- <img src="/img/waiting.gif" id="loading-indicator" style="display:none" /> -->
 <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -468,16 +591,7 @@
 
 			</div>
 
-
-
-
 				<div class="row clearfix">
-					<div class="col-md-2 column">
-						<h3 class="text-center">Motors</h3>
-						<button type="button" class="btn btn-block btn-success" value="/machine/motorson" onclick="requestForPrinter(this.value)">Enable</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/motorsoff" onclick="requestForPrinter(this.value)">Disable</button>
-					</div>
-
 					<div class="col-md-6 column">
 						<h3 class="text-center">Job Status</h3>
 						<div class="col-md-12">
@@ -493,53 +607,64 @@
 						</div>
 					</div>
 					<div class="col-md-1 column">
-						<h3 class="text-center">Z Axis</h3>
-						<button type="button" class="btn btn-primary btn-block" value="/machine/homez" onclick="requestForPrinter(this.value)">Home Z</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movez/50.0" onclick="requestForPrinter(this.value)">50.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movez/10.0" onclick="requestForPrinter(this.value)">10.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movez/1.0" onclick="requestForPrinter(this.value)">1.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movez/.025" onclick="requestForPrinter(this.value)">.025</button> 
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-.025" onclick="requestForPrinter(this.value)">-.025</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-1.0" onclick="requestForPrinter(this.value)">-1.0</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-10.0" onclick="requestForPrinter(this.value)">-10.0</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movez/-50.0" onclick="requestForPrinter(this.value)">-50.0</button>
-					</div>
-					<div class="col-md-1 column">
-						<h3 class="text-center">X Axis</h3>
-						<button type="button" class="btn btn-primary btn-block" value="/machine/homex" onclick="requestForPrinter(this.value)">Home X</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movex/50.0" onclick="requestForPrinter(this.value)">50.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movex/10.0" onclick="requestForPrinter(this.value)">10.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movex/1.0" onclick="requestForPrinter(this.value)">1.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movex/.025" onclick="requestForPrinter(this.value)">.025</button> 
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movex/-.025" onclick="requestForPrinter(this.value)">-.025</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movex/-1.0" onclick="requestForPrinter(this.value)">-1.0</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movex/-10.0" onclick="requestForPrinter(this.value)">-10.0</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movex/-50.0" onclick="requestForPrinter(this.value)">-50.0</button>
+						<h3 class="text-center">X</h3>
+						<button type="button" class="btn btn-primary btn-block" onclick="requestForPrinter('homex', null)">Home X</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movex', '50.0')">50.0</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movex', '10.0')">10.0</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movex', '1.0')">1.0</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movex', '.025')">.025</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movex', '-.025')">-.025</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movex', '-1.0')">-1.0</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movex', '-10.0')">-10.0</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movex', '-50.0')">-50.0</button>
 					</div>
 					<div class="col-lg-1 column">
-						<h3 class="text-center">Y Axis</h3>
-						<button type="button" class="btn btn-primary btn-block" value="/machine/homey" onclick="requestForPrinter(this.value)">Home Y</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movey/50.0" onclick="requestForPrinter(this.value)">50.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movey/10.0" onclick="requestForPrinter(this.value)">10.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movey/1.0" onclick="requestForPrinter(this.value)">1.0</button>
-						<button type="button" class="btn btn-block btn-success" value="/machine/movey/.025" onclick="requestForPrinter(this.value)">.025</button> 
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movey/-.025" onclick="requestForPrinter(this.value)">-.025</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movey/-1.0" onclick="requestForPrinter(this.value)">-1.0</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movey/-10.0" onclick="requestForPrinter(this.value)">-10.0</button>
-						<button type="button" class="btn btn-block btn-danger" value="/machine/movey/-50.0" onclick="requestForPrinter(this.value)">-50.0</button>
+						<h3 class="text-center">Y</h3>
+						<button type="button" class="btn btn-primary btn-block" onclick="requestForPrinter('homey', null)">Home Y</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movey', '50.0')">50.0</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movey', '10.0')">10.0</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movey', '1.0')">1.0</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movey', '.025')">.025</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movey', '-.025')">-.025</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movey', '-1.0')">-1.0</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movey', '-10.0')">-10.0</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movey', '-50.0')">-50.0</button>
 					</div>
+					<div class="col-md-1 column">
+						<h3 class="text-center">Z</h3>
+						<button type="button" class="btn btn-primary btn-block" onclick="requestForPrinter('homez', null)">Home Z</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movez', '50.0')">50.0</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movez', '10.0')">10.0</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movez', '1.0')">1.0</button>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movez', '.025')">.025</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movez', '-.025')">-.025</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movez', '-1.0')">-1.0</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movez', '-10.0')">-10.0</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movez', '-50.0')">-50.0</button>
+					</div>
+					<div class="col-md-2 column">
+						<h3 class="text-center">Motors</h3>
+						<button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('motorson', null)">Enable</button>
+						<button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('motorsoff', null)">Disable</button>
+						<h3 class="text-center">Manual GCode</h3>
+						<div class="row">
+						    <input type="text" class="form-control" id="sendGcodeText" placeholder="gcode">
+							<button type="button" class="btn btn-block btn-primary" onclick="sendGCode()">Go</button>
+						</div>
+					</div>				
 				</div>
+
+
+				
 				<div class="row clearfix">					
 					<div class="col-md-6 column">
 						<form class="form-horizontal">
 							<fieldset>
 	
-								<!-- Form Name -->
 								<legend>Printer Controls</legend>
 							    <label class="col-md-4 control-label">New Printer Name</label>
-							    <input type="email" class="form-control" id="newPrinterNameText" placeholder="Enter printer name">
+							    <input type="text" class="form-control" id="newPrinterNameText" placeholder="Enter new printer name">
 	
-								<!-- Select Printer -->
 								<div class="form-group">
 								  <label class="col-md-4 control-label" for="selectPrinters">Printers</label>
 								  <div class="col-md-8">
@@ -548,7 +673,6 @@
 								  </div>
 								</div>
 								
-								<!-- Select Ports -->
 								<div class="form-group">
 								  <label class="col-md-4 control-label" for="selectPorts">Serial Ports</label>
 								  <div class="col-md-8">
@@ -557,7 +681,6 @@
 								  </div>
 								</div>
 								
-								<!-- Select Displays -->
 								<div class="form-group">
 								  <label class="col-md-4 control-label" for="selectDisplays">Displays</label>
 								  <div class="col-md-8">
@@ -590,14 +713,14 @@
 								  </div>
 								</div>
 	
-								<!-- Button (Double) -->
 								<div class="form-group">
 								  <label class="col-md-4 control-label" for="button1id">Actions</label>
 								  <div class="col-md-8">
 								    <button id="startjobbutton" name="button1id" class="btn btn-success btn-block">Start Job</button>
-								    <button id="pausebutton" name="button2id" class="btn btn-warning btn-block">Toggle Pause</button>
-								    <button id="stopbutton" name="button3id" class="btn btn-danger btn-block">Stop Job</button>
-								    <button id="refreshprinterbutton" name="button4id" class="btn btn-primary btn-block">Refresh Controls</button>
+								    <button id="pausejobbutton" name="button2id" class="btn btn-warning btn-block">Toggle Pause</button>
+								    <button id="stopjobbutton" name="button3id" class="btn btn-danger btn-block">Stop Job</button>
+								    <button id="deletejobbutton" name="button4id" class="btn btn-danger btn-block">Delete Job</button>
+								    <button id="refreshprinterbutton" name="button5id" class="btn btn-primary btn-block">Refresh Controls</button>
 								  </div>
 								</div>
 							</fieldset>
@@ -605,8 +728,8 @@
 						<form id="uploadform" enctype="multipart/form-data">
 							<label class="col-md-4 control-label" for="filebutton">Upload</label>
 							<div class="col-md-8">
-		    					<input id="filebutton" name="file" type="file" />
-		    					<input id="uploadbutton" type="button" value="Upload" />
+		    					<input id="choosefilebutton" name="file" type="file" />
+		    					<input id="uploadfilebutton" type="button" value="Upload" />
 		    				</div>
 						</form>
 						<label class="col-md-4 control-label" for="uploadprogress">Upload Progress</label>
@@ -614,6 +737,49 @@
 							<progress id="uploadprogress" style="width:100%"></progress>
 						</div>
 				   </div>
+
+				   
+				<div class="row clearfix">
+					<form class="form-horizontal">
+						<fieldset>
+							<legend>DLP Controls</legend>
+							<div class="col-md-4 column">
+						   		<h5 class="text-center">Lift Speed (mm/m)</h5>
+								<button type="button" class="btn btn-block btn-success" value="0.25" onclick="sendMuve1GCode(null, this.value, null)">+</button>
+							    <input type="text" class="form-control" id="liftSpeedText" placeholder="millimeters per minute" value="1">
+								<button type="button" class="btn btn-block btn-danger" value="-.25" onclick="sendMuve1GCode(null, this.value, null)">-</button>
+								<button type="button" class="btn btn-block btn-primary" value="0" onclick="sendMuve1GCode(null, this.value, null)">Go</button>
+							</div>
+							<div class="col-md-4 column">
+						   		<h5 class="text-center">Lift Distance (mm)</h5>
+								<button type="button" class="btn btn-block btn-success" value="0.5" onclick="sendMuve1GCode(this.value, null, null)">+</button>
+							    <input type="text" class="form-control" id="liftDistanceText" placeholder="millimeters" value="5">
+								<button type="button" class="btn btn-block btn-danger" value="-0.5" onclick="sendMuve1GCode(this.value, null, null)">-</button>
+								<button type="button" class="btn btn-block btn-primary" value="0" onclick="sendMuve1GCode(this.value, null, null)">Go</button>
+							</div>
+							<div class="col-md-4 column">
+								<h5 class="text-center">DLP Exposure Time (ms)</h5>
+								<button type="button" class="btn btn-block btn-success" value="300" onclick="sendExposureTime(this.value)">+</button>
+							    <input type="text" class="form-control" id="exposureTimeText" placeholder="milliseconds">
+								<button type="button" class="btn btn-block btn-danger" value="-300" onclick="sendExposureTime(this.value)">-</button>
+								<button type="button" class="btn btn-block btn-primary" value="0" onclick="sendExposureTime(this.value)">Go</button>
+							</div>
+							<div class="col-md-4 column">
+								<h5 class="text-center">Show calibration screen (pixels)</h5>
+								<button type="button" class="btn btn-block btn-success" value="10" onclick="showCalibrationScreen(this.value)">+</button>
+							    <input type="text" class="form-control" id="calibrationPixelsText" placeholder="pixels" value="10">
+								<button type="button" class="btn btn-block btn-danger" value="-10" onclick="showCalibrationScreen(this.value)">-</button>
+								<button type="button" class="btn btn-block btn-primary" value="0" onclick="showCalibrationScreen(this.value)">Go</button>
+							</div>
+							<div class="col-md-4 column">
+								<h5 class="text-center">Show blank screen</h5>
+								<button type="button" class="btn btn-block btn-primary" onclick="requestForPrinter('showblankscreen', null)">Go</button>
+							</div>
+						</fieldset>
+				   	</form>
+				</div>
+				
+				
 			</div>
 		</div>
 	</div>

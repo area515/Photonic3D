@@ -1,18 +1,12 @@
 package org.area515.resinprinter.printer;
 
-import gnu.io.SerialPort;
-
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -21,7 +15,7 @@ import javax.swing.JFrame;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.gcode.GCodeControl;
 import org.area515.resinprinter.job.JobStatus;
-
+import org.area515.resinprinter.serial.SerialCommunicationsPort;
 
 public class Printer {
 	private PrinterConfiguration configuration;
@@ -30,13 +24,13 @@ public class Printer {
 	private Graphics2D graphics;
 	private GraphicsConfiguration graphicsConfiguration;
 	private BufferedImage blankImage;
+	private int calibrationSquareSize;
+	private BufferedImage calibrationImage;
 	private JFrame frame;
 	private Rectangle screenSize;
 
 	//For Serial Port
-	private SerialPort serialPort;
-	private InputStream input;
-	private OutputStream output;
+	private SerialCommunicationsPort serialPort;
 	
 	//For Job Status
 	private volatile JobStatus status;
@@ -45,8 +39,7 @@ public class Printer {
 	
 	//GCode
 	private GCodeControl gCodeControl;
-	private ReentrantLock gCodeLock = new ReentrantLock();
-	
+
 	public Printer(PrinterConfiguration configuration) throws InappropriateDeviceException {
 		this.configuration = configuration;
 		
@@ -124,12 +117,8 @@ public class Printer {
 		}
 	}
 	
-	public void setSerialPort(SerialPort serialPort) throws IOException {
+	public void setSerialPort(SerialCommunicationsPort serialPort) {
 		this.serialPort = serialPort;
-		
-		// open the streams
-		input = serialPort.getInputStream();
-		output = serialPort.getOutputStream();
 		
 		//Read the welcome mat
 		try {
@@ -139,55 +128,12 @@ public class Printer {
 		}
 	}
 	
-	//synchronized allows us to send manual commands to the printer
-	public String readLine(boolean returnIfPrintNotInProgress) throws IOException {
-		gCodeLock.lock();
-		try {
-			StringBuilder builder = new StringBuilder();
-			
-			int value = -1;
-			do {
-				value = input.read();
-				if (value > -1) {
-					builder.append((char)value);
-				}
-			} while ((value > -1 && value != '\n') || (returnIfPrintNotInProgress && value == -1 && isPrintInProgress()));
-			if (builder.length() == 0) {
-				return null;
-			}
-			return builder.toString();
-		} finally {
-			gCodeLock.unlock();
-		}
-	}
-	
-	//synchronized allows us to send manual commands to the printer
-	public String sendGCodeAndWaitForResponseForever(String gcode) throws IOException {
-		gCodeLock.lock();
-		try {
-			output.write(gcode.getBytes());
-			return readLine(false);
-		} finally {
-			gCodeLock.unlock();
-		}
-	}
-	
-	public String sendGCodeAndWaitForResponseOnlyWhilePrintIsInProgress(String gcode) throws IOException {
-		gCodeLock.lock();
-		try {
-			output.write(gcode.getBytes());
-			return readLine(true);
-		} finally {
-			gCodeLock.unlock();
-		}
-	}
 	
 	public void setGraphicsData(JFrame frame, GraphicsConfiguration graphicsConfiguration) {
 		this.frame = frame;
 		this.graphics = (Graphics2D)frame.getGraphics();
 		this.graphicsConfiguration = graphicsConfiguration;
 		this.screenSize = graphicsConfiguration.getBounds();
-		getConfiguration().setOSMonitorID(graphicsConfiguration.getDevice().getIDstring());
 		getConfiguration().getMonitorDriverConfig().setDLP_X_Res(screenSize.width);
 		getConfiguration().getMonitorDriverConfig().setDLP_Y_Res(screenSize.height);
 	}
@@ -202,6 +148,29 @@ public class Printer {
 		}
 		
 		graphics.drawImage(blankImage, null, 0, 0);
+	}
+	
+	public void showCalibrationImage(int pixels) {
+		if (calibrationSquareSize != pixels || calibrationImage == null) {
+			calibrationSquareSize = pixels;
+			
+			if (calibrationImage != null) {
+				//calibrationImage.flush();
+			}
+			calibrationImage = graphicsConfiguration.createCompatibleImage(screenSize.width, screenSize.height);
+			Graphics2D imageGraphics = (Graphics2D)calibrationImage.getGraphics();
+			imageGraphics.setBackground(Color.BLACK);
+			imageGraphics.setColor(Color.RED);
+			for (int x = 0; x < screenSize.width; x += pixels) {
+				imageGraphics.drawLine(x, 0, x, screenSize.height);
+			}
+			
+			for (int y = 0; y < screenSize.height; y += pixels) {
+				imageGraphics.drawLine(0, y, screenSize.width, y);
+			}
+		}
+		
+		graphics.drawImage(calibrationImage, null, 0, 0);
 	}
 	
 	public void showImage(BufferedImage image) {
@@ -227,18 +196,16 @@ public class Printer {
 		return gCodeControl;
 	}
 
+	public SerialCommunicationsPort getSerialPort() {
+		return serialPort;
+	}
+	
 	public String toString() {
 		return getName() + "(SerialPort:" + serialPort + ", Display:" + graphicsConfiguration.getDevice().getIDstring() + ")";
 	}
 	
 	public void close() {
 		//jobFile.deleteOnExit();
-		if (input != null) {
-			try {input.close();} catch (IOException e) {}
-		}		
-		if (output != null) {
-			try {output.close();} catch (IOException e) {}
-		}
 		if (serialPort != null) {
 			serialPort.close();
 		}

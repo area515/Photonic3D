@@ -49,8 +49,6 @@ public class JobManager {
 			throw new JobManagerException("The selected job is already running");
 		}
 		
-		File extractDirectory = new File(HostProperties.Instance().getWorkingDir(), archiveJob.getName() + "extract");
-
 		if (!archiveJob.exists()) {
 			printJobsByName.remove(archiveJob.getName());
 			throw new JobManagerException("The selected job does not exist");
@@ -63,6 +61,8 @@ public class JobManager {
 		newJob.setCurrentSlice(0);
 		newJob.setTotalSlices(0);
 
+		File extractDirectory = buildExtractionDirectory(archiveJob.getName());
+		
 		if (extractDirectory.exists()) {
 			try {
 				FileUtils.deleteDirectory(extractDirectory);
@@ -80,7 +80,11 @@ public class JobManager {
 		//TODO: Needs to clean up after itself!
 		return newJob;
 	}
-
+	
+	public static File buildExtractionDirectory(String archive) {
+		return new File(HostProperties.Instance().getWorkingDir(), archive + "extract");
+	}
+	
 	public Future<JobStatus> startJob(PrintJob job, Printer printer) throws AlreadyAssignedException, InappropriateDeviceException {
 		PrinterManager.Instance().assignPrinter(job, printer);
 		Callable<JobStatus> worker = new GCodeParseThread(job, printer);

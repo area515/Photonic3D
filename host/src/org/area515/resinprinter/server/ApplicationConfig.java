@@ -28,7 +28,7 @@ public class ApplicationConfig extends Application{
 
     public ApplicationConfig() {
     	singletons.add(new FileService());
-    	singletons.add(new MachineService());
+    	singletons.add(MachineService.INSTANCE);
     }
 
     @Override
