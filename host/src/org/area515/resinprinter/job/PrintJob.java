@@ -13,7 +13,8 @@ public class PrintJob {
 	private volatile long currentSliceTime = 0;
 	private volatile long startTime = 0;
 	private volatile int exposureTime = 0;
-	private volatile int zLiftSpeed = 0;
+	private volatile double zLiftSpeed = 0;
+	private volatile double zLiftDistance = 0;
 	private volatile boolean exposureTimeOverriden = false;
 	
 	private UUID id = UUID.randomUUID();
@@ -82,13 +83,20 @@ public class PrintJob {
 		this.exposureTime = exposureTime;
 	}
 	
-	public int getZLiftSpeed() {
+	public double getZLiftSpeed() {
 		return zLiftSpeed;
 	}
-	public void setZLiftSpeed(int zLiftSpeed) {
+	public void setZLiftSpeed(double zLiftSpeed) {
 		this.zLiftSpeed = zLiftSpeed;
 	}
-
+	
+	public double getZLiftDistance() {
+		return zLiftDistance;
+	}
+	public void setZLiftDistance(double zLiftDistance) {
+		this.zLiftDistance = zLiftDistance;
+	}
+	
 	public void overrideExposureTime(int exposureTime) {
 		this.exposureTime = exposureTime;
 		exposureTimeOverriden = true;

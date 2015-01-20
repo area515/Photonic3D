@@ -425,7 +425,44 @@ public class MachineService {
 	 
 	 
 	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  *
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException 
+	  */
+	 @GET
+	 @Path("zliftdistance/{jobname}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getLiftDistance(@PathParam("jobname") String jobName) {
+			PrintJob printJob = JobManager.Instance().getJob(jobName);
+			if (printJob == null) {
+				return new MachineResponse("zliftdistance", false, "Job:" + jobName + " not started");
+			}
+			
+			return new MachineResponse("zliftdistance", true, String.format("%1.3f", printJob.getZLiftDistance()));
+	 }
 	 
+	 /**
+	  * Method handling HTTP GET requests. The returned object will be sent
+	  * to the client as "text/plain" media type.
+	  *
+	  * @return String that will be returned as a text/plain response.
+	  * @throws IOException 
+	  */
+	 @GET
+	 @Path("zliftspeed/{jobname}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getLiftSpeed(@PathParam("jobname") String jobName) {
+			PrintJob printJob = JobManager.Instance().getJob(jobName);
+			if (printJob == null) {
+				return new MachineResponse("zliftspeed", false, "Job:" + jobName + " not started");
+			}
+			
+			return new MachineResponse("zliftspeed", true, String.format("%1.3f", printJob.getZLiftSpeed()));
+	 }
+	 	 
 	 /**
 	  * Method handling HTTP GET requests. The returned object will be sent
 	  * to the client as "text/plain" media type.

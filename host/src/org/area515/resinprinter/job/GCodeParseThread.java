@@ -42,6 +42,8 @@ public class GCodeParseThread implements Callable<JobStatus> {
 			Integer sliceCount = null;
 			Pattern slicePattern = Pattern.compile("\\s*;\\s*<\\s*Slice\\s*>\\s*(\\d+|blank)\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern delayPattern = Pattern.compile("\\s*;\\s*<\\s*Delay\\s*>\\s*(\\d+)\\s*", Pattern.CASE_INSENSITIVE);
+			Pattern liftSpeedPattern = Pattern.compile(   "\\s*;\\s*\\(?\\s*Z\\s*Lift\\s*Feed\\s*Rate\\s*=\\s*([\\d\\.]+)\\s*(?:[Mm]{2}?/[Ss])?\\s*\\)?\\s*", Pattern.CASE_INSENSITIVE);
+			Pattern liftDistancePattern = Pattern.compile("\\s*;\\s*\\(?\\s*Lift\\s*Distance\\s*=\\s*([\\d\\.]+)\\s*(?:[Mm]{2})?\\s*\\)?\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern sliceCountPattern = Pattern.compile("\\s*;\\s*Number\\s*of\\s*Slices\\s*=\\s*(\\d+)\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern gCodePattern = Pattern.compile("\\s*([^;]+)\\s*;?.*", Pattern.CASE_INSENSITIVE);
 			
@@ -103,6 +105,22 @@ public class GCodeParseThread implements Callable<JobStatus> {
 						sliceCount = Integer.parseInt(matcher.group(1));
 						printJob.setTotalSlices(sliceCount);
 						System.out.println("Found:" + sliceCount + " slices");
+						continue;
+					}
+					
+					matcher = liftSpeedPattern.matcher(currentLine);
+					if (matcher.matches()) {
+						double liftSpeed = Double.parseDouble(matcher.group(1));
+						printJob.setZLiftSpeed(liftSpeed);
+						System.out.println("Found:lift speed of:" + String.format("%1.3f", liftSpeed));
+						continue;
+					}
+					
+					matcher = liftDistancePattern.matcher(currentLine);
+					if (matcher.matches()) {
+						double liftDistance = Double.parseDouble(matcher.group(1));
+						printJob.setZLiftDistance(liftDistance);
+						System.out.println("Found:lift distance of:" + String.format("%1.3f", liftDistance));
 						continue;
 					}
 					

@@ -175,9 +175,6 @@
 
 	function refreshStatus() {
 		var jobName = $('#filesselect option:selected').val(); 
-
-		//TODO: link about zliftSpeed & zliftdistance
-		
 		
 		// Update DLP exposure time.
 		$.ajax({
@@ -191,7 +188,33 @@
 				}
 			}
 		});
-
+		
+		// Update DLP lift speed
+		$.ajax({
+			type: 'GET', 
+			url: '/services/machine/zliftspeed/' + encodeURIComponent(jobName),
+			dataType: "json",
+    		error: errorHandler,
+			success: function(data){
+				if (applyErrorIfNecessary(data, false, false)) {
+					$("#liftSpeedText").attr("value", data.message);
+				}
+			}
+		});
+		
+		// Update DLP lift distance
+		$.ajax({
+			type: 'GET', 
+			url: '/services/machine/zliftdistance/' + encodeURIComponent(jobName),
+			dataType: "json",
+    		error: errorHandler,
+			success: function(data){
+				if (applyErrorIfNecessary(data, false, false)) {
+					$("#liftDistanceText").attr("value", data.message);
+				}
+			}
+		});
+		
 		// Update status
 		$.ajax({
 			type: 'GET',
