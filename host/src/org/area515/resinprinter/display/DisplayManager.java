@@ -6,6 +6,9 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,8 +27,8 @@ public class DisplayManager {
 	public static final String SIMULATED_DISPLAY = "Simulated display";
 	
 	private GraphicsEnvironment ge = null;
-	private ConcurrentHashMap<GraphicsDevice, Printer> printersByGraphicsDevice = new ConcurrentHashMap<GraphicsDevice, Printer>();
 	private ConcurrentHashMap<Printer, GraphicsDevice> graphicsDevicesByPrinter = new ConcurrentHashMap<Printer, GraphicsDevice>();
+	private ConcurrentHashMap<String, Printer> printersByDisplayIDString = new ConcurrentHashMap<String, Printer>();
 
 	public static DisplayManager Instance() {
 		if (INSTANCE == null) {
@@ -44,10 +47,14 @@ public class DisplayManager {
 			devices.addAll(Arrays.asList(ge.getScreenDevices()));
 			Collections.reverse(devices);
 			for (GraphicsDevice currentDevice : devices) {
-				if (!printersByGraphicsDevice.containsKey(currentDevice)) {
+				if (!printersByDisplayIDString.containsKey(currentDevice.getIDstring())) {
 					device = currentDevice;
 					break;
 				}
+			}
+			
+			if (device.getIDstring().equals(LAST_AVAILABLE_DISPLAY)) {
+				throw new InappropriateDeviceException("No displays left to assign");
 			}
 		}
 		
@@ -56,13 +63,7 @@ public class DisplayManager {
 			throw new AlreadyAssignedException("Printer already assigned to:" + otherDevice.getIDstring(), otherDevice);
 		}
 		
-		/*TODO: Doesn't work in Linux it goes into simulated full screen mode, not exclusive mode
-		if (!device.isFullScreenSupported()) {
-			throw new InappropriateDeviceException("Full screen not supported");
-		}*/
-		
-
-		Printer otherJob = printersByGraphicsDevice.putIfAbsent(device, newPrinter);
+		Printer otherJob = printersByDisplayIDString.putIfAbsent(device.getIDstring(), newPrinter);
 		if (otherJob != null) {
 			graphicsDevicesByPrinter.remove(newPrinter);
 			throw new AlreadyAssignedException("Display already assigned to:" + otherJob, otherJob);
@@ -75,12 +76,12 @@ public class DisplayManager {
 			window.setVisible(true);
 			window.setExtendedState(JFrame.MAXIMIZED_BOTH);
 			window.setMinimumSize(new Dimension(500, 500));
-
-			newPrinter.setGraphicsData(window, window.getGraphicsConfiguration());
+			
+			newPrinter.setGraphicsData(window, window.getGraphicsConfiguration(), device.getIDstring());
 		} else {
 			window.setUndecorated(true);
 			device.setFullScreenWindow(window);
-			newPrinter.setGraphicsData(window, device.getDefaultConfiguration());
+			newPrinter.setGraphicsData(window, device.getDefaultConfiguration(), device.getIDstring());
 			
 			//This can't be done in the setGraphicsData() method since it would reassign the printer Simulation
 			newPrinter.getConfiguration().setOSMonitorID(device.getDefaultConfiguration().getDevice().getIDstring());
@@ -128,10 +129,10 @@ public class DisplayManager {
 		
 		graphicsDevicesByPrinter.remove(printer);
 		
-		GraphicsDevice device = printer.getGraphicsDevice();
-		if (device == null)
+		String deviceId = printer.getDisplayDeviceID();
+		if (deviceId == null)
 			return;
 		
-		printersByGraphicsDevice.remove(device);
+		printersByDisplayIDString.remove(deviceId);
 	}
 }
