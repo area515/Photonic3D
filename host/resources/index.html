@@ -38,6 +38,14 @@
 
 
 <script type="text/javascript">
+	window.onerror = function(msg, url, line, col, error) {
+		$('#errorModalBody').text(error);
+		$('#errorModal').modal();
+		$("#statustext").attr("placeholder", "Error");
+
+	   return false; //true will suppress error alerting to the browser
+	};
+	
 	$( document ).ready(function() {
     	console.log( "ready!" );
     	$(':button').click(function (event) {
@@ -172,9 +180,9 @@
 	        $('#uploadprogress').attr({value:e.loaded,max:e.total});
 	    }
 	}
-
+	
 	function refreshStatus() {
-		var jobName = $('#filesselect option:selected').val(); 
+		var jobName = getSelectedOptionFromListBoxOrThrowError('filesselect', "Please select a job first");
 		
 		// Update DLP exposure time.
 		$.ajax({
@@ -304,8 +312,8 @@
 	
 	function createPrinterAndUpdatePrinters() {
 		var printerName = $('#newPrinterNameText').val(); 
-		var display = $('#displaySelect option:selected').val();
-		var commPort = $('#portSelect option:selected').val();
+		var display = getSelectedOptionFromListBoxOrThrowError('displaySelect', "Please select a display first");
+		var commPort = getSelectedOptionFromListBoxOrThrowError('portSelect', "Please select a serial communications port first");
 		
 		var requestValue = '/machine/createprinter/' + encodeURIComponent(printerName) + "/" + encodeURIComponent(display) + "/" + encodeURIComponent(commPort);
 
@@ -313,7 +321,7 @@
 	}
 	
 	function deletePrinterAndUpdatePrinters() {
-		var printerName = $('#printerSelect option:selected').val();
+		var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
 		
 		var requestValue = '/machine/deleteprinter/' + encodeURIComponent(printerName);
 
@@ -321,7 +329,7 @@
 	}
 	
 	function startPrinterAndUpdatePrinters() {
-		var printerName = $('#printerSelect option:selected').val();
+		var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
 		
 		var requestValue = '/machine/startprinter/' + encodeURIComponent(printerName);
 
@@ -329,7 +337,7 @@
 	}
 	
 	function stopPrinterAndUpdatePrinters() {
-		var printerName = $('#printerSelect option:selected').val();
+		var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
 		
 		var requestValue = '/machine/stopprinter/' + encodeURIComponent(printerName);
 
@@ -337,7 +345,7 @@
 	}
 	
 	function deletefile() {
-		var jobName = $('#filesselect option:selected').val(); 
+		var jobName = getSelectedOptionFromListBoxOrThrowError('filesselect', "Please select a job first");
 		
 		var requestValue = '/files/delete/' + encodeURIComponent(jobName);
 
@@ -345,8 +353,8 @@
 	}
 	
 	function startjob(){
-		var jobName = $('#filesselect option:selected').val(); 
-		var printerName = $('#printerSelect option:selected').val();
+		var jobName = getSelectedOptionFromListBoxOrThrowError('filesselect', "Please select a job first");
+		var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
 		
 		var requestValue = '/machine/startjob/' + encodeURIComponent(jobName) + "/" + encodeURIComponent(printerName);
 
@@ -354,17 +362,14 @@
 	}
 	
 	function stopjob(){
-		var jobName = $('#filesselect option:selected').val(); 
-		
+		var jobName = getSelectedOptionFromListBoxOrThrowError('filesselect', "Please select a job first");
 		var requestValue = '/machine/stopjob/' + encodeURIComponent(jobName);
 
 		request(requestValue, true);
 	}
 
 	function togglePause() {
-		// get name of selection
-		var jobName = $('#filesselect option:selected').val(); 
-		
+		var jobName = getSelectedOptionFromListBoxOrThrowError('filesselect', "Please select a job first");
 		var requestValue = '/machine/togglepause/' + encodeURIComponent(jobName);
 
 		request(requestValue, true);
@@ -377,7 +382,7 @@
 	}
 	
 	function sendExposureTime(incrementTime) {
-		var jobName = $('#filesselect option:selected').val(); 
+		var jobName = getSelectedOptionFromListBoxOrThrowError('filesselect', "Please select a job first");
 		var exposureTime = parseInt($('#exposureTimeText').val());
 		if (isNaN(exposureTime)) {
 			exposureTime = parseInt(incrementTime);
@@ -393,7 +398,7 @@
 	}
 	
 	function showblankscreen() {
-		var printerName = $('#printerSelect option:selected').val(); 
+		var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
 		
 		var requestValue = '/machine/showblankscreen/' + encodeURIComponent(printerName);
 
@@ -401,7 +406,7 @@
 	}
 	
 	function showCalibrationScreen(incrementPixels) {
-		var printerName = $('#printerSelect option:selected').val(); 
+		var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
 		var pixels = parseInt($('#calibrationPixelsText').val());
 		if (isNaN(pixels)) {
 			pixels = parseInt(incrementPixels);
@@ -417,7 +422,7 @@
 	}
 	
 	function sendMuve1GCode(incrementTimeLiftDistance, incrementTimeLiftSpeed, incrementLiftPause) {
-		var printerName = $('#printerSelect option:selected').val(); 
+		var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
 		var liftSpeed = parseFloat($('#liftSpeedText').val());
 		var liftDistance = parseFloat($('#liftDistanceText').val());
 		//var liftPause = parseInt($('#liftPauseText').val());
@@ -490,7 +495,7 @@
 	}
 	
 	function requestForPrinter(command, parameters){
-		var printerName = $('#printerSelect option:selected').val();
+		 var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
 		
 		$("body").css("cursor", "wait");
 		$.ajax({
@@ -523,6 +528,15 @@
 		return data.response;
 	}
 	
+	function getSelectedOptionFromListBoxOrThrowError(listboxId, errorMessage) {
+		var listbox = $('#' + listboxId + ' option:selected').val();
+		
+		if (typeof listbox != 'undefined') {
+			return listbox;
+		}
+		
+		throw errorMessage;
+	}
 </script>
 
 </head>
