@@ -18,7 +18,7 @@ public class Main {
 		UpnpService upnpService = new UpnpServiceImpl();
 		upnpService.getControlPoint().search(new STAllHeader());
 		URI uri = null;
-		long maxLengthToWait = 7000;
+		long maxLengthToWait = 90000;
 		long timeStarted = System.currentTimeMillis();
 		while (uri == null && System.currentTimeMillis() - timeStarted < maxLengthToWait) {
 			Collection<RemoteDevice> devices = upnpService.getRegistry().getRemoteDevices();
