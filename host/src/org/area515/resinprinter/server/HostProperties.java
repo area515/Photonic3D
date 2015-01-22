@@ -81,8 +81,8 @@ public class HostProperties {
 			fakedisplay = new Boolean(props.getProperty("fakedisplay", "false"));
 			for (Entry<Object, Object> currentProperty : props.entrySet()) {
 				String currentPropertyString = currentProperty.getKey() + "";
-				if (currentPropertyString.startsWith("advertise")) {
-					currentPropertyString = currentPropertyString.replace("advertise", "");
+				if (currentPropertyString.startsWith("advertise.")) {
+					currentPropertyString = currentPropertyString.replace("advertise.", "");
 					if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
 						try {
 							advertisementClasses.add((Class<Advertiser>)Class.forName(currentPropertyString));

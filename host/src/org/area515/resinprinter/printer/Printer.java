@@ -28,7 +28,8 @@ public class Printer {
 	private BufferedImage calibrationImage;
 	private JFrame frame;
 	private Rectangle screenSize;
-
+	private String displayDeviceID;
+	
 	//For Serial Port
 	private SerialCommunicationsPort serialPort;
 	
@@ -129,15 +130,20 @@ public class Printer {
 	}
 	
 	
-	public void setGraphicsData(JFrame frame, GraphicsConfiguration graphicsConfiguration) {
+	public void setGraphicsData(JFrame frame, GraphicsConfiguration graphicsConfiguration, String displayDeviceID) {
 		this.frame = frame;
 		this.graphics = (Graphics2D)frame.getGraphics();
 		this.graphicsConfiguration = graphicsConfiguration;
 		this.screenSize = graphicsConfiguration.getBounds();
+		this.displayDeviceID = displayDeviceID;
 		getConfiguration().getMonitorDriverConfig().setDLP_X_Res(screenSize.width);
 		getConfiguration().getMonitorDriverConfig().setDLP_Y_Res(screenSize.height);
 	}
 	
+	public String getDisplayDeviceID() {
+		return displayDeviceID;
+	}
+
 	public void showBlankImage() {
 		if (blankImage == null) {
 			blankImage = graphicsConfiguration.createCompatibleImage(screenSize.width, screenSize.height);
@@ -178,13 +184,6 @@ public class Printer {
 		graphics.drawImage(image, null, screenSize.width / 2 - image.getWidth() / 2, screenSize.height / 2 - image.getHeight() / 2);
 	}
 
-	public GraphicsDevice getGraphicsDevice() {
-		if (graphicsConfiguration == null)
-			return null;
-		
-		return graphicsConfiguration.getDevice();
-	}
-	
 	public PrinterConfiguration getConfiguration() {
 		return configuration;
 	}
