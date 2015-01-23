@@ -262,7 +262,7 @@
 											var secondsLeft = Math.floor(timeLeft / 1000);
 											var displayString = hoursLeft > 0? hoursLeft + " hours": "";
 											displayString += minutesLeft > 0 || hoursLeft > 0? " " + minutesLeft + " minutes": "";
-											displayString += secondsLeft > 0 || minutesLeft > 0 || hoursLeft > 0? " " + minutesLeft + " seconds": "";
+											displayString += secondsLeft > 0 || minutesLeft > 0 || hoursLeft > 0? " " + secondsLeft + " seconds": "";
 											
 											$("#statustext").attr("placeholder", "Approximate time Left: " + displayString);
 										}
@@ -751,8 +751,7 @@
 							<progress id="uploadprogress" style="width:100%"></progress>
 						</div>
 				   </div>
-
-				   
+				
 				<div class="row clearfix">
 					<form class="form-horizontal">
 						<fieldset>
@@ -792,7 +791,6 @@
 						</fieldset>
 				   	</form>
 				</div>
-				
 				
 			</div>
 		</div>

@@ -27,6 +27,7 @@ rm ${deployedZipFile}</echo>
 			<zipfileset dir="libs\jetty" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\resteasy" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\rxtx" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs\cling-2.0-alpha3" prefix="lib" includes="**/*"/>
 		</jar>
 	</target>
 </project>
