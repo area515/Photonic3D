@@ -33,7 +33,7 @@ else
 	javaMinorVersion=`java -version 2>&1 | grep java version | awk -F[\".] '{print "0"$3}'`
 fi
 
-if [$javaMinorVersion -lt 8 -a $javaMajorVersion -le 1 ]; then
+if [ $javaMinorVersion -lt 8 -a $javaMajorVersion -le 1 ]; then
 	downloadJavaFile=`echo ${javaURL} | awk -F/ '{print $(NF)}'`
 	echo Incorrect version of Java installed, Ill try to install it from this URL: ${javaURL}
 	mkdir -p /usr/lib/jvm
@@ -72,7 +72,7 @@ else
 fi
 networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print "0"$2}';`
 
-if [ $networkBuildNumber -gt $currentBuildNumber ]; then
+if [ "$networkBuildNumber" -gt "$currentBuildNumber" ]; then
 	echo Installing latest version of cwh: ${networkBuildNumber}
 	rm -r ${installDirectory}
 	mkdir -p ${installDirectory}
