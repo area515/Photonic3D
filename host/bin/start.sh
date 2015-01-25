@@ -44,7 +44,7 @@ if [ "$javaInstalled" = "" -o \( $javaMinorVersion -lt 8 -a $javaMajorVersion -l
 	if [ "${javaInstallFile}" = ""]; then
 		echo "A new version of Java is available, please update this script with the proper download URLS from: http://www.oracle.com/technetwork/java/javase/downloads/index.html"
 		exit
-	fi;
+	fi
 	
 	echo ${javaInstallFile}
 	#ln -sf /usr/lib/jvm/${javaInstallFile}/bin/java /usr/bin/java
@@ -59,8 +59,12 @@ mv build.number currentbuildnumber
 wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/build.number
 mv build.number networkbuildnumber
 
-currentBuildNumber=`grep build.number currentbuildnumber | awk -F= '{print $2}';`
-networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print $2}';`
+if [ -f currentbuildnumber ]; then
+	currentBuildNumber=`grep build.number currentbuildnumber | awk -F= '{print "0"$2}';`
+else
+	currentBuildNumber=0
+fi
+networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print "0"$2}';`
 
 if [ $networkBuildNumber -gt $currentBuildNumber ]; then
 	echo Installing latest version of cwh: ${networkBuildNumber}
