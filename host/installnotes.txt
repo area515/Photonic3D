@@ -1,5 +1,5 @@
 Three easy steps for installing Creation Workshop Host on Raspberry Pi or linux
 -------------------------------------------------------------------------------
-sudo wget https://github.com/WesGilster/Creation-Wt/raw/master/host/bin/start.sh
+sudo wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/bin/start.sh
 sudo chmod 777 start.sh
 sudo ./start.sh
