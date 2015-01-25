@@ -14,7 +14,7 @@ elif [ "${cpu}" = "x86_64" ]; then
 	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u31-b13/jdk-8u31-linux-x64.tar.gz"
 fi
 
-if [ -f "/usr/lib/jni/librxtxSerial.so" ]; then
+if [ ! -f "/usr/lib/jni/librxtxSerial.so" ]; then
 	echo Installing RxTx
 	apt-get install --yes --force-yes librxtx-java
 fi
@@ -24,7 +24,6 @@ if [ "${DISPLAY}" = "" ]; then
 	DISPLAY=:0.0
 fi;
 
-echo Is the correct version of java installed?
 javaInstalled=`which java`
 javaMajorVersion=`java -version 2>&1 | awk -F[\".] 'NR==1{print "0"$2}'`
 javaMinorVersion=`java -version 2>&1 | awk -F[\".] 'NR==1{print "0"$3}'`
