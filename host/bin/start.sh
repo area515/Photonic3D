@@ -25,9 +25,15 @@ if [ "${DISPLAY}" = "" ]; then
 fi;
 
 javaInstalled=`which java`
-javaMajorVersion=`java -version 2>&1 | awk -F[\".] 'NR==1{print "0"$2}'`
-javaMinorVersion=`java -version 2>&1 | awk -F[\".] 'NR==1{print "0"$3}'`
-if [ "$javaInstalled" = "" -o \( $javaMinorVersion -lt 8 -a $javaMajorVersion -le 1 \) ]; then
+if [ "$javaInstalled" = "" ]; then
+	javaMajorVersion=0
+	javaMinorVersion=0
+else
+	javaMajorVersion=`java -version 2>&1 | grep java version | awk -F[\".] '{print "0"$2}'`
+	javaMinorVersion=`java -version 2>&1 | grep java version | awk -F[\".] '{print "0"$3}'`
+fi
+
+if [$javaMinorVersion -lt 8 -a $javaMajorVersion -le 1 ]; then
 	downloadJavaFile=`echo ${javaURL} | awk -F/ '{print $(NF)}'`
 	echo Incorrect version of Java installed, Ill try to install it from this URL: ${javaURL}
 	mkdir -p /usr/lib/jvm
