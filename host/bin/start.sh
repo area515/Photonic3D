@@ -66,11 +66,11 @@ wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/build.num
 mv build.number networkbuildnumber
 
 if [ -f currentbuildnumber ]; then
-	currentBuildNumber=`grep build.number currentbuildnumber | awk -F= '{print "0"$2}';`
+	currentBuildNumber=`grep build.number currentbuildnumber | awk -F= '{print $2}' | tr -d '\r'`
 else
 	currentBuildNumber=0
 fi
-networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print "0"$2}';`
+networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print $2}' | tr -d '\r'`
 
 if [ "$networkBuildNumber" -gt "$currentBuildNumber" ]; then
 	echo Installing latest version of cwh: ${networkBuildNumber}
@@ -90,7 +90,7 @@ else
 	mv currentbuildnumber build.number
 fi
 
-if [ -f "/etc/init.d/cwh" ]; then
+if [ ! -f "/etc/init.d/cwh" ]; then
 	echo Installing CWH as a service
 	cp ${installDirectory}/cwh /etc/init.d/
 fi
