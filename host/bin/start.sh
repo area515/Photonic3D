@@ -5,7 +5,7 @@ cpu=`uname -m`
 repo=WesGilster
 
 installDirectory=/opt/cwh
-#It's pretty hard to keep these updated, let me know when they get too old
+#Its pretty hard to keep these updated, let me know when they get too old
 if [ "${cpu}" = "armv6l" ]; then 
 	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u33-b05/jdk-8u33-linux-arm-vfp-hflt.tar.gz"
 elif [ "${cpu}" = "i686" ]; then 
@@ -29,7 +29,7 @@ javaMajorVersion=`java -version 2>&1 | awk -F[\".] 'NR==1{print "0"$2}'`
 javaMinorVersion=`java -version 2>&1 | awk -F[\".] 'NR==1{print "0"$3}'`
 if [ "$javaInstalled" = "" -o \( $javaMinorVersion -lt 8 -a $javaMajorVersion -le 1 \) ]; then
 	downloadJavaFile=`echo ${javaURL} | awk -F/ '{print $(NF)}'`
-	echo Incorrect version of Java installed, I'll try to install it from this URL: ${javaURL}
+	echo Incorrect version of Java installed, Ill try to install it from this URL: ${javaURL}
 	mkdir -p /usr/lib/jvm
 	cd /usr/lib/jvm
 	rm ${downloadJavaFile}
