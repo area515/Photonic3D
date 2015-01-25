@@ -72,6 +72,9 @@ else
 fi
 networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print $2}' | tr -d '\r'`
 
+#Network build.number is always 1 greater than it the current version
+(( networkBuildNumber-- ))
+
 if [ "$networkBuildNumber" -gt "$currentBuildNumber" ]; then
 	echo Installing latest version of cwh: ${networkBuildNumber}
 	rm -r ${installDirectory}
