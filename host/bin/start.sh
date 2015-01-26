@@ -67,6 +67,7 @@ mv build.number networkbuildnumber
 
 if [ -f currentbuildnumber ]; then
 	currentBuildNumber=`grep build.number currentbuildnumber | awk -F= '{print $2}' | tr -d '\r'`
+	(( currentBuildNumber-- ))
 else
 	currentBuildNumber=0
 fi
@@ -87,15 +88,14 @@ if [ "$networkBuildNumber" -gt "$currentBuildNumber" ]; then
 	chmod 777 debug.sh
 	chmod 777 browseprinter.sh
 	rm cwh-0.${networkBuildNumber}.zip
-    mv networkbuildnumber build.number
 else
 	rm networkbuildnumber
 	mv currentbuildnumber build.number
 fi
 
-if [ ! -f "/etc/init.d/cwh" ]; then
+if [ ! -f "/etc/init.d/cwhservice" ]; then
 	echo Installing CWH as a service
-	cp ${installDirectory}/cwh /etc/init.d/
+	cp ${installDirectory}/cwhservice /etc/init.d/
 fi
 
 java -Djava.library.path=os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main &
