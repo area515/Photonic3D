@@ -35,24 +35,19 @@ fi
 
 if [ "$javaMinorVersion" -lt 8 -a "$javaMajorVersion" -le 1 ]; then
 	downloadJavaFile=`echo ${javaURL} | awk -F/ '{print $(NF)}'`
-	echo Incorrect version of Java installed, Ill try to install it from this URL: ${javaURL}
+	echo Either Java is not installed, or an incorrect version of Java is installed. Installing from this URL: ${javaURL}
 	mkdir -p /usr/lib/jvm
 	cd /usr/lib/jvm
 	rm ${downloadJavaFile}
 	wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "${javaURL}"
 	
 	firstSnapshot=`ls -1`
-	echo first Snapshot${firstSnapshot}
-	
+	echo Unzipping and installing Java now
 	tar xzf ${downloadJavaFile}
-	
 	secondSnapshot=`ls -1`
-	echo second Snapshot${secondSnapshot}
-	
 	javaInstallFile=`echo "$firstSnapshot"$'\n'"$secondSnapshot" | sort | uniq -u`
-	echo java install file${javaInstallFile}
 	
-	if [ -z "${javaInstallFile}"]; then
+	if [ -z "${javaInstallFile}" ]; then
 		echo "A new version of Java is available, please update this script with the proper download URLS from: http://www.oracle.com/technetwork/java/javase/downloads/index.html"
 		exit
 	fi
@@ -102,4 +97,5 @@ if [ ! -f "/etc/init.d/cwhservice" ]; then
 	cp ${installDirectory}/cwhservice /etc/init.d/
 fi
 
-java -Djava.library.path=os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main &
+#java -Djava.library.path=os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main &
+java -cp lib/*:. org.area515.resinprinter.server.Main &
