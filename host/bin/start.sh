@@ -52,11 +52,10 @@ if [ "$javaMinorVersion" -lt 8 -a "$javaMajorVersion" -le 1 ]; then
 		exit
 	fi
 	
-	echo ${javaInstallFile}
-	#ln -sf /usr/lib/jvm/${javaInstallFile}/bin/java /usr/bin/java
-	#ln -sf /usr/lib/jvm/${javaInstallFile}/bin/javac /usr/bin/javac
-	#ln -sf /usr/lib/jvm/${javaInstallFile}/bin/keytool /usr/bin/keytool		
-	#rm ${downloadJavaFile}
+	ln -sf /usr/lib/jvm/${javaInstallFile}/bin/java /usr/bin/java
+	ln -sf /usr/lib/jvm/${javaInstallFile}/bin/javac /usr/bin/javac
+	ln -sf /usr/lib/jvm/${javaInstallFile}/bin/keytool /usr/bin/keytool		
+	rm ${downloadJavaFile}
 fi
 
 mkdir -p ${installDirectory}
