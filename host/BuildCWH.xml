@@ -14,7 +14,8 @@ chmod 777 start.sh
 chmod 777 debug.sh
 chmod 777 browseprinter.sh
 rm ${deployedZipFile}</echo>-->
-		<jar destfile="${deployedZipFile}">
+		<zip destfile="${deployedZipFile}">
+			<zipfileset dir="." includes="**/build.number"/>
 			<zipfileset dir="srcbin" includes="**/*.class"/>
 			<zipfileset dir="srcbin" includes="**/*.properties"/>
 			<zipfileset dir="os" prefix="os" includes="**/*"/>
@@ -28,6 +29,6 @@ rm ${deployedZipFile}</echo>-->
 			<zipfileset dir="libs\resteasy" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\rxtx" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\cling-2.0-alpha3" prefix="lib" includes="**/*"/>
-		</jar>
+		</zip>
 	</target>
 </project>
