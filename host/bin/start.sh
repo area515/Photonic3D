@@ -42,12 +42,17 @@ if [ "$javaMinorVersion" -lt 8 -a "$javaMajorVersion" -le 1 ]; then
 	wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "${javaURL}"
 	
 	firstSnapshot=`ls -1`
+	echo first Snapshot${firstSnapshot}
+	
 	tar xzf ${downloadJavaFile}
+	
 	secondSnapshot=`ls -1`
+	echo second Snapshot${secondSnapshot}
 	
 	javaInstallFile=`echo "$firstSnapshot"$'\n'"$secondSnapshot" | sort | uniq -u`
+	echo java install file${javaInstallFile}
 	
-	if [ "${javaInstallFile}" = ""]; then
+	if [ -z "${javaInstallFile}"]; then
 		echo "A new version of Java is available, please update this script with the proper download URLS from: http://www.oracle.com/technetwork/java/javase/downloads/index.html"
 		exit
 	fi
