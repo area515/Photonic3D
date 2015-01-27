@@ -8,9 +8,6 @@ else
 	repo=$1
 fi;
 
-echo variable is$1
-echo $repo
-
 installDirectory=/opt/cwh
 #Its pretty hard to keep these updated, let me know when they get too old
 if [ "${cpu}" = "armv6l" ]; then 
