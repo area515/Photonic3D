@@ -8,11 +8,9 @@ sudo ./start.sh
 
 Do you want to start the latest unstable daily development build?
 -------------------------------------------------------------------------------
-sudo wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/bin/startdev.sh
 sudo wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/bin/start.sh
-sudo chmod 777 startdev.sh
 sudo chmod 777 start.sh
-sudo ./startdev.sh
+sudo ./start.sh WesGilster
 
 
 Start script Features:
