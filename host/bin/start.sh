@@ -101,5 +101,4 @@ if [ ! -f "/etc/init.d/cwhservice" ]; then
 	cp ${installDirectory}/cwhservice /etc/init.d/
 fi
 
-#java -Djava.library.path=os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main &
-java -cp lib/*:. org.area515.resinprinter.server.Main &
+java -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main &

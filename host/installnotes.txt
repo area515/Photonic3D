@@ -26,3 +26,4 @@ TODO:
 -----
 Need to make sure the script fails if you aren't root or you aren't sudo'd
 Need to make sure the script starts and configures and starts xWindows if it hasn't already been started.
+Need to install our init.d service script, not just copy it.
