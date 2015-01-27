@@ -2,7 +2,7 @@
 
 cpu=`uname -m`
 
-repo=WesGilster
+repo=area515
 
 installDirectory=/opt/cwh
 #Its pretty hard to keep these updated, let me know when they get too old
