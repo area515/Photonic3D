@@ -1,3 +1,3 @@
 #!/bin/bash
 
-pkill org.area515.resinprinter.server.Main
+pkill -f org.area515.resinprinter.server.Main
