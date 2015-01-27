@@ -2,7 +2,7 @@ Three easy steps for starting/installing Creation Workshop Host on Raspberry Pi 
 
 Do you want to start the latest stable build?
 -------------------------------------------------------------------------------
-sudo wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/bin/start.sh
+sudo wget https://github.com/area515/Creation-Workshop-Host/raw/master/host/bin/start.sh
 sudo chmod 777 start.sh
 sudo ./start.sh
 
