@@ -5,6 +5,7 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.HeadlessException;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
@@ -99,7 +100,7 @@ public class DisplayManager {
 		List<GraphicsDevice> devices = new ArrayList<GraphicsDevice>();
 		try {
 			devices.addAll(Arrays.asList(ge.getScreenDevices()));
-		} catch (AWTError error) {
+		} catch (HeadlessException | AWTError error) {
 			error.printStackTrace();
 		}
 		
