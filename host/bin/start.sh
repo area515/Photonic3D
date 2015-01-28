@@ -96,9 +96,16 @@ else
 	mv currentbuildnumber build.number
 fi
 
+echo Turning off screen saver and power saving
+xset s off         # don't activate screensaver
+xset -dpms         # disable DPMS (Energy Star) features
+xset s noblank     # don't blank the video device 
+
 if [ ! -f "/etc/init.d/cwhservice" ]; then
 	echo Installing CWH as a service
 	cp ${installDirectory}/cwhservice /etc/init.d/
+	chmod 777 /etc/init.d/cwhservice
+	update-rc.d cwhservice defaults
 fi
 
 echo Starting printer host server

@@ -7,7 +7,7 @@ public class InappropriateDeviceException extends Exception {
 		super(message);
 	}
 	
-	public InappropriateDeviceException(String message, Exception e) {
+	public InappropriateDeviceException(String message, Throwable e) {
 		super(message, e);
 	}
 }
