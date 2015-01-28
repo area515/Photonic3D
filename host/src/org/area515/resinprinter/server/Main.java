@@ -102,6 +102,7 @@ public class Main {
 					e.printStackTrace();
 				} finally {
 					server.destroy();
+					System.out.println("Shutdown Complete");
 				}
 			}
 		});

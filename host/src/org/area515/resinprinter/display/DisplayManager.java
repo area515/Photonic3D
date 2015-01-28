@@ -1,14 +1,12 @@
 package org.area515.resinprinter.display;
 
+import java.awt.AWTError;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,7 +97,12 @@ public class DisplayManager {
 	
 	public List<GraphicsDevice> getDisplayDevices() {
 		List<GraphicsDevice> devices = new ArrayList<GraphicsDevice>();
-		devices.addAll(Arrays.asList(ge.getScreenDevices()));
+		try {
+			devices.addAll(Arrays.asList(ge.getScreenDevices()));
+		} catch (AWTError error) {
+			error.printStackTrace();
+		}
+		
 		devices.add(new CustomNamedDisplayDevice(LAST_AVAILABLE_DISPLAY));
 		if (HostProperties.Instance().getFakeDisplay()) {
 			devices.add(new CustomNamedDisplayDevice(SIMULATED_DISPLAY));
