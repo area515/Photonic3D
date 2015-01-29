@@ -1,0 +1,29 @@
+Three easy steps for starting/installing Creation Workshop Host on Raspberry Pi or linux
+
+Do you want to start the latest stable build?
+-------------------------------------------------------------------------------
+sudo wget https://github.com/area515/Creation-Workshop-Host/raw/master/host/bin/start.sh
+sudo chmod 777 start.sh
+sudo ./start.sh
+
+Do you want to start the latest unstable daily development build?
+-------------------------------------------------------------------------------
+sudo wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/bin/start.sh
+sudo chmod 777 start.sh
+sudo ./start.sh WesGilster
+
+
+Start script Features:
+----------------------
+Downloads and starts the latest build of the Creation Workshop Host
+Adds ourselves as a service in Linux
+Installs the latest version of Java if it isn't at least 1.8
+Sets the display variable if it isn't already set
+If Creation Workshop Host isn't already installed, it installs it.
+Installs rxtx if it isn't already installed
+
+TODO:
+-----
+Need to make sure the script fails if you aren't root or you aren't sudo'd
+Need to make sure the script starts and configures and starts xWindows if it hasn't already been started.
+Need to install our init.d service script, not just copy it.

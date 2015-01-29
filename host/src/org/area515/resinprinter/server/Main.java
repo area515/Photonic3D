@@ -26,7 +26,7 @@ public class Main {
 
 	public static void main(String[] args) throws Exception {
 
-		int port = 9091; //TODO: get from HostProperties.Instance();
+		int port = HostProperties.Instance().getPrinterHostPort();
 		/*
 		 * Sequence
 		 * Setup ResourceHandler for html files
@@ -102,6 +102,7 @@ public class Main {
 					e.printStackTrace();
 				} finally {
 					server.destroy();
+					System.out.println("Shutdown Complete");
 				}
 			}
 		});
