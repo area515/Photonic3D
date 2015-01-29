@@ -41,6 +41,7 @@ public class HostProperties {
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
 	private List<Class<Advertiser>> advertisementClasses = new ArrayList<Class<Advertiser>>();
 	private Class<SerialCommunicationsPort> serialPortClass;
+	private int printerHostPort;
 	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
@@ -100,6 +101,8 @@ public class HostProperties {
 			} catch (ClassNotFoundException e) {
 				System.out.println("Failed to load SerialCommunicationsImplementation:" + serialCommClass);
 			}
+			
+			printerHostPort = new Integer(props.getProperty("printerHostPort", "9091"));
 		}
 		
 		if (printDirString == null) {
@@ -133,6 +136,10 @@ public class HostProperties {
 		System.out.println("WorkingDir: " + printDir);
 		System.out.println("SourceDir: " + uploadDir);
 		System.out.println("FakeSerial: " + fakeSerial);
+	}
+
+	public int getPrinterHostPort() {
+		return printerHostPort;
 	}
 
 	public File getUploadDir(){

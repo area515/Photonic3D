@@ -29,9 +29,6 @@ public class UPNPAdvertiser implements Advertiser {
 		private int deviceVersion = 1;//TODO: get from build.number file
 		private String manufacturer = "Wes & Sean";
 		private String deviceType = "3DPrinterHost";
-		private String externallyAccessableIP = null;
-		private boolean webPresentationSecure = false;
-		private int webPresentationPort = 9091;
 		private int upnpStreamPort = 5001;
 		
 		public String getDeviceName() {
@@ -77,7 +74,7 @@ public class UPNPAdvertiser implements Advertiser {
 			DefaultUpnpServiceConfiguration serviceConfiguration = new DefaultUpnpServiceConfiguration(getSetup().upnpStreamPort);
 			UpnpServiceImpl upnpService = new UpnpServiceImpl(serviceConfiguration);
 			if (!upnpService.getRouter().isEnabled()) {
-				throw new IllegalArgumentException("It doesn't seem as though a network is available to publish this server.");
+				throw new IllegalArgumentException("It doesn't seem as though a network is available to publish this server, or an advertiser has already been started on this address.");
 			}
 			
 			// Broadcast a search message for all devices
