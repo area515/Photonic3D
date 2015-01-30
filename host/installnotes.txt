@@ -12,6 +12,11 @@ sudo wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/b
 sudo chmod 777 start.sh
 sudo ./start.sh WesGilster
 
+Do you want to use your web browser to automatically navigate to the running 
+printer host without knowing anything about how your network is setup?
+----------------------------------------------------------------------
+sudo browseprinter.sh
+browseprinter.bat
 
 Start script Features:
 ----------------------
