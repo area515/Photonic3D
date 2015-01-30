@@ -7,7 +7,7 @@ import java.util.TooManyListenersException;
 
 import org.area515.resinprinter.printer.Printer;
 
-public class RXTXSynchronousReadBasedCommPort extends RXTXCommPort implements SerialCommunicationsPort {
+public class RXTXSynchronousReadBasedCommPort extends RXTXCommPort {
 	@Override
 	public String readUntilOkOrStoppedPrinting(Printer printer) throws IOException {
     	StringBuilder builder = new StringBuilder();
