@@ -114,7 +114,7 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 			if (value > -1) {//If we get a character, then keep reading
 				continue;
 			}
-			if (System.currentTimeMillis() - startTime > waitForGCodeTimeout) { //If we've timed out, get out.
+			if (System.currentTimeMillis() - startTime > waitForGCodeTimeout) { //If we've timed out, get out.First available serial port
 				break;
 			}
 			if (printer != null && !printer.isPrintInProgress()) {//Stop if they have asked us to quit printing
@@ -127,5 +127,34 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 		}
 		
 		return builder.toString();
+	}
+
+	public String toString() {
+		return name;
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RXTXCommPort other = (RXTXCommPort) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		return true;
 	}
 }
