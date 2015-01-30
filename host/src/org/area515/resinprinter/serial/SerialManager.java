@@ -35,13 +35,16 @@ public class SerialManager {
 	
 	public void assignSerialPort(Printer printer, SerialCommunicationsPort identifier) throws AlreadyAssignedException, InappropriateDeviceException {
 		if (identifier.getName().equals(FIRST_AVAILABLE_PORT)) {
+			identifier = null;
 			ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
-			Collections.reverse(identifiers);
 			for (CommPortIdentifier currentIdentifier : identifiers) {
 				SerialCommunicationsPort check = getSerialDevice(currentIdentifier.getName());
 				if (!printersBySerialPort.containsKey(check)) {
 					identifier = check;
 				}
+			}
+			if (identifier == null) {
+				throw new InappropriateDeviceException("No serial ports are available for auto assignment");
 			}
 		}
 		
