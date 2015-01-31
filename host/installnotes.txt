@@ -18,6 +18,11 @@ printer host without knowing anything about how your network is setup?
 sudo browseprinter.sh
 browseprinter.bat
 
+Common Problems:
+----------------
+Problem: Right after installing and then rebooting by Raspberry Pi, it won't find my display anymore.
+Solution: Make sure your SD card is being "fully used" by choosing the following option in your raspi-config "1 Expand Filesystem"
+
 Start script Features:
 ----------------------
 Downloads and starts the latest build of the Creation Workshop Host
@@ -30,5 +35,3 @@ Installs rxtx if it isn't already installed
 TODO:
 -----
 Need to make sure the script fails if you aren't root or you aren't sudo'd
-Need to make sure the script starts and configures and starts xWindows if it hasn't already been started.
-Need to install our init.d service script, not just copy it.
