@@ -23,12 +23,13 @@ if [ ! -f "/usr/lib/jni/librxtxSerial.so" ]; then
 	apt-get install --yes --force-yes librxtx-java
 fi
 
-startXProcess=`ps -ef | grep grep -v | grep startx`
-if [ -z "${startXProcess}" ]; then
-	echo No X server running, starting and configuring one
-	DISPLAY=:0.0
-	xhost +x
-	startx &
+#This application will always need to have the display set to the following
+export DISPLAY=:0.0
+xinitProcess=`ps -ef | grep grep -v | grep xinit`
+if [ -z "${xinitProcess}" ]; then
+    echo No X server running, starting and configuring one
+    startx &
+    xhost +x
 fi
 
 javaInstalled=`which java`
