@@ -23,10 +23,13 @@ if [ ! -f "/usr/lib/jni/librxtxSerial.so" ]; then
 	apt-get install --yes --force-yes librxtx-java
 fi
 
-if [ "${DISPLAY}" = "" ]; then
-	echo DISPLAY variable not set, setting to :0.0
+startXProcess=`ps -ef | grep grep -v | grep startx`
+if [ -z "${startXProcess}" ]; then
+	echo No X server running, starting and configuring one
 	DISPLAY=:0.0
-fi;
+	xhost +x
+	startx &
+fi
 
 javaInstalled=`which java`
 if [ "$javaInstalled" = "" ]; then
