@@ -40,13 +40,12 @@ public class DisplayManager {
 	}
 	
 	private DisplayManager(){
-		ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 	}
 
 	public void assignDisplay(Printer newPrinter, GraphicsDevice device) throws AlreadyAssignedException, InappropriateDeviceException {
 		if (device.getIDstring().equals(LAST_AVAILABLE_DISPLAY)) {
 			ArrayList<GraphicsDevice> devices = new ArrayList<GraphicsDevice>();
-			devices.addAll(Arrays.asList(ge.getScreenDevices()));
+			devices.addAll(Arrays.asList(getGraphicsEnvironment().getScreenDevices()));
 			Collections.reverse(devices);
 			for (GraphicsDevice currentDevice : devices) {
 				if (!printersByDisplayIDString.containsKey(currentDevice.getIDstring())) {
@@ -102,9 +101,9 @@ public class DisplayManager {
 	public List<GraphicsDevice> getDisplayDevices() {
 		List<GraphicsDevice> devices = new ArrayList<GraphicsDevice>();
 		try {
-			devices.addAll(Arrays.asList(ge.getScreenDevices()));
-		} catch (HeadlessException | AWTError error) {
-			error.printStackTrace();
+			devices.addAll(Arrays.asList(getGraphicsEnvironment().getScreenDevices()));
+		} catch (InappropriateDeviceException e) {
+			e.printStackTrace();
 		}
 		
 		devices.add(new CustomNamedDisplayDevice(LAST_AVAILABLE_DISPLAY));
@@ -127,7 +126,21 @@ public class DisplayManager {
 	}	
 	
 	public GraphicsDevice getDisplayDevice(int index) throws InappropriateDeviceException {
-		return ge.getScreenDevices()[index];
+		return getGraphicsEnvironment().getScreenDevices()[index];
+	}
+	
+	private GraphicsEnvironment getGraphicsEnvironment() throws InappropriateDeviceException {
+		if (ge != null) {
+			return ge;
+		}
+		
+		try {
+			ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		} catch (HeadlessException | AWTError error) {
+			throw new InappropriateDeviceException("It doesn't look like your graphics environment is properly setup", error);
+		}
+
+		return ge;
 	}
 	
 	public void removeAssignment(Printer printer){

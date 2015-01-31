@@ -90,8 +90,15 @@ public class Main {
 			}
 		}
 		
-		BroadcastManager.start(new URI("http://" + externallyAccessableIP + ":" + port));
+		//Start server before we start broadcasting!
+		try {
+			server.start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
+		//Start broadcasting server
+		BroadcastManager.start(new URI("http://" + externallyAccessableIP + ":" + port));
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
@@ -107,8 +114,8 @@ public class Main {
 			}
 		});
 		
+		//Wait in the Main method until we are shutdown by the OS
 		try {
-			server.start();
 			server.join();
 		} catch (Exception e) {
 			e.printStackTrace();

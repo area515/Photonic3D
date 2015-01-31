@@ -23,10 +23,14 @@ if [ ! -f "/usr/lib/jni/librxtxSerial.so" ]; then
 	apt-get install --yes --force-yes librxtx-java
 fi
 
-if [ "${DISPLAY}" = "" ]; then
-	echo DISPLAY variable not set, setting to :0.0
-	DISPLAY=:0.0
-fi;
+#This application will always need to have the display set to the following
+export DISPLAY=:0.0
+xinitProcess=`ps -ef | grep grep -v | grep xinit`
+if [ -z "${xinitProcess}" ]; then
+    echo No X server running, starting and configuring one
+    startx &
+    xhost +x
+fi
 
 javaInstalled=`which java`
 if [ "$javaInstalled" = "" ]; then
@@ -69,12 +73,12 @@ wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/build.num
 mv build.number networkbuildnumber
 
 if [ -f currentbuildnumber ]; then
-	currentBuildNumber=`grep build.number currentbuildnumber | awk -F= '{print $2}' | tr -d '\r'`
+	currentBuildNumber=`grep build.number currentbuildnumber | awk -F= '{print $2}' | tr -d '\r\n'`
 	(( currentBuildNumber-- ))
 else
 	currentBuildNumber=0
 fi
-networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print $2}' | tr -d '\r'`
+networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print $2}' | tr -d '\r\n'`
 
 #Network build.number is always 1 greater than it the current version
 (( networkBuildNumber-- ))
