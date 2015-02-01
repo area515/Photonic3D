@@ -4,10 +4,10 @@ import java.awt.GraphicsDevice;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -41,6 +41,7 @@ public class MachineService {
 	 @GET
 	 @Path("printers")
 	 @Produces(MediaType.APPLICATION_JSON)
+	// @RolesAllowed("Admin")
 	 public List<String> getPrinters() {
 		 List<PrinterConfiguration> identifiers = HostProperties.Instance().getPrinterConfigurations();
 		 List<String> identifierStrings = new ArrayList<String>();
