@@ -6,6 +6,7 @@ import java.net.URI;
 import java.util.Enumeration;
 
 import org.area515.resinprinter.discover.BroadcastManager;
+import org.area515.resinprinter.security.JettySecurityUtils;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.DefaultHandler;
@@ -68,7 +69,7 @@ public class Main {
         handlers.setHandlers(new Handler[] { serviceContext, resource_handler, new DefaultHandler() });
         server.setHandler(handlers);
 
-        String externallyAccessableIP = null;//TODO: get from HostProperties.Instance()
+        String externallyAccessableIP = HostProperties.Instance().getExternallyAccessableName();
 		if (externallyAccessableIP == null) {
 			//Don't do this: 127.0.0.1 on Linux!
 			//getSetup().externallyAccessableIP = InetAddress.getLocalHost().getHostAddress();
@@ -90,6 +91,11 @@ public class Main {
 			}
 		}
 		
+		//Determine if we are going to use SSL and user authentication
+		if (HostProperties.Instance().isUseSSL()) {
+			JettySecurityUtils.secureContext(externallyAccessableIP, serviceContext, server);
+		}
+		
 		//Start server before we start broadcasting!
 		try {
 			server.start();
@@ -98,7 +104,7 @@ public class Main {
 		}
 		
 		//Start broadcasting server
-		BroadcastManager.start(new URI("http://" + externallyAccessableIP + ":" + port));
+		BroadcastManager.start(new URI("http" + (HostProperties.Instance().isUseSSL()?"S://":"://") + externallyAccessableIP + ":" + port));
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
