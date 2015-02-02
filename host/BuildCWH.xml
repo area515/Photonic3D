@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Packaging Generator" default="BuildCWH">
-	<target name="BuildCWH" description="build cwh.zip">
+	<target name="BuildCWH" description="build server and client">
 		<buildnumber/>
-		<property name="deployedZipFile" value="cwh-0.${build.number}.zip"/>
+		<property name="deployedServerZipFile" value="cwh-0.${build.number}.zip"/>
+		<property name="deployedClientZipFile" value="cwhClient-0.${build.number}.zip"/>
 		<!--<echo file="networkinstall.sh" append="false">#!/bin/bash
 
 rm -r cwh
 mkdir cwh
 cd cwh
-wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/${deployedZipFile}
-unzip ${deployedZipFile}
+wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/${deployedServerZipFile}
+unzip ${deployedServerZipFile}
 chmod 777 start.sh
 chmod 777 debug.sh
 chmod 777 browseprinter.sh
-rm ${deployedZipFile}</echo>-->
-		<zip destfile="${deployedZipFile}">
+rm ${deployedServerZipFile}</echo>-->
+		<zip destfile="${deployedServerZipFile}">
 			<zipfileset dir="." includes="**/build.number"/>
 			<zipfileset dir="srcbin" includes="**/*.class"/>
 			<zipfileset dir="srcbin" includes="**/*.properties"/>
@@ -29,6 +30,11 @@ rm ${deployedZipFile}</echo>-->
 			<zipfileset dir="libs\resteasy" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\rxtx" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\cling-2.0-alpha3" prefix="lib" includes="**/*"/>
+		</zip>
+		<zip destfile="${deployedClientZipFile}">
+			<zipfileset dir="srcbin/org/area515/resinprinter/client" prefix="org/area515/resinprinter/client" includes="**/*.class"/>
+			<zipfileset dir="libs\cling-2.0-alpha3" prefix="lib" includes="**/*"/>
+			<zipfileset dir="bin" includes="**/browseprinter.*"/>
 		</zip>
 	</target>
 </project>

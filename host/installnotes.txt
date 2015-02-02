@@ -1,4 +1,4 @@
-Three easy steps for starting/installing Creation Workshop Host on Raspberry Pi or linux
+Three easy steps for starting/installing Creation Workshop Host on Raspberry Pi/linux
 
 Do you want to start the latest stable build?
 -------------------------------------------------------------------------------
@@ -15,15 +15,23 @@ sudo ./start.sh WesGilster
 Do you want to use your web browser to automatically navigate to the running 
 printer host without knowing anything about how your network is setup?
 ----------------------------------------------------------------------
-sudo browseprinter.sh
-browseprinter.bat
+Unzip the latest version of cwhClient-0.XX.zip onto your hard drive.
+If you are in Linux run this:
+	sudo browseprinter.sh
+If you are in windows run this:
+	browseprinter.bat
 
-Common Problems:
-----------------
-Problem: Right after installing the software and then rebooting the Raspberry Pi, 
-		it won't find my displays anymore.
-Solution: Make sure your SD card is being "fully used" by choosing the following
-		option in your raspi-config "1 Expand Filesystem"
+FAQ:
+----
+Question: What is a known image of raspbian that I should use as a starting point?
+Answer: 2014-12-24-wheezy-raspbian.img
+
+Question: I installing the software and then rebooted my Raspberry Pi.
+		Why won't it find my displays anymore?
+Answer: Make sure your SD card is being "fully used" by choosing the following
+		option in your raspi-config "1 Expand Filesystem".
+
+
 
 Start script Features:
 ----------------------
