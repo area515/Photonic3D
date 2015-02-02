@@ -32,6 +32,8 @@ do_boot_behaviour() {
             disable_raspi_config_at_boot
             do_remove_lxpanel
             do_blank_desktop
+            do_remove_trashcan
+            do_autostart_cwhost
           else
             echo "The pi user has been removed, can't set up boot to desktop"
           fi
@@ -57,6 +59,21 @@ do_remove_trashcan() {
   sudo sed -i 's/show_trash=1/show_trash=0'/ /home/pi/.config/pcmanfm/LXDE-pi/desktop-items-0.conf
 }
 
+do_autostart_cwhost() {
+  #setup autostart for cwhost for when after startx and gui auto-login
+  #must be after starx and gui auto-login to avoid awt-headless exception
+  mkdir -p /home/pi/.config/autostart/cwhost.desktop
+  echo "[Desktop Entry]" >> /home/pi/.config/autostart/cwhost.desktop
+  echo "Encoding=UTF-8" >> /home/pi/.config/autostart/cwhost.desktop
+  echo "Type=Application" >> /home/pi/.config/autostart/cwhost.desktop
+  echo "Name=cwhost" >> /home/pi/.config/autostart/cwhost.desktop
+  echo "Comment=" >> /home/pi/.config/autostart/cwhost.desktop
+  echo "Exec=/home/pi/start.sh" >> /home/pi/.config/autostart/cwhost.desktop
+  echo "StartupNotify=false" >> /home/pi/.config/autostart/cwhost.desktop
+  echo "Terminal=false" >> /home/pi/.config/autostart/cwhost.desktop
+  echo "Hidden=false" >> /home/pi/.config/autostart/cwhost.desktop
+
+}
 
 # Make sure only root can run our script
 if [ $(id -u) -ne 0 ]; then
