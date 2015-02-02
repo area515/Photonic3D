@@ -30,6 +30,8 @@ do_boot_behaviour() {
             sed /etc/lightdm/lightdm.conf -i -e "s/^#autologin-user=.*/autologin-user=pi/"
             disable_boot_to_scratch
             disable_raspi_config_at_boot
+            do_remove_lxpanel
+            do_blank_desktop
           else
             echo "The pi user has been removed, can't set up boot to desktop"
           fi
@@ -37,6 +39,22 @@ do_boot_behaviour() {
           echo "Do sudo apt-get install lightdm to allow configuration of boot to desktop"
           return 1
         fi
+}
+
+do_remove_lxpanel() {
+  #prevent lxpanel from loading
+  sudo sed -i 's/@lxpanel --profile LXDE-pi/#@lxpanel --profile LXDE-pi'/ /etc/xdg/lxsession/LXDE-pi/autostart
+}
+
+do_blank_desktop() {
+  #change desktop background to color and set color to black
+  sudo sed -i 's/wallpaper_mode=center/wallpaper_mode=color'/ /home/pi/.config/pcmanfm/LXDE-pi/desktop-items-0.conf
+  sudo sed -i 's/desktop_bg=#c4c2c2/desktop_bg=#000000'/ /home/pi/.config/pcmanfm/LXDE-pi/desktop-items-0.conf
+}
+
+do_remove_trashcan() {
+  #remove the trashcan icon on the desktop
+  sudo sed -i 's/show_trash=1/show_trash=0'/ /home/pi/.config/pcmanfm/LXDE-pi/desktop-items-0.conf
 }
 
 
