@@ -81,11 +81,11 @@ do_autostart_cwhost() {
 do_hide_mouse() {
   sudo apt-get install unclutter
   mkdir -p /home/pi/.config/lxsession/LXDE/autostart
-  sudo echo "unclutter -idle 0" >> /home/pi/.config/lxsession/LXDE/autostart
+  echo "unclutter -idle 0" >> /home/pi/.config/lxsession/LXDE/autostart
 }
 
 do_hide_bootlogo() {
-  sudo echo "logo.nologo" >> /boot/cmdline.txt
+  echo "logo.nologo" >> /boot/cmdline.txt
 }
 
 do_hide_boottext() {
