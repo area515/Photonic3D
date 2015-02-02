@@ -33,6 +33,9 @@ do_boot_behaviour() {
             do_remove_lxpanel
             do_blank_desktop
             do_remove_trashcan
+            do_hide_mouse
+            do_hide_bootlogo
+            do_hide_boottext
             do_autostart_cwhost
           else
             echo "The pi user has been removed, can't set up boot to desktop"
@@ -73,6 +76,22 @@ do_autostart_cwhost() {
   echo "Terminal=false" >> /home/pi/.config/autostart/cwhost.desktop
   echo "Hidden=false" >> /home/pi/.config/autostart/cwhost.desktop
 
+}
+
+do_hide_mouse() {
+  sudo apt-get install unclutter
+  mkdir -p /home/pi/.config/lxsession/LXDE/autostart
+  sudo echo "unclutter -idle 0" >> /home/pi/.config/lxsession/LXDE/autostart
+}
+
+do_hide_bootlogo() {
+  sudo echo "logo.nologo" >> /boot/cmdline.txt
+}
+
+do_hide_boottext() {
+  sudo sed -i 's/console=tty1/console=tty3'/ /boot/cmdline.txt
+  echo "loglevel=3" >> /boot/cmdline.txt
+  echo "vt.global_cursor_default=0" >> /boot/cmdline.txt
 }
 
 # Make sure only root can run our script
