@@ -20,7 +20,7 @@ browseprinter.bat
 
 Common Problems:
 ----------------
-Problem: Right after installing the software and then rebooting by Raspberry Pi, 
+Problem: Right after installing the software and then rebooting the Raspberry Pi, 
 		it won't find my displays anymore.
 Solution: Make sure your SD card is being "fully used" by choosing the following
 		option in your raspi-config "1 Expand Filesystem"
