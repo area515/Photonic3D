@@ -257,7 +257,7 @@
 									dataType: "json",
 						    		error: errorHandler,
 									success: function(data){
-									  	if ("WebSocket" in window) {
+									  	if (false && "WebSocket" in window) {
 										     var ws = new WebSocket(createWebSocketURL("printjobnotification/" + encodeURIComponent(jobName)));
 										     ws.onopen = function() {
 										     };
