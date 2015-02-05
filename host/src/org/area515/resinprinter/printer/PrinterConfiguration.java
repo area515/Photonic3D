@@ -197,7 +197,10 @@ public class PrinterConfiguration {
 		this.monitorDriverConfig = monitorDriverConfig;
 	}
 	
-	public int getDisplayIndex() {
+	public Integer getDisplayIndex() {
+		if (monitorDriverConfig == null || monitorDriverConfig.monitorID == null) {
+			return null;
+		}
 		Pattern displayPattern = Pattern.compile(".*?([\\d]{1,2})");
 		Matcher matcher = displayPattern.matcher(monitorDriverConfig.monitorID);
 		if (!matcher.matches()) {

@@ -257,6 +257,18 @@
 									dataType: "json",
 						    		error: errorHandler,
 									success: function(data){
+									  	if ("WebSocket" in window) {
+										     var ws = new WebSocket(createWebSocketURL("printjobnotification/" + encodeURIComponent(jobName)));
+										     ws.onopen = function() {
+										     };
+										     ws.onmessage = function (evt) {
+										        var received_msg = JSON.parse(evt.data)
+										        alert("Message is received..." + received_msg);
+										     };
+										     ws.onclose = function() {
+										     };
+										}
+									  
 										if (data.message === "0") {
 											$("#statustext").attr("placeholder", "Time Left:Unknown");
 										} else {
@@ -276,22 +288,6 @@
 										$("#sliceprogress").attr({value:parseInt(currentslice), max:parseInt(totalslices)});
 										
 										
-										  if (false && "WebSocket" in window) {
-										     var ws = new WebSocket(createWebSocketURL("printjobnotification/" + encodeURIComponent(jobName)));
-										     ws.onopen = function() {
-										        // Web Socket is connected, send data using send()
-										        ws.send("Message to send");
-										        alert("Message is sent...");
-										     };
-										     ws.onmessage = function (evt) { 
-										        var received_msg = evt.data;
-										        alert("Message is received..." + received_msg);
-										     };
-										     ws.onclose = function() { 
-										        // websocket is closed.
-										        alert("Connection is closed..."); 
-										     };
-										  }
 										  
 										  
 									} //end of seccess for currentSliceTime

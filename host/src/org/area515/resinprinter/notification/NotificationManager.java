@@ -27,6 +27,7 @@ public class NotificationManager {
 			try {
 				notifier = currentClass.newInstance();
 				notifier.register(container);
+				notifiers.add(notifier);
 			} catch (InstantiationException | IllegalAccessException | InappropriateDeviceException e) {
 				System.out.println("Couldn't start Notifier");
 				e.printStackTrace();
@@ -56,7 +57,7 @@ public class NotificationManager {
 		});
 	}
 	
-	public static void stop() {
+	public static void shutdown() {
 		for (Notifier currentNotifier : notifiers) {
 			currentNotifier.stop();
 		}
