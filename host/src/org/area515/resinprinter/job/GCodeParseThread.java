@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FilenameUtils;
+import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterManager;
 
@@ -29,6 +30,8 @@ public class GCodeParseThread implements Callable<JobStatus> {
 	public JobStatus call() {
 		System.out.println(Thread.currentThread().getName() + " Start");
 		printer.setStatus(JobStatus.Printing);
+		NotificationManager.jobChanged(printJob);
+		
 		File gCodeFile = printJob.getGCodeFile();
 		BufferedReader stream = null;
 		BufferedImage bimage = null;
@@ -76,6 +79,9 @@ public class GCodeParseThread implements Callable<JobStatus> {
 							File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
 							bimage = ImageIO.read(imageFile);
 							System.out.println("Show picture: " + imageFilename);
+							
+							//Notify the client that the printJob has increased the currentSlice
+							NotificationManager.jobChanged(printJob);
 
 							printer.showImage(bimage);
 						}
@@ -146,6 +152,10 @@ public class GCodeParseThread implements Callable<JobStatus> {
 			
 			printer.setStatus(JobStatus.Completed);
 			System.out.println("Job Complete:" + Thread.currentThread().getName());
+			
+			//Send a notification that the job is complete
+			NotificationManager.jobChanged(printJob);
+
 			return printer.getStatus();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

@@ -4,8 +4,13 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.URI;
 import java.util.Enumeration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.websocket.server.ServerContainer;
 
 import org.area515.resinprinter.discover.BroadcastManager;
+import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.security.JettySecurityUtils;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -14,6 +19,7 @@ import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 /*
@@ -24,6 +30,7 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
  */
 
 public class Main {
+	public static ExecutorService GLOBAL_EXECUTOR = Executors.newScheduledThreadPool(15);
 
 	public static void main(String[] args) throws Exception {
 
@@ -96,6 +103,9 @@ public class Main {
 			JettySecurityUtils.secureContext(externallyAccessableIP, serviceContext, server);
 		}
 		
+		ServerContainer container = WebSocketServerContainerInitializer.configureContext(serviceContext);
+		NotificationManager.start(container);
+		
 		//Start server before we start broadcasting!
 		try {
 			server.start();
@@ -108,7 +118,16 @@ public class Main {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				//BroadcastManager.stop();
+				try {
+					BroadcastManager.stop();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				try {
+					NotificationManager.stop();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				try {
 					server.stop();
 				} catch (Exception e) {
