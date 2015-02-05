@@ -36,7 +36,7 @@ public class Main {
 			
 			upnpService.shutdown();
 		} catch (Throwable e) {
-			if (uri != null) {
+			if (uri == null) {
 				e.printStackTrace();
 				return;
 			}
