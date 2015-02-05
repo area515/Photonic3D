@@ -169,7 +169,12 @@
 	}
 	
 	var errorHandler = function(xhr, ajaxOptions, thrownError) {
-		$('#errorModalBody').text("Problem communicating with host printer. (http:" + xhr.status + ")");
+		if (xhr.status == "401") {
+			$('#errorModalBody').text("You logged in wrong. Please delete your cookies and try again.");
+		} else {
+			$('#errorModalBody').text("Problem communicating with host printer. (http:" + xhr.status + ")");
+		}
+		
 		$('#errorModal').modal();
 		$("#statustext").attr("placeholder", "Error");
 		$("body").css("cursor", "default");
@@ -223,6 +228,7 @@
 			}
 		});
 		
+		//TODO: Use promises instead of this crazy if train!!!
 		// Update status
 		$.ajax({
 			type: 'GET',
@@ -268,6 +274,26 @@
 										}
 										$("#progresstext").text(currentslice + "/" + totalslices);
 										$("#sliceprogress").attr({value:parseInt(currentslice), max:parseInt(totalslices)});
+										
+										
+										  if (false && "WebSocket" in window) {
+										     var ws = new WebSocket(createWebSocketURL("printjobnotification/" + encodeURIComponent(jobName)));
+										     ws.onopen = function() {
+										        // Web Socket is connected, send data using send()
+										        ws.send("Message to send");
+										        alert("Message is sent...");
+										     };
+										     ws.onmessage = function (evt) { 
+										        var received_msg = evt.data;
+										        alert("Message is received..." + received_msg);
+										     };
+										     ws.onclose = function() { 
+										        // websocket is closed.
+										        alert("Connection is closed..."); 
+										     };
+										  }
+										  
+										  
 									} //end of seccess for currentSliceTime
 								});//end of ajax currentSliceTime
 							} //end of success for totalSliceData
@@ -277,6 +303,18 @@
 			} // end of success for currentSlice
 		}); // end of ajax currentSlice
 	}//end of refressStatus
+	
+	function createWebSocketURL(relativeURL) {
+		  var loc = window.location;
+		  var schema;
+		  if (loc.protocol === "https:") {
+			  schema = "wss:";
+		  } else {
+			  schema = "ws:";
+		  }
+		  
+		  return schema + "//" + loc.host + "/services" + loc.pathname + relativeURL;
+	}
 	
 	function refreshListbox(serviceUrl, listbox) {
 		$.ajax({

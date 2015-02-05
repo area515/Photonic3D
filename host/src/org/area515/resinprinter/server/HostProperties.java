@@ -22,6 +22,7 @@ import org.area515.resinprinter.discover.Advertiser;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.notification.Notifier;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
@@ -41,6 +42,7 @@ public class HostProperties {
 	private boolean fakedisplay = false;
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
 	private List<Class<Advertiser>> advertisementClasses = new ArrayList<Class<Advertiser>>();
+	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
 	private Class<SerialCommunicationsPort> serialPortClass;
 	private int versionNumber;
 	private String deviceName;
@@ -98,6 +100,8 @@ public class HostProperties {
 			uploadDirString = props.getProperty("uploaddir");
 			fakeSerial = new Boolean(props.getProperty("fakeserial", "false"));
 			fakedisplay = new Boolean(props.getProperty("fakedisplay", "false"));
+			
+			//This loads advertisers
 			for (Entry<Object, Object> currentProperty : props.entrySet()) {
 				String currentPropertyString = currentProperty.getKey() + "";
 				if (currentPropertyString.startsWith("advertise.")) {
@@ -110,7 +114,23 @@ public class HostProperties {
 						}
 					}
 				}
+			}			
+			
+			//This loads notifiers
+			for (Entry<Object, Object> currentProperty : props.entrySet()) {
+				String currentPropertyString = currentProperty.getKey() + "";
+				if (currentPropertyString.startsWith("notify.")) {
+					currentPropertyString = currentPropertyString.replace("notify.", "");
+					if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
+						try {
+							notificationClasses.add((Class<Notifier>)Class.forName(currentPropertyString));
+						} catch (ClassNotFoundException e) {
+							System.out.println("Failed to load notifier:" + currentPropertyString);
+						}
+					}
+				}
 			}
+			
 			
 			String serialCommClass = null;
 			try {
@@ -239,6 +259,10 @@ public class HostProperties {
 	
 	public List<Class<Advertiser>> getAdvertisers() {
 		return advertisementClasses;
+	}
+	
+	public List<Class<Notifier>> getNotifiers() {
+		return notificationClasses;
 	}
 	
 	public boolean isUseSSL() {
