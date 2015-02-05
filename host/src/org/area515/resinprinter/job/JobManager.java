@@ -11,8 +11,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -25,11 +23,11 @@ import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.server.Main;
 
 public class JobManager {
 	private static JobManager INSTANCE;
 	
-	private ExecutorService EXECUTOR = Executors.newScheduledThreadPool(10);
 	private ConcurrentHashMap<String, PrintJob> printJobsByName = new ConcurrentHashMap<String, PrintJob>();
 	
 	public static JobManager Instance() {
@@ -88,7 +86,7 @@ public class JobManager {
 	public Future<JobStatus> startJob(PrintJob job, Printer printer) throws AlreadyAssignedException, InappropriateDeviceException {
 		PrinterManager.Instance().assignPrinter(job, printer);
 		Callable<JobStatus> worker = new GCodeParseThread(job, printer);
-		return EXECUTOR.submit(worker);
+		return Main.GLOBAL_EXECUTOR.submit(worker);
 	}
 	
 	public PrintJob getJob(String jobId) {

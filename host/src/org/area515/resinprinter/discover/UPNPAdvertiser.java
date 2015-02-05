@@ -2,6 +2,7 @@ package org.area515.resinprinter.discover;
 
 import java.net.URI;
 
+import org.area515.resinprinter.server.HostProperties;
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.UpnpServiceImpl;
 import org.fourthline.cling.binding.annotations.AnnotationLocalServiceBinder;
@@ -25,9 +26,9 @@ public class UPNPAdvertiser implements Advertiser {
 	public static UPNPSetup INSTANCE = new UPNPSetup();
 	
 	public static class UPNPSetup {
-		private String deviceName = "Multiprint";
-		private int deviceVersion = 1;//TODO: get from build.number file
-		private String manufacturer = "Wes & Sean";
+		private String deviceName =  HostProperties.Instance().getDeviceName();
+		private int deviceVersion = HostProperties.Instance().getVersionNumber();
+		private String manufacturer = HostProperties.Instance().getManufacturer();
 		private String deviceType = "3DPrinterHost";
 		private int upnpStreamPort = 5001;
 		
@@ -40,7 +41,6 @@ public class UPNPAdvertiser implements Advertiser {
 	}
 	
 	public UPNPSetup getSetup() {
-		//TODO: Get properties from HostProperties.Instance()
 		return INSTANCE;
 	}
 	

@@ -1,6 +1,5 @@
 package org.area515.resinprinter.server;
 
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -23,6 +22,7 @@ import org.area515.resinprinter.discover.Advertiser;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.notification.Notifier;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
@@ -30,6 +30,8 @@ import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.services.MachineService;
 
 public class HostProperties {
+	public static String FULL_RIGHTS = "adminRole";
+
 	private static HostProperties INSTANCE = null;
 	private static String MACHINE_EXTENSION = ".machine";
 	
@@ -40,8 +42,26 @@ public class HostProperties {
 	private boolean fakedisplay = false;
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
 	private List<Class<Advertiser>> advertisementClasses = new ArrayList<Class<Advertiser>>();
+	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
 	private Class<SerialCommunicationsPort> serialPortClass;
+	private int versionNumber;
+	private String deviceName;
+	private String manufacturer;
+	
+	//Server settings:
+	private boolean useSSL;
 	private int printerHostPort;
+	private File keystoreFile;
+	private String keypairPassword;
+	private String keystorePassword;
+	private String securityRealmName;
+	
+	//Optional
+	private String externallyAccessableName;
+	
+	//This is for authentication
+	private String clientUsername;
+	private String clientPassword;
 	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
@@ -80,6 +100,8 @@ public class HostProperties {
 			uploadDirString = props.getProperty("uploaddir");
 			fakeSerial = new Boolean(props.getProperty("fakeserial", "false"));
 			fakedisplay = new Boolean(props.getProperty("fakedisplay", "false"));
+			
+			//This loads advertisers
 			for (Entry<Object, Object> currentProperty : props.entrySet()) {
 				String currentPropertyString = currentProperty.getKey() + "";
 				if (currentPropertyString.startsWith("advertise.")) {
@@ -92,7 +114,23 @@ public class HostProperties {
 						}
 					}
 				}
+			}			
+			
+			//This loads notifiers
+			for (Entry<Object, Object> currentProperty : props.entrySet()) {
+				String currentPropertyString = currentProperty.getKey() + "";
+				if (currentPropertyString.startsWith("notify.")) {
+					currentPropertyString = currentPropertyString.replace("notify.", "");
+					if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
+						try {
+							notificationClasses.add((Class<Notifier>)Class.forName(currentPropertyString));
+						} catch (ClassNotFoundException e) {
+							System.out.println("Failed to load notifier:" + currentPropertyString);
+						}
+					}
+				}
 			}
+			
 			
 			String serialCommClass = null;
 			try {
@@ -102,7 +140,21 @@ public class HostProperties {
 				System.out.println("Failed to load SerialCommunicationsImplementation:" + serialCommClass);
 			}
 			
-			printerHostPort = new Integer(props.getProperty("printerHostPort", "9091"));
+			//Here are all of the server configuration settings
+			String keystoreFilename = props.getProperty("keystoreFilename");
+			if (keystoreFilename != null) {
+				keystoreFile = new File(keystoreFilename);
+			}
+			useSSL = new Boolean(props.getProperty("useSSL", "false"));
+			printerHostPort = new Integer(props.getProperty("printerHostPort", useSSL?"443":"9091"));
+			externallyAccessableName = props.getProperty("externallyAccessableName");
+			keypairPassword = props.getProperty("keypairPassword");
+			keystorePassword = props.getProperty("keystorePassword");
+			deviceName = props.getProperty("deviceName", "3D Multiprint Host");
+			manufacturer = props.getProperty("manufacturer", "Wes & Sean");
+			securityRealmName = props.getProperty("securityRealmName", "SecurityRealm");
+			clientUsername = props.getProperty(securityRealmName + ".clientUsername", "");
+			clientPassword = props.getProperty(securityRealmName + ".clientPassword", "");
 		}
 		
 		if (printDirString == null) {
@@ -115,6 +167,17 @@ public class HostProperties {
 			uploadDir = new File(System.getProperty("java.io.tmpdir"), "uploaddir");
 		} else {
 			uploadDir = new File(uploadDirString);
+		}
+		
+		File versionFile = new File("build.number");
+		if (versionFile.exists()) {
+			Properties newProperties = new Properties();
+			try {
+				newProperties.load(new FileInputStream(versionFile));
+				versionNumber = Integer.valueOf((String)newProperties.get("build.number"));
+			} catch (IOException e) {
+				System.out.println("Version file is missing:" + versionFile);
+			}
 		}
 		
 		if(!printDir.exists()){
@@ -138,6 +201,30 @@ public class HostProperties {
 		System.out.println("FakeSerial: " + fakeSerial);
 	}
 
+	public String getClientUsername() {
+		return clientUsername;
+	}
+
+	public String getClientPassword() {
+		return clientPassword;
+	}
+
+	public String getSecurityRealmName() {
+		return securityRealmName;
+	}
+
+	public int getVersionNumber() {
+		return versionNumber;
+	}
+
+	public String getDeviceName() {
+		return deviceName;
+	}
+
+	public String getManufacturer() {
+		return manufacturer;
+	}
+
 	public int getPrinterHostPort() {
 		return printerHostPort;
 	}
@@ -145,6 +232,7 @@ public class HostProperties {
 	public File getUploadDir(){
 		return uploadDir;
 	}
+	
 	public File getWorkingDir(){
 		return printDir;
 	}
@@ -157,6 +245,14 @@ public class HostProperties {
 		return fakedisplay;
 	}
 	
+	public String getKeypairPassword() {
+		return keypairPassword;
+	}
+
+	public String getKeystorePassword() {
+		return keystorePassword;
+	}
+
 	public Class<SerialCommunicationsPort> getSerialCommunicationsClass() {
 		return serialPortClass;
 	}
@@ -165,6 +261,22 @@ public class HostProperties {
 		return advertisementClasses;
 	}
 	
+	public List<Class<Notifier>> getNotifiers() {
+		return notificationClasses;
+	}
+	
+	public boolean isUseSSL() {
+		return useSSL;
+	}
+
+	public String getExternallyAccessableName() {
+		return externallyAccessableName;
+	}
+
+	public File getKeystoreFile() {
+		return keystoreFile;
+	}
+
 	public List<PrinterConfiguration> getPrinterConfigurations() {
 		if (configurations != null) {
 			return new ArrayList<PrinterConfiguration>(configurations.values());
