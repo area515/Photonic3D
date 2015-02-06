@@ -13,11 +13,11 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerContainer;
 import javax.websocket.server.ServerEndpoint;
 
-import org.area515.jackson.util.JacksonEncoder;
-import org.area515.jackson.util.PrintJobJacksonDecoder;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.util.JacksonEncoder;
+import org.area515.util.PrintJobJacksonDecoder;
 
 @ServerEndpoint(value="/printjobnotification/{printJobName}", encoders={JacksonEncoder.class}, decoders={PrintJobJacksonDecoder.class})
 public class WebSocketPrintJobNotifier implements Notifier {
@@ -57,7 +57,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 	}
 
 	@Override
-	public void jobChanged(PrintJob job) {
+	public void jobChanged(Printer printer, PrintJob job) {
 		ConcurrentHashMap<String, Session> sessionsBySessionId = sessionsByPrintJobName.get(job.getJobFile().getName());
 		if (sessionsBySessionId == null) {
 			return;

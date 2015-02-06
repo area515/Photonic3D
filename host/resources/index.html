@@ -257,39 +257,21 @@
 									dataType: "json",
 						    		error: errorHandler,
 									success: function(data){
-									  	if (false && "WebSocket" in window) {
+									  	if ("WebSocket" in window) {
 										     var ws = new WebSocket(createWebSocketURL("printjobnotification/" + encodeURIComponent(jobName)));
 										     ws.onopen = function() {
 										     };
 										     ws.onmessage = function (evt) {
-										        var received_msg = JSON.parse(evt.data)
-										        alert("Message is received..." + received_msg);
+										        var printJob = JSON.parse(evt.data)
+
+												updateStatusArea(printJob.currentSliceTime, printJob.currentSlice, printJob.totalSlices)
 										     };
 										     ws.onclose = function() {
 										     };
 										}
 									  
-										if (data.message === "0") {
-											$("#statustext").attr("placeholder", "Time Left:Unknown");
-										} else {
-											var timeLeft = (parseInt(totalslices) - parseInt(currentslice)) * parseInt(data.message);
-											var hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
-											timeLeft -= hoursLeft * 60 * 60 * 1000;
-											var minutesLeft = Math.floor(timeLeft / (60 * 1000));
-											timeLeft -= minutesLeft * 60 * 1000;
-											var secondsLeft = Math.floor(timeLeft / 1000);
-											var displayString = hoursLeft > 0? hoursLeft + " hours": "";
-											displayString += minutesLeft > 0 || hoursLeft > 0? " " + minutesLeft + " minutes": "";
-											displayString += secondsLeft > 0 || minutesLeft > 0 || hoursLeft > 0? " " + secondsLeft + " seconds": "";
-											
-											$("#statustext").attr("placeholder", "Approximate time Left: " + displayString);
-										}
-										$("#progresstext").text(currentslice + "/" + totalslices);
-										$("#sliceprogress").attr({value:parseInt(currentslice), max:parseInt(totalslices)});
-										
-										
-										  
-										  
+										updateStatusArea(data.message, currentslice, totalslices)
+
 									} //end of seccess for currentSliceTime
 								});//end of ajax currentSliceTime
 							} //end of success for totalSliceData
@@ -299,6 +281,27 @@
 			} // end of success for currentSlice
 		}); // end of ajax currentSlice
 	}//end of refressStatus
+	
+	function updateStatusArea(currentSliceTime, currentslice, totalslices) {
+		if (currentSliceTime === "0") {
+			$("#statustext").attr("placeholder", "Time Left:Unknown");
+		} else {
+			//We add 1 to the currentslice because currentslice is zero based
+			var timeLeft = (parseInt(totalslices) - (parseInt(currentslice) + 1)) * parseInt(currentSliceTime);
+			var hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+			timeLeft -= hoursLeft * 60 * 60 * 1000;
+			var minutesLeft = Math.floor(timeLeft / (60 * 1000));
+			timeLeft -= minutesLeft * 60 * 1000;
+			var secondsLeft = Math.floor(timeLeft / 1000);
+			var displayString = hoursLeft > 0? hoursLeft + " hours": "";
+			displayString += minutesLeft > 0 || hoursLeft > 0? " " + minutesLeft + " minutes": "";
+			displayString += secondsLeft > 0 || minutesLeft > 0 || hoursLeft > 0? " " + secondsLeft + " seconds": "";
+			
+			$("#statustext").attr("placeholder", "Approximate time Left: " + displayString);
+		}
+		$("#progresstext").text((parseInt(currentslice) + 1) + "/" + totalslices);
+		$("#sliceprogress").attr({value:parseInt(currentslice) + 1, max:parseInt(totalslices)});
+	}
 	
 	function createWebSocketURL(relativeURL) {
 		  var loc = window.location;

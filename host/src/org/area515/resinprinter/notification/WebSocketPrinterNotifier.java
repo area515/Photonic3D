@@ -1,11 +1,14 @@
 package org.area515.resinprinter.notification;
 
+import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.websocket.CloseReason;
 import javax.websocket.DeploymentException;
 import javax.websocket.OnClose;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
+import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerContainer;
 import javax.websocket.server.ServerEndpoint;
@@ -48,20 +51,35 @@ public class WebSocketPrinterNotifier implements Notifier {
 	}
 
 	@Override
-	public void jobChanged(PrintJob job) {
+	public void jobChanged(Printer printer, PrintJob job) {
 	}
 
 	@Override
 	public void printerChanged(Printer printer) {
 		ConcurrentHashMap<String, Session> sessionsBySessionId = sessionsByPrinterName.get(printer.getName());
+		if (sessionsBySessionId == null) {
+			return;
+		}
+		
 		for (Session currentSession : sessionsBySessionId.values()) {
-			currentSession.getAsyncRemote().sendObject(printer);
+			try {
+				currentSession.getAsyncRemote().sendObject(printer);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
 	@Override
 	public void stop() {
-		// TODO Auto-generated method stub
-		
+		for (ConcurrentHashMap<String, Session> sessions : sessionsByPrinterName.values()) {
+			for (Session currentSession : sessions.values()) {
+				try {
+					currentSession.close(new CloseReason(CloseCodes.NORMAL_CLOSURE, "The printer host has been asked to shut down now!"));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 }
