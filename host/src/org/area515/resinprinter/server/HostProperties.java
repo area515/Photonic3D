@@ -47,6 +47,7 @@ public class HostProperties {
 	private int versionNumber;
 	private String deviceName;
 	private String manufacturer;
+	private Properties configurationProperties = new Properties();
 	
 	//Server settings:
 	private boolean useSSL;
@@ -89,20 +90,19 @@ public class HostProperties {
 		}
 		
 		if (stream != null) {
-			Properties props = new Properties();
 			try {
-				props.load(stream);
+				configurationProperties.load(stream);
 			} catch (IOException e) {
 				throw new IllegalArgumentException("Couldn't load config.properties file", e);
 			}
 
-			printDirString = props.getProperty("printdir");
-			uploadDirString = props.getProperty("uploaddir");
-			fakeSerial = new Boolean(props.getProperty("fakeserial", "false"));
-			fakedisplay = new Boolean(props.getProperty("fakedisplay", "false"));
+			printDirString = configurationProperties.getProperty("printdir");
+			uploadDirString = configurationProperties.getProperty("uploaddir");
+			fakeSerial = new Boolean(configurationProperties.getProperty("fakeserial", "false"));
+			fakedisplay = new Boolean(configurationProperties.getProperty("fakedisplay", "false"));
 			
 			//This loads advertisers
-			for (Entry<Object, Object> currentProperty : props.entrySet()) {
+			for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
 				String currentPropertyString = currentProperty.getKey() + "";
 				if (currentPropertyString.startsWith("advertise.")) {
 					currentPropertyString = currentPropertyString.replace("advertise.", "");
@@ -117,7 +117,7 @@ public class HostProperties {
 			}			
 			
 			//This loads notifiers
-			for (Entry<Object, Object> currentProperty : props.entrySet()) {
+			for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
 				String currentPropertyString = currentProperty.getKey() + "";
 				if (currentPropertyString.startsWith("notify.")) {
 					currentPropertyString = currentPropertyString.replace("notify.", "");
@@ -134,27 +134,27 @@ public class HostProperties {
 			
 			String serialCommClass = null;
 			try {
-				serialCommClass = props.getProperty("SerialCommunicationsImplementation", "org.area515.resinprinter.serial.RXTXSynchronousReadBasedCommPort");
+				serialCommClass = configurationProperties.getProperty("SerialCommunicationsImplementation", "org.area515.resinprinter.serial.RXTXSynchronousReadBasedCommPort");
 				serialPortClass = (Class<SerialCommunicationsPort>)Class.forName(serialCommClass);
 			} catch (ClassNotFoundException e) {
 				System.out.println("Failed to load SerialCommunicationsImplementation:" + serialCommClass);
 			}
 			
 			//Here are all of the server configuration settings
-			String keystoreFilename = props.getProperty("keystoreFilename");
+			String keystoreFilename = configurationProperties.getProperty("keystoreFilename");
 			if (keystoreFilename != null) {
 				keystoreFile = new File(keystoreFilename);
 			}
-			useSSL = new Boolean(props.getProperty("useSSL", "false"));
-			printerHostPort = new Integer(props.getProperty("printerHostPort", useSSL?"443":"9091"));
-			externallyAccessableName = props.getProperty("externallyAccessableName");
-			keypairPassword = props.getProperty("keypairPassword");
-			keystorePassword = props.getProperty("keystorePassword");
-			deviceName = props.getProperty("deviceName", "3D Multiprint Host");
-			manufacturer = props.getProperty("manufacturer", "Wes & Sean");
-			securityRealmName = props.getProperty("securityRealmName", "SecurityRealm");
-			clientUsername = props.getProperty(securityRealmName + ".clientUsername", "");
-			clientPassword = props.getProperty(securityRealmName + ".clientPassword", "");
+			useSSL = new Boolean(configurationProperties.getProperty("useSSL", "false"));
+			printerHostPort = new Integer(configurationProperties.getProperty("printerHostPort", useSSL?"443":"9091"));
+			externallyAccessableName = configurationProperties.getProperty("externallyAccessableName");
+			keypairPassword = configurationProperties.getProperty("keypairPassword");
+			keystorePassword = configurationProperties.getProperty("keystorePassword");
+			deviceName = configurationProperties.getProperty("deviceName", "3D Multiprint Host");
+			manufacturer = configurationProperties.getProperty("manufacturer", "Wes & Sean");
+			securityRealmName = configurationProperties.getProperty("securityRealmName", "SecurityRealm");
+			clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", "");
+			clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
 		}
 		
 		if (printDirString == null) {
@@ -199,6 +199,10 @@ public class HostProperties {
 		System.out.println("WorkingDir: " + printDir);
 		System.out.println("SourceDir: " + uploadDir);
 		System.out.println("FakeSerial: " + fakeSerial);
+	}
+
+	public Properties getConfigurationProperties() {
+		return configurationProperties;
 	}
 
 	public String getClientUsername() {

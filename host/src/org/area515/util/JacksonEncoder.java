@@ -1,4 +1,4 @@
-package org.area515.jackson.util;
+package org.area515.util;
 
 import java.io.IOException;
 

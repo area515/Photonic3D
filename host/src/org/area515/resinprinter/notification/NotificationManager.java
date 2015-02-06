@@ -35,12 +35,12 @@ public class NotificationManager {
 		}
 	}
 	
-	public static Future<?> jobChanged(final PrintJob job) {
+	public static Future<?> jobChanged(final Printer printer, final PrintJob job) {
 		return Main.GLOBAL_EXECUTOR.submit(new Runnable() {
 			@Override
 			public void run() {
 				for (Notifier currentNotifier : notifiers) {
-					currentNotifier.jobChanged(job);
+					currentNotifier.jobChanged(printer, job);
 				}
 			}
 		});
