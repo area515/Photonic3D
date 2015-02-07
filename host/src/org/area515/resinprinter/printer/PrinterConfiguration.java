@@ -29,6 +29,18 @@ public class PrinterConfiguration {
 		private String stopbits;
 		@XmlElement(name="Handshake")
 		private String handshake;
+
+		public ComPortSettings() {
+		}
+		
+		public ComPortSettings(ComPortSettings settings) {
+			this.portName = settings.portName;
+			this.speed = settings.speed;
+			this.databits = settings.databits;
+			this.parity = settings.parity;
+			this.stopbits = settings.stopbits;
+			this.handshake = settings.handshake;
+		}
 		
 		@XmlTransient
 		public String getPortName() {
