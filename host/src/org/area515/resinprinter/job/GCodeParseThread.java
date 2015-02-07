@@ -25,7 +25,7 @@ public class GCodeParseThread implements Callable<JobStatus> {
 		this.printJob = printJob;
 		this.printer = printer;
 	}
-
+	
 	@Override
 	public JobStatus call() {
 		System.out.println(Thread.currentThread().getName() + " Start");
