@@ -137,7 +137,7 @@ public class PrinterManager {
 		}
 	}
 	
-	public void assignPrinter(PrintJob newJob, Printer printer) throws AlreadyAssignedException, InappropriateDeviceException {
+	public void assignPrinter(PrintJob newJob, Printer printer) throws AlreadyAssignedException {
 		Printer otherPrinter = printersByJob.putIfAbsent(newJob, printer);
 		if (otherPrinter != null) {
 			throw new AlreadyAssignedException("Job already assigned to:" + otherPrinter.getName(), otherPrinter);
