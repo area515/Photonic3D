@@ -2,12 +2,11 @@ package org.area515.resinprinter.services;
 
 import java.awt.GraphicsDevice;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -27,6 +26,7 @@ import org.area515.resinprinter.printer.PrinterConfiguration.ComPortSettings;
 import org.area515.resinprinter.printer.PrinterConfiguration.MonitorDriverConfig;
 import org.area515.resinprinter.printer.PrinterConfiguration.MotorsDriverConfig;
 import org.area515.resinprinter.printer.PrinterManager;
+import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
@@ -78,34 +78,71 @@ public class MachineService {
 		 return deviceStrings;
 	 }
 	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  * 
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException
-	  */
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 //These are some help methods:
+	 public static void main(String[] args) {
+		 new MachineService().createDefaultPrintersInMachinesDirectory();
+	}
+	 
+	 private void createDefaultPrintersInMachinesDirectory() {
+		 PrinterConfiguration configuration = createTemplatePrinter("mUVe 1 DLP (Testing)", DisplayManager.SIMULATED_DISPLAY, ConsoleCommPort.CONSOLE_COMM_PORT);
+		 configuration.getMotorsDriverConfig().setZLiftDistanceGCode(Arrays.asList(new String[]{"M650 D${ZLiftDistance} S${ZLiftSpeed}"}));
+		 configuration.getMotorsDriverConfig().setZLiftSpeedGCode(Arrays.asList(new String[]{"M650 D${ZLiftDistance} S${ZLiftSpeed}"}));
+		 
+		 try {
+			HostProperties.Instance().addPrinterConfiguration(configuration);
+		} catch (AlreadyAssignedException e) {
+			
+		}
+	 }
+	 
+	 private PrinterConfiguration createTemplatePrinter(String printername, String displayId, String comport) {
+			PrinterConfiguration currentConfiguration = new PrinterConfiguration();
+			ComPortSettings settings = new ComPortSettings();
+			settings.setPortName(comport);
+			settings.setDatabits(8);
+			settings.setHandshake("None");
+			settings.setStopbits("One");
+			settings.setParity("None");
+			settings.setSpeed(115200);
+			MotorsDriverConfig motors = new MotorsDriverConfig();
+			motors.setComPortSettings(settings);
+			MonitorDriverConfig monitor = new MonitorDriverConfig();
+			currentConfiguration.setMotorsDriverConfig(motors);
+			currentConfiguration.setMonitorDriverConfig(monitor);
+			currentConfiguration.setOSMonitorID(displayId);
+			currentConfiguration.setName(printername);
+			return currentConfiguration;
+	 }
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 //The following methods are for Printers
+	 //======================================
+
 	 @GET
 	 @Path("createprinter/{printername}/{display}/{comport}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse createPrinter(@PathParam("printername") String printername, @PathParam("display") String displayId, @PathParam("comport") String comport) {
 		//TODO: This data needs to be set by the user interface...
 		//========================================================
-		PrinterConfiguration currentConfiguration = new PrinterConfiguration();
-		ComPortSettings settings = new ComPortSettings();
-		settings.setPortName(comport);
-		settings.setDatabits(8);
-		settings.setHandshake("None");
-		settings.setStopbits("One");
-		settings.setParity("None");
-		settings.setSpeed(115200);
-		MotorsDriverConfig motors = new MotorsDriverConfig();
-		motors.setComPortSettings(settings);
-		MonitorDriverConfig monitor = new MonitorDriverConfig();
-		currentConfiguration.setMotorsDriverConfig(motors);
-		currentConfiguration.setMonitorDriverConfig(monitor);
-		currentConfiguration.setOSMonitorID(displayId);
-		currentConfiguration.setName(printername);
+		PrinterConfiguration currentConfiguration = createTemplatePrinter(printername, displayId, comport);
 		//=========================================================
 		try {
 			HostProperties.Instance().addPrinterConfiguration(currentConfiguration);
@@ -116,62 +153,6 @@ public class MachineService {
 		}
 	 }
 	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  * 
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException
-	  */
-	 @GET
-	 @Path("showcalibrationscreen/{printername}/{pixels}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse showCalibrationScreen(@PathParam("printername") String printerName, @PathParam("pixels") int pixels) {
-		try {
-			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
-			if (currentPrinter == null) {
-				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
-			}
-			
-			currentPrinter.showCalibrationImage(pixels);
-			return new MachineResponse("calibrationscreenshown", true, "Showed calibration screen on:" + printerName);
-		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
-			return new MachineResponse("calibrationscreenshown", false, e.getMessage());
-		}
-	 }
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  * 
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException
-	  */
-	 @GET
-	 @Path("showblankscreen/{printername}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse showblankscreen(@PathParam("printername") String printerName) {
-		try {
-			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
-			if (currentPrinter == null) {
-				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
-			}
-			
-			currentPrinter.showBlankImage();
-			return new MachineResponse("calibrationscreenshown", true, "Showed calibration screen on:" + printerName);
-		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
-			return new MachineResponse("calibrationscreenshown", false, e.getMessage());
-		}
-	 }
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  * 
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException
-	  */
 	 @GET
 	 @Path("deleteprinter/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -194,13 +175,7 @@ public class MachineService {
 				return new MachineResponse("delete", false, e.getMessage());
 			}
 	 }
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  * 
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException
-	  */
+
 	 @GET
 	 @Path("startprinter/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -220,13 +195,6 @@ public class MachineService {
 		}
 	 }	 
 	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  * 
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException
-	  */
 	 @GET
 	 @Path("stopprinter/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -251,110 +219,7 @@ public class MachineService {
 			return new MachineResponse("stop", false, e.getMessage());
 		}
 	 }
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  * 
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("startjob/{jobid}/{printername}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse startJob(@PathParam("jobid") String jobid, @PathParam("printername") String printername) {
-		// Create job
-		File selectedFile = new File(HostProperties.Instance().getUploadDir(), jobid); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
-		
-		// Delete and Create handled in jobManager
-		PrintJob printJob = null;
-		try {
-			printJob = JobManager.Instance().createJob(selectedFile);
-			Printer printer = PrinterManager.Instance().getPrinter(printername);
-			if (printer == null) {
-				throw new InappropriateDeviceException("Printer not started:" + printername);
-			}
-			
-			Future<JobStatus> status = JobManager.Instance().startJob(printJob, printer);
-			return new MachineResponse("start", true, "Started:" + printJob.getId());
-		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
-			JobManager.Instance().removeJob(printJob);
-			PrinterManager.Instance().removeAssignment(printJob);
-			e.printStackTrace();
-			return new MachineResponse("start", false, e.getMessage());
-		}/* catch (Exception e) {
-			JobManager.Instance().removeJob(printJob);
-			PrinterManager.Instance().removeAssignment(printJob);
-			e.printStackTrace();
-			return new MachineResponse("start", false, "Internal error on server");
-		}*/
- 	}
 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("stopjob/{jobid}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse stopJob(@PathParam("jobid") String jobId) {
-		PrintJob job = JobManager.Instance().getJob(jobId);
-		if (job == null) {
-			return new MachineResponse("stop", false, "Job:" + jobId + " not active");
-		}
-		job.getPrinter().setStatus(JobStatus.Cancelled);
-	 	return new MachineResponse("stop", true, "Stopped:" + jobId);
-	 }	 
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("togglepause/{jobid}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse togglePause(@PathParam("jobid") String jobId) {
-		PrintJob job = JobManager.Instance().getJob(jobId);
-		if (job == null) {
-			return new MachineResponse("togglepause", false, "Job:" + jobId + " not active");
-		}
-		
-		JobStatus status = job.getPrinter().togglePause();
-		return new MachineResponse("togglepause", true, "Job:" + jobId + " " + status);
-	 }
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("jobstatus/{jobid}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse getJobStatus(@PathParam("jobid") String jobId) {
-		PrintJob job = JobManager.Instance().getJob(jobId);
-		if (job == null) {
-			return new MachineResponse("status", false, "Job:" + jobId + " not active");
-		}
-
-		return new MachineResponse("status", true, "Job:" + jobId + " " + job.getPrinter().getStatus());
-	 }	 
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
 	 @GET
 	 @Path("printerstatus/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -367,154 +232,46 @@ public class MachineService {
 		return new MachineResponse("status", true, "Printer:" + printerName + " " + printer.getStatus());
 	 }
 	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
 	 @GET
-	 @Path("totalslices/{jobid}")
+	 @Path("showcalibrationscreen/{printername}/{pixels}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse getTotalSlices(@PathParam("jobid") String jobId) {
-		PrintJob job = JobManager.Instance().getJob(jobId);
-		if (job == null) {
-			return new MachineResponse("totalslices", false, "Job:" + jobId + " not active");
+	 public MachineResponse showCalibrationScreen(@PathParam("printername") String printerName, @PathParam("pixels") int pixels) {
+		try {
+			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
+			if (currentPrinter == null) {
+				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
+			}
+			
+			currentPrinter.showCalibrationImage(pixels);
+			return new MachineResponse("calibrationscreenshown", true, "Showed calibration screen on:" + printerName);
+		} catch (InappropriateDeviceException e) {
+			e.printStackTrace();
+			return new MachineResponse("calibrationscreenshown", false, e.getMessage());
 		}
+	 }
+	 
+	 @GET
+	 @Path("showblankscreen/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse showblankscreen(@PathParam("printername") String printerName) {
+		try {
+			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
+			if (currentPrinter == null) {
+				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
+			}
+			
+			currentPrinter.showBlankImage();
+			return new MachineResponse("calibrationscreenshown", true, "Showed blank screen on:" + printerName);
+		} catch (InappropriateDeviceException e) {
+			e.printStackTrace();
+			return new MachineResponse("calibrationscreenshown", false, e.getMessage());
+		}
+	 }
 
-		return new MachineResponse("totalslices", true, String.valueOf(job.getTotalSlices()));
-	 }
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
 	 @GET
-	 @Path("currentslice/{jobid}")
+	 @Path("gcode/{printername}/{gcode}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse getCurrentSlice(@PathParam("jobid") String jobId) {
-		 PrintJob job = JobManager.Instance().getJob(jobId);
-		 if(job == null) {
-			 return new MachineResponse("currentslice", false, "Job:" + jobId + " not active");
-		 }
-		 
-		 return new MachineResponse("currentslice", true, String.valueOf(job.getCurrentSlice()));
-	 }
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("currentslicetime/{jobid}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse getCurrentSliceTime(@PathParam("jobid") String jobId) {
-		 PrintJob job = JobManager.Instance().getJob(jobId);
-		 if(job == null) {
-			 return new MachineResponse("slicetime", false, "Job:" + jobId + " not active");
-		 }
-		 
-		 return new MachineResponse("slicetime", true, String.valueOf(job.getCurrentSliceTime()));
-	 }
-	 
-	 
-	 
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("zliftdistance/{jobname}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse getLiftDistance(@PathParam("jobname") String jobName) {
-			PrintJob printJob = JobManager.Instance().getJob(jobName);
-			if (printJob == null) {
-				return new MachineResponse("zliftdistance", false, "Job:" + jobName + " not started");
-			}
-			
-			return new MachineResponse("zliftdistance", true, String.format("%1.3f", printJob.getZLiftDistance()));
-	 }
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("zliftspeed/{jobname}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse getLiftSpeed(@PathParam("jobname") String jobName) {
-			PrintJob printJob = JobManager.Instance().getJob(jobName);
-			if (printJob == null) {
-				return new MachineResponse("zliftspeed", false, "Job:" + jobName + " not started");
-			}
-			
-			return new MachineResponse("zliftspeed", true, String.format("%1.3f", printJob.getZLiftSpeed()));
-	 }
-	 	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("exposuretime/{jobname}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse getExposureTime(@PathParam("jobname") String jobName) {
-			PrintJob printJob = JobManager.Instance().getJob(jobName);
-			if (printJob == null) {
-				return new MachineResponse("exposureTime", false, "Job:" + jobName + " not started");
-			}
-			
-			return new MachineResponse("exposureTime", true, printJob.getExposureTime() + "");
-	 }
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("exposuretime/{jobname}/{exposureTime}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse setExposureTime(@PathParam("jobname") String jobName, @PathParam("exposureTime") int exposureTime) {
-			PrintJob printJob = JobManager.Instance().getJob(jobName);
-			if (printJob == null) {
-				return new MachineResponse("exposureTime", false, "Job:" + jobName + " not started");
-			}
-			
-			printJob.overrideExposureTime(exposureTime);
-			return new MachineResponse("exposureTime", true, "Exposure time set");
-	 }	 
-
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
-	 @GET
-	 @Path("gcode/{printer}/{gcode}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse executeGCode(@PathParam("printer") String printerName, @PathParam("gcode") String gcode) {
+	 public MachineResponse executeGCode(@PathParam("printername") String printerName, @PathParam("gcode") String gcode) {
 			Printer printer = PrinterManager.Instance().getPrinter(printerName);
 			if (printer == null) {
 				return new MachineResponse("gcode", false, "Printer:" + printerName + " not started");
@@ -525,13 +282,6 @@ public class MachineService {
 	 
 	 //X Axis Move (sedgwick open aperature)
 	 //MachineControl.cmdMoveX()
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
 	 @GET
 	 @Path("movex/{printername}/{distance}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -547,13 +297,6 @@ public class MachineService {
 	 
 	 //Y Axis Move (sedgwick close aperature)
 	 //MachineControl.cmdMoveY()
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
 	 @GET
 	 @Path("movey/{printername}/{distance}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -575,13 +318,6 @@ public class MachineService {
 	 // (-.025 small reverse)
 	 // (-1.0 medium reverse)
 	 // (-10.0 large reverse)
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
 	 @GET
 	 @Path("movez/{printername}/{distance}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -597,13 +333,6 @@ public class MachineService {
 			return new MachineResponse("movez", true, response);
 	 }
 	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
 	 @GET
 	 @Path("homez/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -617,13 +346,6 @@ public class MachineService {
 			return new MachineResponse("homez", true, printer.getGCodeControl().executeZHome());
 	 }
 	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
 	 @GET
 	 @Path("homex/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -636,14 +358,7 @@ public class MachineService {
 			printer.getGCodeControl().executeSetRelativePositioning();
 			return new MachineResponse("homex", true, printer.getGCodeControl().executeXHome());
 	 }	 
-	 
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
+
 	 @GET
 	 @Path("homey/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -656,15 +371,9 @@ public class MachineService {
 			printer.getGCodeControl().executeSetRelativePositioning();
 			return new MachineResponse("homey", true, printer.getGCodeControl().executeYHome());
 	 }	 
+
 	 // Disable Motors
 	 //MachineControl.cmdMotorsOff()
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
 	 @GET
 	 @Path("motorsoff/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -679,13 +388,6 @@ public class MachineService {
 	 
 	 // Enable Motors
 	 //MachineControl.cmdMotorsOn()
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  *
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException 
-	  */
 	 @GET
 	 @Path("motorson/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -697,4 +399,214 @@ public class MachineService {
 			
 			return new MachineResponse("motorson", true, printer.getGCodeControl().executeMotorsOn());
 	 }
+
+	 @GET
+	 @Path("startjob/{jobname}/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse startJob(@PathParam("jobname") String jobname, @PathParam("printername") String printername) {
+		// Create job
+		File selectedFile = new File(HostProperties.Instance().getUploadDir(), jobname); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
+		
+		// Delete and Create handled in jobManager
+		PrintJob printJob = null;
+		try {
+			printJob = JobManager.Instance().createJob(selectedFile);
+			Printer printer = PrinterManager.Instance().getPrinter(printername);
+			if (printer == null) {
+				throw new InappropriateDeviceException("Printer not started:" + printername);
+			}
+			
+			Future<JobStatus> status = JobManager.Instance().startJob(printJob, printer);
+			return new MachineResponse("start", true, "Started:" + printJob.getId());
+		} catch (JobManagerException | AlreadyAssignedException e) {
+			JobManager.Instance().removeJob(printJob);
+			PrinterManager.Instance().removeAssignment(printJob);
+			e.printStackTrace();
+			return new MachineResponse("start", false, e.getMessage());
+		} catch (InappropriateDeviceException e) {
+			JobManager.Instance().removeJob(printJob);
+			e.printStackTrace();
+			return new MachineResponse("start", false, e.getMessage());
+		}
+ 	}
+
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 //The following methods are for Jobs
+	 //======================================
+	 
+	 
+	 @GET
+	 @Path("stopjob/{jobname}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse stopJob(@PathParam("jobname") String jobname) {
+		PrintJob job = JobManager.Instance().getJob(jobname);
+		if (job == null) {
+			return new MachineResponse("stop", false, "Job:" + jobname + " not active");
+		}
+		job.getPrinter().setStatus(JobStatus.Cancelled);
+		//need to unassign the printer!!!!!!!!!!
+	 	return new MachineResponse("stop", true, "Stopped:" + jobname);
+	 }	 
+	 
+	 @GET
+	 @Path("togglepause/{jobname}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse togglePause(@PathParam("jobname") String jobname) {
+		PrintJob job = JobManager.Instance().getJob(jobname);
+		if (job == null) {
+			return new MachineResponse("togglepause", false, "Job:" + jobname + " not active");
+		}
+		
+		JobStatus status = job.getPrinter().togglePause();
+		return new MachineResponse("togglepause", true, "Job:" + jobname + " " + status);
+	 }
+	 
+	 @GET
+	 @Path("jobstatus/{jobname}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getJobStatus(@PathParam("jobname") String jobname) {
+		PrintJob job = JobManager.Instance().getJob(jobname);
+		if (job == null) {
+			return new MachineResponse("status", false, "Job:" + jobname + " not active");
+		}
+
+		return new MachineResponse("status", true, "Job:" + jobname + " " + job.getPrinter().getStatus());
+	 }	 
+	 
+	 @GET
+	 @Path("totalslices/{jobname}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getTotalSlices(@PathParam("jobname") String jobname) {
+		PrintJob job = JobManager.Instance().getJob(jobname);
+		if (job == null) {
+			return new MachineResponse("totalslices", false, "Job:" + jobname + " not active");
+		}
+
+		return new MachineResponse("totalslices", true, String.valueOf(job.getTotalSlices()));
+	 }
+
+	 @GET
+	 @Path("currentslice/{jobname}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getCurrentSlice(@PathParam("jobname") String jobname) {
+		 PrintJob job = JobManager.Instance().getJob(jobname);
+		 if(job == null) {
+			 return new MachineResponse("currentslice", false, "Job:" + jobname + " not active");
+		 }
+		 
+		 return new MachineResponse("currentslice", true, String.valueOf(job.getCurrentSlice()));
+	 }
+
+	 @GET
+	 @Path("currentslicetime/{jobname}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getCurrentSliceTime(@PathParam("jobname") String jobname) {
+		 PrintJob job = JobManager.Instance().getJob(jobname);
+		 if(job == null) {
+			 return new MachineResponse("slicetime", false, "Job:" + jobname + " not active");
+		 }
+		 
+		 return new MachineResponse("slicetime", true, String.valueOf(job.getCurrentSliceTime()));
+	 }
+	 
+	 @GET
+	 @Path("zliftdistance/{jobname}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getLiftDistance(@PathParam("jobname") String jobName) {
+			PrintJob printJob = JobManager.Instance().getJob(jobName);
+			if (printJob == null) {
+				return new MachineResponse("zliftdistance", false, "Job:" + jobName + " not started");
+			}
+			
+			return new MachineResponse("zliftdistance", true, String.format("%1.3f", printJob.getZLiftDistance()));
+	 }	 
+	 
+	 @GET
+	 @Path("zliftdistance/{jobname}/{distance}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse setLiftDistance(@PathParam("jobname") String jobName, @PathParam("distance") double liftDistance) {
+			PrintJob printJob = JobManager.Instance().getJob(jobName);
+			if (printJob == null) {
+				return new MachineResponse("LiftDistance", false, "Job:" + jobName + " not started");
+			}
+			
+			try {
+				printJob.overrideZLiftDistance(liftDistance);
+			} catch (InappropriateDeviceException e) {
+				e.printStackTrace();
+				return new MachineResponse("LiftDistance", false, e.getMessage());
+			}
+			return new MachineResponse("LiftDistance", true, "Set lift distance to:" + liftDistance);
+	 }
+	 
+	 @GET
+	 @Path("zliftspeed/{jobname}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getLiftSpeed(@PathParam("jobname") String jobName) {
+			PrintJob printJob = JobManager.Instance().getJob(jobName);
+			if (printJob == null) {
+				return new MachineResponse("zliftspeed", false, "Job:" + jobName + " not started");
+			}
+			
+			return new MachineResponse("zliftspeed", true, String.format("%1.3f", printJob.getZLiftSpeed()));
+	 }
+	 
+	 @GET
+	 @Path("zliftspeed/{jobname}/{speed}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse setLiftSpeed(@PathParam("jobname") String jobName, @PathParam("speed") double speed) {
+			PrintJob printJob = JobManager.Instance().getJob(jobName);
+			if (printJob == null) {
+				return new MachineResponse("zliftspeed", false, "Job:" + jobName + " not started");
+			}
+			
+			try {
+				printJob.overrideZLiftSpeed(speed);
+			} catch (InappropriateDeviceException e) {
+				e.printStackTrace();
+				return new MachineResponse("zliftspeed", false, e.getMessage());
+			}
+			return new MachineResponse("zliftspeed", true, "Set lift speed to:" + speed);
+	 }
+	 	
+	 @GET
+	 @Path("exposuretime/{jobname}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getExposureTime(@PathParam("jobname") String jobName) {
+			PrintJob printJob = JobManager.Instance().getJob(jobName);
+			if (printJob == null) {
+				return new MachineResponse("exposureTime", false, "Job:" + jobName + " not started");
+			}
+			
+			return new MachineResponse("exposureTime", true, printJob.getExposureTime() + "");
+	 }
+	 
+	 @GET
+	 @Path("exposuretime/{jobname}/{exposureTime}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse setExposureTime(@PathParam("jobname") String jobName, @PathParam("exposureTime") int exposureTime) {
+			PrintJob printJob = JobManager.Instance().getJob(jobName);
+			if (printJob == null) {
+				return new MachineResponse("exposureTime", false, "Job:" + jobName + " not started");
+			}
+			
+			printJob.overrideExposureTime(exposureTime);
+			return new MachineResponse("exposureTime", true, "Exposure time set");
+	 }	 
 }

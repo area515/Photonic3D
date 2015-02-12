@@ -4,7 +4,9 @@ import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration.ComPortSettings;
 
 public class ConsoleCommPort implements SerialCommunicationsPort {
-	private String name = "Console Testing";
+	public static final String CONSOLE_COMM_PORT = "Console Testing";
+	
+	private String name = CONSOLE_COMM_PORT;
 	
 	@Override
 	public void open(String printerName, int timeout, ComPortSettings settings) {
