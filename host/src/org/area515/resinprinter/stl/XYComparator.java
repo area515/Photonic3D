@@ -21,6 +21,7 @@ public class XYComparator implements Comparator<Shape3d> {
 		if (value > 1) {
 			return 1;
 		}
-		return 0;
+		
+		return first.hashCode() - second.hashCode();
 	}
 }

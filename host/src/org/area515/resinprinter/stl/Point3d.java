@@ -12,6 +12,11 @@ public class Point3d {
 	}
 
 	@Override
+	public String toString() {
+		return "(" + x + "," + y + "," + z + ")";
+	}
+	
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;

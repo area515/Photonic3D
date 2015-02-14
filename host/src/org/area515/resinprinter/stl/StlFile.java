@@ -614,90 +614,7 @@ public class StlFile {
 
   
   
-  double z = 0;
-  
-  public static void main(String[] args) throws Exception {
-	  final double pixelsPerMMX = 10;
-	  final double pixelsPerMMY = 10;
-	  final double imageOffsetX = 45 * pixelsPerMMX;
-	  final double imageOffsetY = 30 * pixelsPerMMY;
-	  final double sliceResolution = 0.1;
-	  final StlFile file = new StlFile();
-	  file.load("C:\\Users\\wgilster\\Documents\\ArduinoMega.stl");
-	  file.load("C:\\Users\\wgilster\\Documents\\Olaf_set3_whole.stl");
-	  
-		JFrame window = new JFrame();
-		window.setLayout(new BorderLayout());
-		final JPanel panel = new JPanel() {
-		    public void paintComponent(Graphics g) {
-		    	super.paintComponent(g);
-		    	
-				  g.setColor(Color.red);
-				  TreeSet<Line3d> zIntersectionsBySortedX = new TreeSet<Line3d>(new XYComparator());
-				  for (Triangle3d triangle : file.triangles) {
-					  Line3d line = triangle.getZIntersection(file.z);
-					  if (triangle.intersectsZ(file.z)) {
-						  zIntersectionsBySortedX.add(line);
-						  /*g.drawLine((int)((line.getPointOne().x * pixelsPerMMX) + imageOffsetX), 
-								  (int)((line.getPointOne().y * pixelsPerMMY) + imageOffsetY), 
-								  (int)((line.getPointTwo().x * pixelsPerMMX) + imageOffsetX), 
-								  (int)((line.getPointTwo().y * pixelsPerMMY) + imageOffsetY));*/
-					  }
-				  }
-				  
-				  List<List<Line3d>> completedLoops = new ArrayList<List<Line3d>>();
-				  List<List<Line3d>> workingLoop = new ArrayList<List<Line3d>>();
-				  Iterator<Line3d> lineIterator = zIntersectionsBySortedX.iterator();
-				  nextLine : while (lineIterator.hasNext()) {
-					  Line3d currentLine = lineIterator.next();
-					  for (List<Line3d> currentWorkingLoop : workingLoop) {
-						  Line3d first = currentWorkingLoop.get(0);
-						  Line3d last = currentWorkingLoop.get(currentWorkingLoop.size() - 1);
-						  if (first.equals(currentLine.getPointTwo())) {
-							  currentWorkingLoop.add(0, currentLine);
-							  if (currentWorkingLoop.size() > 1 && currentWorkingLoop.get(0).equals(currentWorkingLoop.get(currentWorkingLoop.size() - 1))) {
-								  workingLoop.remove(currentWorkingLoop);
-								  completedLoops.add(currentWorkingLoop);
-							  }
-							  continue nextLine;
-						  } else if (last.equals(currentLine.getPointOne())) {
-							  currentWorkingLoop.add(currentLine);
-							  if (currentWorkingLoop.size() > 1 && currentWorkingLoop.get(0).equals(currentWorkingLoop.get(currentWorkingLoop.size() - 1))) {
-								  workingLoop.remove(currentWorkingLoop);
-								  completedLoops.add(currentWorkingLoop);
-							  }
-							  continue nextLine;
-						  }
-					  }
-					  
-					  List<Line3d> newLoop = new ArrayList<Line3d>();
-					  newLoop.add(currentLine);
-					  workingLoop.add(newLoop);
-				  }
-		    }
-		};
-
-		JScrollBar bar = new JScrollBar(JScrollBar.VERTICAL);
-		bar.addAdjustmentListener(new AdjustmentListener(){
-			@Override
-			public void adjustmentValueChanged(AdjustmentEvent e) {
-				file.z = e.getValue() * sliceResolution;
-				panel.repaint();
-			}
-		});
-		
-		bar.setMaximum((int)((file.zmax - file.zmin) / sliceResolution));
-		window.add(bar, BorderLayout.EAST);
-		window.add(panel, BorderLayout.CENTER);
-		window.setTitle("Printer Simulation");
-		window.setVisible(true);
-		window.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		window.setMinimumSize(new Dimension(500, 500));
-		//window.getGraphics().setColor(Color.red);
-		//window.paint(g);
-
-
-  }
+ 
   /******************** Accessors and Modifiers ***************************/
 
   public URL getBaseUrl()
@@ -830,5 +747,17 @@ public class StlFile {
   {
     this.objectName = name;
   }
+	
+	public SortedSet<Triangle3d> getTriangles() {
+		return triangles;
+	}
+	
+	public double getZmin() {
+		return zmin;
+	}
+	
+	public double getZmax() {
+		return zmax;
+	}
 
 } // End of package stl_loader

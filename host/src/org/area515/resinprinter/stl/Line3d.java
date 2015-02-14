@@ -33,6 +33,11 @@ public class Line3d implements Shape3d {
 	}
 
 	@Override
+	public String toString() {
+		return "[" + one + "," + two + "]";
+	}
+
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;

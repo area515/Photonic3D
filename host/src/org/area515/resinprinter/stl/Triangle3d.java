@@ -5,8 +5,8 @@ import java.util.Arrays;
 public class Triangle3d implements Shape3d {
 	private Point3d[] verticies;
 	private Point3d normal;
-	private double[] min;
-	private double[] max;
+	private double[] min = new double[3];
+	private double[] max = new double[3];
 	private double[] xSlopes = new double[3];
 	private double[] xIntercepts = new double[3];
 	private double[] ySlopes = new double[3];
@@ -77,6 +77,34 @@ public class Triangle3d implements Shape3d {
 		return new Line3d(line[0], line[1], normal);
 	}
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((normal == null) ? 0 : normal.hashCode());
+		result = prime * result + Arrays.hashCode(verticies);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Triangle3d other = (Triangle3d) obj;
+		if (normal == null) {
+			if (other.normal != null)
+				return false;
+		} else if (!normal.equals(other.normal))
+			return false;
+		if (!Arrays.equals(verticies, other.verticies))
+			return false;
+		return true;
+	}
+
 	public String toString() {
 		return Arrays.toString(verticies) + "@" + normal;
 	}
