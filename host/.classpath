@@ -38,6 +38,5 @@
 	<classpathentry kind="lib" path="libs/jetty/javax.websocket-api-1.1.jar"/>
 	<classpathentry kind="lib" path="libs/email/mail.jar"/>
 	<classpathentry kind="lib" path="libs/freemarker/freemarker-2.3.21.jar"/>
-	<classpathentry kind="lib" path="libs/vectormath/gwt-vecmath-1.0-beta.jar"/>
 	<classpathentry kind="output" path="srcbin"/>
 </classpath>

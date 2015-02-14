@@ -31,14 +31,15 @@ import java.nio.ByteBuffer;
 // New from JDK 1.4 for endian related problems
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.SortedSet;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
 
 
 /**
@@ -87,10 +88,10 @@ public class StlFile {
   // Needed for reading ASCII files because its size is unknown until the end
   //private ArrayList<Point3f> coordList;		// Holds Point3f
   //private ArrayList<Vector3f> normList;		// Holds Vector3f
-  private ArrayList<Triangle3d> triangles;
+  private SortedSet<Triangle3d> triangles;
   private double zmin;
   private double zmax;
-  
+
   // GeometryInfo needs Arrays
   //private Point3f[] coordArray;
   //private Vector3f[] normArray;
@@ -101,7 +102,7 @@ public class StlFile {
 
   // Default = Not available
   private String objectName = new String("Not available");
-
+  
   /**
   *  Constructor
   */
@@ -299,7 +300,7 @@ public class StlFile {
   private void readFacetB(ByteBuffer in, int index) throws IOException
   {
     // Read the Normal
-	Vector3d normal = new Vector3d(in.getFloat(), in.getFloat(), in.getFloat());
+	Point3d normal = new Point3d(in.getFloat(), in.getFloat(), in.getFloat());
 
     // Read vertex1
 	Point3d[] triangle = new Point3d[3];
@@ -558,7 +559,7 @@ public class StlFile {
     // Initialize data
     //coordList = new ArrayList<Point3f>();
     //normList = new ArrayList<Vector3f>();
-    triangles = new ArrayList<Triangle3d>();
+    triangles = new TreeSet<Triangle3d>(new XYComparator());
     
     setAscii(true);      // Default ascii
     readFile(st);
@@ -632,14 +633,46 @@ public class StlFile {
 		    	super.paintComponent(g);
 		    	
 				  g.setColor(Color.red);
+				  TreeSet<Line3d> zIntersectionsBySortedX = new TreeSet<Line3d>(new XYComparator());
 				  for (Triangle3d triangle : file.triangles) {
-					  Point3d[] line = triangle.getZIntersection(file.z);
+					  Line3d line = triangle.getZIntersection(file.z);
 					  if (triangle.intersectsZ(file.z)) {
-						  g.drawLine((int)((line[0].x * pixelsPerMMX) + imageOffsetX), 
-								  (int)((line[0].y * pixelsPerMMY) + imageOffsetY), 
-								  (int)((line[1].x * pixelsPerMMX) + imageOffsetX), 
-								  (int)((line[1].y * pixelsPerMMY) + imageOffsetY));
+						  zIntersectionsBySortedX.add(line);
+						  /*g.drawLine((int)((line.getPointOne().x * pixelsPerMMX) + imageOffsetX), 
+								  (int)((line.getPointOne().y * pixelsPerMMY) + imageOffsetY), 
+								  (int)((line.getPointTwo().x * pixelsPerMMX) + imageOffsetX), 
+								  (int)((line.getPointTwo().y * pixelsPerMMY) + imageOffsetY));*/
 					  }
+				  }
+				  
+				  List<List<Line3d>> completedLoops = new ArrayList<List<Line3d>>();
+				  List<List<Line3d>> workingLoop = new ArrayList<List<Line3d>>();
+				  Iterator<Line3d> lineIterator = zIntersectionsBySortedX.iterator();
+				  nextLine : while (lineIterator.hasNext()) {
+					  Line3d currentLine = lineIterator.next();
+					  for (List<Line3d> currentWorkingLoop : workingLoop) {
+						  Line3d first = currentWorkingLoop.get(0);
+						  Line3d last = currentWorkingLoop.get(currentWorkingLoop.size() - 1);
+						  if (first.equals(currentLine.getPointTwo())) {
+							  currentWorkingLoop.add(0, currentLine);
+							  if (currentWorkingLoop.size() > 1 && currentWorkingLoop.get(0).equals(currentWorkingLoop.get(currentWorkingLoop.size() - 1))) {
+								  workingLoop.remove(currentWorkingLoop);
+								  completedLoops.add(currentWorkingLoop);
+							  }
+							  continue nextLine;
+						  } else if (last.equals(currentLine.getPointOne())) {
+							  currentWorkingLoop.add(currentLine);
+							  if (currentWorkingLoop.size() > 1 && currentWorkingLoop.get(0).equals(currentWorkingLoop.get(currentWorkingLoop.size() - 1))) {
+								  workingLoop.remove(currentWorkingLoop);
+								  completedLoops.add(currentWorkingLoop);
+							  }
+							  continue nextLine;
+						  }
+					  }
+					  
+					  List<Line3d> newLoop = new ArrayList<Line3d>();
+					  newLoop.add(currentLine);
+					  workingLoop.add(newLoop);
 				  }
 		    }
 		};
