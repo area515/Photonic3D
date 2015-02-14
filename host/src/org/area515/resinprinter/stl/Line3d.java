@@ -32,6 +32,12 @@ public class Line3d implements Shape3d {
 		return two;
 	}
 
+	public void swap() {
+		Point3d swap = one;
+		this.one = two;
+		this.two = swap;
+	}
+	
 	@Override
 	public String toString() {
 		return "[" + one + "," + two + "]";
