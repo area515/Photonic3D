@@ -13,6 +13,7 @@ import java.awt.event.AdjustmentListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.JButton;
@@ -28,6 +29,100 @@ import org.area515.resinprinter.stl.XYComparator;
 public class TestSlicer {
 	 private static double z = 0;
 	 private static List<Polygon> coloredPolygons = null;
+	 
+	 public static boolean findLinkage(List<Line3d> currentWorkingLoop, Line3d currentLine, List<List<Line3d>> workingLoop, List<List<Line3d>> completedLoops) {
+			  Line3d firstInCurrentWorkingGroup = currentWorkingLoop.get(0);
+			  Line3d lastInCurrentWorkingGroup = currentWorkingLoop.get(currentWorkingLoop.size() - 1);
+			  if (currentLine.getPointTwo().equals(firstInCurrentWorkingGroup.getPointOne())) {
+				  //Check to determine if this loop is closed
+				  if (currentLine.getPointOne().equals(lastInCurrentWorkingGroup.getPointTwo())) {
+					  workingLoop.remove(currentWorkingLoop);
+					  completedLoops.add(currentWorkingLoop);
+				  }
+				  
+				  currentWorkingLoop.add(0, currentLine);
+				  return true;
+			  } else if (lastInCurrentWorkingGroup.getPointTwo().equals(currentLine.getPointOne())) {
+				  //Check to determine if this loop is closed
+				  if (firstInCurrentWorkingGroup.getPointOne().equals(currentLine.getPointTwo())) {
+					  workingLoop.remove(currentWorkingLoop);
+					  completedLoops.add(currentWorkingLoop);
+				  }
+				  
+				  currentWorkingLoop.add(currentLine);
+				  return true;
+			  } else if (lastInCurrentWorkingGroup.getPointTwo().equals(currentLine.getPointTwo())) {
+				  //Check to determine if this loop is closed
+				  if (firstInCurrentWorkingGroup.getPointOne().equals(currentLine.getPointOne())) {
+					  workingLoop.remove(currentWorkingLoop);
+					  completedLoops.add(currentWorkingLoop);
+				  }
+				  
+				  currentLine.swap();
+				  currentWorkingLoop.add(currentLine);
+				  return true;							  
+			  } else if (currentLine.getPointOne().equals(firstInCurrentWorkingGroup.getPointOne())) {
+				  //Check to determine if this loop is closed
+				  if (firstInCurrentWorkingGroup.getPointTwo().equals(currentLine.getPointTwo())) {
+					  workingLoop.remove(currentWorkingLoop);
+					  completedLoops.add(currentWorkingLoop);
+				  }
+				  
+				  currentLine.swap();
+				  currentWorkingLoop.add(0, currentLine);
+				  return true;							  
+			  }
+			  
+			  return false;
+	 }
+	 
+	/* public static boolean findLinkage(List<Line3d> currentWorkingLoop, List<Line3d> otherWorkingLoop, List<List<Line3d>> workingLoop, List<List<Line3d>> completedLoops) {
+		  Line3d firstInCurrentWorkingGroup = currentWorkingLoop.get(0);
+		  Line3d lastInCurrentWorkingGroup = currentWorkingLoop.get(currentWorkingLoop.size() - 1);
+		  Line3d firstInOtherWorkingGroup = otherWorkingLoop.get(0);
+		  Line3d lastInOtherWorkingGroup = otherWorkingLoop.get(otherWorkingLoop.size() - 1);
+		  if (firstInOtherWorkingGroup.getPointTwo().equals(firstInCurrentWorkingGroup.getPointOne())) {
+			  //Check to determine if this loop is closed
+			  if (firstInOtherWorkingGroup.getPointOne().equals(lastInCurrentWorkingGroup.getPointTwo())) {
+				  workingLoop.remove(currentWorkingLoop);
+				  completedLoops.add(currentWorkingLoop);
+			  }
+			  
+			  currentWorkingLoop.add(0, currentLine);
+			  return true;
+		  } else if (lastInCurrentWorkingGroup.getPointTwo().equals(firstInOtherWorkingGroup.getPointOne())) {
+			  //Check to determine if this loop is closed
+			  if (firstInCurrentWorkingGroup.getPointOne().equals(lastInOtherWorkingGroup.getPointTwo())) {
+				  workingLoop.remove(currentWorkingLoop);
+				  completedLoops.add(currentWorkingLoop);
+			  }
+			  
+			  currentWorkingLoop.add(currentLine);
+			  return true;
+		  } else if (lastInCurrentWorkingGroup.getPointTwo().equals(lastInOtherWorkingGroup.getPointTwo())) {
+			  //Check to determine if this loop is closed
+			  if (firstInCurrentWorkingGroup.getPointOne().equals(firstInOtherWorkingGroup.getPointOne())) {
+				  workingLoop.remove(currentWorkingLoop);
+				  completedLoops.add(currentWorkingLoop);
+			  }
+			  
+			  currentLine.swap();
+			  currentWorkingLoop.add(currentLine);
+			  return true;							  
+		  } else if (firstInOtherWorkingGroup.getPointOne().equals(firstInCurrentWorkingGroup.getPointOne())) {
+			  //Check to determine if this loop is closed
+			  if (firstInCurrentWorkingGroup.getPointTwo().equals(lastInOtherWorkingGroup.getPointTwo())) {
+				  workingLoop.remove(currentWorkingLoop);
+				  completedLoops.add(currentWorkingLoop);
+			  }
+			  
+			  currentLine.swap();
+			  currentWorkingLoop.add(0,currentLine);
+			  return true;							  
+		  }
+		  
+		  return false;
+	}*/
 	 
 	  public static void main(String[] args) throws Exception {
 		  final double pixelsPerMMX = 10;
@@ -64,6 +159,7 @@ public class TestSlicer {
 					  if (coloredPolygons != null) {
 						  for (Polygon currentPolygon : coloredPolygons) {
 							  g.fillPolygon(currentPolygon);
+							  g.drawPolygon(currentPolygon);
 						  }
 					  }
 			    }
@@ -83,7 +179,8 @@ public class TestSlicer {
 			colorize.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					  TreeSet<Line3d> zIntersectionsBySortedX = new TreeSet<Line3d>(new XYComparator());
+					  //Set<Line3d> zIntersectionsBySortedX = new LinkedHashSet<Line3d>();//
+					  Set<Line3d> zIntersectionsBySortedX = new TreeSet<Line3d>(new XYComparator());
 					  for (Triangle3d triangle : file.getTriangles()) {
 						  if (triangle.intersectsZ(z)) {
 							  Line3d line = triangle.getZIntersection(z);
@@ -91,29 +188,17 @@ public class TestSlicer {
 						  }
 					  }
 					  
-					  //Join chains of polygons into working loops
+					  //Join a set of loose lines into working loops of lines
+					  //This algorithm is slightly more efficient than the below algorithm.
+					  //So attempt as many linkages here than the below algorithm
 					  List<List<Line3d>> completedLoops = new ArrayList<List<Line3d>>();
-					  List<List<Line3d>> brokenLoops = new ArrayList<List<Line3d>>();					  
+					  List<List<Line3d>> brokenLoops = new ArrayList<List<Line3d>>();
 					  List<List<Line3d>> workingLoop = new ArrayList<List<Line3d>>();
 					  Iterator<Line3d> lineIterator = zIntersectionsBySortedX.iterator();
 					  nextLine : while (lineIterator.hasNext()) {
 						  Line3d currentLine = lineIterator.next();
 						  for (List<Line3d> currentWorkingLoop : workingLoop) {
-							  Line3d first = currentWorkingLoop.get(0);
-							  Line3d last = currentWorkingLoop.get(currentWorkingLoop.size() - 1);
-							  if (first.equals(currentLine.getPointTwo())) {
-								  currentWorkingLoop.add(0, currentLine);
-								  if (currentWorkingLoop.size() > 1 && currentWorkingLoop.get(0).equals(currentWorkingLoop.get(currentWorkingLoop.size() - 1))) {
-									  workingLoop.remove(currentWorkingLoop);
-									  completedLoops.add(currentWorkingLoop);
-								  }
-								  continue nextLine;
-							  } else if (last.equals(currentLine.getPointOne())) {
-								  currentWorkingLoop.add(currentLine);
-								  if (currentWorkingLoop.size() > 1 && currentWorkingLoop.get(0).equals(currentWorkingLoop.get(currentWorkingLoop.size() - 1))) {
-									  workingLoop.remove(currentWorkingLoop);
-									  completedLoops.add(currentWorkingLoop);
-								  }
+							  if (findLinkage(currentWorkingLoop, currentLine, workingLoop, completedLoops)) {
 								  continue nextLine;
 							  }
 						  }
@@ -124,7 +209,7 @@ public class TestSlicer {
 					  }
 					  
 					  //Now combine workingLoops into completedLoops
-					  nextWorkingLoop : for (int index = 0; index < workingLoop.size(); index++) {
+					  /*nextWorkingLoop : for (int index = 0; index < workingLoop.size(); index++) {
 						  List<Line3d> currentWorkingLoop = workingLoop.get(index);
 						  
 						  for (int otherIndex = index; otherIndex < workingLoop.size(); otherIndex++) {
@@ -150,10 +235,10 @@ public class TestSlicer {
 						  }
 						  
 						  brokenLoops.add(currentWorkingLoop);
-					  }
+					  }*/
 					  
 					  coloredPolygons = new ArrayList<Polygon>();
-					  for (List<Line3d> lines : brokenLoops) {
+					  for (List<Line3d> lines : workingLoop) {
 						  int[] xpoints = new int[lines.size()];
 						  int[] ypoints = new int[lines.size()];
 						  for (int t = 0; t < lines.size(); t++) {
@@ -163,9 +248,20 @@ public class TestSlicer {
 						  Polygon polygon = new Polygon(xpoints, ypoints, xpoints.length);
 						  coloredPolygons.add(polygon);
 					  }
-					  System.out.println("Broken Loops:" + brokenLoops);
-					  System.out.println("Completed Loops:" + completedLoops);
-					  System.out.println("Working Loops:" + workingLoop);
+					  for (List<Line3d> lines : completedLoops) {
+						  int[] xpoints = new int[lines.size()];
+						  int[] ypoints = new int[lines.size()];
+						  for (int t = 0; t < lines.size(); t++) {
+							  xpoints[t] = (int)(lines.get(t).getPointOne().x * pixelsPerMMX + imageOffsetX);
+							  ypoints[t] = (int)(lines.get(t).getPointOne().y * pixelsPerMMY + imageOffsetY);
+						  }
+						  Polygon polygon = new Polygon(xpoints, ypoints, xpoints.length);
+						  coloredPolygons.add(polygon);
+					  }					  
+					  
+					  System.out.println("Broken Loops(" + brokenLoops.size() + "):" + brokenLoops);
+					  System.out.println("Completed Loops(" + completedLoops.size() + "):" + completedLoops);
+					  System.out.println("Working Loops(" + workingLoop.size() + "):" + workingLoop);
 					  panel.repaint();
 				}
 			});

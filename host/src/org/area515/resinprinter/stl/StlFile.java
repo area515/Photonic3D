@@ -12,12 +12,6 @@ package org.area515.resinprinter.stl;
    limitations under the License.
 */
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -30,16 +24,9 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 // New from JDK 1.4 for endian related problems
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollBar;
 
 
 /**
@@ -88,7 +75,7 @@ public class StlFile {
   // Needed for reading ASCII files because its size is unknown until the end
   //private ArrayList<Point3f> coordList;		// Holds Point3f
   //private ArrayList<Vector3f> normList;		// Holds Vector3f
-  private SortedSet<Triangle3d> triangles;
+  private Set<Triangle3d> triangles;
   private double zmin;
   private double zmax;
 
@@ -560,6 +547,7 @@ public class StlFile {
     //coordList = new ArrayList<Point3f>();
     //normList = new ArrayList<Vector3f>();
     triangles = new TreeSet<Triangle3d>(new XYComparator());
+    //triangles = new LinkedHashSet<Triangle3d>();//new TreeSet<Triangle3d>(new XYComparator());
     
     setAscii(true);      // Default ascii
     readFile(st);
@@ -748,7 +736,7 @@ public class StlFile {
     this.objectName = name;
   }
 	
-	public SortedSet<Triangle3d> getTriangles() {
+	public Set<Triangle3d> getTriangles() {
 		return triangles;
 	}
 	
