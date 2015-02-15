@@ -2,11 +2,11 @@ package org.area515.resinprinter.stl;
 
 import java.util.Comparator;
 
-public class XYComparator implements Comparator<Shape3d> {
+public class XYComparatori implements Comparator<Shape3i> {
 	
 	@Override
-	public int compare(Shape3d first, Shape3d second) {
-		double value = first.getMinX() - second.getMinX();
+	public int compare(Shape3i first, Shape3i second) {
+		int value = first.getMinX() - second.getMinX();
 		if (value > 0) {
 			return 1;
 		} 

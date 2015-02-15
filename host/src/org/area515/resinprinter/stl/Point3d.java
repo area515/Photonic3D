@@ -1,6 +1,6 @@
 package org.area515.resinprinter.stl;
 
-public class Point3d {
+public class Point3d implements Shape3d {
 	public double x;
 	public double y;
 	public double z;
@@ -46,5 +46,21 @@ public class Point3d {
 		if (Double.doubleToLongBits(z) != Double.doubleToLongBits(other.z))
 			return false;
 		return true;
+	}
+	
+	public boolean ceilingEquals(Point3d otherPoint) {
+		return Math.ceil(x) == Math.ceil(otherPoint.x) &&
+				Math.ceil(y) == Math.ceil(otherPoint.y) &&
+				Math.ceil(z) == Math.ceil(otherPoint.z);
+	}
+	
+	@Override
+	public double getMinX() {
+		return x;
+	}
+
+	@Override
+	public double getMinY() {
+		return y;
 	}
 }
