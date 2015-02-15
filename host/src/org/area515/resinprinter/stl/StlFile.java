@@ -57,7 +57,7 @@ import java.util.TreeSet;
  *    Can give us problems if the comment of the binary file begins by "solid"
  */
 
-public class StlFile {
+public abstract class StlFile<T> {
   // Maximum length (in chars) of basePath
   private static final int MAX_PATH_LENGTH = 1024;
 
@@ -75,9 +75,9 @@ public class StlFile {
   // Needed for reading ASCII files because its size is unknown until the end
   //private ArrayList<Point3f> coordList;		// Holds Point3f
   //private ArrayList<Vector3f> normList;		// Holds Vector3f
-  private Set<Triangle3d> triangles;
-  private double zmin;
-  private double zmax;
+  protected Set<T> triangles;
+  protected double zmin = Double.MAX_VALUE;
+  protected double zmax = Double.MIN_VALUE;
 
   // GeometryInfo needs Arrays
   //private Point3f[] coordArray;
@@ -284,27 +284,8 @@ public class StlFile {
    *
    * @throws IOException
    */
-  private void readFacetB(ByteBuffer in, int index) throws IOException
-  {
-    // Read the Normal
-	Point3d normal = new Point3d(in.getFloat(), in.getFloat(), in.getFloat());
-
-    // Read vertex1
-	Point3d[] triangle = new Point3d[3];
-	triangle[0] = new Point3d(in.getFloat(), in.getFloat(), in.getFloat());
-
-    // Read vertex2
-	triangle[1] = new Point3d(in.getFloat(), in.getFloat(), in.getFloat());
-
-    // Read vertex3
-	triangle[2] = new Point3d(in.getFloat(), in.getFloat(), in.getFloat());
-	
-    triangles.add(new Triangle3d(triangle, normal));
-    
-    zmin = Math.min(triangle[0].z, Math.min(triangle[1].z, Math.min(triangle[2].z, zmin)));
-    zmax = Math.max(triangle[0].z, Math.max(triangle[1].z, Math.max(triangle[2].z, zmax)));
-  }// End of readFacetB
-
+  public abstract void readFacetB(ByteBuffer in, int index) throws IOException;
+  
   /**
    * Method for reading binary files
    * Execution is completly different
@@ -520,6 +501,7 @@ public class StlFile {
     load(reader);
   } // End of load(URL)
 
+  public abstract Set<T> createSet();
   /**
    * The Stl File is loaded from the already opened file.
    * To attach the model to your scene, call getSceneGroup() on
@@ -546,7 +528,7 @@ public class StlFile {
     // Initialize data
     //coordList = new ArrayList<Point3f>();
     //normList = new ArrayList<Vector3f>();
-    triangles = new TreeSet<Triangle3d>(new XYComparator());
+    triangles = createSet();//
     //triangles = new LinkedHashSet<Triangle3d>();//new TreeSet<Triangle3d>(new XYComparator());
     
     setAscii(true);      // Default ascii
@@ -736,7 +718,7 @@ public class StlFile {
     this.objectName = name;
   }
 	
-	public Set<Triangle3d> getTriangles() {
+	public Set<T> getTriangles() {
 		return triangles;
 	}
 	
