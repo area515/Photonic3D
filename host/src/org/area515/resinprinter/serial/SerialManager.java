@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.printer.PrinterConfiguration.ComPortSettings;
 import org.area515.resinprinter.server.HostProperties;
 
 public class SerialManager {
@@ -34,6 +35,7 @@ public class SerialManager {
 	}
 	
 	public void assignSerialPort(Printer printer, SerialCommunicationsPort identifier) throws AlreadyAssignedException, InappropriateDeviceException {
+		ComPortSettings newComPortSettings = new ComPortSettings(printer.getConfiguration().getMotorsDriverConfig().getComPortSettings());
 		if (identifier.getName().equals(FIRST_AVAILABLE_PORT)) {
 			identifier = null;
 			ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
@@ -46,6 +48,8 @@ public class SerialManager {
 			if (identifier == null) {
 				throw new InappropriateDeviceException("No serial ports are available for auto assignment");
 			}
+			
+			newComPortSettings.setPortName(identifier.getName());
 		}
 		
 		SerialCommunicationsPort otherIdentifier = serialPortsByPrinter.putIfAbsent(printer, identifier);
@@ -59,7 +63,7 @@ public class SerialManager {
 			throw new AlreadyAssignedException("SerialPort already assigned to this job:" + otherPrintJob, otherPrintJob);
 		}
 		
-		identifier.open(printer.getName(), TIME_OUT, printer.getConfiguration().getMotorsDriverConfig().getComPortSettings());
+		identifier.open(printer.getName(), TIME_OUT, newComPortSettings);
 		printer.setSerialPort(identifier);
 	}
 	

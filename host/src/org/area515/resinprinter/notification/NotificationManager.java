@@ -27,6 +27,7 @@ public class NotificationManager {
 			try {
 				notifier = currentClass.newInstance();
 				notifier.register(container);
+				notifiers.add(notifier);
 			} catch (InstantiationException | IllegalAccessException | InappropriateDeviceException e) {
 				System.out.println("Couldn't start Notifier");
 				e.printStackTrace();
@@ -34,12 +35,12 @@ public class NotificationManager {
 		}
 	}
 	
-	public static Future<?> jobChanged(final PrintJob job) {
+	public static Future<?> jobChanged(final Printer printer, final PrintJob job) {
 		return Main.GLOBAL_EXECUTOR.submit(new Runnable() {
 			@Override
 			public void run() {
 				for (Notifier currentNotifier : notifiers) {
-					currentNotifier.jobChanged(job);
+					currentNotifier.jobChanged(printer, job);
 				}
 			}
 		});
@@ -56,7 +57,7 @@ public class NotificationManager {
 		});
 	}
 	
-	public static void stop() {
+	public static void shutdown() {
 		for (Notifier currentNotifier : notifiers) {
 			currentNotifier.stop();
 		}

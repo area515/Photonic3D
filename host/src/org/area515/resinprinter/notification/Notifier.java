@@ -8,7 +8,7 @@ import org.area515.resinprinter.printer.Printer;
 
 public interface Notifier {
 	public void register(ServerContainer container) throws InappropriateDeviceException;
-	public void jobChanged(PrintJob job);
+	public void jobChanged(Printer printer, PrintJob job);
 	public void printerChanged(Printer printer);
 	public void stop();
 }

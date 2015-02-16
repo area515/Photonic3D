@@ -1,5 +1,6 @@
 package org.area515.resinprinter.printer;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,6 +11,8 @@ import javax.xml.bind.annotation.XmlTransient;
 
 @XmlRootElement(name="MachineConfig")
 public class PrinterConfiguration {
+	public static final String NOT_CAPABLE = "Your printer configuration isn't capable of this feature";
+	
 	public static class DisplayedControls {
 	}
 	
@@ -29,6 +32,18 @@ public class PrinterConfiguration {
 		private String stopbits;
 		@XmlElement(name="Handshake")
 		private String handshake;
+
+		public ComPortSettings() {
+		}
+		
+		public ComPortSettings(ComPortSettings settings) {
+			this.portName = settings.portName;
+			this.speed = settings.speed;
+			this.databits = settings.databits;
+			this.parity = settings.parity;
+			this.stopbits = settings.stopbits;
+			this.handshake = settings.handshake;
+		}
 		
 		@XmlTransient
 		public String getPortName() {
@@ -84,6 +99,12 @@ public class PrinterConfiguration {
 		private String driverType = "eGENERIC";
 		@XmlElement(name="ComPortSettings")
 		private ComPortSettings comPortSettings;
+		@XmlElement(name="ZLiftSpeedGCode")
+		private List<String> zLiftSpeedGCode;
+		@XmlElement(name="ZLiftDistanceGCode")
+		private List<String> zLiftDistanceGCode;
+		@XmlElement(name="ZLiftSequenceGCode")
+		private List<String> zLiftSequenceGCode;
 		
 		@XmlTransient
 		public ComPortSettings getComPortSettings() {
@@ -92,13 +113,37 @@ public class PrinterConfiguration {
 		public void setComPortSettings(ComPortSettings comPortSettings) {
 			this.comPortSettings = comPortSettings;
 		}
-
+		
 		@XmlTransient
 		public String getDriverType() {
 			return driverType;
 		}
 		public void setDriverType(String driverType) {
 			this.driverType = driverType;
+		}
+		
+		@XmlTransient
+		public List<String> getZLiftSpeedGCode() {
+			return this.zLiftSpeedGCode;
+		}
+		public void setZLiftSpeedGCode(List<String> gcodes) {
+			this.zLiftSpeedGCode = gcodes;
+		}
+		
+		@XmlTransient
+		public List<String> getZLiftDistanceGCode() {
+			return this.zLiftDistanceGCode;
+		}
+		public void setZLiftDistanceGCode(List<String> gcodes) {
+			this.zLiftDistanceGCode = gcodes;
+		}
+		
+		@XmlTransient
+		public List<String> getZLiftSequenceGCode() {
+			return this.zLiftSequenceGCode;
+		}
+		public void setZLiftSequenceGCode(List<String> gcodes) {
+			this.zLiftSequenceGCode = gcodes;
 		}
 	}
 	
@@ -197,7 +242,10 @@ public class PrinterConfiguration {
 		this.monitorDriverConfig = monitorDriverConfig;
 	}
 	
-	public int getDisplayIndex() {
+	public Integer getDisplayIndex() {
+		if (monitorDriverConfig == null || monitorDriverConfig.monitorID == null) {
+			return null;
+		}
 		Pattern displayPattern = Pattern.compile(".*?([\\d]{1,2})");
 		Matcher matcher = displayPattern.matcher(monitorDriverConfig.monitorID);
 		if (!matcher.matches()) {

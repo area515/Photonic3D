@@ -25,12 +25,12 @@ public class GCodeParseThread implements Callable<JobStatus> {
 		this.printJob = printJob;
 		this.printer = printer;
 	}
-
+	
 	@Override
 	public JobStatus call() {
 		System.out.println(Thread.currentThread().getName() + " Start");
 		printer.setStatus(JobStatus.Printing);
-		NotificationManager.jobChanged(printJob);
+		NotificationManager.jobChanged(printer, printJob);
 		
 		File gCodeFile = printJob.getGCodeFile();
 		BufferedReader stream = null;
@@ -81,7 +81,7 @@ public class GCodeParseThread implements Callable<JobStatus> {
 							System.out.println("Show picture: " + imageFilename);
 							
 							//Notify the client that the printJob has increased the currentSlice
-							NotificationManager.jobChanged(printJob);
+							NotificationManager.jobChanged(printer, printJob);
 
 							printer.showImage(bimage);
 						}
@@ -154,7 +154,7 @@ public class GCodeParseThread implements Callable<JobStatus> {
 			System.out.println("Job Complete:" + Thread.currentThread().getName());
 			
 			//Send a notification that the job is complete
-			NotificationManager.jobChanged(printJob);
+			NotificationManager.jobChanged(printer, printJob);
 
 			return printer.getStatus();
 		} catch (FileNotFoundException e) {

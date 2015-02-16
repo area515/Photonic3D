@@ -25,6 +25,8 @@ import org.fourthline.cling.support.connectionmanager.AbstractPeeringConnectionM
 public class UPNPAdvertiser implements Advertiser {
 	public static UPNPSetup INSTANCE = new UPNPSetup();
 	
+	private UpnpServiceImpl upnpService;
+	
 	public static class UPNPSetup {
 		private String deviceName =  HostProperties.Instance().getDeviceName();
 		private int deviceVersion = HostProperties.Instance().getVersionNumber();
@@ -72,7 +74,7 @@ public class UPNPAdvertiser implements Advertiser {
 			LocalDevice printerServer = new LocalDevice(new DeviceIdentity(udn), type, details, new LocalService[]{contentManagerService, connectionManagerService});
 	
 			DefaultUpnpServiceConfiguration serviceConfiguration = new DefaultUpnpServiceConfiguration(getSetup().upnpStreamPort);
-			UpnpServiceImpl upnpService = new UpnpServiceImpl(serviceConfiguration);
+			upnpService = new UpnpServiceImpl(serviceConfiguration);
 			if (!upnpService.getRouter().isEnabled()) {
 				throw new IllegalArgumentException("It doesn't seem as though a network is available to publish this server, or an advertiser has already been started on this address.");
 			}
@@ -105,8 +107,6 @@ public class UPNPAdvertiser implements Advertiser {
 
 	@Override
 	public void stop() {
-		// TODO Auto-generated method stub
-
+		upnpService.shutdown();
 	}
-
 }
