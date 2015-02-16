@@ -28,7 +28,7 @@ public class BroadcastManager {
 		}
 	}
 	
-	public static void stop() {
+	public static void shutdown() {
 		for (Advertiser currentAdvertiser : advertisers) {
 			currentAdvertiser.stop();
 		}

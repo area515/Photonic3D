@@ -119,12 +119,12 @@ public class Main {
 			@Override
 			public void run() {
 				try {
-					BroadcastManager.stop();
+					BroadcastManager.shutdown();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				try {
-					NotificationManager.stop();
+					NotificationManager.shutdown();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

@@ -19,7 +19,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.display.AlreadyAssignedException;
-import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.server.HostProperties;
@@ -83,10 +82,12 @@ public class JobManager {
 		return new File(HostProperties.Instance().getWorkingDir(), archive + "extract");
 	}
 	
-	public Future<JobStatus> startJob(PrintJob job, Printer printer) throws AlreadyAssignedException, InappropriateDeviceException {
+	public Future<JobStatus> startJob(PrintJob job, Printer printer) throws AlreadyAssignedException {
 		PrinterManager.Instance().assignPrinter(job, printer);
 		Callable<JobStatus> worker = new GCodeParseThread(job, printer);
-		return Main.GLOBAL_EXECUTOR.submit(worker);
+		Future<JobStatus> futureJobStatus = Main.GLOBAL_EXECUTOR.submit(worker);
+		job.setFutureJobStatus(futureJobStatus);
+		return futureJobStatus;
 	}
 	
 	public PrintJob getJob(String jobId) {

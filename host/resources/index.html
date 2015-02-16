@@ -257,43 +257,21 @@
 									dataType: "json",
 						    		error: errorHandler,
 									success: function(data){
-										if (data.message === "0") {
-											$("#statustext").attr("placeholder", "Time Left:Unknown");
-										} else {
-											var timeLeft = (parseInt(totalslices) - parseInt(currentslice)) * parseInt(data.message);
-											var hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
-											timeLeft -= hoursLeft * 60 * 60 * 1000;
-											var minutesLeft = Math.floor(timeLeft / (60 * 1000));
-											timeLeft -= minutesLeft * 60 * 1000;
-											var secondsLeft = Math.floor(timeLeft / 1000);
-											var displayString = hoursLeft > 0? hoursLeft + " hours": "";
-											displayString += minutesLeft > 0 || hoursLeft > 0? " " + minutesLeft + " minutes": "";
-											displayString += secondsLeft > 0 || minutesLeft > 0 || hoursLeft > 0? " " + secondsLeft + " seconds": "";
-											
-											$("#statustext").attr("placeholder", "Approximate time Left: " + displayString);
-										}
-										$("#progresstext").text(currentslice + "/" + totalslices);
-										$("#sliceprogress").attr({value:parseInt(currentslice), max:parseInt(totalslices)});
-										
-										
-										  if (false && "WebSocket" in window) {
+									  	if ("WebSocket" in window) {
 										     var ws = new WebSocket(createWebSocketURL("printjobnotification/" + encodeURIComponent(jobName)));
 										     ws.onopen = function() {
-										        // Web Socket is connected, send data using send()
-										        ws.send("Message to send");
-										        alert("Message is sent...");
 										     };
-										     ws.onmessage = function (evt) { 
-										        var received_msg = evt.data;
-										        alert("Message is received..." + received_msg);
+										     ws.onmessage = function (evt) {
+										        var printJob = JSON.parse(evt.data)
+
+												updateStatusArea(printJob.currentSliceTime, printJob.currentSlice, printJob.totalSlices)
 										     };
-										     ws.onclose = function() { 
-										        // websocket is closed.
-										        alert("Connection is closed..."); 
+										     ws.onclose = function() {
 										     };
-										  }
-										  
-										  
+										}
+									  
+										updateStatusArea(data.message, currentslice, totalslices)
+
 									} //end of seccess for currentSliceTime
 								});//end of ajax currentSliceTime
 							} //end of success for totalSliceData
@@ -303,6 +281,27 @@
 			} // end of success for currentSlice
 		}); // end of ajax currentSlice
 	}//end of refressStatus
+	
+	function updateStatusArea(currentSliceTime, currentslice, totalslices) {
+		if (currentSliceTime === "0") {
+			$("#statustext").attr("placeholder", "Time Left:Unknown");
+		} else {
+			//We add 1 to the currentslice because currentslice is zero based
+			var timeLeft = (parseInt(totalslices) - (parseInt(currentslice) + 1)) * parseInt(currentSliceTime);
+			var hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+			timeLeft -= hoursLeft * 60 * 60 * 1000;
+			var minutesLeft = Math.floor(timeLeft / (60 * 1000));
+			timeLeft -= minutesLeft * 60 * 1000;
+			var secondsLeft = Math.floor(timeLeft / 1000);
+			var displayString = hoursLeft > 0? hoursLeft + " hours": "";
+			displayString += minutesLeft > 0 || hoursLeft > 0? " " + minutesLeft + " minutes": "";
+			displayString += secondsLeft > 0 || minutesLeft > 0 || hoursLeft > 0? " " + secondsLeft + " seconds": "";
+			
+			$("#statustext").attr("placeholder", "Approximate time Left: " + displayString);
+		}
+		$("#progresstext").text((parseInt(currentslice) + 1) + "/" + totalslices);
+		$("#sliceprogress").attr({value:parseInt(currentslice) + 1, max:parseInt(totalslices)});
+	}
 	
 	function createWebSocketURL(relativeURL) {
 		  var loc = window.location;
@@ -412,7 +411,33 @@
 
 		request(requestValue, true);
 	}
+	
+	function setZLiftSpeed(incrementTimeLiftSpeed) {
+		var jobName = getSelectedOptionFromListBoxOrThrowError('filesselect', "Please select a job first");
+		var liftSpeed = parseFloat($('#liftSpeedText').val());
+		if (incrementTimeLiftSpeed != null) {
+			liftSpeed += parseFloat(incrementTimeLiftSpeed);
+			$("#liftSpeedText").val(liftSpeed + "");
+		}
+		
+		var requestValue = '/machine/zliftspeed/' + encodeURIComponent(jobName) + '/' + liftSpeed;
 
+		request(requestValue, true);
+	}
+	
+	function setZLiftDistance(incrementTimeLiftDistance) {
+		var jobName = getSelectedOptionFromListBoxOrThrowError('filesselect', "Please select a job first");
+		var liftDistance = parseFloat($('#liftDistanceText').val());
+		if (incrementTimeLiftDistance != null) {
+			liftDistance += parseFloat(incrementTimeLiftDistance);
+			$("#liftDistanceText").val(liftDistance + "");
+		}
+		
+		var requestValue = '/machine/zliftdistance/' + encodeURIComponent(jobName) + '/' + liftDistance;
+
+		request(requestValue, true);
+	}
+	
 	function sendGCode() {
 		var gcode = $('#sendGcodeText').val();
 
@@ -459,6 +484,7 @@
 		request(requestValue, false);
 	}
 	
+	/*This is no longer used...
 	function sendMuve1GCode(incrementTimeLiftDistance, incrementTimeLiftSpeed, incrementLiftPause) {
 		var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
 		var liftSpeed = parseFloat($('#liftSpeedText').val());
@@ -485,7 +511,7 @@
 		var requestValue = '/machine/gcode/' + encodeURIComponent(printerName) + "/" + gCode;
 
 		request(requestValue, false);
-	}
+	}*/
 	
 	function requestAndUpdatePrinters(requestValue) {
 		$("body").css("cursor", "wait");
@@ -796,17 +822,17 @@
 							<legend>DLP Controls</legend>
 							<div class="col-md-4 column">
 						   		<h5 class="text-center">Lift Speed (mm/m)</h5>
-								<button type="button" class="btn btn-block btn-success" value="0.25" onclick="sendMuve1GCode(null, this.value, null)">+</button>
+								<button type="button" class="btn btn-block btn-success" value="0.25" onclick="setZLiftSpeed(this.value)">+</button>
 							    <input type="text" class="form-control" id="liftSpeedText" placeholder="millimeters per minute" value="1">
-								<button type="button" class="btn btn-block btn-danger" value="-.25" onclick="sendMuve1GCode(null, this.value, null)">-</button>
-								<button type="button" class="btn btn-block btn-primary" value="0" onclick="sendMuve1GCode(null, this.value, null)">Go</button>
+								<button type="button" class="btn btn-block btn-danger" value="-.25" onclick="setZLiftSpeed(this.value)">-</button>
+								<button type="button" class="btn btn-block btn-primary" value="0" onclick="setZLiftSpeed(this.value)">Go</button>
 							</div>
 							<div class="col-md-4 column">
 						   		<h5 class="text-center">Lift Distance (mm)</h5>
-								<button type="button" class="btn btn-block btn-success" value="0.5" onclick="sendMuve1GCode(this.value, null, null)">+</button>
+								<button type="button" class="btn btn-block btn-success" value="0.5" onclick="setZLiftDistance(this.value)">+</button>
 							    <input type="text" class="form-control" id="liftDistanceText" placeholder="millimeters" value="5">
-								<button type="button" class="btn btn-block btn-danger" value="-0.5" onclick="sendMuve1GCode(this.value, null, null)">-</button>
-								<button type="button" class="btn btn-block btn-primary" value="0" onclick="sendMuve1GCode(this.value, null, null)">Go</button>
+								<button type="button" class="btn btn-block btn-danger" value="-0.5" onclick="setZLiftDistance(this.value)">-</button>
+								<button type="button" class="btn btn-block btn-primary" value="0" onclick="setZLiftDistance(this.value)">Go</button>
 							</div>
 							<div class="col-md-4 column">
 								<h5 class="text-center">DLP Exposure Time (ms)</h5>

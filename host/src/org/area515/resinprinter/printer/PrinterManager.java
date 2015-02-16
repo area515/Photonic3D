@@ -1,18 +1,10 @@
 package org.area515.resinprinter.printer;
 
 
-import gnu.io.CommPortIdentifier;
-
-import java.awt.Cursor;
 import java.awt.GraphicsDevice;
-import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.swing.JFrame;
 
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
@@ -21,12 +13,11 @@ import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
-import org.area515.resinprinter.server.HostProperties;
-import org.area515.resinprinter.services.MachineResponse;
 
 public class PrinterManager {
 	private static PrinterManager INSTANCE;
 
+	private ConcurrentHashMap<Printer, PrintJob> printJobsByPrinter = new ConcurrentHashMap<Printer, PrintJob>();
 	private ConcurrentHashMap<String, Printer> printersByName = new ConcurrentHashMap<String, Printer>();
 	private ConcurrentHashMap<PrintJob, Printer> printersByJob = new ConcurrentHashMap<PrintJob, Printer>();
 	
@@ -146,10 +137,16 @@ public class PrinterManager {
 		}
 	}
 	
-	public void assignPrinter(PrintJob newJob, Printer printer) throws AlreadyAssignedException, InappropriateDeviceException {
+	public void assignPrinter(PrintJob newJob, Printer printer) throws AlreadyAssignedException {
 		Printer otherPrinter = printersByJob.putIfAbsent(newJob, printer);
 		if (otherPrinter != null) {
-			throw new AlreadyAssignedException("Printer already assigned to:" + otherPrinter.getName(), otherPrinter);
+			throw new AlreadyAssignedException("Job already assigned to:" + otherPrinter.getName(), otherPrinter);
+		}
+		
+		PrintJob otherJob = printJobsByPrinter.putIfAbsent(printer, newJob);
+		if (otherJob != null) {
+			printersByJob.remove(newJob);
+			throw new AlreadyAssignedException("Printer already working on job:" + otherJob.getJobFile().getName(), otherJob);
 		}
 		
 		newJob.setPrinter(printer);
@@ -161,6 +158,8 @@ public class PrinterManager {
 		}
 		
 		printersByJob.remove(job);
+		
+		printJobsByPrinter.remove(job.getPrinter());
 		
 		job.setPrinter(null);
 	}
