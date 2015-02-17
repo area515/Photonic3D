@@ -1,5 +1,10 @@
 package org.area515.resinprinter.stl;
 
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.RadialGradientPaint;
+import java.awt.geom.Point2D;
+
 public class Line3d implements Shape3d {
 	private Point3d one;
 	private Point3d two;

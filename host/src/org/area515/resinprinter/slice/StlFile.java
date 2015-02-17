@@ -1,4 +1,4 @@
-package org.area515.resinprinter.stl;
+package org.area515.resinprinter.slice;
 /*
    Copyright 2001  Universidad del Pais Vasco (UPV/EHU)
    Licensed under the Apache License, Version 2.0 (the "License");
