@@ -1,4 +1,4 @@
-package org.area515.resinprinter.stl;
+package org.area515.resinprinter.slice;
 import java.io.StreamTokenizer;
 import java.io.Reader;
 import java.io.IOException;
