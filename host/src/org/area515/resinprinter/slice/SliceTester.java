@@ -21,6 +21,7 @@ public class SliceTester {
 				 imageOffsetY, 
 				 sliceResolution);
 		 slicer.loadFile();
+		 
 		 for (int z = slicer.getZMin(); z < slicer.getZMax(); z++) {
 			 slicer.setZ(z);
 			 slicer.colorizePolygons();
