@@ -16,8 +16,8 @@ import javax.swing.JScrollBar;
 
 public class SliceBrowser {
 	  public static void main(String[] args) throws Exception {
-		 int z = 0;//600, 384, 387, 388, 548, 691, 709;
-		 int precisionScaler = 100000;//We need to scale the whole stl large enough to have enough precision before the decimal point
+		 int z = 384;//600;//0, 384, 387, 388, 548, 691, 709;
+		 int precisionScaler = 100000;//We need to scale the whole stl large enough to have high enough precision before the decimal point
 		 double pixelsPerMMX = 10;
 		 double pixelsPerMMY = 10;
 		 double imageOffsetX = 35 * pixelsPerMMX;
