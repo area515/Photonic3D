@@ -9,9 +9,10 @@ public class Line3d implements Shape3d {
 	private Point3d one;
 	private Point3d two;
 	private Point3d normal;
+	private Face3d originatingFace;//This is usually a Triangle3d
 	
-	public Line3d(Point3d one, Point3d two, Point3d normal) {
-		if (one.x < two.x) {
+	public Line3d(Point3d one, Point3d two, Point3d normal, Face3d originatingFace, boolean swapIfNecessary) {
+		if (!swapIfNecessary || one.x < two.x) {
 			this.one = one;
 			this.two = two;
 		} else {
@@ -19,6 +20,7 @@ public class Line3d implements Shape3d {
 			this.two = one;
 		}
 
+		this.originatingFace = originatingFace;
 		this.normal = normal;
 	}
 	
@@ -43,6 +45,10 @@ public class Line3d implements Shape3d {
 		this.two = swap;
 	}
 	
+	public Face3d getOriginatingFace() {
+		return originatingFace;
+	}
+
 	@Override
 	public String toString() {
 		return "[" + one + "," + two + "]";

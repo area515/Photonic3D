@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Triangle3d implements Shape3d {
+public class Triangle3d implements Shape3d, Face3d {
 	private Point3d[] verticies;
 	private Point3d normal;
 	private double[] min = new double[3];
@@ -41,6 +41,10 @@ public class Triangle3d implements Shape3d {
 		yIntercepts[2] = -(ySlopes[2] * points[2].z - points[2].y);
 	}
 	
+	public Point3d[] getBrokenEnds() {
+		return verticies;
+	}
+	
 	public int[] getX() {
 		return new int[] {(int)verticies[0].x, (int)verticies[1].x, (int)verticies[2].x};
 	}
@@ -51,9 +55,10 @@ public class Triangle3d implements Shape3d {
 	
 	public List<Line3d> getLines() {
 		List<Line3d> lines = new ArrayList<Line3d>();
-		lines.add(new Line3d(verticies[0], verticies[1], normal));//!Not the right normal!
-		lines.add(new Line3d(verticies[1], verticies[2], normal));//!Not the right normal!
-		lines.add(new Line3d(verticies[2], verticies[0], normal));//!Not the right normal!
+		lines.add(new Line3d(verticies[0], verticies[1], normal, this, false));//!Not the right normal!
+		lines.add(new Line3d(verticies[1], verticies[2], normal, this, false));//!Not the right normal!
+		lines.add(new Line3d(verticies[2], verticies[0], normal, this, false));//!Not the right normal!
+		//stop the swap here!!
 		return lines;
 	}
 	
@@ -109,7 +114,7 @@ public class Triangle3d implements Shape3d {
 		}
 		
 		if (line[2] == null) {
-			return new Line3d(line[0], line[1], normal);
+			return new Line3d(line[0], line[1], normal, this, true);
 		}
 
 		return new Triangle3d(line, normal);
