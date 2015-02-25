@@ -51,8 +51,8 @@ public class ZSlicer {
 			  public void readFacetB(ByteBuffer in, int index) throws IOException {
 			    // Read the Normal
 				Point3d normal = new Point3d(
-					in.getFloat() * ZSlicer.this.precisionScaler, 
-					in.getFloat() * ZSlicer.this.precisionScaler, 
+					in.getFloat(), 
+					in.getFloat(), 
 					in.getFloat() / ZSlicer.this.sliceResolution);
 
 			    // Read vertex1
@@ -268,9 +268,10 @@ public class ZSlicer {
 	 }
 
 	 public void debugPaintSlice(Graphics2D g) {
-		  g.setColor(Color.red);
+		 int t = 0;
 		  for (Triangle3d triangle : stlFile.getTriangles()) {
 			  if (triangle.intersectsZ(z)) {
+				  t++;
 				  Shape3d shape = triangle.getZIntersection(z);
 				  if (shape instanceof Triangle3d) {
 					  g.setColor(Color.blue);
@@ -278,12 +279,25 @@ public class ZSlicer {
 					  Polygon poly = new Polygon(tri.getX(), tri.gety(), 3);
 					  g.drawPolygon(poly);
 				  } else if (shape instanceof Line3d) {
-					  g.setColor(Color.red);
 					  Line3d line = (Line3d)shape;
+					  g.setColor(Color.orange);
+					  g.drawLine((int)(line.getPointTwo().x / precisionScaler * pixelsPerMMX + imageOffsetX), 
+							  (int)(line.getPointTwo().y / precisionScaler * pixelsPerMMY + imageOffsetY), 
+							  (int)((line.getPointTwo().x / precisionScaler + line.getNormal().x) * pixelsPerMMX + imageOffsetX), 
+							  (int)((line.getPointTwo().y / precisionScaler + line.getNormal().y) * pixelsPerMMY + imageOffsetY));
+					  
+					  g.setColor(Color.cyan);
+					  g.drawLine((int)(line.getPointOne().x / precisionScaler * pixelsPerMMX + imageOffsetX), 
+							  (int)(line.getPointOne().y / precisionScaler * pixelsPerMMY + imageOffsetY), 
+							  (int)((line.getPointOne().x / precisionScaler + line.getNormal().x) * pixelsPerMMX + imageOffsetX), 
+							  (int)((line.getPointOne().y / precisionScaler + line.getNormal().y) * pixelsPerMMY + imageOffsetY));
+					  
+					  g.setColor(Color.red);
 					  g.drawLine((int)(line.getPointOne().x / precisionScaler * pixelsPerMMX + imageOffsetX), 
 								  (int)(line.getPointOne().y / precisionScaler * pixelsPerMMY + imageOffsetY), 
 								  (int)(line.getPointTwo().x / precisionScaler * pixelsPerMMX + imageOffsetX), 
 								  (int)(line.getPointTwo().y / precisionScaler * pixelsPerMMY + imageOffsetY));
+					  
 				  } else if (shape instanceof Point3d) {
 					  g.setColor(Color.magenta);
 					  Point3d point = (Point3d)shape;

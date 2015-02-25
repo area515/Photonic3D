@@ -16,16 +16,16 @@ import javax.swing.JScrollBar;
 
 public class SliceBrowser {
 	  public static void main(String[] args) throws Exception {
-		 int z = 0;//547
+		 int z = 0;//547;
 		 int precisionScaler = 100000;//We need to scale the whole stl large enough to have high enough precision before the decimal point
-		 double pixelsPerMMX = 3;
-		 double pixelsPerMMY = 3;
-		 double imageOffsetX = 35 * pixelsPerMMX;
-		 double imageOffsetY = 25 * pixelsPerMMY;
+		 double pixelsPerMMX = 5;
+		 double pixelsPerMMY = 5;
+		 double imageOffsetX = 30 * pixelsPerMMX;
+		 double imageOffsetY = 30 * pixelsPerMMY;
 		 double sliceResolution = 0.1;
 		 
 		 final ZSlicer slicer = new ZSlicer(
-				 //"C:\\Users\\wgilster\\Documents\\ArduinoMega.stl,
+				 //"C:\\Users\\wgilster\\Documents\\ArduinoMega.stl",
 				 //"C:\\Users\\wgilster\\Documents\\Olaf_set3_whole.stl",
 				 "C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl", 
 				 precisionScaler, 
