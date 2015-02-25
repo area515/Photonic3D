@@ -31,6 +31,10 @@ public class Line3d implements Shape3d {
 		return Math.min(one.y, two.y);
 	}
 	
+	public Point3d getNormal() {
+		return normal;
+	}
+	
 	public Point3d getPointOne() {
 		return one;
 	}

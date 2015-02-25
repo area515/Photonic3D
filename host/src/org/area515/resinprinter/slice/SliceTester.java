@@ -26,7 +26,7 @@ public class SliceTester {
 				 sliceResolution);
 		 slicer.loadFile();
 		 
-		 for (int z = slicer.getZMin(); z < slicer.getZMax(); z++) {
+		 for (int z = 780/*slicer.getZMin()*/; z < slicer.getZMax(); z++) {
 			 slicer.setZ(z);
 			 System.out.println("Testing Z:" + z);
 			 slicer.colorizePolygons();
@@ -35,6 +35,7 @@ public class SliceTester {
 					 for (Line3d line : lines) {
 						 if (!line.getPointOne().ceilingEquals(line.getPointTwo())) {
 							 System.out.println("Z: " + z + " Non point based broken loop:" + line);
+							 System.out.println("Z: " + z + " :" + slicer.getBrokenLoops());
 						 }
 					 }
 				 }
