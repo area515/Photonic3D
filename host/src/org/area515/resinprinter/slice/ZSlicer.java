@@ -88,7 +88,7 @@ public class ZSlicer {
 	 }
 	 
 	 private void placeIntoCompletedLoopList(List<Line3d> completedLoop, List<List<Line3d>> completedFillInLoops, List<List<Line3d>> completedDigOutLoops) {
-		 completedFillInLoops.add(completedLoop);
+		 //completedFillInLoops.add(completedLoop);
 		 
 		 /*Integer leastXIndex = null;
 		 for (int t = 0; t < completedLoop.size(); t++) {
@@ -113,6 +113,20 @@ public class ZSlicer {
 		 }*/
 		 
 		 //If otherLeastXIndex or 
+		 Line3d higherYLine = null;
+		 Line3d lowerYLine = null;
+		 if (completedLoop.get(0).getPointOne().y > completedLoop.get(1).getPointTwo().y) {
+			 higherYLine = completedLoop.get(0);
+			 lowerYLine = completedLoop.get(1);
+		 } else {
+			 higherYLine = completedLoop.get(1);
+			 lowerYLine = completedLoop.get(0);
+		 }
+		 if (higherYLine.getNormal().y > 0) {
+			 completedFillInLoops.add(completedLoop);
+		 } else {
+			 completedDigOutLoops.add(completedLoop);
+		 }
 	 }
 	 
 	 private LinkageDiscovery findLinkage(List<Line3d> currentWorkingLoop, Line3d currentLine, List<List<Line3d>> completedFillInLoops, List<List<Line3d>> completedDigOutLoops) {
@@ -124,7 +138,7 @@ public class ZSlicer {
 			  if (currentLine.getPointOne().ceilingEquals(lastInCurrentWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  placeIntoCompletedLoopList(currentWorkingLoop, completedFillInLoops, completedDigOutLoops);
-				  //System.out.println("Completed Link: 1 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  System.out.println("Completed Link: 1 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -135,7 +149,7 @@ public class ZSlicer {
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(currentLine.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  placeIntoCompletedLoopList(currentWorkingLoop, completedFillInLoops, completedDigOutLoops);
-				  //System.out.println("Completed Link: 2 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  System.out.println("Completed Link: 2 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -146,7 +160,7 @@ public class ZSlicer {
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(currentLine.getPointOne())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  placeIntoCompletedLoopList(currentWorkingLoop, completedFillInLoops, completedDigOutLoops);
-				  //System.out.println("Completed Link: 3 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  System.out.println("Completed Link: 3 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -158,7 +172,7 @@ public class ZSlicer {
 			  if (firstInCurrentWorkingLoop.getPointTwo().ceilingEquals(currentLine.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  placeIntoCompletedLoopList(currentWorkingLoop, completedFillInLoops, completedDigOutLoops);
-				  //System.out.println("Completed Link: 4 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  System.out.println("Completed Link: 4 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -182,7 +196,7 @@ public class ZSlicer {
 			  if (firstInOtherWorkingLoop.getPointOne().ceilingEquals(lastInCurrentWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  placeIntoCompletedLoopList(currentWorkingLoop, completedFillInLoops, completedDigOutLoops);
-				  //System.out.println("Completed Link: 1 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  System.out.println("Completed Link: 1 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -194,7 +208,7 @@ public class ZSlicer {
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(lastInOtherWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  placeIntoCompletedLoopList(currentWorkingLoop, completedFillInLoops, completedDigOutLoops);
-				  //System.out.println("Completed Link: 2 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  System.out.println("Completed Link: 2 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -206,7 +220,7 @@ public class ZSlicer {
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(firstInOtherWorkingLoop.getPointOne())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  placeIntoCompletedLoopList(currentWorkingLoop, completedFillInLoops, completedDigOutLoops);
-				  //System.out.println("Completed Link: 3 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  System.out.println("Completed Link: 3 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -222,7 +236,7 @@ public class ZSlicer {
 			  if (firstInCurrentWorkingLoop.getPointTwo().ceilingEquals(lastInOtherWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  placeIntoCompletedLoopList(currentWorkingLoop, completedFillInLoops, completedDigOutLoops);
-				  //System.out.println("Completed Link: 4 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  System.out.println("Completed Link: 4 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -547,9 +561,9 @@ public class ZSlicer {
 		  
 		  //System.out.println("TOTALS");
 		  //System.out.println("======");
-		  //System.out.println("Broken Loops(" + brokenLoops.size() + "):" + brokenLoops);
-		  //System.out.println("Completed Loops(" + completedFillInLoops.size() + "):" + completedFillInLoops);
-		  //System.out.println("Working Loops(" + workingLoop.size() + "):" + workingLoop);
+		  System.out.println("Broken Loops(" + brokenLoops.size() + "):" + brokenLoops);
+		  System.out.println("Completed Loops(" + completedFillInLoops.size() + "):" + completedFillInLoops);
+		  System.out.println("Working Loops(" + workingLoop.size() + "):" + workingLoop);
 	 }
 	 
 	 public List<List<Line3d>> getBrokenLoops() {
