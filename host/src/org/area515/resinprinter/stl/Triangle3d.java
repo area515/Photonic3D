@@ -41,6 +41,10 @@ public class Triangle3d implements Shape3d, Face3d {
 		yIntercepts[2] = -(ySlopes[2] * points[2].z - points[2].y);
 	}
 	
+	public Point3d getNormal() {
+		return normal;
+	}
+
 	public Point3d[] getBrokenEnds() {
 		return verticies;
 	}
@@ -74,6 +78,13 @@ public class Triangle3d implements Shape3d, Face3d {
 		return min[0];
 	}
 	
+	public double getMaxX() {
+		return max[0];
+	}
+	public double getMaxY() {
+		return max[1];
+	}
+
 	public boolean intersectsZ(double z) {
 		return z >= min[2] && z <= max[2];
 	}
