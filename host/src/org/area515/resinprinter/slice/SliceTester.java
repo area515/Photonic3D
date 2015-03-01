@@ -1,9 +1,6 @@
 package org.area515.resinprinter.slice;
 
 import java.io.FileNotFoundException;
-import java.util.List;
-
-import org.area515.resinprinter.stl.Line3d;
 
 public class SliceTester {
 	public static void main(String[] args) throws FileNotFoundException {
@@ -23,21 +20,17 @@ public class SliceTester {
 				 pixelsPerMMY, 
 				 imageOffsetX, 
 				 imageOffsetY, 
-				 sliceResolution);
+				 sliceResolution,
+				 true);
 		 slicer.loadFile();
 		 
 		 for (int z = 780/*slicer.getZMin()*/; z < slicer.getZMax(); z++) {
 			 slicer.setZ(z);
 			 System.out.println("Testing Z:" + z);
 			 slicer.colorizePolygons();
-			 if (slicer.getBrokenLoops().size() > 0) {
-				 for (List<Line3d> lines : slicer.getBrokenLoops()) {
-					 for (Line3d line : lines) {
-						 if (!line.getPointOne().ceilingEquals(line.getPointTwo())) {
-							 System.out.println("Z: " + z + " Non point based broken loop:" + line);
-							 System.out.println("Z: " + z + " :" + slicer.getBrokenLoops());
-						 }
-					 }
+			 if (slicer.getStlErrors().size() > 0) {
+				 for (StlError error : slicer.getStlErrors()) {
+					 System.out.println(error);
 				 }
 			 }
 		 }

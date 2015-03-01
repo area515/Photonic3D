@@ -19,4 +19,8 @@ public class BrokenFace3d implements Face3d {
 	public List<Line3d> getLines() {
 		return lines;
 	}
+	
+	public Point3d getNormal() {
+		throw new UnsupportedOperationException("It's unnecessary to implement this");
+	}
 }
