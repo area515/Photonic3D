@@ -3,6 +3,8 @@ package org.area515.resinprinter.stl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class Triangle3i implements Shape3i {
 	private Point3i[] verticies;
@@ -50,11 +52,11 @@ public class Triangle3i implements Shape3i {
 	}
 	
 	public List<Line3i> getLines() {
-		List<Line3i> lines = new ArrayList<Line3i>();
+		Set<Line3i> lines = new TreeSet<Line3i>(new XYComparatori());
 		lines.add(new Line3i(verticies[0], verticies[1], normal));//!Not the right normal!
 		lines.add(new Line3i(verticies[1], verticies[2], normal));//!Not the right normal!
 		lines.add(new Line3i(verticies[2], verticies[0], normal));//!Not the right normal!
-		return lines;
+		return new ArrayList<Line3i>(lines);
 	}
 	
 	public double getMinZ() {
