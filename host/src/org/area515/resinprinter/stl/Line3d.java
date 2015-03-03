@@ -1,17 +1,16 @@
 package org.area515.resinprinter.stl;
 
-import java.awt.Color;
-import java.awt.Point;
-import java.awt.RadialGradientPaint;
-import java.awt.geom.Point2D;
 
 public class Line3d implements Shape3d {
 	private Point3d one;
 	private Point3d two;
 	private Point3d normal;
+	private Face3d originatingFace;//This is usually a Triangle3d
+	private double slope;
+	private double xintercept;
 	
-	public Line3d(Point3d one, Point3d two, Point3d normal) {
-		if (one.x < two.x) {
+	public Line3d(Point3d one, Point3d two, Point3d normal, Face3d originatingFace, boolean swapIfNecessary) {
+		if (!swapIfNecessary || one.x < two.x) {
 			this.one = one;
 			this.two = two;
 		} else {
@@ -19,14 +18,32 @@ public class Line3d implements Shape3d {
 			this.two = one;
 		}
 
-		this.normal = normal;
+		this.originatingFace = originatingFace;
+		this.normal = normal;//TODO: if the normal is null we probably need to compute it.
+		this.slope = (one.x - two.x) / (one.y - two.y);
+		this.xintercept = -(slope * one.y - one.x);
+	}
+	
+	public double getXIntersectionPoint(double y) {
+		return slope * y + xintercept;
 	}
 	
 	public double getMinX() {
-		return one.x;
+		return Math.min(one.x, two.x);
 	}
 	public double getMinY() {
 		return Math.min(one.y, two.y);
+	}
+	
+	public double getMaxX() {
+		return Math.max(one.x, two.x);
+	}
+	public double getMaxY() {
+		return Math.max(one.y, two.y);
+	}
+	
+	public Point3d getNormal() {
+		return normal;
 	}
 	
 	public Point3d getPointOne() {
@@ -43,6 +60,10 @@ public class Line3d implements Shape3d {
 		this.two = swap;
 	}
 	
+	public Face3d getOriginatingFace() {
+		return originatingFace;
+	}
+
 	@Override
 	public String toString() {
 		return "[" + one + "," + two + "]";

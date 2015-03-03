@@ -4,13 +4,25 @@ public class Point3d implements Shape3d {
 	public double x;
 	public double y;
 	public double z;
+	private Face3d originatingShape;
 	
 	public Point3d(double x, double y, double z) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
-
+	
+	public Point3d(double x, double y, double z, Face3d originatingShape) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.originatingShape = originatingShape;
+	}
+	
+	public Face3d getOriginatingShape() {
+		return originatingShape;
+	}
+	
 	@Override
 	public String toString() {
 		return "(" + x + "," + y + "," + z + ")";
@@ -58,9 +70,14 @@ public class Point3d implements Shape3d {
 	public double getMinX() {
 		return x;
 	}
-
 	@Override
 	public double getMinY() {
+		return y;
+	}
+	public double getMaxX() {
+		return x;
+	}
+	public double getMaxY() {
 		return y;
 	}
 }
