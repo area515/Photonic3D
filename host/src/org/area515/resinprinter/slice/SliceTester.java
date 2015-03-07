@@ -7,8 +7,8 @@ public class SliceTester {
 		 int precisionScaler = 100000;//We need to scale the whole stl large enough to have enough precision before the decimal point
 		 double pixelsPerMMX = 5;
 		 double pixelsPerMMY = 5;
-		 double imageOffsetX = 35 * pixelsPerMMX;
-		 double imageOffsetY = 25 * pixelsPerMMY;
+		 //double imageOffsetX = 35 * pixelsPerMMX;
+		 //double imageOffsetY = 25 * pixelsPerMMY;
 		 double sliceResolution = 0.1;
 		 
 		 final ZSlicer slicer = new ZSlicer(
@@ -18,11 +18,9 @@ public class SliceTester {
 				 precisionScaler, 
 				 pixelsPerMMX, 
 				 pixelsPerMMY, 
-				 imageOffsetX, 
-				 imageOffsetY, 
 				 sliceResolution,
 				 true);
-		 slicer.loadFile();
+		 slicer.loadFile(null, null);
 		 
 		 for (int z = 780/*slicer.getZMin()*/; z < slicer.getZMax(); z++) {
 			 slicer.setZ(z);
