@@ -77,7 +77,11 @@ public abstract class StlFile<T> {
   //private ArrayList<Vector3f> normList;		// Holds Vector3f
   protected Set<T> triangles;
   protected double zmin = Double.MAX_VALUE;
-  protected double zmax = Double.MIN_VALUE;
+  protected double zmax = -Double.MAX_VALUE;
+  protected double xmin = Double.MAX_VALUE;
+  protected double xmax = -Double.MAX_VALUE;
+  protected double ymin = Double.MAX_VALUE;
+  protected double ymax = -Double.MAX_VALUE;
 
   // GeometryInfo needs Arrays
   //private Point3f[] coordArray;
@@ -729,5 +733,28 @@ public abstract class StlFile<T> {
 	public double getZmax() {
 		return zmax;
 	}
+	
+	public double getXmin() {
+		return xmin;
+	}
+	
+	public double getXmax() {
+		return xmax;
+	}
+	
+	public double getYmin() {
+		return ymin;
+	}
+	
+	public double getYmax() {
+		return ymax;
+	}
 
+	public double getWidth() {
+		return xmax - xmin;
+	}
+
+	public double getHeight() {
+		return ymax - ymin;
+	}
 } // End of package stl_loader

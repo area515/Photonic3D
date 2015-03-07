@@ -4,6 +4,7 @@ public class Point3d implements Shape3d {
 	public double x;
 	public double y;
 	public double z;
+	private Point3d normal;
 	private Face3d originatingShape;
 	
 	public Point3d(double x, double y, double z) {
@@ -12,11 +13,16 @@ public class Point3d implements Shape3d {
 		this.z = z;
 	}
 	
-	public Point3d(double x, double y, double z, Face3d originatingShape) {
+	public Point3d(double x, double y, double z, Point3d normal, Face3d originatingShape) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
+		this.normal = normal;
 		this.originatingShape = originatingShape;
+	}
+	
+	public Point3d getNormal() {
+		return normal;
 	}
 	
 	public Face3d getOriginatingShape() {
