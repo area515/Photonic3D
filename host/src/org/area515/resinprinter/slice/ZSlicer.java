@@ -194,7 +194,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (currentLine.getPointOne().ceilingEquals(lastInCurrentWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  System.out.println("Completed Link: 1 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  //System.out.println("Completed Link: 1 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -204,7 +204,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(currentLine.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  System.out.println("Completed Link: 2 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  //System.out.println("Completed Link: 2 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -214,7 +214,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(currentLine.getPointOne())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  System.out.println("Completed Link: 3 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  //System.out.println("Completed Link: 3 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -225,7 +225,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointTwo().ceilingEquals(currentLine.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  System.out.println("Completed Link: 4 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  //System.out.println("Completed Link: 4 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -248,7 +248,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (firstInOtherWorkingLoop.getPointOne().ceilingEquals(lastInCurrentWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  System.out.println("Completed Link: 1 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  //System.out.println("Completed Link: 1 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -259,7 +259,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(lastInOtherWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  System.out.println("Completed Link: 2 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  //System.out.println("Completed Link: 2 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -270,7 +270,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(firstInOtherWorkingLoop.getPointOne())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  System.out.println("Completed Link: 3 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  //System.out.println("Completed Link: 3 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -285,7 +285,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointTwo().ceilingEquals(lastInOtherWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  System.out.println("Completed Link: 4 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  //System.out.println("Completed Link: 4 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -308,7 +308,7 @@ public class ZSlicer {
 			  int[] xpointsCheck = new int[lines.size()];
 			  int[] ypoints = new int[lines.size()];
 			  int[] ypointsCheck = new int[lines.size()];
-			  System.out.println("Checking out[" + count++ + "] element Count:" + lines.size());
+			  //System.out.println("Checking out[" + count++ + "] element Count:" + lines.size());
 			  for (int t = 0; t < lines.size(); t++) {
 				  xpoints[t] = (int)(lines.get(t).getPointOne().x);
 				  ypoints[t] = (int)(lines.get(t).getPointOne().y);
@@ -333,7 +333,7 @@ public class ZSlicer {
 	 
 	 public List<Shape3d> getTrianglesAt(int x, int y) {
 		 List<Shape3d> intersections = new ArrayList<Shape3d>();
-		 System.out.println("x:" + x + " y:" + y);
+		 //System.out.println("x:" + x + " y:" + y);
 		  for (Shape3d shape : getPolygonsOnSlice()) {
 			  if (shape instanceof Triangle3d) {
 				  
@@ -391,7 +391,7 @@ public class ZSlicer {
 					  g.drawPolygon(poly);
 				  } else if (shape instanceof Line3d) {
 					  Line3d line = (Line3d)shape;
-					  g.setColor(Color.orange);
+					  /*g.setColor(Color.orange);
 					  g.drawLine((int)(line.getPointTwo().x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
 							  (int)(line.getPointTwo().y / (precisionScaler) * pixelsPerMMY + imageOffsetY), 
 							  (int)((line.getPointTwo().x / (precisionScaler) + line.getNormal().x) * pixelsPerMMX + imageOffsetX), 
@@ -401,7 +401,7 @@ public class ZSlicer {
 					  g.drawLine((int)(line.getPointOne().x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
 							  (int)(line.getPointOne().y / (precisionScaler) * pixelsPerMMY + imageOffsetY), 
 							  (int)((line.getPointOne().x / (precisionScaler) + line.getNormal().x) * pixelsPerMMX + imageOffsetX), 
-							  (int)((line.getPointOne().y / (precisionScaler) + line.getNormal().y) * pixelsPerMMY + imageOffsetY));
+							  (int)((line.getPointOne().y / (precisionScaler) + line.getNormal().y) * pixelsPerMMY + imageOffsetY));*/
 					  
 					  g.setColor(Color.red);
 					  g.drawLine((int)(line.getPointOne().x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
@@ -552,10 +552,10 @@ public class ZSlicer {
 			  }
 		  }
 		  
-		  System.out.println("===================");
-		  System.out.println("zIntersectionsBySortedX:" + zIntersectionsBySortedX.size());
-		  System.out.println("completedFillInLoops:" + completedFillInLoops.size());
-		  System.out.println("===================");
+		  //System.out.println("===================");
+		  //System.out.println("zIntersectionsBySortedX:" + zIntersectionsBySortedX.size());
+		  //System.out.println("completedFillInLoops:" + completedFillInLoops.size());
+		  //System.out.println("===================");
 		  
 		  //Even though this algorithm is structured to be n^2 it executes in (n * constant) time because of the comparator
 		  //We join a set of loose lines into working loops of lines
@@ -583,7 +583,7 @@ public class ZSlicer {
 			  workingLoops.add(newLoop);
 		  }
 		  
-		  System.out.println("===================");
+		  /*System.out.println("===================");
 		  System.out.println("zIntersectionsBySortedX:" + zIntersectionsBySortedX.size());
 		  System.out.println("completedFillInLoops count:" + completedFillInLoops.size());
 		  int value = 0;
@@ -597,7 +597,7 @@ public class ZSlicer {
 			  value += loop.size();
 		  }
 		  System.out.println("workingLoops lines:" + value);
-		  System.out.println("===================");
+		  System.out.println("===================");*/
 		  
 		  //Empirically I've found that about half of all loops need to be joined with this method
 		  //Now combine workingLoops into completedLoops. This algorithm is a bit more inefficient
@@ -625,7 +625,7 @@ public class ZSlicer {
 			  workingLoops.remove(0);
 		  }
 		  
-		  System.out.println("===================");
+		  /*System.out.println("===================");
 		  System.out.println("zIntersectionsBySortedX:" + zIntersectionsBySortedX.size());
 		  System.out.println("completedFillInLoops count:" + completedFillInLoops.size());
 		  value = 0;
@@ -645,7 +645,7 @@ public class ZSlicer {
 			  value += loop.size();
 		  }
 		  System.out.println("brokenLoops lines:" + value);
-		  System.out.println("===================");
+		  System.out.println("===================");*/
 
 		  
 		  //empirically I've found that this block of code will only execute 1 in 100 times.
@@ -686,7 +686,7 @@ public class ZSlicer {
 				  assembledFaces.add(currentElementIndex);
 				  path = findPathThroughTrianglesAndBrokenLoops(currentBrokenLoop.get(0).getPointOne(), currentBrokenLoop.get(currentBrokenLoop.size() - 1).getPointTwo(), path, trianglesAndBrokenFacesForMazeTraversal, assembledFaces, 0);
 				  if (path != null) {
-					  System.out.println("Found path");
+					  System.out.println("Found path through maze");
 					  //We skip the first element on the path because it's we already know it's currentBrokenLoop
 					  for (int t = 1; t < assembledFaces.size(); t++) {
 						  Face3d usedFace = trianglesAndBrokenFacesForMazeTraversal.get(assembledFaces.get(t));
@@ -740,16 +740,14 @@ public class ZSlicer {
 		  //Fix BrokenLoops
 		  for (List<Line3d> currentBrokenLoop : brokenLoops) {
 			  if (currentBrokenLoop.size() > 1) {
-				  Line3d line1 = currentBrokenLoop.get(currentBrokenLoop.size() - 1);
-				  Line3d line2 = currentBrokenLoop.get(0);
+				  Line3d line1 = currentBrokenLoop.get(0);
+				  Line3d line2 = currentBrokenLoop.get(currentBrokenLoop.size() - 1);
 				  Point3d normal = new Point3d(line1.getNormal().x + line2.getNormal().x, line1.getNormal().y + line2.getNormal().y, line1.getNormal().z + line2.getNormal().z);
-				  Line3d line = new Line3d(line1.getPointOne(), line2.getPointTwo(), normal, null, false);
+				  Line3d line = new Line3d(line2.getPointTwo(), line1.getPointOne(), normal, null, false);
 				  currentBrokenLoop.add(line);
 			  }
 			  
 			  placeIntoCompletedLoopList(currentBrokenLoop, completedFillInLoops);
-			  
-			  System.out.println("Placed into broken loop list");
 		  }
 		  
 		  Map<Integer, List<Line3d>> inRangeLines = new HashMap<Integer, List<Line3d>>();
@@ -799,8 +797,6 @@ public class ZSlicer {
 				try {
 					work = currentWork.get();
 					if (keepTrackOfErrors) {
-						  System.out.println("Insideout polygons:" + work.getInsideOutPolygons().size());
-						  
 						  for (Face3d currentInsideOutPolygon : work.getInsideOutPolygons()) {
 							  errors.add(new StlError((Triangle3d)currentInsideOutPolygon, ErrorType.Insideout));
 						  }
