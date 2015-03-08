@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -299,7 +300,7 @@ public class ZSlicer {
 		  return completedLinkage;
 	 }
 
-	 private List<Polygon> compilePolygons(List<List<Line3d>> completedFillInLoops, double xOffset, double yOffset, double pixelsPerMMX, double pixelsPerMMY, double precisionScaler) {
+	 private List<Polygon> compilePolygons(List<List<Line3d>> completedFillInLoops) {
 		 List<Polygon> polygons = new ArrayList<Polygon>();
 		 int count = 0;
 		  for (List<Line3d> lines : completedFillInLoops) {
@@ -329,7 +330,7 @@ public class ZSlicer {
 		  
 		  return polygons;
 	 }
-
+	 
 	 public List<Shape3d> getTrianglesAt(int x, int y) {
 		 List<Shape3d> intersections = new ArrayList<Shape3d>();
 		 System.out.println("x:" + x + " y:" + y);
@@ -338,8 +339,12 @@ public class ZSlicer {
 				  
 			  } else if (shape instanceof Line3d) {
 				  Line3d line = (Line3d)shape;
-				  int checkx = (int)(line.getXIntersectionPoint(y * (precisionScaler) / pixelsPerMMY - imageOffsetY) / (precisionScaler) * pixelsPerMMX + imageOffsetX);
-				  if (checkx == x && checkx == x) {
+				  double translatedX1 = (x - 1 - imageOffsetX) * precisionScaler / pixelsPerMMX;
+				  double translatedY1 = (y - 1 - imageOffsetY) * precisionScaler / pixelsPerMMY;
+				  double translatedX2 = (x + 1 - imageOffsetX) * precisionScaler / pixelsPerMMX;
+				  double translatedY2 = (y + 1 - imageOffsetY) * precisionScaler / pixelsPerMMY;
+	
+				  if (line.intersects(translatedX1, translatedY1, translatedX2, translatedY2)) {
 					  intersections.add(line);
 				  }
 			  }
@@ -348,12 +353,21 @@ public class ZSlicer {
 		  return intersections;
 	 }
 	 
+	 public String translateLine(Line3d line) {
+		 return "line: x1:" + translateX(line.getPointOne().x) + 
+			",y1:" + translateY(line.getPointOne().y) + 
+			" x2:" + translateX(line.getPointTwo().x) + 
+			",y2:" + translateY(line.getPointTwo().y) + 
+			" ylength:" + (translateY(line.getPointTwo().y) - translateY(line.getPointOne().y)) + 
+			" xlength:" + (translateX(line.getPointTwo().x) - translateX(line.getPointOne().x));
+	 }
+	 
 	 public double translateX(double x) {
 		 return (x / (precisionScaler) * pixelsPerMMX + imageOffsetX);
 	 }
 	 
 	 public double translateY(double y) {
-		 return (y / (precisionScaler) * pixelsPerMMX + imageOffsetX);
+		 return (y / (precisionScaler) * pixelsPerMMY + imageOffsetY);
 	 }
 	 
 	 private List<Shape3d> getPolygonsOnSlice() {
@@ -391,9 +405,9 @@ public class ZSlicer {
 					  
 					  g.setColor(Color.red);
 					  g.drawLine((int)(line.getPointOne().x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
-								  (int)(line.getPointOne().y / (precisionScaler) * pixelsPerMMY + imageOffsetY), 
-								  (int)(line.getPointTwo().x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
-								  (int)(line.getPointTwo().y / (precisionScaler) * pixelsPerMMY + imageOffsetY));
+							  (int)(line.getPointOne().y / (precisionScaler) * pixelsPerMMY + imageOffsetY), 
+							  (int)(line.getPointTwo().x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
+							  (int)(line.getPointTwo().y / (precisionScaler) * pixelsPerMMY + imageOffsetY));
 					  
 				  } else if (shape instanceof Point3d) {
 					  g.setColor(Color.magenta);
@@ -454,12 +468,13 @@ public class ZSlicer {
 			}
 		}
 
-		/*if (fillInPolygons != null) {
+		if (fillInPolygons != null) {
+			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 			g.setColor(Color.white);
 			for (Polygon currentPolygon : fillInPolygons) {
 				g.drawPolygon(currentPolygon);
 			}
-		}*/
+		}
 	 }
 	 
 	 private List<Line3d> findPathThroughTrianglesAndBrokenLoops(Point3d beginning, Point3d ending, List<Line3d> path, List<Face3d> brokenFaceMaze, List<Integer> usedFaces, int currentTriangleIndex) {
@@ -509,8 +524,8 @@ public class ZSlicer {
 	 }
 	 
 	 public void colorizePolygons() {
-		  sliceMaxX = Integer.MIN_VALUE;
-		  sliceMaxY = Integer.MIN_VALUE;
+		  sliceMaxX = -Integer.MAX_VALUE;
+		  sliceMaxY = -Integer.MAX_VALUE;
 		  sliceMinX = Integer.MAX_VALUE;
 		  sliceMinY = Integer.MAX_VALUE;
 		  ForkJoinPool pool = new ForkJoinPool();
@@ -802,7 +817,7 @@ public class ZSlicer {
 		  //I'm not sure I want to do this. It just traces the polygon but doesn't provide much value other than an edge blur.
 		  //System.out.println("Polygons");
 		  //System.out.println("======");
-		  fillInPolygons = compilePolygons(completedFillInLoops, imageOffsetX, imageOffsetY, pixelsPerMMX, pixelsPerMMY, (precisionScaler));
+		  fillInPolygons = compilePolygons(completedFillInLoops);
 		  
 		  System.out.println("TOTALS");
 		  System.out.println("======");

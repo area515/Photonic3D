@@ -47,8 +47,11 @@ public class ScanlineFillPolygonWork extends RecursiveTask<ScanlineFillPolygonWo
 	         for (int y = start; y <= stop; y++) {
 		    	 Set<Point3d> intersectedPoints = new TreeSet<Point3d>(new XYComparatord());
 	        	 for (Line3d currentLine : potentialLinesInRange) {
+	        		 if (y < currentLine.getMinY() || y > currentLine.getMaxY()) {
+	        			 continue;
+	        		 }
 	        		 double x = currentLine.getXIntersectionPoint(y);
-	        		 if (x >= currentLine.getMinX() && x <= currentLine.getMaxX()) {
+	        		 if (x >= currentLine.getMinX() && x <= currentLine.getMaxX()) {//TODO: ceil/floor here?
 	        			 intersectedPoints.add(new Point3d(x, y, z, currentLine.getNormal(), currentLine.getOriginatingFace()));
 	        		 }
 	        	 }

@@ -19,7 +19,6 @@ import java.awt.geom.Point2D;
 import java.io.FileNotFoundException;
 import java.util.List;
 
-import javax.swing.BoundedRangeModel;
 import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -32,15 +31,14 @@ import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.event.ChangeListener;
 
 import org.area515.resinprinter.stl.Face3d;
 import org.area515.resinprinter.stl.Line3d;
 import org.area515.resinprinter.stl.Shape3d;
 
 public class SliceBrowser extends JFrame{
-	private int firstSlice = 0;//781;//bad frame in big guy
-	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl";
+	private int firstSlice = 781;//bad frame in big guy      //321;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl"
+	private String firstFile = "C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl";
 	/*
 	 * 
 C:\Users\wgilster\Documents\Olaf_set3_whole.stl
@@ -61,8 +59,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	private JScrollBar sliceBar = new JScrollBar(JScrollBar.VERTICAL);
 	
 	private int mmPerStlUnit = 1;//We need to scale the whole stl large enough to have high enough precision before the decimal point
-	private double pixelsPerMMX = 5;
-	private double pixelsPerMMY = 5;
+	private double pixelsPerMMX = 65;
+	private double pixelsPerMMY = 65;
 	private double sliceResolution = 0.1;
 	private double buildPlatformX = 1024;
 	private double buildPlatformY = 500;
@@ -213,10 +211,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 						for (Shape3d shape : shapes) {
 							Line3d line = (Line3d)shape;
 							Face3d face = line.getOriginatingFace();
-							System.out.println("line: x1:" + slicer.translateX(line.getPointOne().x) + 
-													",y1:" + slicer.translateY(line.getPointOne().y) + 
-													" x2:" + slicer.translateY(line.getPointTwo().x) + 
-													",y2:" + slicer.translateY(line.getPointTwo().y) );
+							System.out.println(slicer.translateLine(line));
 							System.out.println("stltriangle: "+ face + " Hash:" + face.hashCode());
 						}
 					}
