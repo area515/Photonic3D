@@ -391,7 +391,7 @@ public class ZSlicer {
 					  g.drawPolygon(poly);
 				  } else if (shape instanceof Line3d) {
 					  Line3d line = (Line3d)shape;
-					  /*g.setColor(Color.orange);
+					  g.setColor(Color.orange);
 					  g.drawLine((int)(line.getPointTwo().x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
 							  (int)(line.getPointTwo().y / (precisionScaler) * pixelsPerMMY + imageOffsetY), 
 							  (int)((line.getPointTwo().x / (precisionScaler) + line.getNormal().x) * pixelsPerMMX + imageOffsetX), 
@@ -401,7 +401,7 @@ public class ZSlicer {
 					  g.drawLine((int)(line.getPointOne().x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
 							  (int)(line.getPointOne().y / (precisionScaler) * pixelsPerMMY + imageOffsetY), 
 							  (int)((line.getPointOne().x / (precisionScaler) + line.getNormal().x) * pixelsPerMMX + imageOffsetX), 
-							  (int)((line.getPointOne().y / (precisionScaler) + line.getNormal().y) * pixelsPerMMY + imageOffsetY));*/
+							  (int)((line.getPointOne().y / (precisionScaler) + line.getNormal().y) * pixelsPerMMY + imageOffsetY));
 					  
 					  g.setColor(Color.red);
 					  g.drawLine((int)(line.getPointOne().x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
