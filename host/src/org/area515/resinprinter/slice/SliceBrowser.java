@@ -59,8 +59,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	private JScrollBar sliceBar = new JScrollBar(JScrollBar.VERTICAL);
 	
 	private int mmPerStlUnit = 1;//We need to scale the whole stl large enough to have high enough precision before the decimal point
-	private double pixelsPerMMX = 65;
-	private double pixelsPerMMY = 65;
+	private double pixelsPerMMX = 5;
+	private double pixelsPerMMY = 5;
 	private double sliceResolution = 0.1;
 	private double buildPlatformX = 1024;
 	private double buildPlatformY = 500;

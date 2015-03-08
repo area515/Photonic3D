@@ -35,8 +35,11 @@ rm ${deployedServerZipFile}</echo>-->
 		</zip>
 		<zip destfile="${deployedClientZipFile}">
 			<zipfileset dir="srcbin/org/area515/resinprinter/client" prefix="org/area515/resinprinter/client" includes="**/*.class"/>
+			<zipfileset dir="srcbin/org/area515/resinprinter/slice" prefix="org/area515/resinprinter/slice" includes="**/*.class"/>
+			<zipfileset dir="srcbin/org/area515/resinprinter/stl" prefix="org/area515/resinprinter/stl" includes="**/*.class"/>
 			<zipfileset dir="libs\cling-2.0-alpha3" prefix="lib" includes="**/*"/>
 			<zipfileset dir="bin" includes="**/browseprinter.*"/>
+			<zipfileset dir="bin" includes="**/slicebrowser.*"/>
 		</zip>
 	</target>
 </project>
