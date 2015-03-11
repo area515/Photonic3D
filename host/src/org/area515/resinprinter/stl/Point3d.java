@@ -4,6 +4,7 @@ public class Point3d implements Shape3d {
 	public double x;
 	public double y;
 	public double z;
+	private Point3d normal;
 	private Face3d originatingShape;
 	
 	public Point3d(double x, double y, double z) {
@@ -12,11 +13,16 @@ public class Point3d implements Shape3d {
 		this.z = z;
 	}
 	
-	public Point3d(double x, double y, double z, Face3d originatingShape) {
+	public Point3d(double x, double y, double z, Point3d normal, Face3d originatingShape) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
+		this.normal = normal;
 		this.originatingShape = originatingShape;
+	}
+	
+	public Point3d getNormal() {
+		return normal;
 	}
 	
 	public Face3d getOriginatingShape() {
@@ -25,13 +31,22 @@ public class Point3d implements Shape3d {
 	
 	@Override
 	public String toString() {
-		return "(" + x + "," + y + "," + z + ")";
+		return "(x:" + x + ",y:" + y + ",z:" + z + (normal != null?("@x:" + normal.x + ",y:" + normal.y + ",z:" + normal.z):"") + ")";
+	}
+	
+	public boolean ceilingEquals(Point3d otherPoint) {
+		return Math.ceil(x) == Math.ceil(otherPoint.x) &&
+				Math.ceil(y) == Math.ceil(otherPoint.y) &&
+				Math.ceil(z) == Math.ceil(otherPoint.z);
 	}
 	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime
+				* result
+				+ ((originatingShape == null) ? 0 : originatingShape.hashCode());
 		long temp;
 		temp = Double.doubleToLongBits(x);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
@@ -51,6 +66,11 @@ public class Point3d implements Shape3d {
 		if (getClass() != obj.getClass())
 			return false;
 		Point3d other = (Point3d) obj;
+		if (originatingShape == null) {
+			if (other.originatingShape != null)
+				return false;
+		} else if (!originatingShape.equals(other.originatingShape))
+			return false;
 		if (Double.doubleToLongBits(x) != Double.doubleToLongBits(other.x))
 			return false;
 		if (Double.doubleToLongBits(y) != Double.doubleToLongBits(other.y))
@@ -59,13 +79,7 @@ public class Point3d implements Shape3d {
 			return false;
 		return true;
 	}
-	
-	public boolean ceilingEquals(Point3d otherPoint) {
-		return Math.ceil(x) == Math.ceil(otherPoint.x) &&
-				Math.ceil(y) == Math.ceil(otherPoint.y) &&
-				Math.ceil(z) == Math.ceil(otherPoint.z);
-	}
-	
+
 	@Override
 	public double getMinX() {
 		return x;

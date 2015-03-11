@@ -1,5 +1,7 @@
 package org.area515.resinprinter.stl;
 
+import java.awt.geom.Line2D;
+
 
 public class Line3d implements Shape3d {
 	private Point3d one;
@@ -22,6 +24,10 @@ public class Line3d implements Shape3d {
 		this.normal = normal;//TODO: if the normal is null we probably need to compute it.
 		this.slope = (one.x - two.x) / (one.y - two.y);
 		this.xintercept = -(slope * one.y - one.x);
+	}
+	
+	public boolean intersects(double x1, double y1, double x2, double y2) {
+		return Line2D.linesIntersect(x1, y1, x2, y2, one.x, one.y, two.x, two.y);
 	}
 	
 	public double getXIntersectionPoint(double y) {
