@@ -93,24 +93,24 @@ public class PrinterManager {
 		
 		try {
 			printer = new Printer(currentConfiguration);
-			String monitorId = currentConfiguration.getOSMonitorID();
+			String monitorId = currentConfiguration.getMachineConfig().getOSMonitorID();
 			GraphicsDevice graphicsDevice = null;
 			if (monitorId != null) {
-				graphicsDevice = DisplayManager.Instance().getDisplayDevice(currentConfiguration.getOSMonitorID());
+				graphicsDevice = DisplayManager.Instance().getDisplayDevice(currentConfiguration.getMachineConfig().getOSMonitorID());
 			} else {
-				graphicsDevice = DisplayManager.Instance().getDisplayDevice(currentConfiguration.getDisplayIndex());
+				graphicsDevice = DisplayManager.Instance().getDisplayDevice(currentConfiguration.getMachineConfig().getDisplayIndex());
 			}
 			
 			if (graphicsDevice == null) {
 				if (monitorId != null) {
 					throw new JobManagerException("Couldn't find graphicsDevice called:" + monitorId);
 				} else {
-					throw new JobManagerException("Couldn't find graphicsDevice called:" + currentConfiguration.getDisplayIndex());
+					throw new JobManagerException("Couldn't find graphicsDevice called:" + currentConfiguration.getMachineConfig().getDisplayIndex());
 				}
 			}
 			DisplayManager.Instance().assignDisplay(printer, graphicsDevice);
 			
-			String comportId = printer.getConfiguration().getMotorsDriverConfig().getComPortSettings().getPortName();
+			String comportId = printer.getConfiguration().getMachineConfig().getMotorsDriverConfig().getComPortSettings().getPortName();
 			SerialCommunicationsPort port = SerialManager.Instance().getSerialDevice(comportId);
 			if (port == null) {
 				throw new JobManagerException("Couldn't find communications device called:" + comportId);

@@ -1,7 +1,7 @@
 package org.area515.resinprinter.serial;
 
+import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.printer.PrinterConfiguration.ComPortSettings;
 
 public class ConsoleCommPort implements SerialCommunicationsPort {
 	public static final String CONSOLE_COMM_PORT = "Console Testing";

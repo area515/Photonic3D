@@ -16,6 +16,7 @@ import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
 
@@ -36,11 +37,10 @@ import org.area515.resinprinter.stl.Face3d;
 import org.area515.resinprinter.stl.Line3d;
 import org.area515.resinprinter.stl.Shape3d;
 
-public class SliceBrowser extends JFrame{
+public class SliceBrowser extends JFrame {
 	private int firstSlice = 781;//bad frame in big guy      //321;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl"
 	private String firstFile = "C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl";
 	/*
-	 * 
 C:\Users\wgilster\Documents\Olaf_set3_whole.stl
 C:\Users\wgilster\Documents\Fat_Guy_Statue.stl
 C:\Users\wgilster\Documents\ArduinoMegaEnclosureTop.stl
@@ -48,7 +48,6 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 
 "C:\\Users\\wgilster\\Documents\\ArduinoMega.stl",
 "C:\\Users\\wgilster\\Documents\\Olaf_set3_whole.stl",
-
 	 */
 	
 	
@@ -58,7 +57,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	private DefaultBoundedRangeModel sliceModel = new DefaultBoundedRangeModel();
 	private JScrollBar sliceBar = new JScrollBar(JScrollBar.VERTICAL);
 	
-	private int mmPerStlUnit = 1;//We need to scale the whole stl large enough to have high enough precision before the decimal point
+	private int mmPerStlUnit = 1;
 	private double pixelsPerMMX = 5;
 	private double pixelsPerMMY = 5;
 	private double sliceResolution = 0.1;
@@ -143,7 +142,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	
 	private void loadStl(Integer firstSlice) {
 		 ZSlicer newSlicer = new ZSlicer(
-			 loadStlText.getText(),
+			 new File(loadStlText.getText()),
 			 mmPerStlUnit,
 			 pixelsPerMMX,
 			 pixelsPerMMY,
