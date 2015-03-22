@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,13 +37,13 @@ public class ZSlicer {
 	 private double precisionScaler = 100000;
 	 private double pixelsPerMMX = 5;
 	 private double pixelsPerMMY = 5;
-	 private double millimetersPerStlUnit = 1;
+	 private double stlScale = 1;
 	 
 	 private Double imageOffsetX = null;
 	 private Double imageOffsetY = null;
 	 private double sliceResolution = 0.1;
 	 private StlFile<Triangle3d> stlFile;
-	 private String stlFileToSlice;
+	 private File stlFileToSlice;
 	 private boolean keepTrackOfErrors = false;
 	 
 	 //These are the variables per z
@@ -56,8 +57,9 @@ public class ZSlicer {
 	 private int sliceMinY;
 	 private int buildArea;
 	 
-	 public ZSlicer(String stlFileToSlice, double millimetersPerStlUnit, double pixelsPerMMX, double pixelsPerMMY, double sliceResolution, boolean keepTrackOfErrors) {
-		 this.millimetersPerStlUnit = millimetersPerStlUnit;
+	 //TODO: Need to add in super sampling
+	 public ZSlicer(File stlFileToSlice, double stlScale, double pixelsPerMMX, double pixelsPerMMY, double sliceResolution, boolean keepTrackOfErrors) {
+		 this.stlScale = stlScale;
 		 this.pixelsPerMMX = pixelsPerMMX;
 		 this.pixelsPerMMY = pixelsPerMMY;
 		 this.sliceResolution = sliceResolution;
@@ -78,20 +80,20 @@ public class ZSlicer {
 				double p3[] = new double[]{in.getFloat(), in.getFloat(), in.getFloat()};
 				Point3d[] triangle = new Point3d[3];
 				triangle[0] = new Point3d(
-					p1[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.millimetersPerStlUnit), 
-					p1[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.millimetersPerStlUnit), 
+					p1[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
+					p1[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
 					p1[2] / ZSlicer.this.sliceResolution);
 
 			    // Read vertex2
 				triangle[1] = new Point3d(
-					p2[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.millimetersPerStlUnit), 
-					p2[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.millimetersPerStlUnit), 
+					p2[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
+					p2[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
 					p2[2] / ZSlicer.this.sliceResolution);
 
 			    // Read vertex3
 				triangle[2] = new Point3d(
-					p3[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.millimetersPerStlUnit), 
-					p3[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.millimetersPerStlUnit), 
+					p3[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
+					p3[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
 					p3[2] / ZSlicer.this.sliceResolution);
 				
 				if (normal.x == 0 && normal.y == 0 && normal.z == 0) {

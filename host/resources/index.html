@@ -43,7 +43,7 @@
 		$('#errorModal').modal();
 		$("#statustext").attr("placeholder", "Error");
 
-	   return false; //true will suppress error alerting to the browser
+	   return true; //true will suppress error alerting to the browser
 	};
 	
 	$( document ).ready(function() {
@@ -241,6 +241,7 @@
 	
 					if (currentslice === "-1") {
 						$("#progresstext").text("0/0");
+						$("#totalcost").text("$0.00");
 						$("#sliceprogress").attr({value:0,max:1});
 					} else {
 						$.ajax({
@@ -253,7 +254,7 @@
 								
 								$.ajax({
 									type: 'GET', 
-									url: '/services/machine/currentslicetime/' + encodeURIComponent(jobName),
+									url: '/services/machine/averageslicetime/' + encodeURIComponent(jobName),
 									dataType: "json",
 						    		error: errorHandler,
 									success: function(data){
@@ -264,16 +265,17 @@
 										     ws.onmessage = function (evt) {
 										        var printJob = JSON.parse(evt.data)
 
-												updateStatusArea(printJob.currentSliceTime, printJob.currentSlice, printJob.totalSlices)
+												updateStatusArea(printJob.totalCost, printJob.averageSliceTime, printJob.currentSlice, printJob.totalSlices)
+												$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/" + encodeURIComponent(jobName) + "?" + new Date().getTime());
 										     };
 										     ws.onclose = function() {
 										     };
 										}
 									  
-										updateStatusArea(data.message, currentslice, totalslices)
+										updateStatusArea(0, data.message, currentslice, totalslices)
 
-									} //end of seccess for currentSliceTime
-								});//end of ajax currentSliceTime
+									} //end of seccess for averageslicetime
+								});//end of ajax averageslicetime
 							} //end of success for totalSliceData
 						});//end of ajax totalSliceData
 					} // end of else
@@ -282,12 +284,12 @@
 		}); // end of ajax currentSlice
 	}//end of refressStatus
 	
-	function updateStatusArea(currentSliceTime, currentslice, totalslices) {
-		if (currentSliceTime === "0") {
+	function updateStatusArea(totalCost, averageSliceTime, currentslice, totalslices) {
+		if (averageSliceTime === "0") {
 			$("#statustext").attr("placeholder", "Time Left:Unknown");
 		} else {
 			//We add 1 to the currentslice because currentslice is zero based
-			var timeLeft = (parseInt(totalslices) - (parseInt(currentslice) + 1)) * parseInt(currentSliceTime);
+			var timeLeft = (parseInt(totalslices) - (parseInt(currentslice) + 1)) * parseInt(averageSliceTime);
 			var hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
 			timeLeft -= hoursLeft * 60 * 60 * 1000;
 			var minutesLeft = Math.floor(timeLeft / (60 * 1000));
@@ -300,6 +302,11 @@
 			$("#statustext").attr("placeholder", "Approximate time Left: " + displayString);
 		}
 		$("#progresstext").text((parseInt(currentslice) + 1) + "/" + totalslices);
+		if (totalCost > 0) {
+			$("#totalcost").text("$" + totalCost);
+		} else {
+			$("#totalcost").text("");
+		}
 		$("#sliceprogress").attr({value:parseInt(currentslice) + 1, max:parseInt(totalslices)});
 	}
 	
@@ -679,6 +686,7 @@
 						<h3 class="text-center">Job Progress</h3>
 						<div id="progresslabel" class="text-center">Slices</div>
 						<p id="progresstext" class="text-center">0/0</p>
+						<p id="totalcost" class="text-center">$0.00</p>
 						<progress id="sliceprogress" style="width: 100%"></progress>
 						<div>
 							<button id="refreshstatusbutton" name="singlebutton" class="btn btn-primary btn-block">Refresh Status</button>
@@ -857,6 +865,22 @@
 				</div>
 				
 			</div>
+			
+			<div class="row clearfix">					
+				<div class="col-md-6 column">
+					<video width="320" height="240" autoplay>
+		  				<source src="video/camera.mp4" type="video/mp4">
+						Your browser does not support the video tag.
+					</video>
+				</div>
+				<div class="col-md-6 column">
+					<img id="currentSliceImage" src="/services/machine/currentsliceImage/noJobSelected" alt="Current Slice" height="200" width="200">
+				</div>
+			</div>
+			
+			
+			
+			
 		</div>
 	</div>
 </div>

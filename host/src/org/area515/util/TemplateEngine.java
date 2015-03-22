@@ -7,6 +7,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
+
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
 
@@ -27,6 +30,29 @@ public class TemplateEngine {
 		}
 	};
 
+	public static String convertToFreeMarkerTemplate(String template) {
+		if (template == null || template.trim().length() == 0) {
+			return template;
+		}
+		String[] replacements = new String[] {
+				"CURSLICE", 
+				"LayerThickness", 
+				"ZDir", 
+				"ZLiftRate", 
+				"ZLiftDist", 
+				"buildAreaMM", 
+				"LayerTime", 
+				"FirstLayerTime", 
+				"NumFirstLayers",
+				"buildPlatformXPixels",
+				"buildPlatformYPixels"};
+		for (String replacement : replacements) {
+			template = template.replaceAll("\\$" + replacement, "\\$\\{" + replacement + "\\}");
+		}
+		
+		return template;
+	}
+	
 	public static String buildData(PrintJob job, Printer printer, String templateString) throws IOException, TemplateException {
 		if (config == null) {
 	        config = new Configuration(Configuration.VERSION_2_3_21);
@@ -37,10 +63,34 @@ public class TemplateEngine {
 		}
 		
 		//com.cfs.daq.script.SharedInterpreter has similar stuff in it...
-        Map root = new HashMap();
+        Map<String, Object> root = new HashMap<String, Object>();
+        /*
+        	$ZDir
+        	$CURSLICE
+        	$LayerThickness// the thickenss of the layer in mm
+        	$ZLiftDist// how far we're lifting
+        	$ZLiftRate// the rate at which we're lifting
+        $ZBottomLiftRate// the rate at which we're lifting for the bottom layers
+        $ZRetractRate// how fast we'r retracting
+        $SlideTiltVal// any used slide / tilt value on the x axis
+        $BlankTime// how long to show the blank in ms
+        	$LayerTime// total delay for a layer for gcode commands to complete - not including expusre time
+        	$FirstLayerTime// time to expose the first layers in ms
+        	$NumFirstLayers// number of first layers
+        */
+
 		root.put("now", new Date());
-		root.put("ZLiftSpeed", job.getZLiftSpeed());
-		root.put("ZLiftDistance", job.getZLiftDistance());
+		root.put("CURSLICE", job.getCurrentSlice());
+		root.put("LayerThickness", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
+		root.put("ZDir", job.getPrinter().getConfiguration().getSlicingProfile().getDirection().getVector());
+		root.put("ZLiftRate", job.getZLiftSpeed());
+		root.put("ZLiftDist", job.getZLiftDistance());
+		root.put("buildAreaMM", job.getPrintFileProcessor().getBuildAreaMM(job));
+		root.put("LayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getLayerTime());
+		root.put("FirstLayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerTime());
+		root.put("NumFirstLayers", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
+		root.put("buildPlatformXPixels", job.getPrinter().getConfiguration().getSlicingProfile().getxResolution());
+		root.put("buildPlatformYPixels", job.getPrinter().getConfiguration().getSlicingProfile().getyResolution());
 		root.put("job", job);
 		root.put("printer", printer);
 		
@@ -56,5 +106,23 @@ public class TemplateEngine {
         template.process(root, out);
         
         return out.toString();
+	}
+	
+	public static Object runScript(PrintJob job, ScriptEngine engine, String script) throws ScriptException {
+		engine.put("now", new Date());
+		engine.put("$CURSLICE", job.getCurrentSlice());
+		engine.put("$LayerThickness", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
+		engine.put("$ZDir", job.getPrinter().getConfiguration().getSlicingProfile().getDirection().getVector());
+		engine.put("$ZLiftRate", job.getZLiftSpeed());
+		engine.put("$ZLiftDist", job.getZLiftDistance());
+		engine.put("$buildAreaMM", job.getPrintFileProcessor().getBuildAreaMM(job));
+		engine.put("$LayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getLayerTime());
+		engine.put("$FirstLayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerTime());
+		engine.put("$NumFirstLayers", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
+		engine.put("$buildPlatformXPixels", job.getPrinter().getConfiguration().getSlicingProfile().getxResolution());
+		engine.put("$buildPlatformYPixels", job.getPrinter().getConfiguration().getSlicingProfile().getyResolution());
+		engine.put("job", job);
+		engine.put("printer", job.getPrinter());
+		return engine.eval(script);
 	}
 }
