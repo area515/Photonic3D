@@ -126,6 +126,7 @@ public class STLFileProcessor implements PrintFileProcessor {
 		return data.slicer.getBuildArea() / (slicingProfile.getDotsPermmX() * slicingProfile.getDotsPermmY());
 	}
 	
+	//TODO: Why does the image on the web show a scan line defect with the north side gray and the south side white?
 	@Override
 	public BufferedImage getCurrentImage(PrintJob processingFile) {
 		STLFileData data = dataByPrintJob.get(processingFile);
@@ -139,7 +140,7 @@ public class STLFileProcessor implements PrintFileProcessor {
 		
 		data.renderingImage.lock();
 		try {
-			BufferedImage currentImage = data.currentImagePointer.get()?data.trueImage:data.falseImage;
+			BufferedImage currentImage = data.currentImagePointer.get() && data.falseImage != null?data.falseImage:data.trueImage;
 			return currentImage.getSubimage(0, 0, currentImage.getWidth(), currentImage.getHeight());
 		} finally {
 			data.renderingImage.unlock();
@@ -184,7 +185,6 @@ public class STLFileProcessor implements PrintFileProcessor {
 			
 			int startPoint = slicingProfile.getDirection() == BuildDirection.Bottom_Up?(data.slicer.getZMin() + 1): (data.slicer.getZMax() + 1);
 			int endPoint = slicingProfile.getDirection() == BuildDirection.Bottom_Up?(data.slicer.getZMax() + 1): (data.slicer.getZMin() + 1);
-			int currentLayer = 0;
 			for (int z = startPoint; z <= endPoint && printer.isPrintInProgress(); z += slicingProfile.getDirection().getVector()) {
 				currentSliceTime = System.currentTimeMillis();
 				//Get out if the print is cancelled

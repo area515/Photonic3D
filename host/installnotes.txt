@@ -47,6 +47,9 @@ Question: I installed the software and then rebooted my Raspberry Pi.
 Answer: Make sure your SD card is being "fully used" by choosing the following
 		option in your raspi-config "1 Expand Filesystem".
 
+Question: Why isn't my raspberry PI video working?
+Answer: Make sure you've enabled it in your raspi-config.
+
 Start script Features:
 ----------------------
 Downloads and starts the latest build of the Creation Workshop Host
