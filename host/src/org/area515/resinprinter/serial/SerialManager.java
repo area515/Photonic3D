@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.printer.PrinterConfiguration.ComPortSettings;
 import org.area515.resinprinter.server.HostProperties;
 
 public class SerialManager {
@@ -35,7 +35,7 @@ public class SerialManager {
 	}
 	
 	public void assignSerialPort(Printer printer, SerialCommunicationsPort identifier) throws AlreadyAssignedException, InappropriateDeviceException {
-		ComPortSettings newComPortSettings = new ComPortSettings(printer.getConfiguration().getMotorsDriverConfig().getComPortSettings());
+		ComPortSettings newComPortSettings = new ComPortSettings(printer.getConfiguration().getMachineConfig().getMotorsDriverConfig().getComPortSettings());
 		if (identifier.getName().equals(FIRST_AVAILABLE_PORT)) {
 			identifier = null;
 			ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));

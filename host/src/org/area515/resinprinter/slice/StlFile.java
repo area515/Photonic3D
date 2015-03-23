@@ -13,6 +13,7 @@ package org.area515.resinprinter.slice;
 */
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -26,7 +27,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TreeSet;
 
 
 /**
@@ -64,12 +64,10 @@ public abstract class StlFile<T> {
   // Global variables
   private int flag;                         // Needed cause implements Loader
 
-  private URL baseUrl;               // Reading files over Internet
-  private String basePath;           // For local files
+  private File file;
 
   private boolean fromUrl = false;          // Usefull for binary files
   private boolean Ascii = true;             // File type Ascii -> true o binary -> false
-  private String fileName;
 
   // Arrays with coordinates and normals
   // Needed for reading ASCII files because its size is unknown until the end
@@ -305,7 +303,7 @@ public abstract class StlFile<T> {
    *
    * @throws IOException
    */
-  private void readBinaryFile(String file) throws IOException
+  private void readBinaryFile(File file) throws IOException
   {
     FileInputStream data;                 // For reading the file
     ByteBuffer dataBuffer;                // For reading in the correct endian
@@ -437,7 +435,7 @@ public abstract class StlFile<T> {
     else
     { // Binary file
       try{
-        readBinaryFile(getFileName());
+        readBinaryFile(file);
       }
       catch(IOException e)
       {
@@ -462,12 +460,12 @@ public abstract class StlFile<T> {
    * @throws IncorrectFormatException
    * @throws ParsingErrorException
    */
-  public void load(String filename) throws FileNotFoundException
+  public void load(File file) throws FileNotFoundException
   {
-    setBasePathFromFilename(filename);
-    setFileName(filename);     // For binary files
-    
-    Reader reader = new BufferedReader(new FileReader(filename));
+    //setBasePathFromFilename(filename);
+    //setFileName(filename);     // For binary files
+    this.file = file;
+    Reader reader = new BufferedReader(new FileReader(file));
     
     load(reader);
   } // End of load(String)
@@ -487,7 +485,7 @@ public abstract class StlFile<T> {
    * @throws IncorrectFormatException
    * @throws ParsingErrorException
    */
-  public void load(URL url) throws FileNotFoundException
+  /*public void load(URL url) throws FileNotFoundException
   {
     BufferedReader reader = null;
     setBaseUrlFromUrl(url);
@@ -503,7 +501,7 @@ public abstract class StlFile<T> {
     
     fromUrl = true;
     load(reader);
-  } // End of load(URL)
+  } // End of load(URL)*/
 
   public abstract Set<T> createSet();
   /**
@@ -521,7 +519,7 @@ public abstract class StlFile<T> {
    * @throws IncorrectFormatException
    * @throws ParsingErrorException
    */
-  public void load(Reader reader) throws FileNotFoundException
+  private void load(Reader reader) throws FileNotFoundException
   {
     // That method calls the method that loads the file for real..
     // Even if the Stl format is not complicated I've decided to use
@@ -591,7 +589,7 @@ public abstract class StlFile<T> {
  
   /******************** Accessors and Modifiers ***************************/
 
-  public URL getBaseUrl()
+  /*public URL getBaseUrl()
   {
     return baseUrl;
   }
@@ -601,12 +599,12 @@ public abstract class StlFile<T> {
    *
    * @param url The new url
    */
-  public void setBaseUrl(URL url)
+  /*public void setBaseUrl(URL url)
   {
     baseUrl = url;
   }
 
-  private void setBaseUrlFromUrl(URL url)
+ /* private void setBaseUrlFromUrl(URL url)
   {
     StringTokenizer stok =
       new StringTokenizer(url.toString(), "/\\", true);
@@ -614,7 +612,7 @@ public abstract class StlFile<T> {
     StringBuffer sb = new StringBuffer(MAX_PATH_LENGTH);
     for(int i = 0; i < tocount ; i++) {
 	String a = stok.nextToken();
-	sb.append(a);
+	sb.append(a);*/
 // 	if((i == 0) && (!a.equals("file:"))) {
 // 	    sb.append(a);
 // 	    sb.append(java.io.File.separator);
@@ -623,19 +621,19 @@ public abstract class StlFile<T> {
 // 	    sb.append(a);
 // 	    sb.append( java.io.File.separator );
 // 	}
-    }
+    /*}
     try {
       baseUrl = new URL(sb.toString());
     }
     catch (MalformedURLException e) {
       System.err.println("Error setting base URL: " + e.getMessage());
     }
-  } // End of setBaseUrlFromUrl
+  } // End of setBaseUrlFromUrl*/
 
-  public String getBasePath()
+  /*public String getBasePath()
   {
     return basePath;
-  }
+  }*/
 
   /**
    * Set the path where files associated with this .stl file are
@@ -645,7 +643,7 @@ public abstract class StlFile<T> {
    *
    * @param pathName The new Path to the file
    */
-  public void setBasePath(String pathName)
+  /*public void setBasePath(String pathName)
   {
     basePath = pathName;
     if (basePath == null || basePath == "")
@@ -660,7 +658,7 @@ public abstract class StlFile<T> {
    * Takes a file name and sets the base path to the directory
    * containing that file.
    */
-  private void setBasePathFromFilename(String fileName)
+  /*private void setBasePathFromFilename(String fileName)
   {
     // Get ready to parse the file name
     StringTokenizer stok =
@@ -680,7 +678,7 @@ public abstract class StlFile<T> {
       sb.append(java.io.File.separator);
     }
     setBasePath(sb.toString());
-  } // End of setBasePathFromFilename
+  } // End of setBasePathFromFilename*/
 
   public int getFlags()
   {
@@ -702,7 +700,7 @@ public abstract class StlFile<T> {
     this.Ascii = tipo;
   }
 
-  public String getFileName()
+  /*public String getFileName()
   {
     return this.fileName;
   }
@@ -710,7 +708,7 @@ public abstract class StlFile<T> {
   public void setFileName(String filename)
   {
     this.fileName=new String(filename);
-  }
+  }*/
 
   public String getObjectName()
   {

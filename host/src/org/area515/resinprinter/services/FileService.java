@@ -1,6 +1,7 @@
 package org.area515.resinprinter.services;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,12 +22,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.commons.io.FileUtils;
-import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobManager;
 import org.area515.resinprinter.job.JobManagerException;
+import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.server.HostProperties;
-import org.area515.resinprinter.services.domain.Files;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
  
@@ -200,14 +200,19 @@ public class FileService {
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getProjects() throws IOException {
     	File dir = HostProperties.Instance().getUploadDir();
-    	if("Vault user:".contains("")){
-    		
-    	}
-		String[] extensions = new String[] { "zip", "cws" };
-		
-		List<File> files = (List<File>) FileUtils.listFiles(dir, extensions, true);
+		File[] acceptedFiles = dir.listFiles(new FileFilter() {
+		    public boolean accept(File pathname) {
+				for (PrintFileProcessor currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
+					if (currentProcessor.acceptsFile(pathname)) {
+						return true;
+					}
+				}
+				
+				return false;
+		    }
+		});
 		ArrayList<String> names = new ArrayList<String>();
-		for(File file : files){
+		for(File file : acceptedFiles){
 			names.add(file.getName());
 		}
 		
@@ -235,15 +240,17 @@ public class FileService {
 			return new MachineResponse("delete", false, "Unable to delete:" + fileName);
 		}
 	
-		File extractDirectory = JobManager.buildExtractionDirectory(fileName);
-		if (extractDirectory.exists()) {
-			try {
-				FileUtils.deleteDirectory(extractDirectory);
-			} catch (IOException e) {
-				return new MachineResponse("delete", false, "Unable to clean extract directory");
+		for (PrintFileProcessor currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
+			if (currentProcessor.acceptsFile(currentFile)) {
+				try {
+					currentProcessor.cleanupEnvironment(currentFile);
+					return new MachineResponse("delete", true, "Deleted:" + fileName);
+				} catch (JobManagerException e) {
+					return new MachineResponse("delete", false, e.getMessage());
+				}
 			}
 		}
-
-		return new MachineResponse("delete", true, "Deleted:" + fileName);
+		
+		return new MachineResponse("delete", true, "I couldn't figure out how to clean up:" + fileName);
 	 }
 }

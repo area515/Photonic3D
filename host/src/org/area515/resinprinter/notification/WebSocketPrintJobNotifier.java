@@ -7,6 +7,7 @@ import javax.websocket.CloseReason;
 import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.DeploymentException;
 import javax.websocket.OnClose;
+import javax.websocket.OnError;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
@@ -26,7 +27,14 @@ public class WebSocketPrintJobNotifier implements Notifier {
 	public WebSocketPrintJobNotifier() {
 		super();
 	}
-
+	
+	@OnError
+	public void onError(Session session, Throwable cause) {
+		for (ConcurrentHashMap<String, Session> sessions : sessionsByPrintJobName.values()) {
+			sessions.remove(session.getId());
+		}
+	}
+	
 	@OnOpen
 	public void onOpen(Session session, @PathParam("printJobName") String printerName) {
 		ConcurrentHashMap<String, Session> sessionsBySessionId = new ConcurrentHashMap<String, Session>();
@@ -39,11 +47,9 @@ public class WebSocketPrintJobNotifier implements Notifier {
 	
 	@OnClose
 	public void onClose(Session session, @PathParam("printJobName") String printerName) {
-		ConcurrentHashMap<String, Session> sessionsBySessionId = new ConcurrentHashMap<String, Session>();
-		sessionsBySessionId.put(session.getId(), session);
 		ConcurrentHashMap<String, Session> otherSessionsBySessionId = sessionsByPrintJobName.get(printerName);
 		if (otherSessionsBySessionId != null) {
-			otherSessionsBySessionId.remove(session);
+			otherSessionsBySessionId.remove(session.getId());
 		}
 	}
 	

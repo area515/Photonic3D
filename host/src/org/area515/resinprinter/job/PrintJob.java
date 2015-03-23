@@ -1,31 +1,29 @@
 package org.area515.resinprinter.job;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Future;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.printer.PrinterConfiguration;
-import org.area515.util.TemplateEngine;
-
-import freemarker.template.TemplateException;
+import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 
 public class PrintJob {
 	private volatile int totalSlices = 0;
 	private volatile int currentSlice = 0;
 	private volatile long currentSliceTime = 0;
+	private volatile long averageSliceTime = 0;
 	private volatile long startTime = 0;
 	private volatile int exposureTime = 0;
 	private volatile double zLiftSpeed = 0;
 	private volatile double zLiftDistance = 0;
+	private volatile double totalCost = 0;
+	private volatile double currentSliceCost = 0;
 	private volatile boolean exposureTimeOverriden = false;
+	private volatile PrintFileProcessor printFileProcessor;
 	
 	private UUID id = UUID.randomUUID();
 	private File jobFile;
-	private File gCodeFile;
 	private Printer printer;
 	private Future<JobStatus> futureJobStatus;
 	
@@ -46,13 +44,6 @@ public class PrintJob {
 	}
 	public void setStartTime(long startTime) {
 		this.startTime = startTime;
-	}
-
-	public File getGCodeFile(){
-		return gCodeFile;
-	}	
-	public void setGCodeFile(File gCodeFile){
-		this.gCodeFile = gCodeFile;
 	}
 	
 	public int getTotalSlices(){
@@ -111,45 +102,36 @@ public class PrintJob {
 		this.futureJobStatus = futureJobStatus;
 	}
 
+	public PrintFileProcessor getPrintFileProcessor() {
+		return printFileProcessor;
+	}
+	public void setPrintFileProcessor(PrintFileProcessor printFileProcessor) {
+		this.printFileProcessor = printFileProcessor;
+	}
+
 	public void overrideZLiftDistance(double zLiftDistance) throws InappropriateDeviceException {
 		if (printer == null) {
-			throw new InappropriateDeviceException("This print job:" + getGCodeFile().getName() + " doesn't have a printer assigned.");
+			throw new InappropriateDeviceException("This print job:" + jobFile.getName() + " doesn't have a printer assigned.");
 		}
 		
-		List<String> gcodes = printer.getConfiguration().getMotorsDriverConfig().getZLiftDistanceGCode();
 		try {
-			if (gcodes == null || gcodes.isEmpty()) {
-				throw new InappropriateDeviceException(PrinterConfiguration.NOT_CAPABLE);
-			}
-			for (String gcode : gcodes) {
-				gcode = TemplateEngine.buildData(this, printer, gcode);
-				printer.getGCodeControl().sendGcode(gcode);
-			}
-			
+			printer.getGCodeControl().executeGCodeWithTemplating(this, printer.getConfiguration().getSlicingProfile().getZLiftDistanceGCode());
 			this.zLiftDistance = zLiftDistance;
-		} catch (IOException | TemplateException e) {
-			throw new InappropriateDeviceException(PrinterConfiguration.NOT_CAPABLE, e);
+		} catch (InappropriateDeviceException e) {
+			throw e;
 		}
 	}
 	
 	public void overrideZLiftSpeed(double zLiftSpeed) throws InappropriateDeviceException {
 		if (printer == null) {
-			throw new InappropriateDeviceException("This print job:" + getGCodeFile().getName() + " doesn't have a printer assigned.");
+			throw new InappropriateDeviceException("This print job:" + jobFile.getName() + " doesn't have a printer assigned.");
 		}
-
-		List<String> gcodes = printer.getConfiguration().getMotorsDriverConfig().getZLiftSpeedGCode();
+		
 		try {
-			if (gcodes == null || gcodes.isEmpty()) {
-				throw new InappropriateDeviceException(PrinterConfiguration.NOT_CAPABLE);
-			}
-			for (String gcode : gcodes) {
-				gcode = TemplateEngine.buildData(this, printer, gcode);
-				printer.getGCodeControl().sendGcode(gcode);
-			}
-			
+			printer.getGCodeControl().executeGCodeWithTemplating(this, printer.getConfiguration().getSlicingProfile().getZLiftDistanceGCode());
 			this.zLiftSpeed = zLiftSpeed;
-		} catch (IOException | TemplateException e) {
-			throw new InappropriateDeviceException(PrinterConfiguration.NOT_CAPABLE, e);
+		} catch (InappropriateDeviceException e) {
+			throw e;
 		}
 	}
 	
@@ -157,9 +139,39 @@ public class PrintJob {
 		this.exposureTime = exposureTime;
 		exposureTimeOverriden = true;
 	}
-	
 	public boolean isExposureTimeOverriden() {
 		return exposureTimeOverriden;
+	}
+	
+	public long getAverageSliceTime() {
+		return averageSliceTime;
+	}
+	public void setAverageSliceTime(long averageSliceTime) {
+		this.averageSliceTime = averageSliceTime;
+	}
+
+	public double getTotalCost() {
+		return totalCost;
+	}
+	public void setTotalCost(double totalCost) {
+		this.totalCost = totalCost;
+	}
+
+	public double getCurrentSliceCost() {
+		return currentSliceCost;
+	}
+	public void setCurrentSliceCost(double currentSliceCost) {
+		this.currentSliceCost = currentSliceCost;
+	}
+
+	public void addNewSlice(long sliceTime, double buildAreaInMM) {
+		InkConfig inkConfig = getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig();
+		averageSliceTime = ((averageSliceTime * currentSlice) + sliceTime) / (currentSlice + 1);
+		currentSliceTime = sliceTime;
+		currentSlice++;
+		double buildVolume = buildAreaInMM * inkConfig.getSliceHeight();
+		currentSliceCost = (buildVolume / 1000000) * inkConfig.getResinPriceL();
+		totalCost += currentSliceCost;
 	}
 	
 	public String toString() {

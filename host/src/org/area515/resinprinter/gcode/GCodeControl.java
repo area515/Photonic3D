@@ -2,9 +2,17 @@ package org.area515.resinprinter.gcode;
 
 import java.io.IOException;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
+import org.area515.util.TemplateEngine;
+
+import freemarker.template.TemplateException;
 
 public abstract class GCodeControl {
     private Printer printer;
@@ -97,5 +105,25 @@ public abstract class GCodeControl {
     }
     public String executeHomeAll() {
         return sendGcode("G28\r\n");
+    }
+    
+    public void executeGCodeWithTemplating(PrintJob printJob, String gcodes) throws InappropriateDeviceException {
+		Pattern gCodePattern = Pattern.compile("\\s*([^;]+)\\s*;?.*", Pattern.CASE_INSENSITIVE);
+		try {
+			if (gcodes == null || gcodes.trim().isEmpty()) {
+				throw new InappropriateDeviceException(MachineConfig.NOT_CAPABLE);
+			}
+			
+			for (String gcode : gcodes.split("[\r]?\n")) {
+				gcode = TemplateEngine.buildData(printJob, printer, gcode);
+				Matcher matcher = gCodePattern.matcher(gcode);
+				if (matcher.matches()) {
+					sendGcode(matcher.group(1));
+				}
+			}
+			
+		} catch (IOException | TemplateException e) {
+			throw new InappropriateDeviceException(MachineConfig.NOT_CAPABLE, e);
+		}
     }
 }

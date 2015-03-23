@@ -2,6 +2,10 @@ package org.area515.resinprinter.display;
 
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
+import java.awt.HeadlessException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 public class CustomNamedDisplayDevice extends GraphicsDevice {
 	private String displayName;
@@ -27,7 +31,13 @@ public class CustomNamedDisplayDevice extends GraphicsDevice {
 
 	@Override
 	public GraphicsConfiguration getDefaultConfiguration() {
-		return null;
+		GraphicsDevice[] devices;
+		try {
+			devices = DisplayManager.Instance().getGraphicsEnvironment().getScreenDevices();
+			return devices[devices.length - 1].getDefaultConfiguration();
+		} catch (HeadlessException | InappropriateDeviceException e) {
+			throw new IllegalArgumentException("Graphics environment not supported?", e);
+		}
 	}
 
 	public String toString() {
