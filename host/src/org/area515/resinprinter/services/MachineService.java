@@ -134,7 +134,7 @@ public class MachineService {
 				 "M18 ;Disable Motors");
 		 configuration.getSlicingProfile().setgCodeLift(
 				 "M651; Do mUVe 1 Peel Move\n" + 
-				 "G1 Z(($LayerThickness) * $ZDir)");
+				 "G1 Z${((LayerThickness) * ZDir)}");
 		 configuration.getSlicingProfile().setZLiftDistanceGCode("M650 D${ZLiftDist} S${ZLiftRate}");
 		 configuration.getSlicingProfile().setZLiftSpeedGCode("M650 D${ZLiftDist} S${ZLiftRate}");
 		 configuration.getSlicingProfile().setzLiftSpeedCalculator("var value = 0.25;\n"
