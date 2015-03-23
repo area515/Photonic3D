@@ -12,6 +12,7 @@ import javax.websocket.server.ServerContainer;
 import org.area515.resinprinter.discover.BroadcastManager;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.security.JettySecurityUtils;
+import org.area515.resinprinter.stream.RaspiVidStreamingServlet;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.DefaultHandler;
@@ -67,13 +68,18 @@ public class Main {
         // For services
         ServletContextHandler serviceContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		serviceContext.setContextPath("/services");
-		ServletHolder h = new ServletHolder(new HttpServletDispatcher());
-		h.setInitParameter("javax.ws.rs.Application","org.area515.resinprinter.server.ApplicationConfig");
-		serviceContext.addServlet(h, "/*");		
+		ServletHolder servicesHolder = new ServletHolder(new HttpServletDispatcher());
+		servicesHolder.setInitParameter("javax.ws.rs.Application","org.area515.resinprinter.server.ApplicationConfig");
+		serviceContext.addServlet(servicesHolder, "/*");
+		
+        // For Raspberry Pi video
+        ServletContextHandler videoContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        videoContext.setContextPath("/video");
+		videoContext.addServlet(RaspiVidStreamingServlet.class, "/*");		
 		
 		// Add the ResourceHandler to the server.
 		HandlerList handlers = new HandlerList();
-        handlers.setHandlers(new Handler[] { serviceContext, resource_handler, new DefaultHandler() });
+        handlers.setHandlers(new Handler[] { videoContext, serviceContext, resource_handler, new DefaultHandler() });
         server.setHandler(handlers);
 
         String externallyAccessableIP = HostProperties.Instance().getExternallyAccessableName();
@@ -114,7 +120,7 @@ public class Main {
 		}
 		
 		//Start broadcasting server
-		BroadcastManager.start(new URI("http" + (HostProperties.Instance().isUseSSL()?"S://":"://") + externallyAccessableIP + ":" + port));
+		BroadcastManager.start(new URI("http" + (HostProperties.Instance().isUseSSL()?"s://":"://") + externallyAccessableIP + ":" + port));
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {

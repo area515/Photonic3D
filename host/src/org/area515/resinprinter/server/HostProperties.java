@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.ws.rs.core.NewCookie;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -22,9 +23,12 @@ import org.area515.resinprinter.discover.Advertiser;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.notification.Notifier;
+import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
+import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.services.MachineService;
@@ -32,10 +36,14 @@ import org.area515.resinprinter.services.MachineService;
 public class HostProperties {
 	public static String FULL_RIGHTS = "adminRole";
 
-	private static HostProperties INSTANCE = null;
+	private static String PROFILES_EXTENSION = ".slicing";
+	public File PROFILES_DIR = new File(System.getProperty("user.home"), "Profiles");
 	private static String MACHINE_EXTENSION = ".machine";
-	
-	private File machineDir = new File(System.getProperty("user.home"), "Machines");
+	public File MACHINE_DIR = new File(System.getProperty("user.home"), "Machines");
+	private static String PRINTER_EXTENSION = ".printer";
+	private File printerDir = new File(System.getProperty("user.home"), "3dPrinters");
+
+	private static HostProperties INSTANCE = null;
 	private File uploadDir;
 	private File printDir;
 	private boolean fakeSerial = false;
@@ -43,6 +51,7 @@ public class HostProperties {
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
 	private List<Class<Advertiser>> advertisementClasses = new ArrayList<Class<Advertiser>>();
 	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
+	private List<PrintFileProcessor> printFileProcessors = new ArrayList<PrintFileProcessor>();
 	private Class<SerialCommunicationsPort> serialPortClass;
 	private int versionNumber;
 	private String deviceName;
@@ -74,12 +83,22 @@ public class HostProperties {
 	private HostProperties() {
 		String printDirString = null;
 		String uploadDirString = null;
-		
 		InputStream stream = null;
-		File configPropertiesInMachinesDirectory = new File(machineDir, "config.properties");
-		if (configPropertiesInMachinesDirectory.exists()) {
+		
+		if (!PROFILES_DIR.exists() && !PROFILES_DIR.mkdirs()) {
+			System.out.println("Couldn't make profiles directory. No write access or disk full?" );
+			throw new IllegalArgumentException("Couldn't make profiles directory. No write access or disk full?");
+		}
+		
+		if (!MACHINE_DIR.exists() && !MACHINE_DIR.mkdirs()) {
+			System.out.println("Couldn't make machine directory. No write access or disk full?" );
+			throw new IllegalArgumentException("Couldn't make machine directory. No write access or disk full?");
+		}
+
+		File configPropertiesInPrintersDirectory = new File(printerDir, "config.properties");
+		if (configPropertiesInPrintersDirectory.exists()) {
 			try {
-				stream = new FileInputStream(configPropertiesInMachinesDirectory);
+				stream = new FileInputStream(configPropertiesInPrintersDirectory);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
@@ -126,6 +145,22 @@ public class HostProperties {
 							notificationClasses.add((Class<Notifier>)Class.forName(currentPropertyString));
 						} catch (ClassNotFoundException e) {
 							System.out.println("Failed to load notifier:" + currentPropertyString);
+						}
+					}
+				}
+			}
+			
+			//This loads print file processors
+			for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
+				String currentPropertyString = currentProperty.getKey() + "";
+				if (currentPropertyString.startsWith("printFileProcessor.")) {
+					currentPropertyString = currentPropertyString.replace("printFileProcessor.", "");
+					if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
+						try {
+							PrintFileProcessor processor = ((Class<PrintFileProcessor>)Class.forName(currentPropertyString)).newInstance();
+							printFileProcessors.add(processor);
+						} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+							System.out.println("Failed to load PrintFileProcessor:" + currentPropertyString);
 						}
 					}
 				}
@@ -269,6 +304,10 @@ public class HostProperties {
 		return notificationClasses;
 	}
 	
+	public List<PrintFileProcessor> getPrintFileProcessors() {
+		return printFileProcessors;
+	}
+	
 	public boolean isUseSSL() {
 		return useSSL;
 	}
@@ -288,18 +327,18 @@ public class HostProperties {
 		
 		configurations = new ConcurrentHashMap<String, PrinterConfiguration>();
 
-		if (!machineDir.exists()) {
-			if (!machineDir.mkdirs()) {
-				throw new IllegalArgumentException("Couldn't create machine directory:" + machineDir);
+		if (!printerDir.exists()) {
+			if (!printerDir.mkdirs()) {
+				throw new IllegalArgumentException("Couldn't create printer directory:" + printerDir);
 			}
 			
 			MachineService.INSTANCE.createPrinter("Autodetected Printer", DisplayManager.LAST_AVAILABLE_DISPLAY, SerialManager.FIRST_AVAILABLE_PORT);
 		}
 		
-		File machineFiles[] = machineDir.listFiles(new FilenameFilter() {
+		File machineFiles[] = printerDir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				if (name.endsWith(MACHINE_EXTENSION)) {
+				if (name.endsWith(PRINTER_EXTENSION)) {
 					return true;
 				}
 				
@@ -310,16 +349,18 @@ public class HostProperties {
 		for (File currentFile : machineFiles) {
 			JAXBContext jaxbContext;
 			try {
-				jaxbContext = JAXBContext.newInstance(PrinterConfiguration.class);
+				jaxbContext = JAXBContext.newInstance(PrinterConfiguration.class, MachineConfig.class, SlicingProfile.class);
 				Unmarshaller jaxbUnMarshaller = jaxbContext.createUnmarshaller();
-				//jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 				
 				PrinterConfiguration configuration = (PrinterConfiguration)jaxbUnMarshaller.unmarshal(currentFile);
-				configuration.setName(currentFile.getName().replace(MACHINE_EXTENSION, ""));
+				configuration.setName(currentFile.getName().replace(PRINTER_EXTENSION, ""));
 	
+				configuration.setMachineConfig((MachineConfig)jaxbUnMarshaller.unmarshal(new File(MACHINE_DIR, configuration.getMachineConfigName() + MACHINE_EXTENSION)));
+				configuration.setSlicingProfile((SlicingProfile)jaxbUnMarshaller.unmarshal(new File(PROFILES_DIR, configuration.getMachineConfigName() + PROFILES_EXTENSION)));
+				
 				//We do not want to start the printer here
-				//PrinterManager.Instance().createPrinter(configuration);
 				configurations.put(configuration.getName(), configuration);
+				
 				System.out.println("Created printer configuration for:" + configuration);
 			} catch (JAXBException e) {
 				e.printStackTrace();
@@ -342,9 +383,18 @@ public class HostProperties {
 				jaxbContext = JAXBContext.newInstance(PrinterConfiguration.class);
 				Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 				jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+				MachineConfig machineConfig = currentConfiguration.getMachineConfig();
+				SlicingProfile slicingProfile = currentConfiguration.getSlicingProfile();
 				
-				File machineFile = new File(machineDir, currentConfiguration.getName() + MACHINE_EXTENSION);
-				jaxbMarshaller.marshal(currentConfiguration, machineFile);
+				File machineFile = new File(MACHINE_DIR, currentConfiguration.getMachineConfigName() + MACHINE_EXTENSION);
+				jaxbMarshaller.marshal(machineConfig, machineFile);
+
+				File slicingFile = new File(PROFILES_DIR, currentConfiguration.getSlicingProfileName() + PROFILES_EXTENSION);
+				jaxbMarshaller.marshal(slicingProfile, slicingFile);
+
+				File printerFile = new File(printerDir, currentConfiguration.getName() + PRINTER_EXTENSION);
+				jaxbMarshaller.marshal(new PrinterConfiguration(currentConfiguration.getMachineConfigName(), currentConfiguration.getMachineConfigName()), printerFile);
 			} catch (JAXBException e) {
 				e.printStackTrace();
 			}
@@ -361,11 +411,11 @@ public class HostProperties {
 		
 		saveConfigurations();
 	}
-	
+
 	public void removePrinterConfiguration(PrinterConfiguration configuration) throws InappropriateDeviceException {
 		getPrinterConfigurations();
 
-		File machine = new File(machineDir, configuration.getName() + MACHINE_EXTENSION);
+		File machine = new File(printerDir, configuration.getName() + PRINTER_EXTENSION);
 		if (!machine.exists()) {
 			throw new InappropriateDeviceException("Printer configuration doesn't exist for:" + configuration.getName());
 		}

@@ -3,6 +3,7 @@ package org.area515.resinprinter.display;
 import java.awt.AWTError;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.HeadlessException;
@@ -69,32 +70,8 @@ public class DisplayManager {
 			graphicsDevicesByPrinter.remove(newPrinter);
 			throw new AlreadyAssignedException("Display already assigned to:" + otherJob, otherJob);
 		}
-		
-		//kill the window decorations
-		JFrame window = new JFrame();
-		if (device.getIDstring().equalsIgnoreCase(SIMULATED_DISPLAY)) {
-			window.setTitle("Printer Simulation");
-			window.setVisible(true);
-			window.setExtendedState(JFrame.MAXIMIZED_BOTH);
-			window.setMinimumSize(new Dimension(500, 500));
-			
-			newPrinter.setGraphicsData(window, window.getGraphicsConfiguration(), device.getIDstring());
-		} else {
-			window.setUndecorated(true);
-			device.setFullScreenWindow(window);
-			newPrinter.setGraphicsData(window, device.getDefaultConfiguration(), device.getIDstring());
-			
-			//This can't be done in the setGraphicsData() method since it would reassign the printer Simulation
-			newPrinter.getConfiguration().setOSMonitorID(device.getDefaultConfiguration().getDevice().getIDstring());
-			
-			// hide mouse in full screen
-			Toolkit toolkit = Toolkit.getDefaultToolkit();
-		    Point hotSpot = new Point(0,0);
-		    BufferedImage cursorImage = new BufferedImage(1, 1, BufferedImage.TRANSLUCENT); 
-		    Cursor invisibleCursor = toolkit.createCustomCursor(cursorImage, hotSpot, "InvisibleCursor");        
-		    window.setCursor(invisibleCursor);
-		}
 
+		newPrinter.setGraphicsData(device);
 		newPrinter.showBlankImage();
 	}
 	
@@ -129,7 +106,7 @@ public class DisplayManager {
 		return getGraphicsEnvironment().getScreenDevices()[index];
 	}
 	
-	private GraphicsEnvironment getGraphicsEnvironment() throws InappropriateDeviceException {
+	GraphicsEnvironment getGraphicsEnvironment() throws InappropriateDeviceException {
 		if (ge != null) {
 			return ge;
 		}

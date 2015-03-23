@@ -1,5 +1,6 @@
 package org.area515.resinprinter.slice;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 
 public class SliceTester {
@@ -12,7 +13,7 @@ public class SliceTester {
 		 double sliceResolution = 0.1;
 		 
 		 final ZSlicer slicer = new ZSlicer(
-				 "C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl",
+				 new File("C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"),
 				 //"C:\\Users\\wgilster\\Documents\\ArduinoMega.stl",
 				 //"C:\\Users\\wgilster\\Documents\\Olaf_set3_whole.stl", 
 				 precisionScaler, 

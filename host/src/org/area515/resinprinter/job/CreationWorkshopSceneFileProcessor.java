@@ -4,38 +4,65 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.concurrent.Callable;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.printer.PrinterManager;
+import org.area515.resinprinter.server.HostProperties;
 
-public class GCodeParseThread implements Callable<JobStatus> {
-	private PrintJob printJob = null;
-	private Printer printer;
+public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
+	private HashMap<PrintJob, BufferedImage> currentlyDisplayedImage = new HashMap<PrintJob, BufferedImage>();
 	
-	public GCodeParseThread(PrintJob printJob, Printer printer) {
-		this.printJob = printJob;
-		this.printer = printer;
+	@Override
+	public String[] getFileExtensions() {
+		return new String[]{"zip", "cws"};
+	}
+
+	@Override
+	public boolean acceptsFile(File processingFile) {
+		//TODO: we shouldn't except all zip files only those that have embedded gif/jpg/png information.
+		return processingFile.getName().toLowerCase().endsWith(".zip") || processingFile.getName().toLowerCase().endsWith(".cws");
 	}
 	
 	@Override
-	public JobStatus call() {
-		System.out.println(Thread.currentThread().getName() + " Start");
-		printer.setStatus(JobStatus.Printing);
-		NotificationManager.jobChanged(printer, printJob);
+	public BufferedImage getCurrentImage(PrintJob processingFile) {
+		return currentlyDisplayedImage.get(processingFile);
+	}
+
+	@Override
+	public double getBuildAreaMM(PrintJob processingFile) {
+		return -1;
+	}
+	
+	@Override
+	public JobStatus processFile(final PrintJob printJob) {
+		File gCodeFile = null;
+		try {
+			gCodeFile = findGcodeFile(printJob.getJobFile());
+		} catch (JobManagerException e) {
+			e.printStackTrace();
+			return JobStatus.Failed;
+		}
 		
-		File gCodeFile = printJob.getGCodeFile();
+		Printer printer = printJob.getPrinter();
 		BufferedReader stream = null;
-		BufferedImage bimage = null;
-		printJob.setStartTime(System.currentTimeMillis());
 		long startOfLastImageDisplay = -1;
 		try {
 			System.out.println("Parsing file:" + gCodeFile);
@@ -69,21 +96,25 @@ public class GCodeParseThread implements Callable<JobStatus> {
 							}
 							startOfLastImageDisplay = System.currentTimeMillis();
 							
-							if (bimage != null) {
-								bimage.flush();
+							BufferedImage oldImage = null;
+							if (currentlyDisplayedImage != null) {
+								oldImage = currentlyDisplayedImage.get(printJob);
 							}
 							int incoming = Integer.parseInt(matcher.group(1));
 							printJob.setCurrentSlice(incoming);
 							String imageNumber = String.format("%0" + padLength + "d", incoming);
 							String imageFilename = FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png";
 							File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
-							bimage = ImageIO.read(imageFile);
+							currentlyDisplayedImage.put(printJob, ImageIO.read(imageFile));
 							System.out.println("Show picture: " + imageFilename);
 							
 							//Notify the client that the printJob has increased the currentSlice
 							NotificationManager.jobChanged(printer, printJob);
 
-							printer.showImage(bimage);
+							printer.showImage(currentlyDisplayedImage.get(printJob));
+							if (oldImage != null) {
+								oldImage.flush();
+							}
 						}
 						continue;
 					}
@@ -150,12 +181,6 @@ public class GCodeParseThread implements Callable<JobStatus> {
 					System.out.println("Ignored line:" + currentLine);
 			}
 			
-			printer.setStatus(JobStatus.Completed);
-			System.out.println("Job Complete:" + Thread.currentThread().getName());
-			
-			//Send a notification that the job is complete
-			NotificationManager.jobChanged(printer, printJob);
-
 			return printer.getStatus();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -171,20 +196,104 @@ public class GCodeParseThread implements Callable<JobStatus> {
 				}
 			}
 			
-			if (bimage != null) {
-				bimage.flush();
+			if (currentlyDisplayedImage != null) {
+				currentlyDisplayedImage.get(printJob).flush();
 			}
-			//Don't need to close the printer or dissassociate the serial and display devices
-			//printer.close();
-			//SerialManager.Instance().removeAssignment(printer);
-			//DisplayManager.Instance().removeAssignment(printer);
-			printer.showBlankImage();
-			JobManager.Instance().removeJob(printJob);
-			PrinterManager.Instance().removeAssignment(printJob);
-			System.out.println(Thread.currentThread().getName() + " ended.");
+		}
+	}
+	
+	public static File buildExtractionDirectory(String archive) {
+		return new File(HostProperties.Instance().getWorkingDir(), archive + "extract");
+	}
+
+	@Override
+	public void prepareEnvironment(File processingFile) throws JobManagerException {
+		File extractDirectory = buildExtractionDirectory(processingFile.getName());
+		
+		if (extractDirectory.exists()) {
+			try {
+				FileUtils.deleteDirectory(extractDirectory);
+			} catch (IOException e) {
+				throw new JobManagerException("Couldn't clean directory for new job:" + extractDirectory, e);
+			}
+		}
+
+		try {
+			unpackDir(processingFile);
+		} catch (IOException e) {
+			throw new JobManagerException("Couldn't unpack new job:" + processingFile + " into working directory:" + extractDirectory);
 		}
 	}
 
+	@Override
+	public void cleanupEnvironment(File processingFile) throws JobManagerException {
+		File extractDirectory = buildExtractionDirectory(processingFile.getName());
+		if (extractDirectory.exists()) {
+			try {
+				FileUtils.deleteDirectory(extractDirectory);
+			} catch (IOException e) {
+				e.printStackTrace();
+				throw new JobManagerException("Couldn't clean up extract directory");
+			}
+		}
+	}
+	
+	
+	private File findGcodeFile(File jobFile) throws JobManagerException{
+	
+            String[] extensions = {"gcode"};
+            boolean recursive = true;
+            
+            //
+            // Finds files within a root directory and optionally its
+            // subdirectories which match an array of extensions. When the
+            // extensions is null all files will be returned.
+            //
+            // This method will returns matched file as java.io.File
+            //
+            List<File> files = new ArrayList<File>(FileUtils.listFiles(buildExtractionDirectory(jobFile.getName()), extensions, recursive));
+
+           if (files.size() > 1){
+            	throw new JobManagerException("More than one gcode file exists in print directory");
+            }else if (files.size() == 0){
+            	throw new JobManagerException("Gcode file was not found in print directory");
+            }
+           
+           return files.get(0);
+	}
+	
+	private void unpackDir(File jobFile) throws IOException, JobManagerException {
+		ZipFile zipFile = null;
+		InputStream in = null;
+		OutputStream out = null;
+		File extractDirectory = buildExtractionDirectory(jobFile.getName());
+		try {
+			zipFile = new ZipFile(jobFile);
+			Enumeration<? extends ZipEntry> entries = zipFile.entries();
+			while (entries.hasMoreElements()) {
+				ZipEntry entry = entries.nextElement();
+				File entryDestination = new File(extractDirectory, entry.getName());
+				entryDestination.getParentFile().mkdirs();
+				if (entry.isDirectory())
+					entryDestination.mkdirs();
+				else {
+					in = zipFile.getInputStream(entry);
+					out = new FileOutputStream(entryDestination);
+					IOUtils.copy(in, out);
+					IOUtils.closeQuietly(in);
+					IOUtils.closeQuietly(out);
+				}
+			}
+			String basename = FilenameUtils.removeExtension(jobFile.getName());
+			System.out.println("BaseName: " + FilenameUtils.removeExtension(basename));
+			findGcodeFile(jobFile);
+		} catch (IOException ioe) {
+			throw ioe;
+		} finally {
+			zipFile.close();
+		}
+	}
+	
 	public int determinePadLength(File gCode) throws FileNotFoundException {
 		File currentFile = null;
 		for (int t = 1; t < 10; t++) {
