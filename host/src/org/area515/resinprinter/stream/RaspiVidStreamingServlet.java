@@ -1,6 +1,7 @@
 package org.area515.resinprinter.stream;
 
 import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,6 +24,8 @@ public class RaspiVidStreamingServlet extends HttpServlet {
 	private AtomicInteger viewers = new AtomicInteger();
 	private InputStream inputStream;
     private byte[] buffer;
+    
+    private OutputStream debuggingOutput;
     
 	public boolean createViewer() {
 		if (viewers.addAndGet(1) == 1) {
@@ -68,6 +71,7 @@ public class RaspiVidStreamingServlet extends HttpServlet {
 					public void run() {
 						if (buffer == null) {
 							buffer = new byte[resp.getBufferSize() - 12];//12 bytes less due to:http://stackoverflow.com/questions/9031311/slow-transfers-in-jetty-with-chunked-transfer-encoding-at-certain-buffer-size
+							System.out.println("Buffer setup with:" + buffer.length);
 						}
 						
 						raspiVidProcessLock.lock();
@@ -75,14 +79,23 @@ public class RaspiVidStreamingServlet extends HttpServlet {
 							if (inputStream == null) {
 								throw new IllegalArgumentException("Nobody is left to stream??? How did this happen?");
 							}
-							int bytesRead = 0;
-					        while( (bytesRead += inputStream.read(buffer, bytesRead, buffer.length - bytesRead)) < buffer.length ) {
-					        	System.out.println("bytesRead:" + bytesRead);
+							debuggingOutput = new FileOutputStream("fromRaspivid.mp4", true);
+							int totalBytesRead = 0;
+							int currentBytesRead = 0;
+							System.out.println("filling buffer");
+					        while(totalBytesRead < buffer.length ) {
+					        	currentBytesRead = inputStream.read(buffer, totalBytesRead, buffer.length - totalBytesRead);
+					        	System.out.println("bytesRead:" + currentBytesRead);
+					        	debuggingOutput.write(buffer, totalBytesRead, currentBytesRead);
+					        	totalBytesRead += currentBytesRead;
 					        }
 				        } catch (IOException e) {
 				        	e.printStackTrace();
 				        	throw new IllegalArgumentException("IOException when reading from buffer. Nobody left to stream???", e);
 				        } finally {
+				        	try {
+								debuggingOutput.close();
+							} catch (IOException e) {}
 				        	raspiVidProcessLock.unlock();
 				        }
 					};
