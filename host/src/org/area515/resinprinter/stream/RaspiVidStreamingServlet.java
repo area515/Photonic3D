@@ -1,6 +1,5 @@
 package org.area515.resinprinter.stream;
 
-import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +31,7 @@ public class RaspiVidStreamingServlet extends HttpServlet {
 			raspiVidProcessLock.lock();
 			try {
 				raspiVidProcess = Runtime.getRuntime().exec("raspivid -w 100 -h 100 -n -t 10000 -o -");
-				inputStream = new BufferedInputStream(raspiVidProcess.getInputStream());
+				inputStream = raspiVidProcess.getInputStream();
 				return true;
 			} catch (IOException e) {
 				e.printStackTrace();
