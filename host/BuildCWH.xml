@@ -18,6 +18,7 @@ rm ${deployedServerZipFile}</echo>-->
 		<zip destfile="${deployedServerZipFile}">
 			<zipfileset dir="." includes="**/build.number"/>
 			<zipfileset dir="srcbin" includes="**/*.class"/>
+			<zipfileset dir="srcbin" includes="**/*png"/>
 			<zipfileset dir="srcbin" includes="**/*.properties"/>
 			<zipfileset dir="os" prefix="os" includes="**/*"/>
 			<zipfileset dir="bin" includes="**/*"/>

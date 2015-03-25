@@ -21,7 +21,7 @@ public class RaspiVidStreamingServlet extends HttpServlet {
 	private Process raspiVidProcess;
 	private Lock raspiVidProcessLock = new ReentrantLock();
 	private AtomicInteger viewers = new AtomicInteger();
-	private BufferedInputStream inputStream;
+	private InputStream inputStream;
     private byte[] buffer;
     
 	public boolean createViewer() {
@@ -77,6 +77,7 @@ public class RaspiVidStreamingServlet extends HttpServlet {
 							}
 							int bytesRead = 0;
 					        while( (bytesRead += inputStream.read(buffer, bytesRead, buffer.length - bytesRead)) < buffer.length ) {
+					        	System.out.println("bytesRead:" + bytesRead);
 					        }
 				        } catch (IOException e) {
 				        	e.printStackTrace();

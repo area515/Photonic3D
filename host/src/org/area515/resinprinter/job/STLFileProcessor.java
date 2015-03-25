@@ -118,7 +118,7 @@ public class STLFileProcessor implements PrintFileProcessor {
 	public boolean acceptsFile(File processingFile) {
 		return processingFile.getName().toLowerCase().endsWith("stl");
 	}
-
+	
 	@Override
 	public double getBuildAreaMM(PrintJob printJob) {
 		STLFileData data = dataByPrintJob.get(printJob);
