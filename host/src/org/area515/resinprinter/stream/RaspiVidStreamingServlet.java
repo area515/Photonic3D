@@ -24,13 +24,13 @@ public class RaspiVidStreamingServlet extends HttpServlet {
 	private InputStream inputStream;
     private byte[] buffer;
     
-    private OutputStream debuggingOutput;
+    //private OutputStream debuggingOutput;
     
 	public boolean createViewer() {
 		if (viewers.addAndGet(1) == 1) {
 			raspiVidProcessLock.lock();
 			try {
-				raspiVidProcess = Runtime.getRuntime().exec("raspivid --nopreview -w 100 -h 100 -n -t 0 -o -");
+				raspiVidProcess = Runtime.getRuntime().exec("raspivid -w 100 -h 100 -n -t 0 -o -");
 				inputStream = raspiVidProcess.getInputStream();
 				return true;
 			} catch (IOException e) {
@@ -78,23 +78,23 @@ public class RaspiVidStreamingServlet extends HttpServlet {
 							if (inputStream == null) {
 								throw new IllegalArgumentException("Nobody is left to stream??? How did this happen?");
 							}
-							debuggingOutput = new FileOutputStream("fromRaspivid.mp4", true);
+							//debuggingOutput = new FileOutputStream("fromRaspivid.mp4", true);
 							int totalBytesRead = 0;
 							int currentBytesRead = 0;
 							System.out.println("filling buffer");
 					        while(totalBytesRead < buffer.length ) {
 					        	currentBytesRead = inputStream.read(buffer, totalBytesRead, buffer.length - totalBytesRead);
 					        	System.out.println("bytesRead:" + currentBytesRead);
-					        	debuggingOutput.write(buffer, totalBytesRead, currentBytesRead);
+					        	//debuggingOutput.write(buffer, totalBytesRead, currentBytesRead);
 					        	totalBytesRead += currentBytesRead;
 					        }
 				        } catch (IOException e) {
 				        	e.printStackTrace();
 				        	throw new IllegalArgumentException("IOException when reading from buffer. Nobody left to stream???", e);
 				        } finally {
-				        	try {
-								debuggingOutput.close();
-							} catch (IOException e) {}
+				        	//try {
+								//debuggingOutput.close();
+							//} catch (IOException e) {}
 				        	raspiVidProcessLock.unlock();
 				        }
 					};
