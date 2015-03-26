@@ -30,7 +30,7 @@ public class RaspiVidStreamingServlet extends HttpServlet {
 		if (viewers.addAndGet(1) == 1) {
 			raspiVidProcessLock.lock();
 			try {
-				raspiVidProcess = Runtime.getRuntime().exec("raspivid -ih -w 100 -h 100 -n -t 0 -o -");
+				raspiVidProcess = Runtime.getRuntime().exec("raspivid --nopreview -w 100 -h 100 -n -t 0 -o -");
 				inputStream = raspiVidProcess.getInputStream();
 				return true;
 			} catch (IOException e) {
