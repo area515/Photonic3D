@@ -58,20 +58,22 @@ public class HostProperties {
 	private String manufacturer;
 	private Properties configurationProperties = new Properties();
 	
-	//Server settings:
+	//SSL settings:
 	private boolean useSSL;
 	private int printerHostPort;
 	private File keystoreFile;
 	private String keypairPassword;
 	private String keystorePassword;
 	private String securityRealmName;
-	
-	//Optional
+	//Optional SSL settings:
 	private String externallyAccessableName;
 	
 	//This is for authentication
 	private String clientUsername;
 	private String clientPassword;
+	
+	//This is for Streaming
+	private String streamingCommand;
 	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
@@ -190,6 +192,7 @@ public class HostProperties {
 			securityRealmName = configurationProperties.getProperty("securityRealmName", "SecurityRealm");
 			clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", "");
 			clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
+			streamingCommand = configurationProperties.getProperty("streamingCommand");
 		}
 		
 		if (printDirString == null) {
@@ -318,6 +321,10 @@ public class HostProperties {
 
 	public File getKeystoreFile() {
 		return keystoreFile;
+	}
+
+	public String getStreamingCommand() {
+		return streamingCommand;
 	}
 
 	public List<PrinterConfiguration> getPrinterConfigurations() {
