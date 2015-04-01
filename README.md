@@ -48,9 +48,9 @@ Do you want to install under Windows?
 Do you want to use your web browser to automatically navigate to the running printer host without knowing anything about how your network is setup?
 ----------------------------------------------------------------------
 * Download the latest version from:
-https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwhClient-X.XX.zip
+* https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwhClient-X.XX.zip
  or
-https://github.com/WesGilster/Creation-Workshop-Host/blob/master/host/cwhClient-X.XX.zip
+* https://github.com/WesGilster/Creation-Workshop-Host/blob/master/host/cwhClient-X.XX.zip
 * Unzip the zip file into the directory of your choice.
 * If you are in Linux run this:
 ````````
