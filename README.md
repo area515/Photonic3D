@@ -5,7 +5,9 @@ Raspberry Pi Installation
 -------------------------
 1. Install 2015-02-16-raspbian-wheezy.img onto an SD card. Do NOT use an older version!
 2. Start your Raspberry Pi and type the following at the command line:
-	sudo raspi-config
+```
+sudo raspi-config
+```
 3. Choose and enable the following options from the Raspberry Pi Software Configuration Tool:
 	Expand Filesystem
 	Enable Camera
