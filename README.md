@@ -9,8 +9,8 @@ Raspberry Pi Installation
 sudo raspi-config
 ```
 3. Choose and enable the following options from the Raspberry Pi Software Configuration Tool:
-	Expand Filesystem
-	Enable Camera
+ * Expand Filesystem
+ * Enable Camera
 4. Choose to reboot the Raspberry Pi when you are prompted by the configuration tool.
 5. After the Raspberry Pi has completed rebooting, execute the following commands at the command line:
 ```
