@@ -1,4 +1,18 @@
-Three easy steps for installing Creation Workshop Host on Raspberry Pi/linux
+Raspberry Pi Installation
+-------------------------
+1. Install 2015-02-16-raspbian-wheezy.img onto an SD card. Do NOT use an older version!
+2. Start your Raspberry Pi and type the following at the command line:
+	sudo raspi-config
+3. Choose and enable the following options from the Raspberry Pi Software Configuration Tool:
+	Expand Filesystem
+	Enable Camera
+4. Choose to reboot the Raspberry Pi when you are prompted by the configuration tool.
+5. After the Raspberry Pi has completed rebooting, execute the following commands at the command line:
+	sudo wget https://github.com/area515/Creation-Workshop-Host/raw/master/host/bin/start.sh
+	sudo chmod 777 start.sh
+	sudo ./start.sh
+6. Browse to the Raspberry Pi with cwhClient, or your favorite browser.
+
 
 Do you want to install the latest stable build?
 -------------------------------------------------------------------------------
@@ -40,15 +54,18 @@ Question: I've already installed the host software in Linux, how do I install th
 Answer: Just restart your linux box, it will install the latest version automatically.
 
 Question: What is a known image of raspbian that I should use as a starting point for my install?
-Answer: 2014-12-24-wheezy-raspbian.img
+Answer: 2015-02-16-raspbian-wheezy.img
 
 Question: I installed the software and then rebooted my Raspberry Pi.
 		Why won't it find my displays anymore?
 Answer: Make sure your SD card is being "fully used" by choosing the following
 		option in your raspi-config "1 Expand Filesystem".
 
-Question: Why isn't my raspberry PI video working?
+Question: Why isn't my raspberry PI camera working?
 Answer: Make sure you've enabled it in your raspi-config.
+
+Quesion: Does CWH work with the Raspberry Pi 2?
+Answer: Yes, the same instructions will work for the Raspberry Pi 2.
 
 Start script Features:
 ----------------------
@@ -62,3 +79,4 @@ Installs rxtx if it isn't already installed
 TODO:
 -----
 Need to make sure the script fails if you aren't root or you aren't sudo'd
+
