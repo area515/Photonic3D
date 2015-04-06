@@ -1,12 +1,16 @@
 package org.area515.resinprinter.stream;
 
 import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -21,6 +25,15 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.area515.resinprinter.server.HostProperties;
 
+import com.coremedia.iso.boxes.Container;
+import com.googlecode.mp4parser.FileDataSourceImpl;
+import com.googlecode.mp4parser.authoring.Movie;
+import com.googlecode.mp4parser.authoring.builder.DefaultMp4Builder;
+import com.googlecode.mp4parser.authoring.builder.FragmentedMp4Builder;
+import com.googlecode.mp4parser.authoring.builder.TwoSecondIntersectionFinder;
+import com.googlecode.mp4parser.authoring.container.mp4.MovieCreator;
+import com.googlecode.mp4parser.authoring.tracks.H264TrackImpl;
+
 public class CommandLineStreamingServlet extends HttpServlet {
 	private static final long serialVersionUID = 2174785174671619450L;
 	private final long maxTimeSinceLastRequest = 60000;
@@ -32,8 +45,31 @@ public class CommandLineStreamingServlet extends HttpServlet {
 	private Lock raspiVidProcessLock = new ReentrantLock();
 	
     public static void main(String[] args) throws IOException {
-    	Path path = Paths.get("c:\\Users\\wgilster\\desktop\\toystory.mp4");
-    	System.out.println(Files.probeContentType(path));
+    	System.out.println(Files.probeContentType(Paths.get("stuff.wma")));
+        H264TrackImpl h264Track = new H264TrackImpl(new FileDataSourceImpl("c:\\Users\\wgilster\\desktop\\controlbreak.raw"));
+        Movie m = new Movie();
+        m.addTrack(h264Track);
+        
+        Container out = new FragmentedMp4Builder().build(m);
+        FileOutputStream fos = new FileOutputStream(new File("c:\\Users\\wgilster\\desktop\\stuff.mp4"));
+        FileChannel fc = fos.getChannel();
+        out.writeContainer(fc);
+        fos.close();
+
+        /*Movie movie = MovieCreator.build("");
+        FragmentedMp4Builder mp4Builder = new FragmentedMp4Builder() {
+            @Override
+            public Date getDate() {
+                return new Date(0);
+            }
+        };
+        
+        mp4Builder.setIntersectionFinder(new TwoSecondIntersectionFinder(movie, 2));
+        Container fMp4 = mp4Builder.build(movie);
+        //ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        FileOutputStream baos = new FileOutputStream("c:\\User\\wgilster\\desktop\\stuff.mp4");
+        fMp4.writeContainer(Channels.newChannel(baos));
+        baos.close();*/
 	}
     
 	public boolean startVideo() {
@@ -134,6 +170,11 @@ public class CommandLineStreamingServlet extends HttpServlet {
 	
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    	//long FAKE_SIZE = 46062305;//Long.MAX_VALUE / 2;
+    	long FAKE_SIZE = 37449;//Long.MAX_VALUE / 2;
+    	//long FAKE_SIZE = Long.MAX_VALUE / 2;
+    	//response.setBufferSize(46062305);
+    	
     	System.out.println("Servlet GET");
     	System.out.println("===============");
     	
@@ -144,6 +185,8 @@ public class CommandLineStreamingServlet extends HttpServlet {
         response.setHeader("Accept-Ranges", "bytes");
         response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
         response.setHeader("Connection", "close");
+        response.setHeader("TransferMode.DLNA.ORG", "Streaming");
+        response.setHeader("File-Size", FAKE_SIZE + "");
         
     	Enumeration<String> headerNames = request.getHeaderNames();
     	while (headerNames.hasMoreElements()) {
@@ -215,8 +258,9 @@ public class CommandLineStreamingServlet extends HttpServlet {
         		}
         	}
         	
+        	//This section of code deals with the complexities of a circular buffer
         	//This section deals with a maximum buffer size that should be sent to the client
-        	int requestedAmount = response.getBufferSize();
+        	long requestedAmount = FAKE_SIZE;//response.getBufferSize();
     		if (bufferHead > recordedBufferTail) {
     			int inc = buffer.length - bufferHead + recordedBufferTail;
     			if (requestedAmount < inc) {
@@ -240,7 +284,7 @@ public class CommandLineStreamingServlet extends HttpServlet {
     			int inc = buffer.length - bufferHead + recordedBufferTail;
         		end += inc;
         		response.setContentLengthLong(inc);
-                response.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/999999999999");
+                response.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + FAKE_SIZE);
         		Cookie cookie = new Cookie("BufferHead", recordedBufferTail + "");
         		response.addCookie(cookie);
     			outStream.write(buffer, bufferHead, buffer.length - bufferHead);
@@ -252,7 +296,7 @@ public class CommandLineStreamingServlet extends HttpServlet {
         		end += inc;
         		Cookie cookie = new Cookie("BufferHead", recordedBufferTail + "");
         		response.addCookie(cookie);
-        		response.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/999999999999");
+        		response.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + FAKE_SIZE);//
         		response.setContentLengthLong(inc);
     			outStream.write(buffer, bufferHead, inc);
     			System.out.println("bytes starting from:" + bufferHead + " to:" + (bufferHead + inc - 1));
