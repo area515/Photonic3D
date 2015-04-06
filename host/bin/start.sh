@@ -68,8 +68,9 @@ fi
 
 mkdir -p ${installDirectory}
 cd ${installDirectory}
+cp build.number networkbuildnumber
 mv build.number currentbuildnumber
-wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/build.number
+wget -t 2 -T 20 https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/build.number
 mv build.number networkbuildnumber
 
 if [ -f currentbuildnumber ]; then
