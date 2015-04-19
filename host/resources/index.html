@@ -325,8 +325,8 @@
     		error: errorHandler,
 			success: function(data){
 				if (applyErrorIfNecessary(data, true, false)) {
-					$("#video.source").attr('src', 'video/camera' + Math.random() + '.mp4');
-					$("#video").load();
+					$("video > source").attr('src', 'video/camera' + Math.random() + '.mp4');
+					$("video").load();
 				}
 			}
 		});
