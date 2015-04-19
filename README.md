@@ -3,7 +3,7 @@ Creation-Workshop-Host
 
 Raspberry Pi Installation
 -------------------------
-- Install _2015-02-16-raspbian-wheezy.img_ onto an SD card. **Do NOT use an older version!**
+- Install _2015-02-16-raspbian-wheezy.img_ onto an SD card. (I use Win32DiskImager) **Do NOT use an older version!**
 - Start your Raspberry Pi and type the following at the command line:
 ```
 sudo raspi-config
