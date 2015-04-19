@@ -1,26 +1,15 @@
 package org.area515.resinprinter.services;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
-import java.awt.MultipleGradientPaint;
-import java.awt.RadialGradientPaint;
-import java.awt.Rectangle;
-import java.awt.MultipleGradientPaint.CycleMethod;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 
 import javax.imageio.ImageIO;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -51,7 +40,6 @@ import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
-import org.area515.util.TemplateEngine;
 
 @Path("machine")
 public class MachineService {
@@ -786,5 +774,5 @@ public class MachineService {
 			
 			printJob.overrideExposureTime(exposureTime);
 			return new MachineResponse("exposureTime", true, "Exposure time set");
-	 }	 
+	 }
 }
