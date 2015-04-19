@@ -18,7 +18,7 @@ sudo raspi-config
   sudo chmod 777 start.sh
   sudo ./start.sh
 ```
-- Browse to the Raspberry Pi with cwhClient if you don't know the ip address and port. Or use your favorite browser and try:
+- Browse to Creation Workshop Host if you don't know the ip address and port of your Raspberry Pi. Or use your favorite browser and try:
 ```
 http://[RaspberryPiIp]:9091
 ```
