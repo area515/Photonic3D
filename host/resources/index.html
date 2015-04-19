@@ -271,9 +271,13 @@
 										     };
 										     ws.onmessage = function (evt) {
 										        var printJob = JSON.parse(evt.data)
-
-												updateStatusArea(printJob.totalCost, printJob.averageSliceTime, printJob.currentSlice, printJob.totalSlices)
-												$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/" + encodeURIComponent(jobName) + "?" + new Date().getTime());
+												if (printJob.jobStatus != 'Printing') {
+													updateStatusArea(0, "0", 0, 0, printJob.errorDescription);
+													$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/noJobSelected");
+												} else {
+													updateStatusArea(printJob.totalCost, printJob.averageSliceTime, printJob.currentSlice, printJob.totalSlices)
+													$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/" + encodeURIComponent(jobName) + "?" + new Date().getTime());
+												}
 										     };
 										     ws.onclose = function() {
 										     };
@@ -291,7 +295,7 @@
 		}); // end of ajax currentSlice
 	}//end of refressStatus
 	
-	function updateStatusArea(totalCost, averageSliceTime, currentslice, totalslices) {
+	function updateStatusArea(totalCost, averageSliceTime, currentslice, totalslices, errorDescription) {
 		if (averageSliceTime === "0") {
 			$("#statustext").attr("placeholder", "Time Left:Unknown");
 		} else {
@@ -315,6 +319,9 @@
 			$("#totalcost").text("");
 		}
 		$("#sliceprogress").attr({value:parseInt(currentslice) + 1, max:parseInt(totalslices)});
+		if (errorDescription != null) {
+			$("#statustext").attr("placeholder", errorDescription);
+		}
 	}
 	
 	function stopVideoRecord() {

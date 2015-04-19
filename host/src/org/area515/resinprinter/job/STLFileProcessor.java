@@ -148,7 +148,7 @@ public class STLFileProcessor implements PrintFileProcessor {
 	}
 
 	@Override
-	public JobStatus processFile(PrintJob printJob) {
+	public JobStatus processFile(PrintJob printJob) throws Exception {
 		Printer printer = printJob.getPrinter();
 		printJob.setStartTime(System.currentTimeMillis());
 		STLFileData data = new STLFileData();
@@ -245,7 +245,7 @@ public class STLFileProcessor implements PrintFileProcessor {
 			return JobStatus.Completed;
 		} catch (InterruptedException | ExecutionException | InappropriateDeviceException | ScriptException e) {
 			e.printStackTrace();
-			return JobStatus.Failed;
+			throw e;
 		}
 	}
 

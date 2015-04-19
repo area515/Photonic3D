@@ -27,7 +27,7 @@ public class PrintJobProcessingThread implements Callable<JobStatus> {
 	}
 	
 	@Override
-	public JobStatus call() {
+	public JobStatus call() throws Exception {
 		System.out.println(Thread.currentThread().getName() + " Start");
 		printer.setStatus(JobStatus.Printing);
 		NotificationManager.jobChanged(printer, printJob);
@@ -47,7 +47,8 @@ public class PrintJobProcessingThread implements Callable<JobStatus> {
 		} catch (Throwable e) {
 			e.printStackTrace();
 			printer.setStatus(JobStatus.Failed);
-			return JobStatus.Failed;
+			NotificationManager.jobChanged(printer, printJob);
+			throw e;
 		} finally {
 			//Don't need to close the printer or dissassociate the serial and display devices
 			printer.showBlankImage();
