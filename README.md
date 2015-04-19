@@ -1,6 +1,6 @@
 Creation-Workshop-Host
 ======================
-<img src='host\src\org\area515\resinprinter\services\noimageavailable.png'>
+<img src='host/src/org/area515/resinprinter/services/noimageavailable.png'>
 Raspberry Pi Installation
 -------------------------
 - Install _2015-02-16-raspbian-wheezy.img_ onto an SD card. (I use Win32DiskImager) **Do NOT use an older version!**
