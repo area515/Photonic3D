@@ -216,10 +216,10 @@ public class STLFileProcessor implements PrintFileProcessor {
 				}
 				
 				if (slicingProfile.getzLiftDistanceCalculator() != null && slicingProfile.getzLiftDistanceCalculator().trim().length() > 0) {
-					printJob.setZLiftDistance((Double)TemplateEngine.runScript(printJob, data.scriptEngine, slicingProfile.getzLiftDistanceCalculator()));
+					printJob.setZLiftDistance(((Number)TemplateEngine.runScript(printJob, data.scriptEngine, slicingProfile.getzLiftDistanceCalculator())).doubleValue());
 				}
 				if (slicingProfile.getzLiftSpeedCalculator() != null && slicingProfile.getzLiftSpeedCalculator().trim().length() > 0) {
-					printJob.setZLiftSpeed((Double)TemplateEngine.runScript(printJob, data.scriptEngine, slicingProfile.getzLiftSpeedCalculator()));
+					printJob.setZLiftSpeed(((Number)TemplateEngine.runScript(printJob, data.scriptEngine, slicingProfile.getzLiftSpeedCalculator())).doubleValue());
 				}
 				if (slicingProfile.getZLiftDistanceGCode() != null && slicingProfile.getZLiftDistanceGCode().trim().length() > 0) {
 					printer.getGCodeControl().executeGCodeWithTemplating(printJob, slicingProfile.getZLiftDistanceGCode());
