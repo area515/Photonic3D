@@ -130,7 +130,7 @@ public class MachineService {
 		 		+ " value = 4.6666666666666705e+000 * Math.pow($buildAreaMM,0) + -7.0000000000000184e-003 * Math.pow($buildAreaMM,1) + 3.3333333333333490e-006 * Math.pow($buildAreaMM,2);\n"
 		 		+ "}\n"
 		 		+ "value");
-		 configuration.getSlicingProfile().setzLiftDistanceCalculator("var value = 9;\n"
+		 configuration.getSlicingProfile().setzLiftDistanceCalculator("var value = 9.0;\n"
 		 		+ "if ($CURSLICE > $NumFirstLayers) {\n"
 			 	+ " value = 3.5555555555555420e+000 * Math.pow($buildAreaMM,0) + 4.3333333333334060e-003 * Math.pow($buildAreaMM,1) + 1.1111111111110492e-006 * Math.pow($buildAreaMM,2);\n"
 			 	+ "}\n"
@@ -141,6 +141,10 @@ public class MachineService {
 		 		+ "}\n"
 			 	+ "value");
 		 configuration.getSlicingProfile().setProjectorGradientCalculator(
+			 	"//Without the following try catch block, nashhorn won't understand the importPackage methods..." + 
+			 	"try {\n" +
+				"	load(\"nashorn:mozilla_script.js\");\n" + 
+	 			"} catch (e) {}\n" + 
 			 	"importPackage(java.awt.geom);\n" +
 			    "importPackage(java.awt);\n" +
 		 		"function getFractions(count, start, end) {\n" + 
