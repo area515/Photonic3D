@@ -1,6 +1,7 @@
 package org.area515.resinprinter.services;
 
 import java.awt.GraphicsDevice;
+import java.awt.RadialGradientPaint;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -140,13 +141,7 @@ public class MachineService {
 		 		+ "	value = $LayerTime\n"
 		 		+ "}\n"
 			 	+ "value");
-		 configuration.getSlicingProfile().setProjectorGradientCalculator(
-			 	"//Without the following try catch block, nashhorn won't understand the importPackage methods..." + 
-			 	"try {\n" +
-				"	load(\"nashorn:mozilla_script.js\");\n" + 
-	 			"} catch (e) {}\n" + 
-			 	"importPackage(java.awt.geom);\n" +
-			    "importPackage(java.awt);\n" +
+		 configuration.getSlicingProfile().setProjectorGradientCalculator(			    
 		 		"function getFractions(count, start, end) {\n" + 
 				"	var incrementAmount = (end - start) / count;\n" +
 				"	var fractions = [];\n" + 
@@ -161,17 +156,17 @@ public class MachineService {
 	 			"	var colorRange = stop - start;\n" + 
 	 			"	var atanDivergencePoint = Math.PI / 2;\n" +
 	 			"	for (t = 0; t < fractions.length; t++) {\n" +
-	 			"		colors[t] = new Color(0, 0, 0, Math.atan(fractions[t] * atanDivergencePoint) * colorRange + start);\n" +
+	 			"		colors[t] = new Packages.java.awt.Color(0, 0, 0, Math.atan(fractions[t] * atanDivergencePoint) * colorRange + start);\n" +
 				"	}\n" + 
-				"	//return new Color[]{new Color(0, 0, 0, opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum()), new Color(0, 0, 0, 0)};\n" +
+				"	//return new Packages.java.awt.Color[]{new Packages.java.awt.Color(0, 0, 0, opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum()), new Packages.java.awt.Color(0, 0, 0, 0)};\n" +
 				"	return colors;\n" + 
 	 			"}\n" +
-	 			"var bulbCenter = new Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
-	 			"var bulbFocus = new Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
+	 			"var bulbCenter = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
+	 			"var bulbFocus = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
 	 			"var totalSizeOfGradient = $buildPlatformXPixels > $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;\n" +
 	 			"var fractions = getFractions(totalSizeOfGradient, 0, 1);\n" +
 	 			"var colors = getColors(fractions, 0.2, 0);//Let's start with 20% opaque in the center of the projector bulb\n" +
-	 			"new RadialGradientPaint(\n" +
+	 			"new Packages.java.awt.RadialGradientPaint(\n" +
 	 			"	bulbCenter,\n" + 
 	 			"	totalSizeOfGradient,\n" +
 				"	bulbFocus,\n" +
