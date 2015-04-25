@@ -156,9 +156,9 @@ public class MachineService {
 	 			"	var colorRange = stop - start;\n" + 
 	 			"	var atanDivergencePoint = Math.PI / 2;\n" +
 	 			"	for (t = 0; t < fractions.length; t++) {\n" +
-	 			"		colors[t] = new Packages.java.awt.Color(0, 0, 0, (int)(Math.atan(fractions[t] * atanDivergencePoint) * colorRange + start));\n" +
+	 			"		colors[t] = new Packages.java.awt.Color(0, 0, 0, (java.lang.Integer)(Math.atan(fractions[t] * atanDivergencePoint) * colorRange + start));\n" +
 				"	}\n" + 
-				"	//return new Packages.java.awt.Color[]{new Packages.java.awt.Color(0, 0, 0, (int)(opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum())), new Packages.java.awt.Color(0, 0, 0, 0)};\n" +
+				"	//return new Packages.java.awt.Color[]{new Packages.java.awt.Color(0, 0, 0, (java.lang.Integer)(opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum())), new Packages.java.awt.Color(0, 0, 0, 0)};\n" +
 				"	return colors;\n" + 
 	 			"}\n" +
 	 			"var bulbCenter = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
