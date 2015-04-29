@@ -18,11 +18,7 @@ sudo raspi-config
   sudo chmod 777 start.sh
   sudo ./start.sh
 ```
-<<<<<<< HEAD
-- Browse to Creation Workshop Host if you don't know the ip address and port of your Raspberry Pi. Or use your favorite browser and try:
-=======
 - Automatically find your printer with the browseprinter client if you don't know the ip address and port of your Raspberry Pi. Or use your favorite browser and try:
->>>>>>> 404edba759e4ad88be13713d9b159cfad3d6b61e
 ```
 http://[RaspberryPiIp]:9091
 ```
