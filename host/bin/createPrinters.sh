@@ -117,7 +117,7 @@ echo Starting printer host server
 
 if [ "$2" != "debug" ]
 then
-        java -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
+        java -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.services.MachineService > log.out 2> log.err &
 else
-        java  -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
+        java  -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.services.MachineService > log.out 2> log.err &
 fi

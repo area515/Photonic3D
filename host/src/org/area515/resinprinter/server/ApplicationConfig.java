@@ -7,6 +7,7 @@ import javax.ws.rs.core.Application;
 
 import org.area515.resinprinter.services.FileService;
 import org.area515.resinprinter.services.MachineService;
+import org.area515.resinprinter.services.VideoService;
 
 public class ApplicationConfig extends Application{
 
@@ -27,8 +28,9 @@ public class ApplicationConfig extends Application{
     private Set<Class<?>> classes = new HashSet<Class<?>>();
 
     public ApplicationConfig() {
-    	singletons.add(new FileService());
+    	singletons.add(FileService.INSTANCE);
     	singletons.add(MachineService.INSTANCE);
+    	singletons.add(VideoService.INSTANCE);
     }
 
     @Override

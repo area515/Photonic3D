@@ -32,6 +32,11 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
  
 @Path("files")
 public class FileService {
+	public static FileService INSTANCE = new FileService();
+	
+	private FileService() {
+	}
+	
 		@POST
 		@Path("/upload")
 		@Consumes("multipart/form-data")

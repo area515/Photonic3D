@@ -177,7 +177,7 @@
 	
 	var errorHandler = function(xhr, ajaxOptions, thrownError) {
 		if (xhr.status == "401") {
-			$('#errorModalBody').text("You logged in wrong. Please delete your cookies and try again.");
+			$('#errorModalBody').text("You logged in wrong.");
 		} else {
 			$('#errorModalBody').text("Problem communicating with host printer. (http:" + xhr.status + ")");
 		}
@@ -271,9 +271,13 @@
 										     };
 										     ws.onmessage = function (evt) {
 										        var printJob = JSON.parse(evt.data)
-
-												updateStatusArea(printJob.totalCost, printJob.averageSliceTime, printJob.currentSlice, printJob.totalSlices)
-												$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/" + encodeURIComponent(jobName) + "?" + new Date().getTime());
+												if (printJob.jobStatus != 'Printing') {
+													updateStatusArea(0, "0", 0, 0, printJob.errorDescription);
+													$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/noJobSelected");
+												} else {
+													updateStatusArea(printJob.totalCost, printJob.averageSliceTime, printJob.currentSlice, printJob.totalSlices)
+													$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/" + encodeURIComponent(jobName) + "?" + new Date().getTime());
+												}
 										     };
 										     ws.onclose = function() {
 										     };
@@ -291,7 +295,7 @@
 		}); // end of ajax currentSlice
 	}//end of refressStatus
 	
-	function updateStatusArea(totalCost, averageSliceTime, currentslice, totalslices) {
+	function updateStatusArea(totalCost, averageSliceTime, currentslice, totalslices, errorDescription) {
 		if (averageSliceTime === "0") {
 			$("#statustext").attr("placeholder", "Time Left:Unknown");
 		} else {
@@ -315,6 +319,38 @@
 			$("#totalcost").text("");
 		}
 		$("#sliceprogress").attr({value:parseInt(currentslice) + 1, max:parseInt(totalslices)});
+		if (errorDescription != null) {
+			$("#statustext").attr("placeholder", errorDescription);
+		}
+	}
+	
+	function stopVideoRecord() {
+		$.ajax({
+			type: 'GET',
+			url: "/services/video/stopvideorecord/camera1",
+			dataType: "json",
+    		error: errorHandler,
+			success: function(data){
+				if (applyErrorIfNecessary(data, true, false)) {
+					$("video > source").attr('src', 'video/camera' + Math.random() + '.mp4');
+					$("video").load();
+				}
+			}
+		});
+	}
+	
+	function startVideoRecord() {
+		$.ajax({
+			type: 'GET',
+			url: "/services/video/startrecordvideo/camera1",
+			dataType: "json",
+    		error: errorHandler,
+			success: function(data){
+				if (applyErrorIfNecessary(data, true, false)) {
+					//TODO: Disable the record button
+				}
+			}
+		});
 	}
 	
 	function createWebSocketURL(relativeURL) {
@@ -698,10 +734,12 @@
 						
 						<div class="row text-center">
 							<img class="vcenter" id="currentSliceImage" src="/services/machine/currentsliceImage/noJobSelected" alt="Current Slice" width="50%" height="50%">
-							<video class="vcenter" width="275" height="206" autoplay>
+							<video class="vcenter" width="275" height="206" controls>
 		  						<source src="video/camera.mp4" type="video/mp4">
 		  						Your browser does not support the video tag.
-							</video>				
+							</video>
+						    <button id="startrecordbutton" name="button1id" class="btn btn-success btn-block" onclick="startVideoRecord()">Record Video</button>
+						    <button id="stoprecordbutton" name="button3id" class="btn btn-danger btn-block" onclick="stopVideoRecord()">Stop Recording Video</button>
 						</div>
 						
 						<!-- <div>
@@ -888,11 +926,6 @@
 				<div class="col-md-6 column">
 				</div>
 			</div>
-			
-			<!-- <video width="640" height="360" controls>
-<source src="http://www.html5videoplayer.net/videos/toystory.mp4" type="video/mp4" />
-</video> -->
-			
 			
 		</div>
 	</div>
