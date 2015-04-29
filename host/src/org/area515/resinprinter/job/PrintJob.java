@@ -2,6 +2,7 @@ package org.area515.resinprinter.job;
 
 import java.io.File;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -95,11 +96,47 @@ public class PrintJob {
 		this.zLiftDistance = zLiftDistance;
 	}
 	
-	public Future<JobStatus> getFutureJobStatus() {
-		return futureJobStatus;
+	public JobStatus getJobStatus() {
+		Printer localPrinter = printer;
+		
+		if (localPrinter != null) {
+			return localPrinter.getStatus();
+		}
+		
+		if (futureJobStatus != null && (futureJobStatus.isDone() || futureJobStatus.isCancelled())) {
+			try {
+				return futureJobStatus.get();
+			} catch (InterruptedException | ExecutionException e) {
+			}
+		}
+		
+		return JobStatus.Failed;
 	}
+	public void setJobStatus() {
+		//do nothing.  This is just for JSON
+	}
+	
 	public void setFutureJobStatus(Future<JobStatus> futureJobStatus) {
 		this.futureJobStatus = futureJobStatus;
+	}
+	
+	public String getErrorDescription() {
+		if (futureJobStatus.isDone() || futureJobStatus.isCancelled()) {
+			try {
+				return "Job Status:" + futureJobStatus.get();
+			} catch (InterruptedException | ExecutionException e) {
+				if (e.getCause() instanceof InappropriateDeviceException) {
+					return e.getCause().getMessage();
+				}
+				
+				return "Job Failed. Check server logs for exact problem";
+			}
+		}
+		
+		return null;
+	}
+	public void setErrorDescription(String errorDescription) {
+		//do nothing.  This is just for JSON
 	}
 
 	public PrintFileProcessor getPrintFileProcessor() {

@@ -12,7 +12,7 @@ import javax.websocket.server.ServerContainer;
 import org.area515.resinprinter.discover.BroadcastManager;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.security.JettySecurityUtils;
-import org.area515.resinprinter.stream.CommandLineStreamingServlet;
+import org.area515.resinprinter.stream.ProgressiveDownloadServlet;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.DefaultHandler;
@@ -75,7 +75,7 @@ public class Main {
         // For Raspberry Pi video
         ServletContextHandler videoContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
         videoContext.setContextPath("/video");
-		videoContext.addServlet(CommandLineStreamingServlet.class, "/*");		
+		videoContext.addServlet(ProgressiveDownloadServlet.class, "/*");		
 		
 		// Add the ResourceHandler to the server.
 		HandlerList handlers = new HandlerList();

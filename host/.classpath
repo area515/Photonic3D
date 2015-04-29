@@ -37,6 +37,7 @@
 	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/seamless-xml-1.0-alpha3.jar"/>
 	<classpathentry kind="lib" path="libs/jetty/javax.websocket-api-1.1.jar"/>
 	<classpathentry kind="lib" path="libs/email/mail.jar"/>
-	<classpathentry kind="lib" path="libs/freemarker/freemarker-2.3.21.jar"/>
+	<classpathentry kind="lib" path="libs/freemarker/freemarker-2.3.21.jar" sourcepath="/3rdPartySource/freemarker"/>
+	<classpathentry kind="lib" path="libs/mp4parser/mp4parser.jar"/>
 	<classpathentry kind="output" path="srcbin"/>
 </classpath>
