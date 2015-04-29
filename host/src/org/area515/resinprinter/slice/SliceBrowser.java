@@ -38,14 +38,17 @@ import org.area515.resinprinter.stl.Line3d;
 import org.area515.resinprinter.stl.Shape3d;
 
 public class SliceBrowser extends JFrame {
-	private int firstSlice = 781;//bad frame in big guy      //321;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl"
-	private String firstFile = "C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl";
+	private int firstSlice = 78;
+	//78;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";
+	//321;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl"; good
+	//781;//"C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"; good
+	
+	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";
 	/*
 C:\Users\wgilster\Documents\Olaf_set3_whole.stl
 C:\Users\wgilster\Documents\Fat_Guy_Statue.stl
 C:\Users\wgilster\Documents\ArduinoMegaEnclosureTop.stl
 C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
-
 "C:\\Users\\wgilster\\Documents\\ArduinoMega.stl",
 "C:\\Users\\wgilster\\Documents\\Olaf_set3_whole.stl",
 	 */

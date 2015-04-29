@@ -1,26 +1,16 @@
 package org.area515.resinprinter.services;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
-import java.awt.MultipleGradientPaint;
 import java.awt.RadialGradientPaint;
-import java.awt.Rectangle;
-import java.awt.MultipleGradientPaint.CycleMethod;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 
 import javax.imageio.ImageIO;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -51,7 +41,6 @@ import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
-import org.area515.util.TemplateEngine;
 
 @Path("machine")
 public class MachineService {
@@ -142,7 +131,7 @@ public class MachineService {
 		 		+ " value = 4.6666666666666705e+000 * Math.pow($buildAreaMM,0) + -7.0000000000000184e-003 * Math.pow($buildAreaMM,1) + 3.3333333333333490e-006 * Math.pow($buildAreaMM,2);\n"
 		 		+ "}\n"
 		 		+ "value");
-		 configuration.getSlicingProfile().setzLiftDistanceCalculator("var value = 9;\n"
+		 configuration.getSlicingProfile().setzLiftDistanceCalculator("var value = 9.0;\n"
 		 		+ "if ($CURSLICE > $NumFirstLayers) {\n"
 			 	+ " value = 3.5555555555555420e+000 * Math.pow($buildAreaMM,0) + 4.3333333333334060e-003 * Math.pow($buildAreaMM,1) + 1.1111111111110492e-006 * Math.pow($buildAreaMM,2);\n"
 			 	+ "}\n"
@@ -152,9 +141,7 @@ public class MachineService {
 		 		+ "	value = $LayerTime\n"
 		 		+ "}\n"
 			 	+ "value");
-		 configuration.getSlicingProfile().setProjectorGradientCalculator(
-			 	"importPackage(java.awt.geom);\n" +
-			    "importPackage(java.awt);\n" +
+		 configuration.getSlicingProfile().setProjectorGradientCalculator(			    
 		 		"function getFractions(count, start, end) {\n" + 
 				"	var incrementAmount = (end - start) / count;\n" +
 				"	var fractions = [];\n" + 
@@ -169,17 +156,17 @@ public class MachineService {
 	 			"	var colorRange = stop - start;\n" + 
 	 			"	var atanDivergencePoint = Math.PI / 2;\n" +
 	 			"	for (t = 0; t < fractions.length; t++) {\n" +
-	 			"		colors[t] = new Color(0, 0, 0, Math.atan(fractions[t] * atanDivergencePoint) * colorRange + start);\n" +
+	 			"		colors[t] = new Packages.java.awt.Color(0, 0, 0, (int)(Math.atan(fractions[t] * atanDivergencePoint) * colorRange + start));\n" +
 				"	}\n" + 
-				"	//return new Color[]{new Color(0, 0, 0, opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum()), new Color(0, 0, 0, 0)};\n" +
+				"	//return new Packages.java.awt.Color[]{new Packages.java.awt.Color(0, 0, 0, (int)(opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum())), new Packages.java.awt.Color(0, 0, 0, 0)};\n" +
 				"	return colors;\n" + 
 	 			"}\n" +
-	 			"var bulbCenter = new Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
-	 			"var bulbFocus = new Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
+	 			"var bulbCenter = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
+	 			"var bulbFocus = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
 	 			"var totalSizeOfGradient = $buildPlatformXPixels > $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;\n" +
 	 			"var fractions = getFractions(totalSizeOfGradient, 0, 1);\n" +
 	 			"var colors = getColors(fractions, 0.2, 0);//Let's start with 20% opaque in the center of the projector bulb\n" +
-	 			"new RadialGradientPaint(\n" +
+	 			"new Packages.java.awt.RadialGradientPaint(\n" +
 	 			"	bulbCenter,\n" + 
 	 			"	totalSizeOfGradient,\n" +
 				"	bulbFocus,\n" +
@@ -786,5 +773,5 @@ public class MachineService {
 			
 			printJob.overrideExposureTime(exposureTime);
 			return new MachineResponse("exposureTime", true, "Exposure time set");
-	 }	 
+	 }
 }

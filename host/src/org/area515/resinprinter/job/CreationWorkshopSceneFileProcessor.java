@@ -52,7 +52,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 	}
 	
 	@Override
-	public JobStatus processFile(final PrintJob printJob) {
+	public JobStatus processFile(final PrintJob printJob) throws Exception {
 		File gCodeFile = null;
 		try {
 			gCodeFile = findGcodeFile(printJob.getJobFile());
@@ -182,12 +182,9 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 			}
 			
 			return printer.getStatus();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return JobStatus.Failed;
 		} catch (IOException e) {
 			e.printStackTrace();
-			return JobStatus.Failed;
+			throw e;
 		} finally {
 			if (stream != null) {
 				try {
