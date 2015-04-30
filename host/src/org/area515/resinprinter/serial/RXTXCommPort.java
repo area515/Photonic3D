@@ -27,7 +27,7 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 	public void open(String printerName, int timeout, ComPortSettings settings) throws AlreadyAssignedException, InappropriateDeviceException {
 		String portName = settings.getPortName();
 		try {
-			this.waitForGCodeTimeout = 1000 * 60 * 2;//Maximum time for a single gcode to execute.
+			this.waitForGCodeTimeout = SUGGESTED_TIMEOUT_FOR_ONE_GCODE;//Maximum time for a single gcode to execute.
 			CommPortIdentifier identifier = CommPortIdentifier.getPortIdentifier(portName);
 			// open serial port, and use class name for the appName.
 			serialPort = (SerialPort)identifier.open(printerName, timeout);
