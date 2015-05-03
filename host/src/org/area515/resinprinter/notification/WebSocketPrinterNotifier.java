@@ -1,5 +1,6 @@
 package org.area515.resinprinter.notification;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -81,5 +82,11 @@ public class WebSocketPrinterNotifier implements Notifier {
 				}
 			}
 		}
+	}
+
+	@Override
+	public void fileUploadComplete(File fileUploaded) {
+		// TODO Auto-generated method stub
+		
 	}
 }

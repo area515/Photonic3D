@@ -94,7 +94,28 @@
         		processData: false
     		});
 		});
-
+		
+		$("#uploadurlbutton").click(function( event ){
+			event.preventDefault();
+			var filename = "Upload" + Math.random() + ".stl"
+			var uploadURL = encodeURIComponent($("#chooseurltext").val());
+    		$.ajax({
+        		url: '/services/files/uploadviaurl/' + filename + '/' + uploadURL,
+        		type: 'POST',
+    			dataType: "json",
+        		error: errorHandler,
+    			success: function(data) {
+    				createJobWebSocket(filename,
+    						function(evt) {
+						        var printJob = JSON.parse(evt.data);
+						        if (printJob.jobStatus == 'Ready') {
+			    					$("#statustext").attr("placeholder", "Upload complete:" + uploadURL + " -> " + filename);
+			    					refreshListbox('/services/files/list', "filesselect");
+			    				}
+    						})
+    			}
+    		});
+		});
 		$("#refreshstatusbutton").click(function( event ){
 			event.preventDefault();
 			refreshStatus();
@@ -265,25 +286,20 @@
 									dataType: "json",
 						    		error: errorHandler,
 									success: function(data){
-									  	if ("WebSocket" in window) {
-										     var ws = new WebSocket(createWebSocketURL("printjobnotification/" + encodeURIComponent(jobName)));
-										     ws.onopen = function() {
-										     };
-										     ws.onmessage = function (evt) {
-										        var printJob = JSON.parse(evt.data)
-												if (printJob.jobStatus != 'Printing') {
-													updateStatusArea(0, "0", 0, 0, printJob.errorDescription);
-													$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/noJobSelected");
-												} else {
-													updateStatusArea(printJob.totalCost, printJob.averageSliceTime, printJob.currentSlice, printJob.totalSlices)
-													$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/" + encodeURIComponent(jobName) + "?" + new Date().getTime());
-												}
-										     };
-										     ws.onclose = function() {
-										     };
-										}
+										createJobWebSocket(
+									  			 jobName,
+									  			 function (evt) {
+											        var printJob = JSON.parse(evt.data)
+													if (printJob.jobStatus != 'Printing') {
+														updateStatusArea(0, "0", 0, 0, printJob.errorDescription);
+														$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/noJobSelected");
+													} else {
+														updateStatusArea(printJob.totalCost, printJob.averageSliceTime, printJob.currentSlice, printJob.totalSlices);
+														$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/" + encodeURIComponent(jobName) + "?" + new Date().getTime());
+													}
+											     });
 									  
-										updateStatusArea(0, data.message, currentslice, totalslices)
+										updateStatusArea(0, data.message, currentslice, totalslices);
 
 									} //end of seccess for averageslicetime
 								});//end of ajax averageslicetime
@@ -294,6 +310,21 @@
 			} // end of success for currentSlice
 		}); // end of ajax currentSlice
 	}//end of refressStatus
+	
+	function createJobWebSocket(jobName, onMessageFunction) {
+	  	if ("WebSocket" in window) {
+		     var ws = new WebSocket(createWebSocketURL("printjobnotification/" + encodeURIComponent(jobName)));
+		     ws.onopen = function() {
+		     };
+		     ws.onmessage = onMessageFunction;
+		     ws.onclose = function() {
+		     };
+		     
+		     return ws;
+		}
+	  	
+	  	return null;
+	}
 	
 	function updateStatusArea(totalCost, averageSliceTime, currentslice, totalslices, errorDescription) {
 		if (averageSliceTime === "0") {
@@ -870,6 +901,11 @@
 							<div class="col-md-8">
 		    					<input id="choosefilebutton" name="file" type="file" />
 		    					<input id="uploadfilebutton" type="button" value="Upload" />
+		    				</div>
+		    				<label class="col-md-4 control-label" for="filebutton">Upload STL</label>
+							<div class="col-md-8">
+		    					<input id="chooseurltext" name="stlfile" type="text" />
+		    					<input id="uploadurlbutton" type="button" value="Upload URL" />
 		    				</div>
 						</form>
 						<label class="col-md-4 control-label" for="uploadprogress">Upload Progress</label>
