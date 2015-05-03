@@ -7,7 +7,6 @@
 	<classpathentry kind="lib" path="libs/jetty/jetty-all-9.2.3.v20140905.jar" sourcepath="/3rdPartySource/Jetty9/org.eclipse.jetty.websocket.client.source_9.2.3.v20140905.jar"/>
 	<classpathentry kind="lib" path="libs/jetty/servlet-api-3.1.jar"/>
 	<classpathentry kind="lib" path="libs/resteasy/apache-mime4j-0.6.jar"/>
-	<classpathentry kind="lib" path="libs/resteasy/httpcore-4.2.5.jar"/>
 	<classpathentry kind="lib" path="libs/resteasy/jackson-annotations-2.4.1.jar"/>
 	<classpathentry kind="lib" path="libs/resteasy/jackson-core-2.4.1.jar"/>
 	<classpathentry kind="lib" path="libs/resteasy/jackson-core-asl-1.9.12.jar"/>

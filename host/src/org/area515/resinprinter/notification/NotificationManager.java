@@ -1,5 +1,6 @@
 package org.area515.resinprinter.notification;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -60,6 +61,12 @@ public class NotificationManager {
 	public static void shutdown() {
 		for (Notifier currentNotifier : notifiers) {
 			currentNotifier.stop();
+		}
+	}	
+	
+	public static void fileUploadComplete(File fileUploaded) {
+		for (Notifier currentNotifier : notifiers) {
+			currentNotifier.fileUploadComplete(fileUploaded);
 		}
 	}
 }

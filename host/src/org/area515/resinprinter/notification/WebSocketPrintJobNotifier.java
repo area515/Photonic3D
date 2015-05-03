@@ -1,5 +1,6 @@
 package org.area515.resinprinter.notification;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -15,7 +16,9 @@ import javax.websocket.server.ServerContainer;
 import javax.websocket.server.ServerEndpoint;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.job.StaticJobStatusFuture;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.util.JacksonEncoder;
 import org.area515.util.PrintJobJacksonDecoder;
@@ -91,6 +94,24 @@ public class WebSocketPrintJobNotifier implements Notifier {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+			}
+		}
+	}
+
+	@Override
+	public void fileUploadComplete(File fileUploaded) {
+		ConcurrentHashMap<String, Session> sessionsBySessionId = sessionsByPrintJobName.get(fileUploaded.getName());
+		if (sessionsBySessionId == null) {
+			return;
+		}
+		
+		for (Session currentSession : sessionsBySessionId.values()) {
+			try {
+				PrintJob job = new PrintJob(fileUploaded);
+				job.setFutureJobStatus(new StaticJobStatusFuture(JobStatus.Ready));
+				currentSession.getAsyncRemote().sendObject(job);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}

@@ -1,5 +1,7 @@
 package org.area515.resinprinter.notification;
 
+import java.io.File;
+
 import javax.websocket.server.ServerContainer;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -11,4 +13,5 @@ public interface Notifier {
 	public void jobChanged(Printer printer, PrintJob job);
 	public void printerChanged(Printer printer);
 	public void stop();
+	public void fileUploadComplete(File fileUploaded);
 }
