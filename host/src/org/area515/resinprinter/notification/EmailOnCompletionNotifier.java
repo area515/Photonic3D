@@ -60,4 +60,9 @@ public class EmailOnCompletionNotifier implements Notifier {
 
 	}
 
+	@Override
+	public void fileUploadComplete(File fileUploaded) {
+		// TODO Auto-generated method stub
+		
+	}
 }

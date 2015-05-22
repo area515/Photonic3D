@@ -91,10 +91,7 @@ if [ "$networkBuildNumber" -gt "$currentBuildNumber" ]; then
 	cd ${installDirectory}
 	wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/cwh-0.${networkBuildNumber}.zip
 	unzip cwh-0.${networkBuildNumber}.zip
-	chmod 777 start.sh
-	chmod 777 stop.sh
-	chmod 777 debug.sh
-	chmod 777 browseprinter.sh
+	chmod 777 *.sh
 	rm cwh-0.${networkBuildNumber}.zip
 else
 	rm networkbuildnumber
