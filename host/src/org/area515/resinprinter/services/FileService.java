@@ -6,6 +6,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,11 +26,19 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.area515.resinprinter.job.JobManager;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -66,7 +79,7 @@ public class FileService {
 //					fileName = SERVER_UPLOAD_LOCATION_FOLDER + fileName;
 					File newUploadFile = new File(HostProperties.Instance().getUploadDir(), fileName);
 
-					saveFile(istream, newUploadFile.getAbsolutePath());
+					saveFile(istream, newUploadFile.getAbsoluteFile());
 
 				  } catch (IOException e) {
 					e.printStackTrace();
@@ -89,109 +102,40 @@ public class FileService {
 
 		// Parse Content-Disposition header to get the original file name
 		private String parseFileName(MultivaluedMap<String, String> headers) {
-
 			String[] contentDispositionHeader = headers.getFirst("Content-Disposition").split(";");
-
 			for (String name : contentDispositionHeader) {
-
 				if ((name.trim().startsWith("filename"))) {
-
 					String[] tmp = name.split("=");
-
 					String fileName = tmp[1].trim().replaceAll("\"","");
-
 					return fileName;
 				}
 			}
+			
 			return "randomName";
 		}
 
 		// save uploaded file to a defined location on the server
-		private void saveFile(InputStream uploadedInputStream,
-			String serverLocation) {
-
+		private void saveFile(InputStream uploadedInputStream, File permanentFile) {
+			OutputStream output = null;
 			try {
-				OutputStream outpuStream = new FileOutputStream(new File(serverLocation));
-				int read = 0;
-				byte[] bytes = new byte[1024];
-
-				outpuStream = new FileOutputStream(new File(serverLocation));
-				while ((read = uploadedInputStream.read(bytes)) != -1) {
-					outpuStream.write(bytes, 0, read);
-				}
-				outpuStream.flush();
-				outpuStream.close();
+				File tempFile = File.createTempFile("upload", permanentFile.getName().substring(permanentFile.getName().lastIndexOf(".")));
+				output = new FileOutputStream(tempFile);
+				IOUtils.copy(uploadedInputStream, output);
+				try {output.close();} catch (IOException e) {}
+				Files.move(tempFile.toPath(), permanentFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+				NotificationManager.fileUploadComplete(permanentFile);
 			} catch (IOException e) {
-
 				e.printStackTrace();
+			} finally {
+				if (output != null) {
+					try {output.close();} catch (IOException e) {}
+				}
+				if (uploadedInputStream != null) {
+					try {uploadedInputStream.close();} catch (IOException e) {}
+				}
 			}
 		}
 	
-	
-//	private static final String BASE_PATH = HostProperties.Instance().getSourceDir();
- 
-	
-	
-	
-//	 @POST
-//	    @Consumes("multipart/form-data")
-//	    @Path("/image")
-//	    public void image(@Multipart(value = "image", type = "image/jpeg") Attachment image){
-//	    	
-//	    	
-//	    		DataHandler handler = image.getDataHandler();
-//	            try {
-//	               InputStream stream = handler.getInputStream();
-//	               MultivaluedMap<String, String> map = image.getHeaders();
-//	               System.out.println("fileName Here" + getFileName(map));
-//	               OutputStream out = new FileOutputStream(new File(HostProperties.Instance().getSourceDir(),getFileName(map)));
-//
-//	               int read = 0;
-//	               byte[] bytes = new byte[1024];
-//	               while ((read = stream.read(bytes)) != -1) {
-//	                  out.write(bytes, 0, read);
-//	               }
-//	               stream.close();
-//	               out.flush();
-//	               out.close();
-//	            } catch (Exception e) {
-//	               e.printStackTrace();
-//	            }
-//	            
-//	    }
-//	 private String getFileName(MultivaluedMap<String, String> header) {
-//	        String[] contentDisposition = header.getFirst("Content-Disposition").split(";");
-//	        for (String filename : contentDisposition) {
-//	           if ((filename.trim().startsWith("filename"))) {
-//	              String[] name = filename.split("=");
-//	              String exactFileName = name[1].trim().replaceAll("\"", "");
-//	              return exactFileName;
-//	           }
-//	        }
-//	        return "unknown";
-//	     }
-//	@POST
-//	@Path("upload")
-//	@Consumes(MediaType.MULTIPART_FORM_DATA)
-//	@Produces(MediaType.TEXT_PLAIN)
-//	public String uploadFile(
-//			@FormDataParam("file") InputStream fileInputStream,
-//			@FormDataParam("file") FormDataContentDisposition fileDisposition)
-//			throws FileNotFoundException, IOException {
-// 
-//		String fileName = fileDisposition.getFileName();
-//		System.out.println("***** fileName " + fileDisposition.getFileName());
-//		String filePath = BASE_PATH + fileName;
-//		try (OutputStream fileOutputStream = new FileOutputStream(filePath)) {
-//			int read = 0;
-//			final byte[] bytes = new byte[1024];
-//			while ((read = fileInputStream.read(bytes)) != -1) {
-//				fileOutputStream.write(bytes, 0, read);
-//			}
-//		}
-// 
-//		return "File Upload Successfully !!";
-//	}
 	
     /**
      * Method handling HTTP GET requests. The returned object will be sent
@@ -257,5 +201,55 @@ public class FileService {
 		}
 		
 		return new MachineResponse("delete", true, "I couldn't figure out how to clean up:" + fileName);
+	 }
+	 
+	 @POST
+	 @Path("uploadviaurl/{filename}/{uri}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse uploadViaURL(@PathParam("uri") String uriString, @PathParam("filename") String filename) {
+		URI uri;
+		try {
+			uri = new URI(uriString);
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+			return new MachineResponse("uploadviaurl", false, "That was not a valid URI");
+		}
+		
+		String fileName = filename;//uri.getPath().replaceFirst(".*/([^/]+)", "$1") + filetype;
+		PrintJob currentJob = JobManager.Instance().getJob(fileName);
+		if (currentJob != null && currentJob.getPrinter().isPrintInProgress()) {
+			return new MachineResponse("uploadviaurl", false, "Can't upload file:" + fileName + " while print is in progress.");
+		}
+		
+		File currentFile = new File(HostProperties.Instance().getUploadDir(), fileName);
+		for (PrintFileProcessor currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
+			if (currentProcessor.acceptsFile(currentFile)) {
+				final File newUploadFile = new File(HostProperties.Instance().getUploadDir(), fileName);
+				try {
+			        CloseableHttpClient httpclient = HttpClientBuilder.create().setRedirectStrategy(new LaxRedirectStrategy()).build();
+			        HttpGet httpget = new HttpGet(uri);
+			        httpget.setHeader("User-Agent","Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36");
+			        CloseableHttpResponse response = httpclient.execute(httpget);
+			        
+					final InputStream stream = response.getEntity().getContent();
+					Thread thread = new Thread(new Runnable() {
+						@Override
+						public void run() {
+							saveFile(stream, newUploadFile);
+						}
+					});
+					thread.setName("URL Reader:" + uri);
+					thread.setDaemon(true);
+					thread.start();
+					return new MachineResponse("uploadviaurl", true, "Uploaded:" + fileName);
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		return new MachineResponse("uploadviaurl", false, "I don't know how do deal with a file of this type:" + filename);
 	 }
 }

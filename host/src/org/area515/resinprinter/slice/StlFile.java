@@ -132,7 +132,7 @@ public abstract class StlFile<T> {
    */
   private void readSolid(StlFileParser parser)
   {
-    if(!parser.sval.equals("solid"))
+    if(parser.sval == null || !parser.sval.equals("solid"))
     {
       //System.out.println("Expecting solid on line " + parser.lineno());
       // If the first word is not "solid" then we consider the file is binary

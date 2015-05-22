@@ -32,6 +32,7 @@ rm ${deployedServerZipFile}</echo>-->
 			<zipfileset dir="libs\email" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\resteasy" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\rxtx" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs\jssc" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\cling-2.0-alpha3" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs\mp4parser" prefix="lib" includes="**/*"/>
 		</zip>

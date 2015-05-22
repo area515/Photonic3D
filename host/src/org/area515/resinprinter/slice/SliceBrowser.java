@@ -51,6 +51,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureTop.stl
 C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 "C:\\Users\\wgilster\\Documents\\ArduinoMega.stl",
 "C:\\Users\\wgilster\\Documents\\Olaf_set3_whole.stl",
+//http://www.thingiverse.com/download:888699
 	 */
 	
 	
