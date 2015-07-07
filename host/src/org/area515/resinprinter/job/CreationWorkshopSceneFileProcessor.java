@@ -253,7 +253,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
            if (files.size() > 1){
             	throw new JobManagerException("More than one gcode file exists in print directory");
             }else if (files.size() == 0){
-            	throw new JobManagerException("Gcode file was not found in print directory");
+            	throw new JobManagerException("Gcode file was not found. Did you include the Gcode when you exported your scene?");
             }
            
            return files.get(0);
@@ -301,5 +301,10 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 		}
 		
 		throw new FileNotFoundException(currentFile + "");
+	}
+
+	@Override
+	public Object getGeometry(PrintJob printJob) throws JobManagerException {
+		throw new JobManagerException("You can't get geometry from this type of file");
 	}
 }

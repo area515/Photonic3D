@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -30,9 +31,10 @@ import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.slice.ZSlicer;
+import org.area515.resinprinter.stl.Triangle3d;
 import org.area515.util.TemplateEngine;
 
-public class STLFileProcessor implements PrintFileProcessor {
+public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 	private Map<PrintJob, STLFileData> dataByPrintJob = new HashMap<PrintJob, STLFileData>();
 	private AtomicInteger threads = new AtomicInteger();
 	public class STLFileData {
@@ -128,8 +130,8 @@ public class STLFileProcessor implements PrintFileProcessor {
 	
 	//TODO: Why does the image on the web show a scan line defect with the north side gray and the south side white?
 	@Override
-	public BufferedImage getCurrentImage(PrintJob processingFile) {
-		STLFileData data = dataByPrintJob.get(processingFile);
+	public BufferedImage getCurrentImage(PrintJob printJob) {
+		STLFileData data = dataByPrintJob.get(printJob);
 		if (data == null) {
 			return null;
 		}
@@ -192,6 +194,10 @@ public class STLFileProcessor implements PrintFileProcessor {
 					return printer.getStatus();
 				}
 
+				if (!data.slicer.getStlErrors().isEmpty()) {
+					NotificationManager.errorEncountered(printJob, data.slicer.getStlErrors());
+				}
+				
 				if (slicingProfile.getgCodePreslice() != null && slicingProfile.getgCodePreslice().trim().length() > 0) {
 					printer.getGCodeControl().executeGCodeWithTemplating(printJob, slicingProfile.getgCodePreslice());
 				}
@@ -255,5 +261,15 @@ public class STLFileProcessor implements PrintFileProcessor {
 
 	@Override
 	public void cleanupEnvironment(File processingFile) throws JobManagerException {
+	}
+
+	@Override
+	public Set<Triangle3d> getGeometry(PrintJob printJob) throws JobManagerException {
+		STLFileData data = dataByPrintJob.get(printJob);
+		if (data == null) {
+			return null;
+		}
+		
+		return data.slicer.getAllTriangles();
 	}
 }
