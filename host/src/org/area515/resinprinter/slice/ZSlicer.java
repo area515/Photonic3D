@@ -304,7 +304,6 @@ public class ZSlicer {
 
 	 private List<Polygon> compilePolygons(List<List<Line3d>> completedFillInLoops) {
 		 List<Polygon> polygons = new ArrayList<Polygon>();
-		 int count = 0;
 		  for (List<Line3d> lines : completedFillInLoops) {
 			  int[] xpoints = new int[lines.size()];
 			  int[] xpointsCheck = new int[lines.size()];
@@ -318,11 +317,15 @@ public class ZSlicer {
 				  ypointsCheck[t] = (int)(lines.get(t).getPointTwo().y);
 				  int prevPoint = t > 0? t - 1:lines.size() - 1;
 				  int nextPoint = t < lines.size() - 1? t + 1:0;
-				  if (!lines.get(t).getPointTwo().ceilingEquals(lines.get(nextPoint).getPointOne())) {
-					  System.out.println("Compare second point[" + t + "]:" + lines.get(t) + " to first point[" + nextPoint + "]:" + lines.get(nextPoint));
-				  }
-				  if (!lines.get(t).getPointOne().ceilingEquals(lines.get(prevPoint).getPointTwo())) {
-					  System.out.println("Compare first point[" + t + "]:" + lines.get(t) + " to second point[" + prevPoint + "]:" + lines.get(prevPoint));
+				  
+				  //These are a double check for situations that should never happen other than if a single line(from a broken loop) was placed into the completedFillInLoops
+				  if (lines.size() > 1) {
+					  if (!lines.get(t).getPointTwo().ceilingEquals(lines.get(nextPoint).getPointOne())) {
+						  System.out.println("Compare second point[" + t + "]:" + lines.get(t) + " to first point[" + nextPoint + "]:" + lines.get(nextPoint));
+					  }
+					  if (!lines.get(t).getPointOne().ceilingEquals(lines.get(prevPoint).getPointTwo())) {
+						  System.out.println("Compare first point[" + t + "]:" + lines.get(t) + " to second point[" + prevPoint + "]:" + lines.get(prevPoint));
+					  }
 				  }
 			  }
 			  
@@ -331,6 +334,10 @@ public class ZSlicer {
 		  }
 		  
 		  return polygons;
+	 }
+	 
+	 public Set<Triangle3d> getAllTriangles() {
+		 return stlFile.getTriangles();
 	 }
 	 
 	 public List<Shape3d> getTrianglesAt(int x, int y) {
@@ -525,7 +532,7 @@ public class ZSlicer {
 		 return findPathThroughTrianglesAndBrokenLoops(beginning, ending, path, brokenFaceMaze, usedFaces, currentTriangleIndex + 1);
 	 }
 	 
-	 public void colorizePolygons() {
+	 public List<List<Line3d>> colorizePolygons() {
 		  sliceMaxX = -Integer.MAX_VALUE;
 		  sliceMaxY = -Integer.MAX_VALUE;
 		  sliceMinX = Integer.MAX_VALUE;
@@ -554,10 +561,10 @@ public class ZSlicer {
 			  }
 		  }
 		  
-		  //System.out.println("===================");
-		  //System.out.println("zIntersectionsBySortedX:" + zIntersectionsBySortedX.size());
-		  //System.out.println("completedFillInLoops:" + completedFillInLoops.size());
-		  //System.out.println("===================");
+		  /*System.out.println("===================");
+		  System.out.println("zIntersectionsBySortedX:" + zIntersectionsBySortedX.size());
+		  System.out.println("completedFillInLoops:" + completedFillInLoops.size());
+		  System.out.println("===================");//*/
 		  
 		  //Even though this algorithm is structured to be n^2 it executes in (n * constant) time because of the comparator
 		  //We join a set of loose lines into working loops of lines
@@ -599,7 +606,7 @@ public class ZSlicer {
 			  value += loop.size();
 		  }
 		  System.out.println("workingLoops lines:" + value);
-		  System.out.println("===================");*/
+		  System.out.println("===================");//*/
 		  
 		  //Empirically I've found that about half of all loops need to be joined with this method
 		  //Now combine workingLoops into completedLoops. This algorithm is a bit more inefficient
@@ -647,14 +654,13 @@ public class ZSlicer {
 			  value += loop.size();
 		  }
 		  System.out.println("brokenLoops lines:" + value);
-		  System.out.println("===================");*/
-
+		  System.out.println("===================");//*/
 		  
 		  //empirically I've found that this block of code will only execute 1 in 100 times.
 		  //So here is where things get complicated.
 		  //We need to find our way through a maze of triangles and broken loops to create a full loop
 		  //We can't just simply close broken loops because we could be closing over the top of an area that cuts back into the loop.
-		  if (brokenLoops.size() > 0) {
+		  if (false && brokenLoops.size() > 0) {
 			  //workingLoop.addAll(brokenLoops);
 			  Iterator<List<Line3d>> brokenLoopIter = brokenLoops.iterator();
 			  while (brokenLoopIter.hasNext()) {
@@ -725,10 +731,11 @@ public class ZSlicer {
 				  
 				  trianglesAndBrokenFacesForMazeTraversal.remove(currentElementIndex);
 			  }
-		  }		  
+		  }
+		  
 		  
 		  if (keepTrackOfErrors && brokenLoops.size() > 0) {
-			  System.out.println("Broken Loops(" + brokenLoops.size() + "):" + brokenLoops);
+			  //System.out.println("Broken Loops(" + brokenLoops.size() + "):" + brokenLoops);
 			  for (List<Line3d> currentBrokenLoop : brokenLoops) {
 				  Line3d side = currentBrokenLoop.get(0);
 				  errors.add(new StlError((Triangle3d)side.getOriginatingFace(), side));
@@ -739,7 +746,7 @@ public class ZSlicer {
 			  }
 		  }
 
-		  //Fix BrokenLoops
+		  //close loops manually since we couldn't find a solution for these broken loops
 		  for (List<Line3d> currentBrokenLoop : brokenLoops) {
 			  if (currentBrokenLoop.size() > 1) {
 				  Line3d line1 = currentBrokenLoop.get(0);
@@ -752,8 +759,8 @@ public class ZSlicer {
 			  placeIntoCompletedLoopList(currentBrokenLoop, completedFillInLoops);
 		  }
 		  
+		  //Preperation work for the Scanline algorithm
 		  Map<Integer, List<Line3d>> inRangeLines = new HashMap<Integer, List<Line3d>>();
-		  //List<Line3d> inRangeLines[] = new ArrayList[breakupSize];
 		  int breakupSize = (sliceMaxY - sliceMinY) / ScanlineFillPolygonWork.SMALLEST_UNIT_OF_WORK;
 		  if (completedFillInLoops.size() % ScanlineFillPolygonWork.SMALLEST_UNIT_OF_WORK > 0) {
 			  breakupSize++;
@@ -815,14 +822,23 @@ public class ZSlicer {
 		  //I'm not sure I want to do this. It just traces the polygon but doesn't provide much value other than an edge blur.
 		  //System.out.println("Polygons");
 		  //System.out.println("======");
-		  fillInPolygons = compilePolygons(completedFillInLoops);
+          fillInPolygons = compilePolygons(completedFillInLoops);
 		  
-		  System.out.println("TOTALS");
+		  /*System.out.println("TOTALS");
 		  System.out.println("======");
 		  System.out.println("Completed Loops(" + completedFillInLoops.size() + "):" + completedFillInLoops);
+		  for (List<Line3d> loop : completedFillInLoops) {
+			  System.out.println(loop.get(0));
+			  if (loop.size() > 1) {
+				  System.out.println(loop.get(loop.size() - 1));
+			  }
+			  System.out.println();
+		  }
 		  System.out.println("Working Loops(" + workingLoops.size() + "):" + workingLoops);
+		  System.out.println("======");//*/
 		  
 		  pool.shutdown();
+		  return completedFillInLoops;
 	 }
 	 
 	 public void loadFile(Double buildPlatformXPixels, Double buildPlatformYPixels) throws FileNotFoundException {
