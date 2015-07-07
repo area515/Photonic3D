@@ -12,6 +12,7 @@ import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
+import org.area515.resinprinter.slice.StlError;
 
 public class NotificationManager {
 	private static List<Notifier> notifiers = null;
@@ -45,6 +46,12 @@ public class NotificationManager {
 				}
 			}
 		});
+	}
+	
+	public static void errorEncountered(PrintJob job, List<StlError> errors) {
+		for (Notifier currentNotifier : notifiers) {
+			currentNotifier.geometryError(job, errors);
+		}
 	}
 	
 	public static Future<?> printerChanged(final Printer printer) {

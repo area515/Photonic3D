@@ -18,6 +18,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.DefaultBoundedRangeModel;
@@ -28,22 +29,33 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.JTree;
 import javax.swing.SwingConstants;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 
 import org.area515.resinprinter.stl.Face3d;
 import org.area515.resinprinter.stl.Line3d;
 import org.area515.resinprinter.stl.Shape3d;
 
+import com.fasterxml.jackson.core.TreeNode;
+
 public class SliceBrowser extends JFrame {
-	private int firstSlice = 78;
+	private int firstSlice = 54;
 	//78;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";
 	//321;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl"; good
 	//781;//"C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"; good
 	
-	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";
+	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureBottom.stl";
+//	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";//78 & 54
 	/*
 C:\Users\wgilster\Documents\Olaf_set3_whole.stl
 C:\Users\wgilster\Documents\Fat_Guy_Statue.stl
@@ -58,15 +70,19 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
  	private boolean useRender = false;
 	private JTextField loadStlText = new JTextField(30);
 	private ZSlicer slicer;
-	private DefaultBoundedRangeModel sliceModel = new DefaultBoundedRangeModel();
-	private JScrollBar sliceBar = new JScrollBar(JScrollBar.VERTICAL);
-	
+	private DefaultBoundedRangeModel zSliceModel = new DefaultBoundedRangeModel();
+	private LineSliceModel lineSliceModel = new LineSliceModel();
+	private JScrollBar zSliceBar = new JScrollBar(JScrollBar.VERTICAL);
+	private JSplitPane mainSplitter;
+	private JTree sliceTree;
 	private int mmPerStlUnit = 1;
 	private double pixelsPerMMX = 5;
 	private double pixelsPerMMY = 5;
 	private double sliceResolution = 0.1;
 	private double buildPlatformX = 1024;
 	private double buildPlatformY = 500;
+	private JPanel browserPanel;
+	private List<Line3d> selectedLines = new ArrayList<Line3d>();
 	
 	//This is for the ProjectorShowcase
 	private int focusX = (int)buildPlatformX / 2;
@@ -77,9 +93,94 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	private DefaultBoundedRangeModel opacityLevelModel;
 	private DefaultBoundedRangeModel bulbSizeModel;
 	
+	private class SliceBrowserTreeNode extends DefaultMutableTreeNode {
+		private static final long serialVersionUID = 4514477175597266206L;
+
+		public SliceBrowserTreeNode() {
+			super("Image Root");
+		}
+		
+		public SliceBrowserTreeNode(Object lines) {
+			super(lines);
+			/*setUserObject(lines);
+			setAllowsChildren(true);*/
+		}
+	}
+	
+	private class LineSliceModel extends DefaultTreeModel {
+		private static final long serialVersionUID = 179974567762541369L;
+		
+		public LineSliceModel() {
+			super(new SliceBrowserTreeNode());
+		}
+		
+		public void refreshGui(JLabel mouseLabel, boolean refreshTreeNodes) {
+			DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode)root;
+			rootNode.removeAllChildren();
+			if (refreshTreeNodes) {
+				try {
+					 List<List<Line3d>> coloredLines = slicer.colorizePolygons();
+					 int t = 0;
+					 for (List<Line3d> loops : coloredLines) {
+						 SliceBrowserTreeNode parent = new SliceBrowserTreeNode("Slice:" + slicer.getZ() + " #" + t++ + " :(" + loops.size() + ")");
+						 rootNode.add(parent);
+						 for (Line3d line : loops) {
+							 parent.add(new SliceBrowserTreeNode(line));
+						 }
+					 }
+					 nodeChanged(root);
+					 reload();
+				} catch (Throwable t) {
+					t.printStackTrace();
+				}
+			}
+			if (mouseLabel != null) {
+				mouseLabel.setText("Z:" + slicer.getZ() + " Area:" + slicer.getBuildArea());
+			}
+			browserPanel.repaint();
+		}
+	}
+	
 	private void drawBuildPlatform(Graphics2D g2) {
 		g2.setColor(Color.black);
 		g2.drawRect(1, 1, (int)buildPlatformX, (int)buildPlatformY);
+	}
+	
+	private JTree getSliceTree() {
+		if (sliceTree == null) {
+			sliceTree = new JTree(lineSliceModel);
+			sliceTree.addTreeSelectionListener(new TreeSelectionListener() {
+				@Override
+				public void valueChanged(TreeSelectionEvent e) {
+					TreePath nodes[] = e.getPaths();
+					for (int t = 0; t < nodes.length; t++) {
+						SliceBrowserTreeNode treeNode = (SliceBrowserTreeNode)nodes[t].getLastPathComponent();
+						if (treeNode.isLeaf() && treeNode.getUserObject() instanceof Line3d) {
+							if (e.isAddedPath(t)) {
+								selectedLines.add((Line3d)treeNode.getUserObject());
+							} else {
+								selectedLines.remove((Line3d)treeNode.getUserObject());
+							}
+						}
+					}
+					
+					lineSliceModel.refreshGui(null, false);
+				}
+			});
+		}
+
+		return sliceTree;
+	}
+	
+	private JSplitPane getMainSplitter() throws Exception {
+		if (mainSplitter == null) {
+			mainSplitter = new JSplitPane();
+			mainSplitter.setTopComponent(getSliceBrowser());
+			JScrollPane scroller = new JScrollPane(getSliceTree());
+			mainSplitter.setBottomComponent(scroller);
+		}
+		
+		return mainSplitter;
 	}
 	
 	private float[] getFractions(int count, float start, float end) {
@@ -135,6 +236,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	}
 	
 	private class ProjectorMaskCreatorPanel extends JPanel {
+		private static final long serialVersionUID = 5363505068904537189L;
+
 		@Override
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
@@ -159,16 +262,18 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			JOptionPane.showMessageDialog(null, "File not found:" + loadStlText.getText());
 			return;
 		}
-		sliceModel.setMaximum(slicer.getZMax());
-		sliceModel.setMinimum(slicer.getZMin());
+		zSliceModel.setMaximum(slicer.getZMax());
+		zSliceModel.setMinimum(slicer.getZMin());
 		if (firstSlice == null) {
 			firstSlice = slicer.getZMin();
 		}
 		
 		firstSlice = Math.min(Math.max(firstSlice, slicer.getZMin()), slicer.getZMax());
-		sliceModel.setValue(firstSlice);
+		zSliceModel.setValue(firstSlice);
 		slicer.setZ(firstSlice);
 	}
+	
+
 	
 	  public JComponent getSliceBrowser() throws Exception {
 		  if (firstFile != null) {
@@ -181,7 +286,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				final JLabel mouseLabel = new JLabel("X:" + " Y:" + "Z:");
 				final JPanel window = new JPanel();
 				window.setLayout(new BorderLayout());
-				final JPanel panel = new JPanel() {
+				browserPanel = new JPanel() {
 				    public void paintComponent(Graphics g) {
 				    	super.paintComponent(g);
 				    	if (slicer == null) {
@@ -193,12 +298,21 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				    		applyProjectorMask((Graphics2D)g);
 				    	} else {
 				    		slicer.debugPaintSlice((Graphics2D)g);
+				    		
+				    		if (selectedLines != null) {
+				    			g.setColor(Color.BLUE);
+				    			//g.setStroke(new BasicStroke(10));
+				    			for (Line3d line : selectedLines) {
+				    				g.drawLine((int)line.getPointOne().x, (int)line.getPointOne().y, (int)line.getPointTwo().x, (int)line.getPointTwo().y);
+				    			}
+				    		}
+
 							drawBuildPlatform((Graphics2D)g);
 				    	}
 				    }
 				};
 				
-				panel.addMouseMotionListener(new MouseAdapter() {
+				browserPanel.addMouseMotionListener(new MouseAdapter() {
 					@Override
 					public void mouseMoved(MouseEvent e) {
 						if (slicer == null) {
@@ -207,7 +321,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 						mouseLabel.setText("X:" + e.getX() + " Y:" + e.getY() + " Z:" + slicer.getZ() + " Area:" + slicer.getBuildArea());
 					}
 				});
-				panel.addMouseListener(new MouseAdapter() {
+				browserPanel.addMouseListener(new MouseAdapter() {
 					@Override
 					public void mouseClicked(MouseEvent e) {
 						List<Shape3d> shapes = slicer.getTrianglesAt(e.getX(), e.getY());
@@ -223,14 +337,15 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				final JPanel bottomPanel = new JPanel(new FlowLayout());
 				final JButton colorize = new JButton("Alpha Colorize");
 				final JButton render = new JButton("Render");
-				sliceBar.setModel(sliceModel);
-				sliceBar.addAdjustmentListener(new AdjustmentListener() {
+				zSliceBar.setModel(zSliceModel);
+				zSliceBar.addAdjustmentListener(new AdjustmentListener() {
 					@Override
 					public void adjustmentValueChanged(AdjustmentEvent e) {
+						selectedLines.clear();
 						slicer.setZ(e.getValue());
 						mouseLabel.setText("Z:" + slicer.getZ());
-						panel.repaint();
 						useRender = false;
+						lineSliceModel.refreshGui(mouseLabel, false);
 					}
 				});
 				
@@ -238,13 +353,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						useRender = false;
-						try {
-							slicer.colorizePolygons();
-						} catch (Throwable t) {
-							t.printStackTrace();
-						}
-						mouseLabel.setText("Z:" + slicer.getZ() + " Area:" + slicer.getBuildArea());
-						panel.repaint();
+						lineSliceModel.refreshGui(mouseLabel, true);
 					}
 				});
 				
@@ -252,13 +361,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						useRender = true;
-						try {
-							slicer.colorizePolygons();
-						} catch (Throwable t) {
-							t.printStackTrace();
-						}
-						mouseLabel.setText("Z:" + slicer.getZ() + " Area:" + slicer.getBuildArea());
-						panel.repaint();
+						lineSliceModel.refreshGui(mouseLabel, true);
 					}
 				});
 				
@@ -266,7 +369,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						loadStl(null);
-						panel.repaint();
+						selectedLines.clear();
+						lineSliceModel.refreshGui(null, false);
 					}
 				});
 				
@@ -275,8 +379,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				bottomPanel.add(render);
 				bottomPanel.add(loadStlText);
 				bottomPanel.add(loadStlButton);
-				window.add(sliceBar, BorderLayout.EAST);
-				window.add(panel, BorderLayout.CENTER);
+				window.add(zSliceBar, BorderLayout.EAST);
+				window.add(browserPanel, BorderLayout.CENTER);
 				window.add(bottomPanel, BorderLayout.SOUTH);
 
 				return window;
@@ -323,7 +427,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	  
 	  public SliceBrowser() throws Exception {
 		  JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP);
-		  tabs.addTab("Slice Browser", getSliceBrowser());
+		  tabs.addTab("Slice Browser", getMainSplitter());
 		  tabs.addTab("Projector Mask Creator", getProjectorMaskCreator());
 		  add(tabs);
 		  

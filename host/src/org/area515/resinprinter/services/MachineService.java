@@ -1,7 +1,6 @@
 package org.area515.resinprinter.services;
 
 import java.awt.GraphicsDevice;
-import java.awt.RadialGradientPaint;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +40,12 @@ import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 
 @Path("machine")
 public class MachineService {
@@ -552,9 +557,35 @@ public class MachineService {
 		}
  	}
 
-	 
-	 
-	 
+	 /*@GET    //Not ready for this yet...
+	 @Path("remainingResin/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getRemainingResin(@PathParam("printername") String printername) {
+		// Create job
+		File selectedFile = new File(HostProperties.Instance().getUploadDir(), jobname); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
+		
+		// Delete and Create handled in jobManager
+		PrintJob printJob = null;
+		try {
+			printJob = JobManager.Instance().createJob(selectedFile);
+			Printer printer = PrinterManager.Instance().getPrinter(printername);
+			if (printer == null) {
+				throw new InappropriateDeviceException("Printer not started:" + printername);
+			}
+			
+			Future<JobStatus> status = JobManager.Instance().startJob(printJob, printer);
+			return new MachineResponse("start", true, "Started:" + printJob.getId());
+		} catch (JobManagerException | AlreadyAssignedException e) {
+			JobManager.Instance().removeJob(printJob);
+			PrinterManager.Instance().removeAssignment(printJob);
+			e.printStackTrace();
+			return new MachineResponse("start", false, e.getMessage());
+		} catch (InappropriateDeviceException e) {
+			JobManager.Instance().removeJob(printJob);
+			e.printStackTrace();
+			return new MachineResponse("start", false, e.getMessage());
+		}
+ 	}*/
 	 
 	 
 	 
@@ -773,5 +804,28 @@ public class MachineService {
 			
 			printJob.overrideExposureTime(exposureTime);
 			return new MachineResponse("exposureTime", true, "Exposure time set");
+	 }
+	 
+	 @GET
+	 @Path("geometry/{jobName}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse getGeometry(@PathParam("jobName") String jobName) {
+			PrintJob printJob = JobManager.Instance().getJob(jobName);
+			if (printJob == null) {
+				return new MachineResponse("geometry", false, "Job:" + jobName + " must be started or a simulation must be in progress to get geometry.");
+			}
+
+			try {
+				Object data = printJob.getPrintFileProcessor().getGeometry(printJob);
+				ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+				String json = mapper.writeValueAsString(data);
+				return new MachineResponse("geometry", true, json);
+			} catch (JobManagerException e) {
+				e.printStackTrace();
+				return new MachineResponse("geometry", false, e.getMessage());
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+				return new MachineResponse("geometry", false, "Couldn't convert geometry to JSON");
+			}
 	 }
 }
