@@ -2,6 +2,7 @@ package org.area515.resinprinter.notification;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.CloseReason;
@@ -17,6 +18,7 @@ import javax.websocket.server.ServerEndpoint;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.slice.StlError;
 
 @ServerEndpoint("/printernotification/{printerName}")
 public class WebSocketPrinterNotifier implements Notifier {
@@ -86,7 +88,11 @@ public class WebSocketPrinterNotifier implements Notifier {
 
 	@Override
 	public void fileUploadComplete(File fileUploaded) {
-		// TODO Auto-generated method stub
-		
+		//Not for printers
+	}
+
+	@Override
+	public void geometryError(PrintJob job, List<StlError> error) {
+		//Not for printers
 	}
 }

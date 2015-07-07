@@ -3,6 +3,7 @@ package org.area515.resinprinter.notification;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.Transport;
@@ -13,6 +14,7 @@ import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.slice.StlError;
 import org.area515.util.MailUtilities;
 
 public class EmailOnCompletionNotifier implements Notifier {
@@ -62,6 +64,12 @@ public class EmailOnCompletionNotifier implements Notifier {
 
 	@Override
 	public void fileUploadComplete(File fileUploaded) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void geometryError(PrintJob job, List<StlError> error) {
 		// TODO Auto-generated method stub
 		
 	}

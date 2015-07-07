@@ -72,7 +72,7 @@ public class Line3d implements Shape3d {
 
 	@Override
 	public String toString() {
-		return "[" + one + "," + two + "]";
+		return "[" + one + "," + two + "]" + (originatingFace == null?"*":"");
 	}
 
 	@Override
