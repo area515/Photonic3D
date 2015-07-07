@@ -363,7 +363,7 @@ public class HostProperties {
 				configuration.setName(currentFile.getName().replace(PRINTER_EXTENSION, ""));
 	
 				configuration.setMachineConfig((MachineConfig)jaxbUnMarshaller.unmarshal(new File(MACHINE_DIR, configuration.getMachineConfigName() + MACHINE_EXTENSION)));
-				configuration.setSlicingProfile((SlicingProfile)jaxbUnMarshaller.unmarshal(new File(PROFILES_DIR, configuration.getMachineConfigName() + PROFILES_EXTENSION)));
+				configuration.setSlicingProfile((SlicingProfile)jaxbUnMarshaller.unmarshal(new File(PROFILES_DIR, configuration.getSlicingProfileName() + PROFILES_EXTENSION)));
 				
 				//We do not want to start the printer here
 				configurations.put(configuration.getName(), configuration);
@@ -401,7 +401,7 @@ public class HostProperties {
 				jaxbMarshaller.marshal(slicingProfile, slicingFile);
 
 				File printerFile = new File(printerDir, currentConfiguration.getName() + PRINTER_EXTENSION);
-				jaxbMarshaller.marshal(new PrinterConfiguration(currentConfiguration.getMachineConfigName(), currentConfiguration.getMachineConfigName()), printerFile);
+				jaxbMarshaller.marshal(new PrinterConfiguration(currentConfiguration.getMachineConfigName(), currentConfiguration.getSlicingProfileName()), printerFile);
 			} catch (JAXBException e) {
 				e.printStackTrace();
 			}
