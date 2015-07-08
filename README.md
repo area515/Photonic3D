@@ -50,3 +50,7 @@ If you are in windows double click this:
 ````````
 	browseprinter.bat
 ````````
+
+Do you want to see a video of how to use CWH with CWS/Zip files?  
+----------------------------------------------------------------------
+[Here](https://www.youtube.com/watch?v=J3HTCkxlKcw).
