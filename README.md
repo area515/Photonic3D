@@ -1,27 +1,6 @@
 Creation-Workshop-Host
 ======================
-<img src='host/cwh.png'>
-Raspberry Pi Installation
--------------------------
-- Install _2015-02-16-raspbian-wheezy.img_ onto an SD card. (I use Win32DiskImager) **Do NOT use an older version!**
-- Start your Raspberry Pi and type the following at the command line:
-```
-sudo raspi-config
-```
-- Choose and enable the following options from the Raspberry Pi Software Configuration Tool:
- * Expand Filesystem
- * Enable Camera
-- Choose to reboot the Raspberry Pi when you are prompted by the configuration tool.
-- After the Raspberry Pi has completed rebooting, execute the following commands at the command line:
-```
-  sudo wget https://github.com/area515/Creation-Workshop-Host/raw/master/host/bin/start.sh
-  sudo chmod 777 start.sh
-  sudo ./start.sh
-```
-- Automatically find your printer with the browseprinter client if you don't know the ip address and port of your Raspberry Pi. Or use your favorite browser and try:
-```
-http://[RaspberryPiIp]:9091
-```
+Where are the instructions for installing on the Raspberry Pi?
 
 Do you want to install the latest stable build?
 -------------------------------------------------------------------------------
