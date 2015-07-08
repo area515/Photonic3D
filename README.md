@@ -9,6 +9,9 @@ Where are the instructions for installing on the Raspberry Pi?
 -------------------------------------------------------------------------------  
 [Here](https://github.com/area515/Creation-Workshop-Host/wiki/Raspberry-Pi-Manual-Setup-Instructions).
 
+Where is a video of how to use CWH with CWS and Zip files?  
+----------------------------------------------------------------------
+[Here](https://www.youtube.com/watch?v=J3HTCkxlKcw).
 
 Do you want to install the latest stable build?
 -------------------------------------------------------------------------------
@@ -50,7 +53,3 @@ If you are in windows double click this:
 ````````
 	browseprinter.bat
 ````````
-
-Do you want to see a video of how to use CWH with CWS/Zip files?  
-----------------------------------------------------------------------
-[Here](https://www.youtube.com/watch?v=J3HTCkxlKcw).
