@@ -1,6 +1,7 @@
 Creation-Workshop-Host
 ======================
 Where are the instructions for installing on the Raspberry Pi?
+https://github.com/area515/Creation-Workshop-Host/wiki/Raspberry-Pi-Manual-Setup-Instructions
 
 Do you want to install the latest stable build?
 -------------------------------------------------------------------------------
