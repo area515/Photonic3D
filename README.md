@@ -19,7 +19,7 @@ What features does CWH have?
 2. Load STL files directly from thingiverse or the internet.
 3. Uses common xml Creation Workshop configuration files.
 4. Custom printer mask overlays.
-5. SSL based security with Basic authentication.
+5. TLS encryption with Basic authentication.
 6. Use of [FreeMarker](http://freemarker.org/) templating in configuration files.
 7. Restful developer API for printer management.
 8. Video Recording and playback of build.
