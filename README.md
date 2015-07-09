@@ -30,7 +30,7 @@ What features does CWH have?
 13. Sophisticated javascript calculators that compute gradients, exposure time, lift speed and distance.
 14. Notification of Printer events through webSockets.
 15. Simple printer setup for Zip/CWS based printing.
-16. 
+16. Automatic updates.
 
 Do you want to install the latest stable build?
 -------------------------------------------------------------------------------
