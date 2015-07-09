@@ -10,8 +10,27 @@ Where are the instructions for installing on the Raspberry Pi?
 [Here](https://github.com/area515/Creation-Workshop-Host/wiki/Raspberry-Pi-Manual-Setup-Instructions).
 
 Where is a video of how to use CWH with CWS and Zip files?  
-----------------------------------------------------------------------
+-------------------------------------------------------------------------------  
 [Here](https://www.youtube.com/watch?v=J3HTCkxlKcw).
+
+What features does CWH have?
+-------------------------------------------------------------------------------  
+1. Print STL files.
+2. Load STL files directly from thingiverse or the internet.
+3. Uses common xml Creation Workshop configuration files.
+4. Custom printer mask overlays.
+5. SSL based security with Basic authentication.
+6. Use of [FreeMarker](http://freemarker.org/) templating in configuration files.
+7. Restful developer API for printer management.
+8. Video Recording and playback of build.
+9. Print Zip/CWS files exported from Creation Workshop.
+10. Execution of custom gcode from GUI.
+11. Managment of multiple printers with a single print host.
+12. Plugin based notification framework.
+13. Sophisticated javascript calculators that compute gradients, exposure time, lift speed and distance.
+14. Notification of Printer events through webSockets.
+15. Simple printer setup for Zip/CWS based printing.
+16. 
 
 Do you want to install the latest stable build?
 -------------------------------------------------------------------------------
