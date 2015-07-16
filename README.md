@@ -32,6 +32,7 @@ What features does CWH have?
 15. Simple printer setup for Zip/CWS based printing.
 16. Automatic updates.
 17. [Script](https://github.com/area515/Creation-Workshop-Host/blob/master/host/bin/browseprinter.sh) to find CWH based printers on the local network with zero network setup.
+18. Capability of building printer configurations with simulated Serial ports and displays.
 
 Do you want to install the latest stable build?
 -------------------------------------------------------------------------------
