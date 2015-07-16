@@ -31,6 +31,7 @@ What features does CWH have?
 14. Notification of Printer events through webSockets.
 15. Simple printer setup for Zip/CWS based printing.
 16. Automatic updates.
+17. Find CWH based printers on the local network with zero network setup.
 
 Do you want to install the latest stable build?
 -------------------------------------------------------------------------------
