@@ -72,8 +72,9 @@ public class HostProperties {
 	private String clientUsername;
 	private String clientPassword;
 	
-	//This is for Streaming
+	//This is for Media
 	private String streamingCommand;
+	private String imagingCommand;
 	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
@@ -193,6 +194,7 @@ public class HostProperties {
 			clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", "");
 			clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
 			streamingCommand = configurationProperties.getProperty("streamingCommand");
+			imagingCommand = configurationProperties.getProperty("imagingCommand");
 		}
 		
 		if (printDirString == null) {
@@ -325,6 +327,10 @@ public class HostProperties {
 
 	public String getStreamingCommand() {
 		return streamingCommand;
+	}
+	
+	public String getImagingCommand() {
+		return imagingCommand;
 	}
 
 	public List<PrinterConfiguration> getPrinterConfigurations() {
