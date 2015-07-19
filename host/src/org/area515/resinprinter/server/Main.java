@@ -4,14 +4,19 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.URI;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.websocket.server.ServerContainer;
 
 import org.area515.resinprinter.discover.BroadcastManager;
 import org.area515.resinprinter.notification.NotificationManager;
+import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.security.JettySecurityUtils;
+import org.area515.resinprinter.services.MachineService;
 import org.area515.resinprinter.stream.ProgressiveDownloadServlet;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -31,8 +36,15 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
  */
 
 public class Main {
-	public static ExecutorService GLOBAL_EXECUTOR = Executors.newScheduledThreadPool(15);
-
+	public static ExecutorService GLOBAL_EXECUTOR = new ScheduledThreadPoolExecutor(3, new ThreadFactory() {
+		private AtomicInteger threads = new AtomicInteger();
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread thread = new Thread(r, "PrintJobProcessorThread-" + threads.incrementAndGet());
+			thread.setDaemon(true);
+			return thread;
+		}
+	});
 	public static void main(String[] args) throws Exception {
 
 		int port = HostProperties.Instance().getPrinterHostPort();
@@ -150,6 +162,14 @@ public class Main {
 			server.join();
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+		
+		//Startup all printers that should be autostarted
+		List<PrinterConfiguration> configurations = HostProperties.Instance().getPrinterConfigurations();
+		for (PrinterConfiguration configuration : configurations) {
+			if (configuration.isAutostart()) {
+				MachineService.INSTANCE.startPrinter(configuration.getName());
+			}
 		}
 	}
 }

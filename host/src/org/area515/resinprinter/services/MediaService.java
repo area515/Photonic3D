@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -12,7 +13,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.server.HostProperties;
@@ -23,30 +26,33 @@ import com.googlecode.mp4parser.authoring.Movie;
 import com.googlecode.mp4parser.authoring.builder.FragmentedMp4Builder;
 import com.googlecode.mp4parser.authoring.tracks.H264TrackImpl;
 
-@Path("video")
-public class VideoService {
-	public static VideoService INSTANCE = new VideoService();
+@Path("media")
+public class MediaService {
+	public static MediaService INSTANCE = new MediaService();
 
 	//All static for now, just to get this done...
 	private File rawh264StreamFile = new File(System.getProperty("java.io.tmpdir"), "tempraw.h246");
 	private File mp4StreamFile = new File(System.getProperty("java.io.tmpdir"), "temp.mp4");
 	private Process rawH264ProducerProcess;
+	
+	//TODO: We need to Lock per Printer, not a global lock!
 	private Lock processLock = new ReentrantLock();
 	
-	private VideoService(){}
+	private MediaService(){}
 
 	public File getRecordedFile() {
 		return mp4StreamFile;
 	}
 	
+	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
 	@GET
-	@Path("startrecordvideo/{cameraName}")
+	@Path("startrecordvideo/{printerName}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MachineResponse startVideo(@PathParam("cameraName") String cameraName) {
+	public MachineResponse startVideo(@PathParam("printerName") String printerName) {
 		processLock.lock();
 		try {
 			if (rawH264ProducerProcess != null) {
-				return new MachineResponse("startrecord", true, "Camera:" + cameraName + " already started");
+				return new MachineResponse("startrecord", true, "Printer:" + printerName + " already started recording");
 			}
 
 			System.out.println("Attempting to start video");
@@ -80,13 +86,13 @@ public class VideoService {
 				}, "OriginalVideoWritingThread");
 				thread.setDaemon(true);
 				thread.start();
-				return new MachineResponse("startrecord", true, "Camera:" + cameraName + " started");
+				return new MachineResponse("startrecord", true, "Printer:" + printerName + " started recording");
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.out.println("Couldn't start command line process:" + streamingCommand);
 				rawH264ProducerProcess.destroy();
 				rawH264ProducerProcess = null;
-				return new MachineResponse("startrecord", false, "Camera:" + cameraName + " couldn't be started");
+				return new MachineResponse("startrecord", false, "Printer:" + printerName + " couldn't record");
 			}
 		} finally {
 			processLock.unlock();
@@ -94,13 +100,13 @@ public class VideoService {
 	}
 
 	@GET
-	@Path("stopvideorecord/{cameraName}")
+	@Path("stopvideorecord/{printerName}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MachineResponse stopVideo(@PathParam("cameraName") String cameraName) {
+	public MachineResponse stopVideo(@PathParam("printerName") String printerName) {
 		processLock.lock();
 		try {
 			if (rawH264ProducerProcess == null) {
-				return new MachineResponse("stopvideorecord", false, "A recording hasn't been started yet for this camera: " + cameraName);
+				return new MachineResponse("stopvideorecord", false, "A recording hasn't been started yet for this printer: " + printerName);
 			}
 
 			System.out.println("Attempting to end video");
@@ -113,8 +119,7 @@ public class VideoService {
 						publishStream = new FileOutputStream(mp4StreamFile);
 						originalFileSource = new FileDataSourceImpl(rawh264StreamFile);
 
-						H264TrackImpl h264Track = new H264TrackImpl(
-								originalFileSource);
+						H264TrackImpl h264Track = new H264TrackImpl(originalFileSource);
 						Movie m = new Movie();
 						m.addTrack(h264Track);
 
@@ -157,5 +162,38 @@ public class VideoService {
 		} finally {
 			processLock.unlock();
 		}
+	}
+	
+	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
+	@GET
+	@Path("takesnapshot/{printerName}")
+    @Produces("image/png")
+	public StreamingOutput takePicture(@PathParam("printerName") String printerName) {
+	    return new StreamingOutput() {
+			@Override
+			public void write(OutputStream output) throws IOException, WebApplicationException {
+				String streamingCommand = HostProperties.Instance().getStreamingCommand();
+				BufferedInputStream inputStream = null;
+				processLock.lock();
+				try {
+					Process imagingProcess = Runtime.getRuntime().exec(streamingCommand);
+					IOUtils.copy(imagingProcess.getInputStream(), output);
+				} finally {
+					if (inputStream != null) {
+						try {
+							inputStream.close();
+						} catch (IOException e) {
+						}
+					}
+					if (output != null) {
+						try {
+							output.close();
+						} catch (IOException e) {
+						}
+					}
+					processLock.unlock();
+				}
+			}  
+	    };
 	}
 }

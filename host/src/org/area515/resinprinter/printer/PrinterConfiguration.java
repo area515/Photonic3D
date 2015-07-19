@@ -10,6 +10,9 @@ public class PrinterConfiguration {
 	private String machineConfigName;
 	@XmlElement(name="SlicingProfileName")
 	private String slicingProfileName;
+	@XmlElement(name="AutoStart")
+	private boolean autostart;
+	
 	private MachineConfig machineConfig;
 	private SlicingProfile slicingProfile;
 
@@ -50,6 +53,13 @@ public class PrinterConfiguration {
 		this.slicingProfile = slicingProfile;
 	}
 	
+	public boolean isAutostart() {
+		return autostart;
+	}
+	public void setAutostart(boolean autostart) {
+		this.autostart = autostart;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

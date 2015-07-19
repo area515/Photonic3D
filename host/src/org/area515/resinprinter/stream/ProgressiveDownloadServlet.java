@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.area515.resinprinter.services.VideoService;
+import org.area515.resinprinter.services.MediaService;
 
 public class ProgressiveDownloadServlet extends HttpServlet {
 	private static final long serialVersionUID = 5110548757293069069L;
@@ -37,7 +37,7 @@ public class ProgressiveDownloadServlet extends HttpServlet {
 	}
 	
 	private void doAll(HttpServletRequest request, HttpServletResponse response) {
-		File servedFile = VideoService.INSTANCE.getRecordedFile();
+		File servedFile = MediaService.INSTANCE.getRecordedFile();
 		Path path = servedFile != null?servedFile.toPath():null;
 
 		if (servedFile == null || path == null || !path.toFile().exists()) {

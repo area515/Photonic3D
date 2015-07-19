@@ -11,11 +11,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,13 +26,13 @@ import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
+import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.ZSlicer;
 import org.area515.resinprinter.stl.Triangle3d;
 import org.area515.util.TemplateEngine;
 
 public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 	private Map<PrintJob, STLFileData> dataByPrintJob = new HashMap<PrintJob, STLFileData>();
-	private AtomicInteger threads = new AtomicInteger();
 	public class STLFileData {
 		public ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByExtension("js");
 		public BufferedImage trueImage;
@@ -46,15 +42,6 @@ public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 		public ZSlicer slicer;
 	}
 
-	private ScheduledExecutorService EXECUTOR = new ScheduledThreadPoolExecutor(3, new ThreadFactory() {
-		@Override
-		public Thread newThread(Runnable r) {
-			Thread thread = new Thread(r, "STLFileProcessorThread-" + threads.incrementAndGet());
-			thread.setDaemon(true);
-			return thread;
-		}
-	});
-	
 	public class CurrentImageRenderer implements Callable<BufferedImage> {
 		private BufferedImage currentImage = null;
 		private STLFileData data;
@@ -162,10 +149,8 @@ public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 		int xResolution = slicingProfile.getxResolution();
 		int yResolution = slicingProfile.getyResolution();
 		InkConfig inkConfiguration = slicingProfile.getSelectedInkConfig();
-		data.slicer = new ZSlicer(
-				printJob.getJobFile(),
-				1, xPixelsPerMM, yPixelsPerMM, 
-				inkConfiguration.getSliceHeight(), true);
+		data.slicer = new ZSlicer(printJob.getJobFile(),1, xPixelsPerMM, yPixelsPerMM, inkConfiguration.getSliceHeight(), true);
+		InkDetector inkDetector = inkConfiguration.getInkDetector(printer);
 		try {
 			data.slicer.loadFile(new Double(xResolution), new Double(yResolution));
 			printJob.setTotalSlices(data.slicer.getZMax() - data.slicer.getZMin());
@@ -178,7 +163,8 @@ public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 		data.slicer.setZ(data.slicer.getZMin());
 		
 		data.currentImagePointer = new AtomicBoolean(true);
-		Future<BufferedImage> currentImage = EXECUTOR.submit(new CurrentImageRenderer(printJob, data, xResolution, yResolution));
+		Future<BufferedImage> currentImage = Main.GLOBAL_EXECUTOR.submit(new CurrentImageRenderer(printJob, data, xResolution, yResolution));
+		Future<Boolean> outOfInk = Main.GLOBAL_EXECUTOR.submit(inkDetector);
 		try {
 			long currentSliceTime;
 			if (slicingProfile.getgCodeHeader() != null && slicingProfile.getgCodeHeader().trim().length() > 0) {
@@ -189,34 +175,61 @@ public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 			int endPoint = slicingProfile.getDirection() == BuildDirection.Bottom_Up?(data.slicer.getZMax() + 1): (data.slicer.getZMin() + 1);
 			for (int z = startPoint; z <= endPoint && printer.isPrintInProgress(); z += slicingProfile.getDirection().getVector()) {
 				currentSliceTime = System.currentTimeMillis();
-				//Get out if the print is cancelled
+				
+				//Perform two actions at once here:
+				// 1. Pause if the user asked us to pause
+				// 2. Get out if the print is cancelled
 				if (!printer.waitForPauseIfRequired()) {
 					return printer.getStatus();
 				}
 
+				//Show the errors to our users if the stl file is broken, but we'll keep on processing like normal
 				if (!data.slicer.getStlErrors().isEmpty()) {
 					NotificationManager.errorEncountered(printJob, data.slicer.getStlErrors());
 				}
 				
+				//Execute preslice gcode
 				if (slicingProfile.getgCodePreslice() != null && slicingProfile.getgCodePreslice().trim().length() > 0) {
 					printer.getGCodeControl().executeGCodeWithTemplating(printJob, slicingProfile.getgCodePreslice());
 				}
+				
+				//Cure the current image
 				printer.showImage(currentImage.get());
 
-				//We don't need to waste CPU rendering the last image
+				//Render the next image while we are waiting for the current image to cure
 				if (z < data.slicer.getZMax() + 1) {
 					data.slicer.setZ(z);
-					currentImage = EXECUTOR.submit(new CurrentImageRenderer(printJob, data, xResolution, yResolution));
+					currentImage = Main.GLOBAL_EXECUTOR.submit(new CurrentImageRenderer(printJob, data, xResolution, yResolution));
+				}
+				
+				//Start but don't wait for a potentially heavy weight operation to determine if we are out of ink.
+				if (inkConfiguration == null) {
+					outOfInk = Main.GLOBAL_EXECUTOR.submit(inkDetector);
 				}
 
+				//Determine the dynamic amount of time we should expose our resin
 				if (slicingProfile.getExposureTimeCalculator() != null && slicingProfile.getExposureTimeCalculator().trim().length() > 0) {
 					printJob.setExposureTime(((Number)TemplateEngine.runScript(printJob, data.scriptEngine, slicingProfile.getExposureTimeCalculator())).intValue());
 				}
+				
+				//TODO: Open shutter here:
+				
+				//Sleep for the amount of time that we are exposing the resin.
 				Thread.sleep(printJob.getExposureTime());
+				
+				//TODO: close shutter here:
+				
+				//Blank the screen in the case that our printer doesn't have a shutter
 				printer.showBlankImage();
 				
+				//Is the printer out of ink?
+				if (outOfInk.get()) {
+					printer.setStatus(JobStatus.PausedOutOfPrintMaterial);
+				}
 				
-				//Get out if the print is cancelled
+				//Perform two actions at once here:
+				// 1. Pause if the user asked us to pause
+				// 2. Get out if the print is cancelled
 				if (!printer.waitForPauseIfRequired()) {
 					return printer.getStatus();
 				}
@@ -233,8 +246,11 @@ public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 				if (slicingProfile.getZLiftSpeedGCode() != null && slicingProfile.getZLiftSpeedGCode().trim().length() > 0) {
 					printer.getGCodeControl().executeGCodeWithTemplating(printJob, slicingProfile.getZLiftSpeedGCode());
 				}
+				
+				//Perform the lift gcode manipulation
 				printer.getGCodeControl().executeGCodeWithTemplating(printJob, slicingProfile.getgCodeLift());
 				
+				//Perform area and cost manipulations for current slice
 				printJob.addNewSlice(System.currentTimeMillis() - currentSliceTime, getBuildAreaMM(printJob));
 				
 				//Notify the client that the printJob has increased the currentSlice

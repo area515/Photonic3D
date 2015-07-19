@@ -358,7 +358,7 @@
 	function stopVideoRecord() {
 		$.ajax({
 			type: 'GET',
-			url: "/services/video/stopvideorecord/camera1",
+			url: "/services/media/stopvideorecord/camera1",
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
@@ -373,7 +373,7 @@
 	function startVideoRecord() {
 		$.ajax({
 			type: 'GET',
-			url: "/services/video/startrecordvideo/camera1",
+			url: "/services/media/startrecordvideo/camera1",
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
