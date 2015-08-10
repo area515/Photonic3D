@@ -319,12 +319,12 @@ public class GenericHoughDetection<S> {
     
     public void printHoughSpace() {
         for(int currentScale = scaleMin;currentScale <= scaleMax;currentScale = currentScale+scaleInc) {
-        	int indexR=(currentScale-scaleMin)/scaleInc;
-        	System.out.println(printHoughSpaceForRadius(indexR));
+        	int scaleIndex=(currentScale-scaleMin)/scaleInc;
+        	System.out.println(printHoughSpaceForScale(scaleIndex));
         }
     }
     
-    private String printHoughSpaceForRadius(int scaleIndex) {
+    private String printHoughSpaceForScale(int scaleIndex) {
     	StringBuilder builder = new StringBuilder();
     	double radius = scaleIndex * scaleInc + scaleMin;
     	builder.append("Radius:" + radius + "\n   ");
@@ -340,6 +340,39 @@ public class GenericHoughDetection<S> {
 			builder.append("\n");
     	}
     	return builder.toString();
+    }
+    
+    public BufferedImage generateHoughSpaceImage(boolean performLinear8bitEqualizationPass) {
+    	//TODO: For performance reasons we really need to use the databuffer rather than this get/set pixel stuff
+    	BufferedImage image = new BufferedImage(houghSpaceSize[0], houghSpaceSize[1], BufferedImage.TYPE_BYTE_GRAY);
+    	WritableRaster d = image.getRaster();
+    	double highestMax = 0;
+    	int sumarizedHoughValues[][] = new int[houghSpaceSize[1]][houghSpaceSize[0]];
+    	for (int y = 0; y < houghSpaceSize[1]; y++) {
+    		for (int x = 0; x < houghSpaceSize[0]; x++) {
+    			for (int scale = scaleMin; scale <= scaleMax; scale += scaleInc) {
+    				int scaleIndex = (scale-scaleMin)/scaleInc;
+    				sumarizedHoughValues[x][y] += houghValues[x][y][scaleIndex];
+    			}
+    			if (sumarizedHoughValues[x][y] > highestMax) {
+    				highestMax = sumarizedHoughValues[x][y];
+    			}
+
+				d.setPixel(x, y, new int[]{sumarizedHoughValues[x][y]});
+    		}
+    	}
+    	
+    	if (performLinear8bitEqualizationPass) {
+        	for (int y = 0; y < houghSpaceSize[1]; y++) {
+        		for (int x = 0; x < houghSpaceSize[0]; x++) {
+        			int value[] = d.getPixel(x, y, new int[1]);
+        			value[0] = (int)((double)sumarizedHoughValues[x][y] / highestMax * 255d);
+    				d.setPixel(x, y, value);
+        		}
+        	}    	
+        }
+    	
+    	return image;
     }
     
     public BufferedImage generateHoughSpaceImageForScale(int scaleIndex) {

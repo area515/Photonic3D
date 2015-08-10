@@ -48,7 +48,7 @@ public class JobManager {
 		try {
 			for (PrintFileProcessor currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
 				if (currentProcessor.acceptsFile(job)) {
-					currentProcessor.prepareEnvironment(job);
+					currentProcessor.prepareEnvironment(job, newJob);
 				}
 			}
 		} catch (JobManagerException e) {

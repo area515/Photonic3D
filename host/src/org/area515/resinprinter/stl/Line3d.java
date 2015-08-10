@@ -72,7 +72,7 @@ public class Line3d implements Shape3d {
 
 	@Override
 	public String toString() {
-		return "[" + one + "," + two + "]" + (originatingFace == null?"*":"");
+		return "[" + one + "," + two + "]" + (originatingFace == null?"(Artificial Line)":"");
 	}
 
 	@Override
@@ -84,6 +84,25 @@ public class Line3d implements Shape3d {
 		return result;
 	}
 
+	public boolean pointsEqual(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Line3d other = (Line3d) obj;
+		if ((one == other.one || (one != null && one.equals(other.one))) &&
+			(two == other.two || (two != null && two.equals(other.two)))) {
+			return true;
+		}
+		if ((one == other.two || (two != null && two.equals(other.one))) &&
+			(two == other.one || (one != null && one.equals(other.two)))) {
+			return true;
+		}
+		return false;
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

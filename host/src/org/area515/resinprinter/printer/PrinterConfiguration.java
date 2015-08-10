@@ -2,6 +2,7 @@ package org.area515.resinprinter.printer;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 @XmlRootElement(name="PrinterConfiguration")
 public class PrinterConfiguration {
@@ -53,6 +54,7 @@ public class PrinterConfiguration {
 		this.slicingProfile = slicingProfile;
 	}
 	
+	@XmlTransient
 	public boolean isAutostart() {
 		return autostart;
 	}

@@ -34,7 +34,7 @@ public class CircleTest {
 		}//*/
 		
 		ImageIO.write(edges, "png", new File("outputcircle.png"));
-		ImageIO.write(houghDetection.generateHoughSpaceImageForScale(13), "png", new File("houghspacecircle.png"));
+		ImageIO.write(houghDetection.generateHoughSpaceImage(true), "png", new File("houghspacecircle.png"));
 		System.out.println("Complete");		
 	}
 }

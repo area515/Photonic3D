@@ -51,8 +51,8 @@ public class SlicingProfile {
 		public int getNumberOfFirstLayers() {
 			return numberOfFirstLayers;
 		}
-		public void setNumberOfBottomLayers(int numberofBottomLayers) {
-			this.numberOfFirstLayers = numberofBottomLayers;
+		public void setNumberOfFirstLayers(int numberOfFirstLayers) {
+			this.numberOfFirstLayers = numberOfFirstLayers;
 		}
 		
 		@XmlTransient
@@ -64,18 +64,18 @@ public class SlicingProfile {
 		}
 		
 		@XmlTransient
-		public int getLayerTime() {
+		public int getExposureTime() {
 			return layerTime;
 		}
-		public void setLayerTime(int layerTime) {
+		public void setExposureTime(int layerTime) {
 			this.layerTime = layerTime;
 		}
 		
 		@XmlTransient
-		public int getFirstLayerTime() {
+		public int getFirstLayerExposureTime() {
 			return firstLayerTime;
 		}
-		public void setFirstLayerTime(int firstLayerTime) {
+		public void setFirstLayerExposureTime(int firstLayerTime) {
 			this.firstLayerTime = firstLayerTime;
 		}
 		

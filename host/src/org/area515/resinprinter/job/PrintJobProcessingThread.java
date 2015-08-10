@@ -10,19 +10,19 @@ import org.area515.resinprinter.server.HostProperties;
 public class PrintJobProcessingThread implements Callable<JobStatus> {
 	private PrintJob printJob = null;
 	private Printer printer;
-	private PrintFileProcessor processor;
+	private PrintFileProcessor<?> processor;
 	
 	public PrintJobProcessingThread(PrintJob printJob, Printer printer) {
 		this.printJob = printJob;
 		this.printer = printer;
-		for (PrintFileProcessor currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
+		for (PrintFileProcessor<?> currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
 			if (currentProcessor.acceptsFile(printJob.getJobFile())) {
 				processor = currentProcessor;
 			}
 		}
 	}
 	
-	public PrintFileProcessor getPrintFileProcessor() {
+	public PrintFileProcessor<?> getPrintFileProcessor() {
 		return processor;
 	}
 	

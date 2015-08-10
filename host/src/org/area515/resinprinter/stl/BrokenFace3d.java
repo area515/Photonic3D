@@ -1,6 +1,5 @@
 package org.area515.resinprinter.stl;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class BrokenFace3d implements Face3d {

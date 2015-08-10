@@ -157,19 +157,19 @@ public class Main {
 			}
 		});
 		
-		//Wait in the Main method until we are shutdown by the OS
-		try {
-			server.join();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
 		//Startup all printers that should be autostarted
 		List<PrinterConfiguration> configurations = HostProperties.Instance().getPrinterConfigurations();
 		for (PrinterConfiguration configuration : configurations) {
 			if (configuration.isAutostart()) {
 				MachineService.INSTANCE.startPrinter(configuration.getName());
 			}
+		}
+
+		//Wait in the Main method until we are shutdown by the OS
+		try {
+			server.join();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
