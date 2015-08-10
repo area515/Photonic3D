@@ -113,9 +113,9 @@ public class MachineService {
 				 DisplayManager.SIMULATED_DISPLAY, 
 				 ConsoleCommPort.CONSOLE_COMM_PORT, 
 				 134, 75, 185);
-		 configuration.getSlicingProfile().getSelectedInkConfig().setNumberOfBottomLayers(10);
-		 configuration.getSlicingProfile().getSelectedInkConfig().setFirstLayerTime(20000);
-		 configuration.getSlicingProfile().getSelectedInkConfig().setLayerTime(8000);
+		 configuration.getSlicingProfile().getSelectedInkConfig().setNumberOfFirstLayers(10);
+		 configuration.getSlicingProfile().getSelectedInkConfig().setFirstLayerExposureTime(20000);
+		 configuration.getSlicingProfile().getSelectedInkConfig().setExposureTime(8000);
 		 configuration.getSlicingProfile().setgCodeHeader(
 				 "G21 ;Set units to be mm\n" +
 				 "G91 ;Relative Positioning\n" +
@@ -226,11 +226,11 @@ public class MachineService {
 			
 			InkConfig ink = new InkConfig();
 			ink.setName("Default");
-			ink.setNumberOfBottomLayers(3);
+			ink.setNumberOfFirstLayers(3);
 			ink.setResinPriceL(65.0);
 			ink.setSliceHeight(0.1);
-			ink.setFirstLayerTime(5000);
-			ink.setLayerTime(1000);
+			ink.setFirstLayerExposureTime(5000);
+			ink.setExposureTime(1000);
 			
 			List<InkConfig> configs = new ArrayList<InkConfig>();
 			configs.add(ink);
@@ -268,6 +268,13 @@ public class MachineService {
 		//TODO: This data needs to be set by the user interface...
 		//========================================================
 		PrinterConfiguration currentConfiguration = createTemplatePrinter(printername, displayId, comport, 134, 75, 185);
+		if (displayId.equals(DisplayManager.SIMULATED_DISPLAY) &&
+			comport.equals(ConsoleCommPort.CONSOLE_COMM_PORT)) {
+			currentConfiguration.getSlicingProfile().setgCodeLift("Lift Z; Lift the platform");
+			currentConfiguration.getSlicingProfile().getSelectedInkConfig().setNumberOfFirstLayers(3);
+			currentConfiguration.getSlicingProfile().getSelectedInkConfig().setFirstLayerExposureTime(10000);
+			currentConfiguration.getSlicingProfile().getSelectedInkConfig().setExposureTime(3000);
+		}
 		//=========================================================
 		try {
 			HostProperties.Instance().addPrinterConfiguration(currentConfiguration);
@@ -628,7 +635,12 @@ public class MachineService {
 		 			return;
 		 		}
 		 		
-				ImageIO.write(image, "png", output);
+		 		try {
+		 			ImageIO.write(image, "png", output);
+		 		} catch (IOException e) {
+		 			//TODO: For some reason we are getting an org.eclipse.jetty.io.EofException
+		 			e.printStackTrace();
+		 		}
 			}  
 	    };
      }

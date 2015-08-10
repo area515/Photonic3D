@@ -1,7 +1,6 @@
 package org.area515.resinprinter.services;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,15 +23,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.area515.resinprinter.job.JobManager;
 import org.area515.resinprinter.job.JobManagerException;
@@ -40,12 +37,15 @@ import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.server.Main;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
  
 @Path("files")
 public class FileService {
 	public static FileService INSTANCE = new FileService();
+	private static final String UNKNOWN_FILE = "I don't know how do deal with a file of this type:";
+	private static final String NO_FILE = "You didn't attempt to upload a file, or the filename was Blank.";
 	
 	private FileService() {
 	}
@@ -73,13 +73,20 @@ public class FileService {
 					MultivaluedMap<String, String> headers = inputPart.getHeaders();
 					fileName = parseFileName(headers);
 					
+					//If the filename was blank we aren't interested in the file.
+					if (fileName == null || fileName.isEmpty()) {
+						return Response.status(Status.NOT_IMPLEMENTED).entity(NO_FILE).build();
+					}
+					
 					// Handle the body of that part with an InputStream
 					InputStream istream = inputPart.getBody(InputStream.class, null);
 
 //					fileName = SERVER_UPLOAD_LOCATION_FOLDER + fileName;
 					File newUploadFile = new File(HostProperties.Instance().getUploadDir(), fileName);
 
-					saveFile(istream, newUploadFile.getAbsoluteFile());
+					if (!saveFile(istream, newUploadFile.getAbsoluteFile())) {
+						return Response.status(Status.NOT_IMPLEMENTED).entity(UNKNOWN_FILE + fileName).build();
+					}
 
 				  } catch (IOException e) {
 					e.printStackTrace();
@@ -89,7 +96,6 @@ public class FileService {
 
 	                String output = "File saved to server location : " + fileName;
 
-	                ResponseBuilder response = Response.status(200);
 //	                response.header("Access-Control-Allow-Origin", "*");
 //	                response.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
 //	                response.header("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
@@ -97,7 +103,7 @@ public class FileService {
 //	                response.entity(output);
 //	          return response.build();      
 ////	                Response.status(200).header("Access-Control-Allow-Origin", "*");
-			return Response.status(200).entity(output).build();
+			return Response.status(Status.OK).entity(output).build();
 		}
 
 		// Parse Content-Disposition header to get the original file name
@@ -115,7 +121,7 @@ public class FileService {
 		}
 
 		// save uploaded file to a defined location on the server
-		private void saveFile(InputStream uploadedInputStream, File permanentFile) {
+		private boolean saveFile(InputStream uploadedInputStream, File permanentFile) throws IOException {
 			OutputStream output = null;
 			try {
 				File tempFile = File.createTempFile("upload", permanentFile.getName().substring(permanentFile.getName().lastIndexOf(".")));
@@ -123,9 +129,13 @@ public class FileService {
 				IOUtils.copy(uploadedInputStream, output);
 				try {output.close();} catch (IOException e) {}
 				Files.move(tempFile.toPath(), permanentFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-				NotificationManager.fileUploadComplete(permanentFile);
-			} catch (IOException e) {
-				e.printStackTrace();
+				if (PrintFileFilter.INSTANCE.accept(permanentFile)) {
+					NotificationManager.fileUploadComplete(permanentFile);
+					return true;
+				}
+					
+				Files.delete(permanentFile.toPath());
+				return false;
 			} finally {
 				if (output != null) {
 					try {output.close();} catch (IOException e) {}
@@ -149,17 +159,7 @@ public class FileService {
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getProjects() throws IOException {
     	File dir = HostProperties.Instance().getUploadDir();
-		File[] acceptedFiles = dir.listFiles(new FileFilter() {
-		    public boolean accept(File pathname) {
-				for (PrintFileProcessor currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
-					if (currentProcessor.acceptsFile(pathname)) {
-						return true;
-					}
-				}
-				
-				return false;
-		    }
-		});
+		File[] acceptedFiles = dir.listFiles(PrintFileFilter.INSTANCE);
 		ArrayList<String> names = new ArrayList<String>();
 		for(File file : acceptedFiles){
 			names.add(file.getName());
@@ -232,24 +232,25 @@ public class FileService {
 			        CloseableHttpResponse response = httpclient.execute(httpget);
 			        
 					final InputStream stream = response.getEntity().getContent();
-					Thread thread = new Thread(new Runnable() {
+			        Main.GLOBAL_EXECUTOR.submit(new Runnable() {
 						@Override
 						public void run() {
-							saveFile(stream, newUploadFile);
+							try {
+								saveFile(stream, newUploadFile);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 						}
 					});
-					thread.setName("URL Reader:" + uri);
-					thread.setDaemon(true);
-					thread.start();
-					return new MachineResponse("uploadviaurl", true, "Uploaded:" + fileName);
-				} catch (MalformedURLException e) {
-					e.printStackTrace();
+					return new MachineResponse("uploadviaurl", true, "Upload started:" + fileName);
+				} catch (MalformedURLException | IllegalStateException e) {
+					return new MachineResponse("uploadviaurl", false, "I didn't understand this URI:" + uri);
 				} catch (IOException e) {
-					e.printStackTrace();
+					return new MachineResponse("uploadviaurl", false, "Error while downloading URI:" + uri);
 				}
 			}
 		}
 		
-		return new MachineResponse("uploadviaurl", false, "I don't know how do deal with a file of this type:" + filename);
+		return new MachineResponse("uploadviaurl", false, UNKNOWN_FILE + filename);
 	 }
 }
