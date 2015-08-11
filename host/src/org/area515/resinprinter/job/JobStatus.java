@@ -8,5 +8,6 @@ public enum JobStatus {
 	Cancelled,
 	Deleted,
 	Paused,
+	PausedOutOfPrintMaterial,
 	Ready,
 }

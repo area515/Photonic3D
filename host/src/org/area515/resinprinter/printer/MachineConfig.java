@@ -1,6 +1,5 @@
 package org.area515.resinprinter.printer;
 
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +17,7 @@ public class MachineConfig {
 	
 	public static class CorrectionMask {
 	}
-	
+
 	public static class ComPortSettings {
 		@XmlElement(name="PortName")
 		private String portName;

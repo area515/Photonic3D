@@ -12,7 +12,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.ws.rs.core.NewCookie;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -72,8 +71,9 @@ public class HostProperties {
 	private String clientUsername;
 	private String clientPassword;
 	
-	//This is for Streaming
+	//This is for Media
 	private String streamingCommand;
+	private String imagingCommand;
 	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
@@ -193,6 +193,7 @@ public class HostProperties {
 			clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", "");
 			clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
 			streamingCommand = configurationProperties.getProperty("streamingCommand");
+			imagingCommand = configurationProperties.getProperty("imagingCommand");
 		}
 		
 		if (printDirString == null) {
@@ -326,6 +327,10 @@ public class HostProperties {
 	public String getStreamingCommand() {
 		return streamingCommand;
 	}
+	
+	public String getImagingCommand() {
+		return imagingCommand;
+	}
 
 	public List<PrinterConfiguration> getPrinterConfigurations() {
 		if (configurations != null) {
@@ -363,7 +368,7 @@ public class HostProperties {
 				configuration.setName(currentFile.getName().replace(PRINTER_EXTENSION, ""));
 	
 				configuration.setMachineConfig((MachineConfig)jaxbUnMarshaller.unmarshal(new File(MACHINE_DIR, configuration.getMachineConfigName() + MACHINE_EXTENSION)));
-				configuration.setSlicingProfile((SlicingProfile)jaxbUnMarshaller.unmarshal(new File(PROFILES_DIR, configuration.getMachineConfigName() + PROFILES_EXTENSION)));
+				configuration.setSlicingProfile((SlicingProfile)jaxbUnMarshaller.unmarshal(new File(PROFILES_DIR, configuration.getSlicingProfileName() + PROFILES_EXTENSION)));
 				
 				//We do not want to start the printer here
 				configurations.put(configuration.getName(), configuration);
@@ -401,7 +406,7 @@ public class HostProperties {
 				jaxbMarshaller.marshal(slicingProfile, slicingFile);
 
 				File printerFile = new File(printerDir, currentConfiguration.getName() + PRINTER_EXTENSION);
-				jaxbMarshaller.marshal(new PrinterConfiguration(currentConfiguration.getMachineConfigName(), currentConfiguration.getMachineConfigName()), printerFile);
+				jaxbMarshaller.marshal(new PrinterConfiguration(currentConfiguration.getMachineConfigName(), currentConfiguration.getSlicingProfileName()), printerFile);
 			} catch (JAXBException e) {
 				e.printStackTrace();
 			}
