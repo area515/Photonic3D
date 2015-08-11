@@ -61,12 +61,14 @@
     	
 		$('progress').attr({value:0,max:1});
 
-		$(':file').change(function(){
+		$('#choosefilebutton').change(function(){
     		var file = this.files[0];
-    		var name = file.name;
-    		var size = file.size;
-    		var type = file.type;
-    		//Your validation
+    		if (typeof file != 'undefined') {
+    			//TODO: Ah what are we doing here?
+        		var name = file.name;
+        		var size = file.size;
+        		var type = file.type;
+        	}
 		});
 		
 		$("#uploadfilebutton").click(function( event ){
@@ -99,22 +101,26 @@
 			event.preventDefault();
 			var filename = "Upload" + Math.random() + ".stl"
 			var uploadURL = encodeURIComponent($("#chooseurltext").val());
-    		$.ajax({
-        		url: '/services/files/uploadviaurl/' + filename + '/' + uploadURL,
-        		type: 'POST',
-    			dataType: "json",
-        		error: errorHandler,
-    			success: function(data) {
-    				createJobWebSocket(filename,
-    						function(evt) {
-						        var printJob = JSON.parse(evt.data);
-						        if (printJob.jobStatus == 'Ready') {
-			    					$("#statustext").attr("placeholder", "Upload complete:" + uploadURL + " -> " + filename);
-			    					refreshListbox('/services/files/list', "filesselect");
-			    				}
-    						})
-    			}
-    		});
+			
+			if (uploadURL != '') {
+	    		$.ajax({
+	        		url: '/services/files/uploadviaurl/' + filename + '/' + uploadURL,
+	        		type: 'POST',
+	    			dataType: "json",
+	        		error: errorHandler,
+	    			success: function(data) {
+	    				applyErrorIfNecessary(data, false, false)
+	    				createJobWebSocket(filename,
+	    						function(evt) {
+							        var printJob = JSON.parse(evt.data);
+							        if (printJob.jobStatus == 'Ready') {
+				    					$("#statustext").attr("placeholder", "Upload complete:" + uploadURL + " -> " + filename);
+				    					refreshListbox('/services/files/list', "filesselect");
+				    				}
+	    						})
+	    			}
+	    		});
+			}
 		});
 		$("#refreshstatusbutton").click(function( event ){
 			event.preventDefault();
@@ -199,6 +205,8 @@
 	var errorHandler = function(xhr, ajaxOptions, thrownError) {
 		if (xhr.status == "401") {
 			$('#errorModalBody').text("You logged in wrong.");
+		} else if (xhr.status == "501") {
+			$('#errorModalBody').text(xhr.responseText);
 		} else {
 			$('#errorModalBody').text("Problem communicating with host printer. (http:" + xhr.status + ")");
 		}
@@ -358,7 +366,7 @@
 	function stopVideoRecord() {
 		$.ajax({
 			type: 'GET',
-			url: "/services/video/stopvideorecord/camera1",
+			url: "/services/media/stopvideorecord/camera1",
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){
@@ -373,7 +381,7 @@
 	function startVideoRecord() {
 		$.ajax({
 			type: 'GET',
-			url: "/services/video/startrecordvideo/camera1",
+			url: "/services/media/startrecordvideo/camera1",
 			dataType: "json",
     		error: errorHandler,
 			success: function(data){

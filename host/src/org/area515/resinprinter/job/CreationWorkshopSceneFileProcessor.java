@@ -204,7 +204,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 	}
 
 	@Override
-	public void prepareEnvironment(File processingFile) throws JobManagerException {
+	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException {
 		File extractDirectory = buildExtractionDirectory(processingFile.getName());
 		
 		if (extractDirectory.exists()) {

@@ -362,13 +362,21 @@ public class ZSlicer {
 		  return intersections;
 	 }
 	 
-	 public String translateLine(Line3d line) {
+	 public String translateLineToString(Line3d line) {
 		 return "line: x1:" + translateX(line.getPointOne().x) + 
 			",y1:" + translateY(line.getPointOne().y) + 
 			" x2:" + translateX(line.getPointTwo().x) + 
 			",y2:" + translateY(line.getPointTwo().y) + 
 			" ylength:" + (translateY(line.getPointTwo().y) - translateY(line.getPointOne().y)) + 
 			" xlength:" + (translateX(line.getPointTwo().x) - translateX(line.getPointOne().x));
+	 }
+	 
+	 public Line3d translateLine(Line3d line) {
+		 return new Line3d(translatePoint(line.getPointOne()), translatePoint(line.getPointTwo()), translatePoint(line.getNormal()), line.getOriginatingFace(), false);
+	 }
+	 
+	 public Point3d translatePoint(Point3d point) {
+		 return new Point3d(translateX(point.x), translateY(point.y), point.z * sliceResolution);
 	 }
 	 
 	 public double translateX(double x) {

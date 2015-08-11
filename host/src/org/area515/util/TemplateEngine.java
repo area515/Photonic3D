@@ -86,8 +86,8 @@ public class TemplateEngine {
 		root.put("ZLiftRate", job.getZLiftSpeed());
 		root.put("ZLiftDist", job.getZLiftDistance());
 		root.put("buildAreaMM", job.getPrintFileProcessor().getBuildAreaMM(job));
-		root.put("LayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getLayerTime());
-		root.put("FirstLayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerTime());
+		root.put("LayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
+		root.put("FirstLayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
 		root.put("NumFirstLayers", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
 		root.put("buildPlatformXPixels", job.getPrinter().getConfiguration().getSlicingProfile().getxResolution());
 		root.put("buildPlatformYPixels", job.getPrinter().getConfiguration().getSlicingProfile().getyResolution());
@@ -116,8 +116,8 @@ public class TemplateEngine {
 		engine.put("$ZLiftRate", job.getZLiftSpeed());
 		engine.put("$ZLiftDist", job.getZLiftDistance());
 		engine.put("$buildAreaMM", job.getPrintFileProcessor().getBuildAreaMM(job));
-		engine.put("$LayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getLayerTime());
-		engine.put("$FirstLayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerTime());
+		engine.put("$LayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
+		engine.put("$FirstLayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
 		engine.put("$NumFirstLayers", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
 		engine.put("$buildPlatformXPixels", job.getPrinter().getConfiguration().getSlicingProfile().getxResolution());
 		engine.put("$buildPlatformYPixels", job.getPrinter().getConfiguration().getSlicingProfile().getyResolution());

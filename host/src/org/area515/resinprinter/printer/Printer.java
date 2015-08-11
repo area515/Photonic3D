@@ -74,7 +74,7 @@ public class Printer {
 	}
 	
 	public boolean isPrintInProgress() {
-		return status == JobStatus.Paused || status == JobStatus.Printing;
+		return status == JobStatus.Paused || status == JobStatus.Printing || this.status == JobStatus.PausedOutOfPrintMaterial;
 	}
 	
 	public JobStatus getStatus() {
@@ -84,7 +84,7 @@ public class Printer {
 	public void setStatus(JobStatus status) {
 		statusLock.lock();
 		try {
-			if (this.status == JobStatus.Paused) {
+			if (this.status == JobStatus.Paused || this.status == JobStatus.PausedOutOfPrintMaterial) {
 				jobContinued.signalAll();
 			}
 			
@@ -98,7 +98,7 @@ public class Printer {
 		statusLock.lock();
 		try {
 			//Very important that this check is performed
-			if (this.status != JobStatus.Paused) {
+			if (this.status != JobStatus.Paused && this.status != JobStatus.PausedOutOfPrintMaterial) {
 				return isPrintInProgress();
 			}
 			System.out.println("Print has been paused.");
@@ -116,7 +116,7 @@ public class Printer {
 	public JobStatus togglePause() {
 		statusLock.lock();
 		try {
-			if (this.status == JobStatus.Paused) {
+			if (this.status == JobStatus.Paused || this.status == JobStatus.PausedOutOfPrintMaterial) {
 				setStatus(JobStatus.Printing);
 				return this.status;
 			}

@@ -19,6 +19,7 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.swing.DefaultBoundedRangeModel;
@@ -40,13 +41,13 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.DefaultTreeSelectionModel;
 import javax.swing.tree.TreePath;
 
 import org.area515.resinprinter.stl.Face3d;
 import org.area515.resinprinter.stl.Line3d;
 import org.area515.resinprinter.stl.Shape3d;
-
-import com.fasterxml.jackson.core.TreeNode;
+import org.eclipse.jetty.io.SelectorManager.SelectableEndPoint;
 
 public class SliceBrowser extends JFrame {
 	private int firstSlice = 54;
@@ -72,6 +73,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	private ZSlicer slicer;
 	private DefaultBoundedRangeModel zSliceModel = new DefaultBoundedRangeModel();
 	private LineSliceModel lineSliceModel = new LineSliceModel();
+	private SliceBrowserSelectionListener sliceBrowserListener = new SliceBrowserSelectionListener();
 	private JScrollBar zSliceBar = new JScrollBar(JScrollBar.VERTICAL);
 	private JSplitPane mainSplitter;
 	private JTree sliceTree;
@@ -82,7 +84,6 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	private double buildPlatformX = 1024;
 	private double buildPlatformY = 500;
 	private JPanel browserPanel;
-	private List<Line3d> selectedLines = new ArrayList<Line3d>();
 	
 	//This is for the ProjectorShowcase
 	private int focusX = (int)buildPlatformX / 2;
@@ -92,6 +93,43 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	private JPanel showcasePanel;
 	private DefaultBoundedRangeModel opacityLevelModel;
 	private DefaultBoundedRangeModel bulbSizeModel;
+	
+	//TODO: maybe we should do this instead: private class SliceBrowserSelectionModel extends DefaultTreeSelectionModel {
+	private class SliceBrowserSelectionListener implements TreeSelectionListener {
+		private List<Line3d> selectedLines = new ArrayList<Line3d>();
+
+		@Override
+		public void valueChanged(TreeSelectionEvent e) {
+			TreePath nodes[] = e.getPaths();
+			for (int t = 0; t < nodes.length; t++) {
+				SliceBrowserTreeNode treeNode = (SliceBrowserTreeNode)nodes[t].getLastPathComponent();
+				if (treeNode.isLeaf() && treeNode.getUserObject() instanceof Line3d) {
+					if (e.isAddedPath(t)) {
+						selectedLines.add((Line3d)treeNode.getUserObject());
+					} else {
+						selectedLines.remove((Line3d)treeNode.getUserObject());
+					}
+				}
+			}
+			
+			lineSliceModel.refreshGui(null, false);
+		}
+		
+		public void drawSelectedLines(Graphics g) {
+    		if (selectedLines != null) {
+    			g.setColor(Color.BLUE);
+    			//g.setStroke(new BasicStroke(10));
+    			for (Line3d line : selectedLines) {
+    				g.drawLine((int)line.getPointOne().x, (int)line.getPointOne().y, (int)line.getPointTwo().x, (int)line.getPointTwo().y);
+    			}
+    		}
+		}
+
+		public void clearChildren() {
+			selectedLines.clear();
+			getSliceTree().clearSelection();
+		}
+	}
 	
 	private class SliceBrowserTreeNode extends DefaultMutableTreeNode {
 		private static final long serialVersionUID = 4514477175597266206L;
@@ -114,10 +152,21 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			super(new SliceBrowserTreeNode());
 		}
 		
-		public void refreshGui(JLabel mouseLabel, boolean refreshTreeNodes) {
+		public void clearChildren() {
 			DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode)root;
-			rootNode.removeAllChildren();
+			if (rootNode.getChildCount() > 0) {
+				sliceBrowserListener.clearChildren();
+				rootNode.removeAllChildren();
+				nodeChanged(root);
+				reload();
+				browserPanel.repaint();
+			}
+		}
+		
+		public void refreshGui(JLabel mouseLabel, boolean refreshTreeNodes) {
 			if (refreshTreeNodes) {
+				DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode)root;
+				rootNode.removeAllChildren();
 				try {
 					 List<List<Line3d>> coloredLines = slicer.colorizePolygons();
 					 int t = 0;
@@ -134,6 +183,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 					t.printStackTrace();
 				}
 			}
+			
 			if (mouseLabel != null) {
 				mouseLabel.setText("Z:" + slicer.getZ() + " Area:" + slicer.getBuildArea());
 			}
@@ -149,24 +199,9 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	private JTree getSliceTree() {
 		if (sliceTree == null) {
 			sliceTree = new JTree(lineSliceModel);
-			sliceTree.addTreeSelectionListener(new TreeSelectionListener() {
-				@Override
-				public void valueChanged(TreeSelectionEvent e) {
-					TreePath nodes[] = e.getPaths();
-					for (int t = 0; t < nodes.length; t++) {
-						SliceBrowserTreeNode treeNode = (SliceBrowserTreeNode)nodes[t].getLastPathComponent();
-						if (treeNode.isLeaf() && treeNode.getUserObject() instanceof Line3d) {
-							if (e.isAddedPath(t)) {
-								selectedLines.add((Line3d)treeNode.getUserObject());
-							} else {
-								selectedLines.remove((Line3d)treeNode.getUserObject());
-							}
-						}
-					}
-					
-					lineSliceModel.refreshGui(null, false);
-				}
-			});
+			sliceTree.setExpandsSelectedPaths(true);
+			sliceTree.addTreeSelectionListener(sliceBrowserListener);
+			//sliceTree.setSelectionModel(selectionModel);
 		}
 
 		return sliceTree;
@@ -299,13 +334,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				    	} else {
 				    		slicer.debugPaintSlice((Graphics2D)g);
 				    		
-				    		if (selectedLines != null) {
-				    			g.setColor(Color.BLUE);
-				    			//g.setStroke(new BasicStroke(10));
-				    			for (Line3d line : selectedLines) {
-				    				g.drawLine((int)line.getPointOne().x, (int)line.getPointOne().y, (int)line.getPointTwo().x, (int)line.getPointTwo().y);
-				    			}
-				    		}
+				    		sliceBrowserListener.drawSelectedLines(g);
 
 							drawBuildPlatform((Graphics2D)g);
 				    	}
@@ -328,8 +357,29 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 						for (Shape3d shape : shapes) {
 							Line3d line = (Line3d)shape;
 							Face3d face = line.getOriginatingFace();
-							System.out.println(slicer.translateLine(line));
+							
+							System.out.println(slicer.translateLineToString(line));
 							System.out.println("stltriangle: "+ face + " Hash:" + face.hashCode());
+						}					
+						
+						List<TreePath> selectedPaths = new ArrayList<TreePath>();
+						Enumeration depth = ((SliceBrowserTreeNode)lineSliceModel.getRoot()).depthFirstEnumeration();
+						while (depth.hasMoreElements()) {
+							SliceBrowserTreeNode currentNode = (SliceBrowserTreeNode)depth.nextElement();
+							System.out.println(currentNode);
+							for (Shape3d shape : shapes) {
+								Line3d line = slicer.translateLine(((Line3d)shape));
+								
+								if (line.pointsEqual(currentNode.getUserObject())) {
+									selectedPaths.add(new TreePath(currentNode.getPath()));
+								}
+							}
+						}
+						
+						if (e.isShiftDown() || e.isControlDown()) {
+							getSliceTree().addSelectionPaths(selectedPaths.toArray(new TreePath[selectedPaths.size()]));
+						} else {
+							getSliceTree().setSelectionPaths(selectedPaths.toArray(new TreePath[selectedPaths.size()]));
 						}
 					}
 				});
@@ -341,10 +391,11 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				zSliceBar.addAdjustmentListener(new AdjustmentListener() {
 					@Override
 					public void adjustmentValueChanged(AdjustmentEvent e) {
-						selectedLines.clear();
 						slicer.setZ(e.getValue());
 						mouseLabel.setText("Z:" + slicer.getZ());
 						useRender = false;
+						sliceBrowserListener.clearChildren();
+						lineSliceModel.clearChildren();
 						lineSliceModel.refreshGui(mouseLabel, false);
 					}
 				});
@@ -369,7 +420,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						loadStl(null);
-						selectedLines.clear();
+						sliceBrowserListener.clearChildren();
 						lineSliceModel.refreshGui(null, false);
 					}
 				});

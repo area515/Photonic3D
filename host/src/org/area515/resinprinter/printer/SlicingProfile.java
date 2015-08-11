@@ -6,12 +6,18 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
+import org.area515.resinprinter.job.InkDetector;
 import org.area515.util.TemplateEngine;
 
 @XmlRootElement(name="SliceBuildConfig")
 public class SlicingProfile {
 	public static class InkConfig {
-	    @XmlElement(name="Name")
+		@XmlElement(name="PrintMaterialDetector")
+		private String printMaterialDetector;
+		@XmlElement(name="PercentageOfPrintMaterialConsideredEmpty")
+		private float percentageConsideredEmpty;
+		@XmlElement(name="Name")
 	    private String name;
 	    @XmlElement(name="SliceHeight")
 	    private double sliceHeight;
@@ -23,6 +29,7 @@ public class SlicingProfile {
 	    private int numberOfFirstLayers;
 	    @XmlElement(name="ResinPriceL")
 	    private double resinPriceL;
+		private InkDetector detector;
 		
 		@XmlTransient
 		public String getName() {
@@ -44,8 +51,8 @@ public class SlicingProfile {
 		public int getNumberOfFirstLayers() {
 			return numberOfFirstLayers;
 		}
-		public void setNumberOfBottomLayers(int numberofBottomLayers) {
-			this.numberOfFirstLayers = numberofBottomLayers;
+		public void setNumberOfFirstLayers(int numberOfFirstLayers) {
+			this.numberOfFirstLayers = numberOfFirstLayers;
 		}
 		
 		@XmlTransient
@@ -57,19 +64,54 @@ public class SlicingProfile {
 		}
 		
 		@XmlTransient
-		public int getLayerTime() {
+		public int getExposureTime() {
 			return layerTime;
 		}
-		public void setLayerTime(int layerTime) {
+		public void setExposureTime(int layerTime) {
 			this.layerTime = layerTime;
 		}
 		
 		@XmlTransient
-		public int getFirstLayerTime() {
+		public int getFirstLayerExposureTime() {
 			return firstLayerTime;
 		}
-		public void setFirstLayerTime(int firstLayerTime) {
+		public void setFirstLayerExposureTime(int firstLayerTime) {
 			this.firstLayerTime = firstLayerTime;
+		}
+		
+		@XmlTransient
+		public String getPrintMaterialDetector() {
+			return printMaterialDetector;
+		}
+		public void setPrintMaterialDetector(String printMaterialDetector) {
+			this.printMaterialDetector = printMaterialDetector;
+		}
+		
+		@XmlTransient
+		public float getPercentageOfInkConsideredEmpty() {
+			return percentageConsideredEmpty;
+		}
+		public void setPercentageOfInkConsideredEmpty(float percentageConsideredEmpty) {
+			this.percentageConsideredEmpty = percentageConsideredEmpty;
+		}
+		
+		public InkDetector getInkDetector(Printer printer) {
+			if (this.detector != null) {
+				return this.detector;
+			}
+			
+			String detectorClass = getPrintMaterialDetector();
+			if (detectorClass == null || detectorClass.trim().isEmpty()) {
+				return null;
+			}
+			
+			try {
+				this.detector = new InkDetector(printer, ((Class<PrintMaterialDetector>)Class.forName(detectorClass)).newInstance(), percentageConsideredEmpty);
+				return this.detector;
+			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+				System.out.println("Failed to load PrintMaterialDetector:" + detector);
+				return null;
+			}
 		}
 	}
 

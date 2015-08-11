@@ -21,7 +21,7 @@ public class PrintJob {
 	private volatile double totalCost = 0;
 	private volatile double currentSliceCost = 0;
 	private volatile boolean exposureTimeOverriden = false;
-	private volatile PrintFileProcessor printFileProcessor;
+	private volatile PrintFileProcessor<?> printFileProcessor;
 	
 	private UUID id = UUID.randomUUID();
 	private File jobFile;
@@ -139,10 +139,10 @@ public class PrintJob {
 		//do nothing.  This is just for JSON
 	}
 
-	public PrintFileProcessor getPrintFileProcessor() {
+	public PrintFileProcessor<?> getPrintFileProcessor() {
 		return printFileProcessor;
 	}
-	public void setPrintFileProcessor(PrintFileProcessor printFileProcessor) {
+	public void setPrintFileProcessor(PrintFileProcessor<?> printFileProcessor) {
 		this.printFileProcessor = printFileProcessor;
 	}
 
@@ -206,8 +206,11 @@ public class PrintJob {
 		averageSliceTime = ((averageSliceTime * currentSlice) + sliceTime) / (currentSlice + 1);
 		currentSliceTime = sliceTime;
 		currentSlice++;
-		double buildVolume = buildAreaInMM * inkConfig.getSliceHeight();
-		currentSliceCost = (buildVolume / 1000000) * inkConfig.getResinPriceL();
+		if (buildAreaInMM > 0) {
+			double buildVolume = buildAreaInMM * inkConfig.getSliceHeight();
+			currentSliceCost = (buildVolume / 1000000) * inkConfig.getResinPriceL();
+		}
+		
 		totalCost += currentSliceCost;
 	}
 	

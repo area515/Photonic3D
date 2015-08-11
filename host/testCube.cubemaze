@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<minerCube>
+	<!-- These parameters don't affect the solution only the size of the cube -->
+		<!-- This is the width of your cube wall thickness -->
+    	<cubeWallThicknessMillis>0.7</cubeWallThicknessMillis>
+       	<!-- Make this variable a little larger than your marble. -->
+    	<innerCubeWidthMillis>5</innerCubeWidthMillis>
+    
+	<!-- These parameters affect the solution and potentially the size of the cube -->
+		<!-- This variable defines the solution of your MinerCuber -->
+    	<randomSeed>0</randomSeed>
+    	<!-- Width/Height/Length of your MinerCube cubes -->
+    	<cubesPerRow>3</cubesPerRow>
+    	<!-- Use one of the following of: SAME_FACE, OPPOSITE_FACE, ANY_FACE, ADJACENT_FACE, ANY_FACE_OTHER_THAN_ENTER_FACE -->
+    	<exitPreference>OPPOSITE_FACE</exitPreference>
+    	<!-- Use ~ 5% of volume -->
+    	<minimumTurns>3</minimumTurns>
+    	<maximumTurns>10</maximumTurns>
+    	<!-- This parameter is pretty self explanatory -->
+    	<allowTunnelsToCollide>false</allowTunnelsToCollide>
+    	<!-- 1=100% (1 not does not mean 1 inner cube) 0.0=No dead ends-->
+    	<deadEndUsageAsAPercentageOfVolumeOfUnusedCubes>0.0</deadEndUsageAsAPercentageOfVolumeOfUnusedCubes>
+    	<!-- These two parameters should be 1-5 with recommended min/max turns ~= 10-15% volume usage -->
+    	<minimumTravelDistanceInCubes>1</minimumTravelDistanceInCubes>
+    	<maximumTravelDistanceInCubes>5</maximumTravelDistanceInCubes>
+</minerCube>

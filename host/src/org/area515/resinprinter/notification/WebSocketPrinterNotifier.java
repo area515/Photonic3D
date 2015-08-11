@@ -95,4 +95,20 @@ public class WebSocketPrinterNotifier implements Notifier {
 	public void geometryError(PrintJob job, List<StlError> error) {
 		//Not for printers
 	}
+
+	@Override
+	public void printerOutOfMatter(Printer printer, PrintJob job) {
+		ConcurrentHashMap<String, Session> sessionsBySessionId = sessionsByPrinterName.get(printer.getName());
+		if (sessionsBySessionId == null) {
+			return;
+		}
+		
+		for (Session currentSession : sessionsBySessionId.values()) {
+			try {
+				currentSession.getAsyncRemote().sendObject(printer);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }
