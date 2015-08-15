@@ -28,33 +28,11 @@ public class PrintJobProcessingThread implements Callable<JobStatus> {
 	
 	@Override
 	public JobStatus call() throws Exception {
-		System.out.println(Thread.currentThread().getName() + " Start");
+		System.out.println("Starting:" + printJob + " on Printer:" + printer + " executing on Thread:" + Thread.currentThread().getName());
 		printer.setStatus(JobStatus.Printing);
 		NotificationManager.jobChanged(printer, printJob);
 		
 		printJob.setStartTime(System.currentTimeMillis());
-		try {
-			JobStatus status = processor.processFile(printJob);
-			
-			printer.setStatus(status);
-			
-			System.out.println("Job Complete:" + Thread.currentThread().getName());
-
-			//Send a notification that the job is complete
-			NotificationManager.jobChanged(printer, printJob);
-			
-			return status;
-		} catch (Throwable e) {
-			e.printStackTrace();
-			printer.setStatus(JobStatus.Failed);
-			NotificationManager.jobChanged(printer, printJob);
-			throw e;
-		} finally {
-			//Don't need to close the printer or dissassociate the serial and display devices
-			printer.showBlankImage();
-			JobManager.Instance().removeJob(printJob);
-			PrinterManager.Instance().removeAssignment(printJob);
-			System.out.println(Thread.currentThread().getName() + " ended.");
-		}
+		return processor.processFile(printJob);
 	}
 }
