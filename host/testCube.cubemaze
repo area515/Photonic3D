@@ -21,6 +21,6 @@
     	<!-- 1=100% (1 not does not mean 1 inner cube) 0.0=No dead ends-->
     	<deadEndUsageAsAPercentageOfVolumeOfUnusedCubes>0.0</deadEndUsageAsAPercentageOfVolumeOfUnusedCubes>
     	<!-- These two parameters should be 1-5 with recommended min/max turns ~= 10-15% volume usage -->
-    	<minimumTravelDistanceInCubes>1</minimumTravelDistanceInCubes>
+    	<minimumTravelDistanceInCubes>4</minimumTravelDistanceInCubes>
     	<maximumTravelDistanceInCubes>5</maximumTravelDistanceInCubes>
 </minerCube>

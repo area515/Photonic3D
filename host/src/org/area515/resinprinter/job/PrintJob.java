@@ -2,9 +2,11 @@ package org.area515.resinprinter.job;
 
 import java.io.File;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.apache.http.util.ExceptionUtils;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
@@ -27,6 +29,7 @@ public class PrintJob {
 	private File jobFile;
 	private Printer printer;
 	private Future<JobStatus> futureJobStatus;
+	private CountDownLatch futureJobStatusAssigned = new CountDownLatch(1);
 	
 	public PrintJob(File jobFile) {
 		this.jobFile = jobFile;
@@ -97,19 +100,21 @@ public class PrintJob {
 	}
 	
 	public JobStatus getJobStatus() {
-		Printer localPrinter = printer;
-		
-		if (localPrinter != null) {
-			return localPrinter.getStatus();
-		}
-		
+		//If the futureJobStatus is done, we will certainly have the last status that will never be changed.
 		if (futureJobStatus != null && (futureJobStatus.isDone() || futureJobStatus.isCancelled())) {
 			try {
 				return futureJobStatus.get();
 			} catch (InterruptedException | ExecutionException e) {
 			}
 		}
+
+		Printer localPrinter = printer;
 		
+		if (localPrinter != null) {
+			return localPrinter.getStatus();
+		}
+		
+		//TODO: Why are we doing this?
 		return JobStatus.Failed;
 	}
 	public void setJobStatus() {
@@ -117,20 +122,34 @@ public class PrintJob {
 	}
 	
 	public void setFutureJobStatus(Future<JobStatus> futureJobStatus) {
+		futureJobStatusAssigned.countDown();
 		this.futureJobStatus = futureJobStatus;
 	}
 	
 	public String getErrorDescription() {
+		try {
+			futureJobStatusAssigned.await();
+		} catch (InterruptedException e1) {
+
+		}
+		
 		if (futureJobStatus.isDone() || futureJobStatus.isCancelled()) {
+			String errorDescription = null;
 			try {
 				return "Job Status:" + futureJobStatus.get();
-			} catch (InterruptedException | ExecutionException e) {
-				if (e.getCause() instanceof InappropriateDeviceException) {
-					return e.getCause().getMessage();
+			} catch (Throwable e) {
+				while (e.getCause() != null) {
+					e = e.getCause();
 				}
 				
-				return "Job Failed. Check server logs for exact problem";
+				errorDescription = e.getMessage();
 			}
+			
+			if (!errorDescription.equals("")) {
+				return errorDescription;
+			}
+			
+			return "Job Failed. Check server logs for exact problem";
 		}
 		
 		return null;

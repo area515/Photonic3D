@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 import org.area515.resinprinter.display.AlreadyAssignedException;
+import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.server.HostProperties;
@@ -58,12 +59,36 @@ public class JobManager {
 		return newJob;
 	}
 	
-	public Future<JobStatus> startJob(PrintJob job, Printer printer) throws AlreadyAssignedException {
-		PrinterManager.Instance().assignPrinter(job, printer);
-		PrintJobProcessingThread worker = new PrintJobProcessingThread(job, printer);
-		Future<JobStatus> futureJobStatus = Main.GLOBAL_EXECUTOR.submit(worker);
-		job.setFutureJobStatus(futureJobStatus);
-		job.setPrintFileProcessor(worker.getPrintFileProcessor());
+	public Future<JobStatus> startJob(final PrintJob printJob, final Printer printer) throws AlreadyAssignedException {
+		PrinterManager.Instance().assignPrinter(printJob, printer);
+		PrintJobProcessingThread worker = new PrintJobProcessingThread(printJob, printer);
+		final Future<JobStatus> futureJobStatus = Main.GLOBAL_EXECUTOR.submit(worker);
+		printJob.setFutureJobStatus(futureJobStatus);
+		printJob.setPrintFileProcessor(worker.getPrintFileProcessor());
+
+		//Trigger all job completion tasks after job is complete
+		Main.GLOBAL_EXECUTOR.submit(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					printer.setStatus(futureJobStatus.get());
+					System.out.println("Job Success:" + Thread.currentThread().getName());
+					NotificationManager.jobChanged(printer, printJob);
+				} catch (Throwable e) {
+					System.out.println("Job Failed:" + Thread.currentThread().getName());
+					e.printStackTrace();
+					printer.setStatus(JobStatus.Failed);
+					NotificationManager.jobChanged(printer, printJob);
+				} finally {
+					//Don't need to close the printer or dissassociate the serial and display devices
+					printer.showBlankImage();
+					JobManager.Instance().removeJob(printJob);
+					PrinterManager.Instance().removeAssignment(printJob);
+					System.out.println("Job Ended:" + Thread.currentThread().getName());
+				}
+			}
+		});
+		
 		return futureJobStatus;
 	}
 	

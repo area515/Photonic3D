@@ -7,9 +7,11 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.JAXBContext;
@@ -45,6 +47,7 @@ public class HostProperties {
 	private static HostProperties INSTANCE = null;
 	private File uploadDir;
 	private File printDir;
+	private String hostGUI;
 	private boolean fakeSerial = false;
 	private boolean fakedisplay = false;
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
@@ -56,6 +59,7 @@ public class HostProperties {
 	private String deviceName;
 	private String manufacturer;
 	private Properties configurationProperties = new Properties();
+	private List<String> visibleCards;
 	
 	//SSL settings:
 	private boolean useSSL;
@@ -121,7 +125,9 @@ public class HostProperties {
 			uploadDirString = configurationProperties.getProperty("uploaddir");
 			fakeSerial = new Boolean(configurationProperties.getProperty("fakeserial", "false"));
 			fakedisplay = new Boolean(configurationProperties.getProperty("fakedisplay", "false"));
-			
+			hostGUI = configurationProperties.getProperty("hostGUI", "resources");
+			visibleCards = Arrays.asList(configurationProperties.getProperty("visibleCards", "printers,printJobs,printables,users,settings").split(","));
+
 			//This loads advertisers
 			for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
 				String currentPropertyString = currentProperty.getKey() + "";
@@ -272,6 +278,10 @@ public class HostProperties {
 		return printerHostPort;
 	}
 
+	public String hostGUI() {
+		return hostGUI;
+	}
+	
 	public File getUploadDir(){
 		return uploadDir;
 	}
@@ -330,6 +340,10 @@ public class HostProperties {
 	
 	public String getImagingCommand() {
 		return imagingCommand;
+	}
+
+	public List<String> getVisibleCards() {
+		return visibleCards;
 	}
 
 	public List<PrinterConfiguration> getPrinterConfigurations() {

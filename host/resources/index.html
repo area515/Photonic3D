@@ -46,11 +46,9 @@
 
 <script type="text/javascript">
 	window.onerror = function(msg, url, line, col, error) {
-		$('#errorModalBody').text(error);
-		$('#errorModal').modal();
-		$("#statustext").attr("placeholder", "Error");
+		showError(error, "Client Error");
 
-	   return true; //true will suppress error alerting to the browser
+	   	return true; //true will suppress error alerting to the browser
 	};
 	
 	$( document ).ready(function() {
@@ -203,17 +201,25 @@
 	}
 	
 	var errorHandler = function(xhr, ajaxOptions, thrownError) {
+		var message;
 		if (xhr.status == "401") {
-			$('#errorModalBody').text("You logged in wrong.");
+			message = "You logged in wrong.";
 		} else if (xhr.status == "501") {
-			$('#errorModalBody').text(xhr.responseText);
+			message = xhr.responseText;
 		} else {
-			$('#errorModalBody').text("Problem communicating with host printer. (http:" + xhr.status + ")");
+			message = "Problem communicating with host printer. (http:" + xhr.status + ")";
 		}
 		
-		$('#errorModal').modal();
-		$("#statustext").attr("placeholder", "Error");
+		showError(message, "Host Error");
+		
 		$("body").css("cursor", "default");
+	}
+	
+	function showError(body, title) {
+		$('#errorModalBody').text(body);
+		$('#errorModalTitle').text(title);
+		$("#statustext").attr("placeholder", "Error");
+		$('#errorModal').modal();
 	}
 	
 	function progressHandlingFunction(e){
@@ -666,9 +672,7 @@
 		$("body").css("cursor", "default");
 
 		if (!data.response) {
-			$('#errorModalBody').text(data.message);
-			$('#errorModal').modal();
-			$("#statustext").attr("placeholder", "Error");
+			showError(data.message, "Error On " + data.command);
 		} else if (showMessageOnSuccess) {
 			if (applyTimestamp) {
 				var d = new Date();
