@@ -1,32 +1,69 @@
-	    (function() {
-    	var cwhApp = angular.module('cwhApp', []);
+(function() {
+		var cwhApp = angular.module('cwhApp', ['ngRoute']);
+		cwhApp.config(['$routeProvider', '$locationProvider',
+    	  function($routeProvider, $locationProvider) {
+    	    $routeProvider.when('/dashboard', {
+    	        templateUrl: '/dashboard.html',
+    	        controller: 'Dashboard',
+    	        controllerAs: 'dashboard'
+    	    })
+    	    $routeProvider.when('/printers', {
+    	        templateUrl: '/printers.html',
+    	        controller: 'PrintersController',
+    	        controllerAs: 'printersController'
+    	    })
+    	    $routeProvider.otherwise({
+    	    	redirectTo: '/dashboard'
+    	    });
+    	    
+    	    
+    	    //TODO: Angular is pretty messed up when it comes to link rewriting: https://github.com/angular/angular.js/issues/4608
+    	    //TODO: I can't believe we need to server side changes to fix this!!! https://github.com/angular-ui/ui-router/wiki/Frequently-Asked-Questions#how-to-configure-your-server-to-work-with-html5mode
+    	    //TODO: I suppose for Jetty we'll create a 404 redirector! Massive pain and stupidity...
+    	    $locationProvider.html5Mode({enabled: true, requireBase: true, rewriteLinks: true});
+    	}])//*/
     	
-    	cwhApp.controller("getPrintables", function ($scope, $http) {
-	        $http.get('/services/files/list').
-            success(function(data) {
-            	$scope.printables = data;
+    	cwhApp.controller("IndexController", function ($scope, $http) {
+    		this.changeCurrentPage = function (newPageName) {
+    			this.currentPage = newPageName;
+    		}
+
+			$scope.$on("MachineResponse", function (event, args) {
+				//args = machineResponse, successFunction, afterErrorFunction
+            	if (!args.machineResponse.response) {
+            		args.machineResponse.command = "Error On " + args.machineResponse.command;
+            		$scope.currentError = args.machineResponse;
+                	
+                	$('#errorModal').modal().after
+                	if (args.afterErrorFunction != null) {
+                		args.afterErrorFunction(args.machineResponse);
+                	}
+            	} else if (args.successFunction != null) {
+            		args.successFunction(args.machineResponse);
+            	}
             });
-    	})
-    	
-    	cwhApp.controller("getSettings", function ($scope, $http) {
-	        $http.get('/services/settings/visibleCards').
-            success(function(data) {
+			$scope.$on("HTTPError", function (event, args){
+				//args = data, status, headers, config, statusText
+        		var customMessage;
+    			if (args.status == "401") {
+    				customMessage = "You logged in wrong.";
+    			} else if (args.status == "501") {
+    				customMessage = args.statusText;
+    			} else if (args.startText == null) {
+    				customMessage = "Problem communicating with host printer.";
+    			} else {
+    				customMessage = "Problem communicating with host printer. (http:" + args.statusText + ")";
+    			}
+    			
+    			$scope.currentError = {command:"Server Error " + args.status, message : customMessage};
+    	    	$('#errorModal').modal();
+    	    });
+	        $http.get('/services/settings/visibleCards').success(function(data) {
             	$scope.visibleCards = data;
             });
+	        this.currentPage = 'dashboard';
     	})
     	
-    	cwhApp.controller("getPrinters", function ($scope, $http) {
-	        $http.get('/services/machine/printers').
-            success(function(data) {
-            	$scope.printers = data;
-            });
-    	})
-    	
-	    //highlight first list group option (if non active yet)
-	    if ( $('.list-group a.active').length === 0 ) {
-	      $('.list-group a').first().addClass('active');
-	    }
-	
 	    bootcards.init( {
 	        offCanvasHideOnMainClick : true,
 	        offCanvasBackdrop : true,
@@ -35,9 +72,36 @@
 	        disableBreakoutSelector : 'a.no-break-out'
 	      });
 	    
+    	
+    	
+
 	    
-	    
-	    
+    	
+    	
+    	
+    	
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+    	
 	    
 	    
 	    
@@ -45,11 +109,11 @@
 	    
 	    //LEGACY CODE
 	    //===================================
-		window.onerror = function(msg, url, line, col, error) {
+		/*window.onerror = function(msg, url, line, col, error) {
 			showError(error, "Client Error");
 
 		   	return true; //true will suppress error alerting to the browser
-		};
+		};*/
 		
 		var uploadCompleteHandler = function(data){
 			refreshListbox('/services/files/list', "filesselect")

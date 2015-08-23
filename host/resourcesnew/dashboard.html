@@ -1,0 +1,63 @@
+<div class="row">
+	<div class="bootcards-cards">
+		<div class="col-sm-6">
+			<div class="panel panel-default bootcards-summary">
+				<div class="panel-heading">
+					<h3 class="panel-title">Dashboard</h3>
+				</div>
+				
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-xs-6 col-sm-4" ng-show='visibleCards.indexOf("printers") > -1' >
+							<a class="bootcards-summary-item" ng-click="index.changeCurrentPage('printers')" href="printers" style="padding-top:35px;">
+								<i class="fa fa-3x fa-print"></i>
+								<h4>
+									Printers
+									<span class="label label-info">{{printers.length}}</span>
+								</h4>
+							</a>
+						</div>
+						<div class="col-xs-6 col-sm-4" ng-show='visibleCards.indexOf("printJobs") > -1'>
+							<a class="bootcards-summary-item" ng-click="index.changeCurrentPage('printJobs')" href="./printJobs" style="padding-top:35px;">
+								<i class="fa fa-3x fa-database"></i>
+								<h4>
+									PrintJobs
+									<span class="label label-info">{{printJobs.length}}</span> 
+								</h4>
+							</a>
+						</div>
+						<div class="col-xs-6 col-sm-4" ng-show='visibleCards.indexOf("printables") > -1'>
+							<a class="bootcards-summary-item" ng-click="index.changeCurrentPage('printables')" href="./printables" style="padding-top:35px;">
+								<i class="fa fa-3x fa-files-o"></i>
+								<h4>
+									Printables
+									<span class="label label-info" >{{printables.length}}</span>
+								</h4>
+							</a>
+						</div>
+						<div class="col-xs-6 col-sm-4" ng-show='visibleCards.indexOf("users") > -1' >
+							<a class="bootcards-summary-item" ng-click="index.changeCurrentPage('users')" href="./users" style="padding-top:35px;">
+								<i class="fa fa-3x fa-users"></i>
+								<h4>
+									Users
+									<span class="label label-info">{{users.length}}</span>
+								</h4>
+							</a>
+						</div>
+						<div class="col-xs-6 col-sm-4" ng-show='visibleCards.indexOf("settings") > -1'>
+							<a class="bootcards-summary-item" ng-click="index.changeCurrentPage('settings')" href="./settings" data-title="Settings" style="padding-top:35px;">
+								<i class="fa fa-3x fa-gears"></i>
+								<h4>
+									Settings
+								</h4>
+							</a>
+						</div>
+					</div>
+				</div>
+				<div class="panel-footer">
+					<span ng-include="'cardFooter.html'"></span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
