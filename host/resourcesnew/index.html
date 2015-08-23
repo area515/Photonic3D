@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<!-- saved from url=(0026)http://demo.bootcards.org/ -->
+<html lang="en" ng-app="cwhApp">
+ <head>
+  <base href="/">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"> 
+  <!--<link rel="shortcut icon" href="../../docs-assets/ico/favicon.png">-->
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+	<!-- Icons -->  
+  <link rel="shortcut icon" sizes="196x196" href="http://demo.bootcards.org/bootcards-demo-app/images/apple-touch-icon-144x144.png">
+  <link rel="shortcut icon" sizes="128x128" href="http://demo.bootcards.org/bootcards-demo-app/images/apple-touch-icon-120x120.png">
+	<!-- For iPhone with high-resolution Retina display running iOS ≥ 7: -->
+	<link rel="apple-touch-icon" sizes="120x120" href="http://demo.bootcards.org/bootcards-demo-app/images/apple-touch-icon-120x120.png">
+	<!-- For iPad with high-resolution Retina display running iOS ≤ 6: -->
+	<link rel="apple-touch-icon" sizes="144x144" href="http://demo.bootcards.org/bootcards-demo-app/images/apple-touch-icon-144x144.png">
+
+	<!-- Splash Screen Images -->
+    <!-- iOS 6 & 7 iPad (retina, portrait) -->
+    <link href="http://demo.bootcards.org/bootcards-demo-app/images/bootcards-splash-768x1004@2x.png" media="(device-width: 768px) and (device-height: 1024px)
+             and (orientation: portrait)
+             and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image">
+
+    <!-- iOS 6 & 7 iPad (retina, landscape) -->
+    <link href="http://demo.bootcards.org/bootcards-demo-app/images/bootcards-splash-1024x748@2x.png" media="(device-width: 768px) and (device-height: 1024px)
+             and (orientation: landscape)
+             and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image">
+
+    <!-- iOS 6 iPad (portrait) -->
+    <link href="http://demo.bootcards.org/bootcards-demo-app/images/bootcards-splash-1024x748.png" media="(device-width: 768px) and (device-height: 1024px)
+             and (orientation: portrait)
+             and (-webkit-device-pixel-ratio: 1)" rel="apple-touch-startup-image">
+
+    <!-- iOS 6 iPad (landscape) -->
+    <link href="http://demo.bootcards.org/bootcards-demo-app/images/bootcards-splash-768x1004.png" media="(device-width: 768px) and (device-height: 1024px)
+             and (orientation: landscape)
+             and (-webkit-device-pixel-ratio: 1)" rel="apple-touch-startup-image">
+
+    <!-- iOS 6 & 7 iPhone 5 -->
+    <link href="http://demo.bootcards.org/bootcards-demo-app/images/bootcards-splash-320x548@2x.png" media="(device-width: 320px) and (device-height: 568px)
+             and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image">
+
+    <!-- iOS 6 & 7 iPhone (retina) -->
+    <link href="http://demo.bootcards.org/bootcards-demo-app/images/bootcards-splash-320x460@2x.png" media="(device-width: 320px) and (device-height: 480px)
+             and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image">
+
+    <!-- iOS 6 iPhone -->
+    <link href="http://demo.bootcards.org/bootcards-demo-app/images/bootcards-splash-320x460.png" media="(device-width: 320px) and (device-height: 480px)
+             and (-webkit-device-pixel-ratio: 1)" rel="apple-touch-startup-image">	
+
+
+  <title>Creation Workshop Host</title>
+  <!-- 1.1.2 -->
+  
+  <!-- Load the required CSS libraries -->
+
+  <!-- bootstrap -->
+  <link href="./bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="./bootcards/css/bootcards-desktop.min.css" rel="stylesheet" type="text/css">
+  <link href="./fontawesome/css/font-awesome.min.css" rel="stylesheet">
+ 
+  <script>var isDesktop = true;</script>
+  
+  <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+      <![endif]-->
+
+    <script src="./jquery/jquery.min.js"></script>
+	<script src="./bootstrap/js/bootstrap.min.js"></script>
+	<script src="./jquery/jquery-ui.min.js"></script>
+	<script src="./bootcards/js/bootcards.min.js"></script>
+	<script src="./angular/js/angular.min.js"></script> 
+	<script src="./angular/js/angular-route.min.js"></script> 
+	
+	<script src="./cwh/js/index.js"></script> 
+	<script src="./cwh/js/dashboard.js"></script> 
+	<script src="./cwh/js/printers.js"></script> 
+</head>
+<body id="bootcards" ng-controller="IndexController as index">
+
+  <!-- fixed top navbar -->
+  <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
+
+      <button type="button" class="btn btn-default btn-back navbar-left pull-left hidden" onclick="history.back()">
+        <i class="fa fa-lg fa-chevron-left"></i><span>Back</span>
+      </button>
+      <!-- menu button to show/ hide the off canvas slider -->
+      <button type="button" class="btn btn-default btn-menu navbar-left pull-left offCanvasToggle" data-toggle="offcanvas">
+        <i class="fa fa-lg fa-bars"></i><span>Menu</span>
+      </button>  
+      <a class="navbar-brand no-break-out" title="CWH" href="./index.html">CWH</a>  
+
+
+	  <!-- Navigator Bar -->
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li ng-class="{active:index.currentPage == 'dashboard'}">
+            <a href="dashboard" ng-click="index.currentPage = 'dashboard'" class="fa fa-dashboard">
+              Dashboard
+            </a>
+          </li>
+          <li ng-class="{active:index.currentPage == 'printers'}">
+            <a href="printers" ng-click="index.currentPage = 'printers'" class="fa fa-print" ng-show='visibleCards.indexOf("printers") > -1'>
+              Printers
+            </a>          
+          </li>
+          <li ng-class="{active:index.currentPage == 'printJobs'}">
+            <a href="./printJobs" ng-click="index.currentPage = 'printJobs'" class="fa fa-database" ng-show='visibleCards.indexOf("printJobs") > -1'>
+              Print Jobs
+            </a>          
+          </li>
+          <li ng-class="{active:index.currentPage == 'printables'}">
+            <a href="./printables" ng-click="index.currentPage = 'printables'" class="fa fa-files-o" ng-show='visibleCards.indexOf("printables") > -1'>
+              Printables
+            </a>          
+          </li>
+          <li ng-class="{active:index.currentPage == 'users'}">
+            <a href="./users" ng-click="index.currentPage = 'users'" class="fa fa-users" ng-show='visibleCards.indexOf("users") > -1'>
+              Users
+            </a>          
+          </li>
+          <li ng-class="{active:index.currentPage == 'settings'}">
+            <a href="./settings" ng-click="index.currentPage = 'settings'" class="fa fa-gears" ng-show='visibleCards.indexOf("settings") > -1'>
+              Settings
+            </a>          
+          </li>
+        </ul>
+      </div>          
+    </div>
+  </div>   
+
+
+  <!-- slide in menu (mobile only) -->
+  <nav id="offCanvasMenu" class="navmenu offcanvas offcanvas-left">
+    <ul class="nav">
+      <li ng-class="{active:index.currentPage == 'dashboard'}">
+        <a href="./dashboard" ng-click="index.currentPage = 'dashboard'">
+          <i class="fa fa-lg fa-dashboard"></i>
+          Dashboard
+        </a>          
+      </li>
+      <li ng-class="{active:index.currentPage == 'printers'}">
+        <a href="./printers" ng-click="index.currentPage = 'printers'" ng-show='visibleCards.indexOf("printers") > -1'>
+          <i class="fa fa-lg fa-print"></i>
+          Printers
+        </a>          
+      </li>
+      <li ng-class="{active:index.currentPage == 'printJobs'}">
+        <a href="./printJobs" ng-click="index.currentPage = 'printJobs'" ng-show='visibleCards.indexOf("printJobs") > -1'>
+          <i class="fa fa-lg fa-database"></i>
+          PrintJobs
+        </a>          
+      </li>
+      <li ng-class="{active:index.currentPage == 'printables'}">
+        <a href="./printables" ng-click="index.currentPage = 'printables'" ng-show='visibleCards.indexOf("printables") > -1'>
+          <i class="fa fa-lg fa-files-o"></i>
+          Printables
+        </a>          
+      </li>
+      <li ng-class="{active:index.currentPage == 'users'}">
+        <a href="./users" ng-click="index.currentPage = 'users'" ng-show='visibleCards.indexOf("users") > -1'>
+          <i class="fa fa-lg fa-users"></i>
+          Users
+        </a>          
+      </li>
+      <li ng-class="{active:index.currentPage == 'settings'}">
+        <a href="./settings" ng-click="index.currentPage = 'settings'" ng-show='visibleCards.indexOf("settings") > -1'>
+          <i class="fa fa-lg fa-gears"></i>
+          Settings
+        </a>          
+      </li>
+    </ul>
+
+    <div style="margin-top:20px; padding-left: 20px; font-size: 12px; color: #777">v0.114</div>
+  </nav>
+
+  <div ng-view class="container bootcards-container" id="main">
+  </div>
+
+	<!-- fixed tabbed footer -->
+	<div class="navbar navbar-default navbar-fixed-bottom">
+		<div class="container">
+			<div class="bootcards-desktop-footer clearfix">
+				<p class="pull-left">CWH v0.114</p>
+			</div>
+			<div class="btn-group">
+				<a href="./index.html" class="btn btn-default" data-title="CWH">
+					<i class="fa fa-2x fa-dashboard"></i>
+					CWH
+				</a>
+				<a href="./printers" class="btn btn-default" ng-click="index.currentPage = 'printers'" ng-class="{active:index.currentPage == 'printers'}" ng-show='visibleCards.indexOf("printers") > -1'>
+					<i class="fa fa-2x fa-print"></i>
+					Printers
+				</a>
+				<a href="./printJobs" class="btn btn-default" ng-click="index.currentPage = 'printJobs'" ng-class="{active:index.currentPage == 'printJobs'}" ng-show='visibleCards.indexOf("printJobs") > -1'>
+					<i class="fa fa-2x fa-database"></i>
+					PrintJobs
+				</a>
+				<a href="./printables" class="btn btn-default" ng-click="index.currentPage = 'printables'" ng-class="{active:index.currentPage == 'printables'}" ng-show='visibleCards.indexOf("printables") > -1'>
+					<i class="fa fa-2x fa-files-o"></i>
+					Printables
+				</a>
+				<a href="./users" class="btn btn-default" ng-click="index.currentPage = 'users'" ng-class="{active:index.currentPage == 'users'}" ng-show='visibleCards.indexOf("users") > -1'>
+					<i class="fa fa-2x fa-users"></i>
+					Users
+				</a>
+				<a href="./settings" class="btn btn-default" ng-click="index.currentPage = 'settings'" ng-class="{active:index.currentPage == 'settings'}" ng-show='visibleCards.indexOf("settings") > -1'>
+					<i class="fa fa-2x fa-gears"></i>
+					Settings
+				</a>          
+			</div>
+		</div>
+	</div>
+
+	<!--modals-->
+	<div class="modal fade" id="docsModal" tabindex="-1" role="dialog" aria-labelledby="docsModal" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content"></div>
+	  </div>
+	</div>
+	<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorLabel" aria-hidden="false" >
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title" id="errorModalTitle">{{currentError.command}}</h4>
+	      </div>
+	      <div class="modal-body" id="errorModalBody">
+	      {{currentError.message}}
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+</body></html>

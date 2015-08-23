@@ -6,6 +6,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/Java 7"/>
 =======
 	<classpathentry kind="src" path="tests"/>
+	<classpathentry kind="src" path="resourcesnew"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 >>>>>>> 9bb04ce032e7efbe12c01d9d208cfc175c22f1e9
 	<classpathentry kind="lib" path="libs/jetty/javax.annotation-api-1.2.jar"/>

@@ -6,7 +6,6 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -24,6 +23,8 @@ import org.area515.resinprinter.gcode.GCodeControl;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class Printer {
 	private PrinterConfiguration configuration;
 	
@@ -34,7 +35,7 @@ public class Printer {
 	private BufferedImage blankImage;
 	private BufferedImage calibrationImage;
 	private BufferedImage displayImage;
-	//private Rectangle screenSize;
+	private boolean started;
 	private String displayDeviceID;
 	
 	//For Serial Port
@@ -75,6 +76,13 @@ public class Printer {
 	
 	public boolean isPrintInProgress() {
 		return status == JobStatus.Paused || status == JobStatus.Printing || this.status == JobStatus.PausedOutOfPrintMaterial;
+	}
+	
+	public boolean isStarted() {
+		return started;
+	}
+	public void setStarted(boolean started) {
+		this.started = started;
 	}
 	
 	public JobStatus getStatus() {
@@ -232,6 +240,7 @@ public class Printer {
 		this.configuration = configuration;
 	}
 
+	@JsonIgnore
 	public GCodeControl getGCodeControl() {
 		return gCodeControl;
 	}
@@ -245,13 +254,13 @@ public class Printer {
 	}
 	
 	public void close() {
-		//jobFile.deleteOnExit();
 		if (serialPort != null) {
 			serialPort.close();
 		}
 		if (refreshFrame != null) {
 			refreshFrame.dispose();
 		}
+		started = false;
 	}
 
 	@Override

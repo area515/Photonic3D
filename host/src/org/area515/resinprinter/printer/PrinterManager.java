@@ -118,6 +118,7 @@ public class PrinterManager {
 			
 			SerialManager.Instance().assignSerialPort(printer, port);
 			printersByName.put(printer.getName(), printer);
+			printer.setStarted(true);
 			return printer;
 		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
 			DisplayManager.Instance().removeAssignment(printer);

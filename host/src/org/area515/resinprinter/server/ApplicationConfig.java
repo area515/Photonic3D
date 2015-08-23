@@ -8,6 +8,8 @@ import javax.ws.rs.core.Application;
 import org.area515.resinprinter.services.FileService;
 import org.area515.resinprinter.services.MachineService;
 import org.area515.resinprinter.services.MediaService;
+import org.area515.resinprinter.services.PrinterService;
+import org.area515.resinprinter.services.SettingsService;
 
 public class ApplicationConfig extends Application{
 
@@ -30,6 +32,8 @@ public class ApplicationConfig extends Application{
     public ApplicationConfig() {
     	singletons.add(FileService.INSTANCE);
     	singletons.add(MachineService.INSTANCE);
+    	singletons.add(SettingsService.INSTANCE);
+    	singletons.add(PrinterService.INSTANCE);
     	singletons.add(MediaService.INSTANCE);
     }
 

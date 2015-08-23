@@ -1,0 +1,63 @@
+<div class="panel panel-default">
+	<div class="panel-heading clearfix">
+		<h3 class="panel-title pull-left">Basic Printer Setup</h3>
+	    <div class="btn-group pull-right">
+			<a class="btn btn-success" href="/printers/add">
+				<i class="fa fa-play"></i> 
+				<span>Start</span>
+			</a>
+	    </div>
+	    <div class="btn-group pull-right">
+			<a class="btn btn-danger" href="/printers/add">
+				<i class="fa fa-stop"></i> 
+				<span>Stop</span>
+			</a>
+	    </div>
+		<div class="btn-group pull-right">
+			<a class="btn btn-primary" href="/contacts/VBMJHwcLX3Vx/edit">
+				<i class="fa fa-pencil"></i>
+				<span>Edit</span>
+			</a>
+		</div>	
+	    <div class="btn-group pull-right">
+			<a class="btn btn-primary" href="/printers/add">
+				<i class="fa fa-hand-o-up"></i> 
+				<span>Controls</span>
+			</a>
+	    </div>
+	</div>
+	<div class="list-group">
+		<div class="list-group-item">
+			<span class="fa-stack fa-lg">
+			  <i class="fa fa-stack-2x fa-2x fa-print"></i>
+			  <i class="fa fa-stack-2x fa-2x fa-refresh fa-spin text-danger" ng-show="printersController.currentPrinter.configuration.AutoStart"></i>
+			</span>
+			<label>Name</label>
+			<h4 class="list-group-item-heading">{{printersController.currentPrinter.name}}</h4>
+		</div>
+		<div class="list-group-item">
+			<label>Serial Port</label>
+			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.machineConfig.MotorsDriverConfig.ComPortSettings.PortName}}</h4>
+		</div>
+		<div class="list-group-item">
+			<label>Display</label>
+			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.machineConfig.MonitorDriverConfig.OSMonitorID}}</h4>
+		</div>
+		<div class="list-group-item">
+			<label>Autostart</label>
+			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.AutoStart}}</h4>
+		</div>
+		<div class="list-group-item">
+			<label>Machine Configuration</label>
+			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.MachineConfigurationName}}</h4>
+		</div>
+		<div class="list-group-item">
+			<label>Slicing Profile</label>
+			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.SlicingProfileName}}</h4>
+		</div>
+	</div>
+	
+	<div class="panel-footer">
+		<span ng-include="'cardFooter.html'"></span>
+	</div>
+</div>

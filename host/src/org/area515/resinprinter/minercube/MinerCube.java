@@ -436,12 +436,4 @@ public class MinerCube {
 		
 		return output;
 	}
-	
-	public static void main(String[] args) throws Exception {
-		File file = new File("testCube.mcu");
-		JAXBContext jaxbContext = JAXBContext.newInstance(MinerCube.class);
-		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-		jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-		jaxbMarshaller.marshal(new MinerCube(), file);
-	}
 }
