@@ -14,6 +14,16 @@ Where is a video of how to use CWH with CWS and Zip files?
 -------------------------------------------------------------------------------  
 [Here](https://www.youtube.com/watch?v=J3HTCkxlKcw).
 
+How do I use this new version of the GUI you've started?  
+-------------------------------------------------------------------------------  
+Change the following line:  
+```hostGUI=resources```  
+in this file:  
+```config.properties```  
+to this:  
+```hostGUI=resourcesnew```  
+Once the new GUI has all of the features of the current version, we'll do this automatically.
+
 What features does CWH have?
 -------------------------------------------------------------------------------  
 1. Print STL files.
