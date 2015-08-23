@@ -22,7 +22,7 @@ hostGUI=resources
 ```  
 in this file:  
 ```
-config.properties
+[LocationWhereCWHIsInstalled]/config.properties
 ```  
 to this:  
 ```
