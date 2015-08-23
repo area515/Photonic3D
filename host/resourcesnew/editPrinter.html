@@ -1,0 +1,58 @@
+<form class="form-horizontal" method="POST" action="/contacts/">
+<div class="modal-header">
+		<div class="btn-group pull-left">
+			<button class="btn btn-danger" data-dismiss="modal">
+				Cancel
+			</button>
+		</div>
+	
+		<div class="btn-group pull-right">
+			<button class="btn btn-success" data-dismiss="modal">
+				Save
+			</button>
+		</div>
+	<h4 class="modal-title">
+			{{printersController.editTitle}}
+	</h4>		
+</div>
+<div class="modal-body">
+		<input type="hidden" name="companyId" value="">
+		<input type="hidden" name="_method" value="put">
+		<div class="form-group">
+			<label class="col-xs-4 control-label">Printer Name</label>
+			<div class="col-xs-8">
+				<input type="text" class="form-control" placeholder="Printer Name" ng-model="printersController.editPrinter.configuration.name">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-xs-4 control-label"></label>
+			<div class="col-xs-8">
+				<input type="checkbox" ng-model="printersController.editPrinter.configuration.AutoStart">Start printer when CWH starts</label>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-xs-4 control-label">Serial Port</label>
+			<div class="col-xs-8">
+				<select name="type" class="form-control" 
+					ng-model="printersController.editPrinter.configuration.machineConfig.MotorsDriverConfig.ComPortSettings.PortName" 
+					ng-options="serialPort for serialPort in printersController.serialPorts">
+				  <option value="">Select a Serial Port...</option>
+				</select>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-xs-4 control-label">Display</label>
+			<div class="col-xs-8">
+				<select name="type" class="form-control" 
+					ng-model="printersController.editPrinter.configuration.machineConfig.MonitorDriverConfig.OSMonitorID" 
+					ng-options="graphicsDisplay for graphicsDisplay in printersController.graphicsDisplays">
+				  <option value="" selected>Select a Graphics Display...</option>
+				</select>
+			</div>
+		</div>
+</div>
+</form>
+
+<div class="modal-footer">
+	<span ng-include="'cardFooter.html'"></span>
+</div>	

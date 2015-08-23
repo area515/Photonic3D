@@ -1,0 +1,58 @@
+		<div class="row">
+			<div class="col-sm-5 bootcards-list" id="list">
+				<div class="panel panel-default">
+						<div class="panel-heading clearfix">
+							<h3 class="panel-title pull-left">All Printers</h3>
+							<div class="row">
+							   <div class="col-xs-4 pull-right">
+									<a class="btn btn-danger btn-block" ng-click="printersController.deleteCurrentPrinter()" ng-show="printersController.currentPrinter != null">
+										<i class="fa fa-trash-o"></i> 
+										<span>Remove</span>
+									</a>
+							    </div>
+							    <div class="col-xs-3 pull-right">
+									<a class="btn btn-success btn-block" ng-click="printersController.editCurrentPrinter('Create Basic Printer')">
+										<i class="fa fa-plus"></i> 
+										<span>Create</span>
+									</a>
+							    </div>
+						</div>
+					</div>
+					<div class="list-group">
+							<a ng-class="{active:printer.name == printersController.currentPrinter.name}" ng-repeat="printer in printers"
+								class="list-group-item"
+					 			ng-click="printersController.changeCurrentPrinter(printer)">
+					 			<span class="pull-left fa-stack fa-lg">
+								  <i class="fa fa-stack-1x fa-2x fa-print"></i>
+								  <i class="fa fa-stack-3x fa-2x fa-ban text-danger" ng-hide="printer.started"></i>
+								</span>
+								<!-- <img src="/images/Sofia Acey.jpg" class="img-rounded pull-left"/>-->
+								<h4 class="list-group-item-heading">{{printer.name}}</h4>
+								<p class="list-group-item-text">{{printer.status == null?"Port:" + printer.configuration.machineConfig.MotorsDriverConfig.ComPortSettings.PortName + " Display:" + printer.configuration.machineConfig.MonitorDriverConfig.OSMonitorID:"Status:" + printer.status}}</p>
+							</a>
+					</div>
+					<div class="panel-footer">
+						<span ng-include="'cardFooter.html'"></span>
+					</div>			
+				</div>
+			</div>
+		
+			<div class="col-sm-7 bootcards-cards hidden-xs" id="listDetails">
+
+				<!-- contact details -->
+				
+				<div id="printerCard">
+					<span ng-include="'printer.html'"></span>
+				</div>
+
+				<!-- other printer options-->
+
+			</div>
+		</div>
+	<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModal" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<span ng-include="'editPrinter.html'"></span>
+			</div>
+		</div>
+	</div>
