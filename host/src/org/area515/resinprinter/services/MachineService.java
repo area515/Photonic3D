@@ -26,16 +26,9 @@ import org.area515.resinprinter.job.JobManager;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
-import org.area515.resinprinter.printer.BuildDirection;
-import org.area515.resinprinter.printer.MachineConfig;
-import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
-import org.area515.resinprinter.printer.MachineConfig.MonitorDriverConfig;
-import org.area515.resinprinter.printer.MachineConfig.MotorsDriverConfig;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.PrinterManager;
-import org.area515.resinprinter.printer.SlicingProfile;
-import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
@@ -47,7 +40,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Path("machine")
 public class MachineService {
-	
 	public static MachineService INSTANCE = new MachineService();
 	
 	private MachineService(){}
@@ -148,7 +140,7 @@ public class MachineService {
 		}
 		//=========================================================
 		try {
-			HostProperties.Instance().addPrinterConfiguration(currentConfiguration);
+			HostProperties.Instance().addOrUpdatePrinterConfiguration(currentConfiguration);
 			return new MachineResponse("create", true, "Created:" + currentConfiguration.getName() + "");
 		} catch (AlreadyAssignedException e) {
 			e.printStackTrace();
@@ -180,6 +172,7 @@ public class MachineService {
 			}
 	 }
 
+	 @Deprecated
 	 @GET
 	 @Path("startprinter/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -199,6 +192,7 @@ public class MachineService {
 		}
 	 }	 
 	 
+	 @Deprecated
 	 @GET
 	 @Path("stopprinter/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)

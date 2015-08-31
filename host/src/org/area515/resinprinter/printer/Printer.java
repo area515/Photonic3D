@@ -16,6 +16,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.JFrame;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -24,6 +25,7 @@ import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Printer {
 	private PrinterConfiguration configuration;
@@ -55,6 +57,9 @@ public class Printer {
 		CurrentSlice
 	}
 	
+	//For jaxb/json
+	private Printer() {}
+	
 	public Printer(PrinterConfiguration configuration) throws InappropriateDeviceException {
 		this.configuration = configuration;
 		
@@ -70,14 +75,22 @@ public class Printer {
 		}
 	}
 	
+	@JsonIgnore
 	public String getName() {
 		return configuration.getName();
 	}
 	
+	@XmlTransient
+	@JsonProperty
 	public boolean isPrintInProgress() {
 		return status == JobStatus.Paused || status == JobStatus.Printing || this.status == JobStatus.PausedOutOfPrintMaterial;
 	}
+	public void setPrintInProgress(boolean progress) {
+		//Ignore anyone trying to set this property, this is for json only!!
+	}
 	
+	@XmlTransient
+	@JsonProperty
 	public boolean isStarted() {
 		return started;
 	}
@@ -245,6 +258,7 @@ public class Printer {
 		return gCodeControl;
 	}
 
+	@JsonIgnore
 	public SerialCommunicationsPort getSerialPort() {
 		return serialPort;
 	}

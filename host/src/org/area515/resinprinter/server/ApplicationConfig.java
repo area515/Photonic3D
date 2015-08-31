@@ -10,6 +10,12 @@ import org.area515.resinprinter.services.MachineService;
 import org.area515.resinprinter.services.MediaService;
 import org.area515.resinprinter.services.PrinterService;
 import org.area515.resinprinter.services.SettingsService;
+import org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider;
+
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 public class ApplicationConfig extends Application{
 
@@ -30,6 +36,7 @@ public class ApplicationConfig extends Application{
     private Set<Class<?>> classes = new HashSet<Class<?>>();
 
     public ApplicationConfig() {
+    	singletons.add(buildJacksonJaxbJsonProvider());
     	singletons.add(FileService.INSTANCE);
     	singletons.add(MachineService.INSTANCE);
     	singletons.add(SettingsService.INSTANCE);
@@ -37,6 +44,21 @@ public class ApplicationConfig extends Application{
     	singletons.add(MediaService.INSTANCE);
     }
 
+    public JacksonJaxbJsonProvider buildJacksonJaxbJsonProvider() {
+        ObjectMapper mapper = new ObjectMapper();
+        //mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        AnnotationIntrospector pair = AnnotationIntrospector.pair(
+        		new PrioritizeJSONPropertyJaxbAnnotationIntrospector(), 
+        		new JacksonAnnotationIntrospector());
+        mapper.getDeserializationConfig().with(pair);
+        mapper.getSerializationConfig().with(pair);
+        mapper.setAnnotationIntrospectors(pair, pair);
+        // create JsonProvider to provide custom ObjectMapper
+        ResteasyJackson2Provider provider = new ResteasyJackson2Provider();
+        provider.setMapper(mapper);
+        return provider;
+    }
+    
     @Override
     public Set<Class<?>> getClasses() {
         return classes;

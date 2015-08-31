@@ -5,9 +5,9 @@ import java.awt.GraphicsDevice;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -16,17 +16,19 @@ import javax.ws.rs.core.MediaType;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.MachineConfig;
+import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
+import org.area515.resinprinter.printer.MachineConfig.MonitorDriverConfig;
+import org.area515.resinprinter.printer.MachineConfig.MotorsDriverConfig;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.printer.SlicingProfile;
-import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
-import org.area515.resinprinter.printer.MachineConfig.MonitorDriverConfig;
-import org.area515.resinprinter.printer.MachineConfig.MotorsDriverConfig;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.serial.ConsoleCommPort;
+import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
 
 @Path("printers")
@@ -58,8 +60,25 @@ public class PrinterService {
 	 }
 	 
 	 @GET
+	 @Path("get/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public Printer getPrinter(@PathParam("printername") String printerName) throws InappropriateDeviceException {
+		Printer printer = PrinterManager.Instance().getPrinter(printerName);
+		if (printer == null) {
+			PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
+			if (currentConfiguration == null) {
+				throw new InappropriateDeviceException("No printer with that name:" + printerName);
+			}
+			
+			printer = new Printer(currentConfiguration);
+		}
+		 
+		return printer;
+	 }
+	 
+	 @GET
 	 @POST
-	 @Path("deletePrinter/{printername}")
+	 @Path("delete/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse deletePrinter(@PathParam("printername") String printerName) {
 			try {
@@ -74,17 +93,90 @@ public class PrinterService {
 				}				
 				
 				HostProperties.Instance().removePrinterConfiguration(currentConfiguration);
-				return new MachineResponse("delete", true, "Deleted:" + printerName);
+				return new MachineResponse("deletePrinter", true, "Deleted:" + printerName);
 			} catch (InappropriateDeviceException e) {
 				e.printStackTrace();
-				return new MachineResponse("delete", false, e.getMessage());
+				return new MachineResponse("deletePrinter", false, e.getMessage());
 			}
+	 }
+	 
+	 //TODO: We need to synchronize on this printer to make sure it isn't in use.
+	 @POST
+	 @Path("save")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 @Consumes(MediaType.APPLICATION_JSON)
+	 public MachineResponse savePrinter(Printer printerToSave) {
+		try {
+			String printerName = printerToSave.getClass().getName();
+			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
+			if (currentPrinter != null) {
+				throw new InappropriateDeviceException("Can't save printer after it's been started:" + printerName);
+			}
+
+			try {
+				HostProperties.Instance().addOrUpdatePrinterConfiguration(printerToSave.getConfiguration());
+				return new MachineResponse("savePrinter", true, "Created:" + printerToSave.getName() + "");
+			} catch (AlreadyAssignedException e) {
+				e.printStackTrace();
+				return new MachineResponse("savePrinter", false, e.getMessage());
+			}
+		} catch (InappropriateDeviceException e) {
+			e.printStackTrace();
+			return new MachineResponse("savePrinter", false, e.getMessage());
+		}
+	 }
+	 
+	 @GET
+	 @POST
+	 @Path("start/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse startPrinter(@PathParam("printername") String printerName) {
+		Printer printer = null;
+		try {
+			PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
+			if (currentConfiguration == null) {
+				throw new InappropriateDeviceException("No printer with that name:" + printerName);
+			}
+			
+			printer = PrinterManager.Instance().startPrinter(currentConfiguration);
+			return new MachineResponse("startPrinter", true, "Started:" + printer.getName() + "");
+		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
+			e.printStackTrace();
+			return new MachineResponse("startPrinter", false, e.getMessage());
+		}
+	 }	 
+	 
+	 @GET
+	 @POST
+	 @Path("stop/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse stopPrinter(@PathParam("printername") String printerName) {
+		try {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				throw new InappropriateDeviceException("This printer isn't started:" + printerName);
+			}
+			if (printer.isPrintInProgress()) {
+				throw new InappropriateDeviceException("Can't stop printer while a job is in progress. Please stop the active printjob first.");
+			}
+			DisplayManager.Instance().removeAssignment(printer);
+			SerialManager.Instance().removeAssignment(printer);
+			if (printer != null) {
+				printer.close();
+			}
+			PrinterManager.Instance().stopPrinter(printer);
+			return new MachineResponse("stopPrinter", true, "Stopped:" + printerName);
+		} catch (InappropriateDeviceException e) {
+			e.printStackTrace();
+			return new MachineResponse("stopPrinter", false, e.getMessage());
+		}
 	 }
 	 
 	 @GET
 	 @Path("createTemplatePrinter")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public Printer createTemplatePrinter() {
+		 //TODO: Return a nice unused name for this printer instead of the hardcoded value below
 		 PrinterConfiguration configuration = createTemplatePrinter(
 				 "CWH Template Printer", //"mUVe 1 DLP (Testing)", 
 				 DisplayManager.SIMULATED_DISPLAY, 
@@ -153,7 +245,6 @@ public class PrinterService {
 				"	fractions,\n" + 
 				"	colors,\n" +
 				"	MultipleGradientPaint.CycleMethod.NO_CYCLE)");
-		 
 		try {
 			return new Printer(configuration);
 		} catch (InappropriateDeviceException e) {
@@ -164,7 +255,7 @@ public class PrinterService {
 	 }
 	 
 	 PrinterConfiguration createTemplatePrinter(String printername, String displayId, String comport, double physicalProjectionMMX, double physicalProjectionMMY, double buildHeightMMZ) {
-			PrinterConfiguration currentConfiguration = new PrinterConfiguration(printername, printername);
+			PrinterConfiguration currentConfiguration = new PrinterConfiguration(printername, printername, false);
 			ComPortSettings settings = new ComPortSettings();
 			settings.setPortName(comport);
 			settings.setDatabits(8);
@@ -235,13 +326,13 @@ public class PrinterService {
 	 
 	 
 	 //This creates a template printer and saves it.
-	 public static void main(String[] args) {
+	 /*public static void main(String[] args) {
 		 PrinterConfiguration configuration = new PrinterService().createTemplatePrinter().getConfiguration();
 		 try {
-				HostProperties.Instance().addPrinterConfiguration(configuration);
+				HostProperties.Instance().addOrUpdatePrinterConfiguration(configuration);
 			} catch (AlreadyAssignedException e) {
 				e.printStackTrace();
 			}
 
-	 }
+	 }*/
 }

@@ -38,6 +38,7 @@ import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
+import org.area515.util.PrintFileFilter;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
  

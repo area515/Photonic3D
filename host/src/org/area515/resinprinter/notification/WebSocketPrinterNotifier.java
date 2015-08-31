@@ -20,7 +20,7 @@ import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.slice.StlError;
 
-@ServerEndpoint("/printernotification/{printerName}")
+@ServerEndpoint("/printerNotification/{printerName}")
 public class WebSocketPrinterNotifier implements Notifier {
 	private static ConcurrentHashMap<String, ConcurrentHashMap<String, Session>> sessionsByPrinterName = new ConcurrentHashMap<String, ConcurrentHashMap<String, Session>>();
 	

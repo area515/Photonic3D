@@ -25,7 +25,7 @@ import org.area515.resinprinter.slice.StlError;
 import org.area515.util.JacksonEncoder;
 import org.area515.util.PrintJobJacksonDecoder;
 
-@ServerEndpoint(value="/printjobnotification/{printJobName}", encoders={JacksonEncoder.class}, decoders={PrintJobJacksonDecoder.class})
+@ServerEndpoint(value="/printJobNotification/{printJobName}", encoders={JacksonEncoder.class}, decoders={PrintJobJacksonDecoder.class})
 public class WebSocketPrintJobNotifier implements Notifier {
 	private static ConcurrentHashMap<String, ConcurrentHashMap<String, Session>> sessionsByPrintJobName = new ConcurrentHashMap<String, ConcurrentHashMap<String, Session>>();
 	
