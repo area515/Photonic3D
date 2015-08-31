@@ -18,6 +18,8 @@ import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.security.JettySecurityUtils;
 import org.area515.resinprinter.services.MachineService;
 import org.area515.resinprinter.stream.ProgressiveDownloadServlet;
+import org.area515.util.RedirectRegexRule;
+import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.DefaultHandler;
@@ -71,17 +73,23 @@ public class Main {
         resource_handler.setDirectoriesListed(true);
         resource_handler.setWelcomeFiles(new String[]{ "index.html" });
         resource_handler.setResourceBase(HostProperties.Instance().hostGUI());
-		
         
-        /*
-         * Setup ServletContextHandler for rest services
-         */
+	    //Angular is pretty messed up when it comes to link rewriting: https://github.com/angular/angular.js/issues/4608
+	    //I can't believe we need to server side changes to fix this!!! https://github.com/angular-ui/ui-router/wiki/Frequently-Asked-Questions#how-to-configure-your-server-to-work-with-html5mode
+	    //I suppose for Jetty we'll create a 404 redirector! Massive pain and stupidity...
+        //Rewrite anything that ends with "/page" to "/#page"
+        //RedirectRegexRule rewritePagesRule = new RedirectRegexRule();
+        RedirectRegexRule rewritePagesRule = new RedirectRegexRule();
+        rewritePagesRule.setRegex("/(.*[pP]age.*)");
+        rewritePagesRule.setReplacement("/#$1?$Q");
+        RewriteHandler rewritePagesHandler = new RewriteHandler();
+        rewritePagesHandler.addRule(rewritePagesRule);
         
-        // For services
+        //Setup ServletContextHandler for rest services
         ServletContextHandler serviceContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		serviceContext.setContextPath("/services");
 		ServletHolder servicesHolder = new ServletHolder(new HttpServletDispatcher());
-		servicesHolder.setInitParameter("javax.ws.rs.Application","org.area515.resinprinter.server.ApplicationConfig");
+		servicesHolder.setInitParameter("javax.ws.rs.Application",ApplicationConfig.class.getName());
 		serviceContext.addServlet(servicesHolder, "/*");
 		
         // For Raspberry Pi video
@@ -91,7 +99,7 @@ public class Main {
 		
 		// Add the ResourceHandler to the server.
 		HandlerList handlers = new HandlerList();
-        handlers.setHandlers(new Handler[] { videoContext, serviceContext, resource_handler, new DefaultHandler() });
+        handlers.setHandlers(new Handler[] { videoContext, serviceContext, resource_handler, rewritePagesHandler, new DefaultHandler() });
         server.setHandler(handlers);
 
         String externallyAccessableIP = HostProperties.Instance().getExternallyAccessableName();
@@ -160,7 +168,7 @@ public class Main {
 		//Startup all printers that should be autostarted
 		List<PrinterConfiguration> configurations = HostProperties.Instance().getPrinterConfigurations();
 		for (PrinterConfiguration configuration : configurations) {
-			if (configuration.isAutostart()) {
+			if (configuration.isAutoStart()) {
 				MachineService.INSTANCE.startPrinter(configuration.getName());
 			}
 		}

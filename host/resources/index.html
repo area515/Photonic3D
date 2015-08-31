@@ -327,7 +327,7 @@
 	
 	function createJobWebSocket(jobName, onMessageFunction) {
 	  	if ("WebSocket" in window) {
-		     var ws = new WebSocket(createWebSocketURL("printjobnotification/" + encodeURIComponent(jobName)));
+		     var ws = new WebSocket(createWebSocketURL("printJobNotification/" + encodeURIComponent(jobName)));
 		     ws.onopen = function() {
 		     };
 		     ws.onmessage = onMessageFunction;

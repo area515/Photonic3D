@@ -420,21 +420,20 @@ public class HostProperties {
 				jaxbMarshaller.marshal(slicingProfile, slicingFile);
 
 				File printerFile = new File(printerDir, currentConfiguration.getName() + PRINTER_EXTENSION);
-				jaxbMarshaller.marshal(new PrinterConfiguration(currentConfiguration.getMachineConfigName(), currentConfiguration.getSlicingProfileName()), printerFile);
+				jaxbMarshaller.marshal(new PrinterConfiguration(
+						currentConfiguration.getMachineConfigName(), 
+						currentConfiguration.getSlicingProfileName(), 
+						currentConfiguration.isAutoStart()), printerFile);
 			} catch (JAXBException e) {
 				e.printStackTrace();
 			}
 		}
 	}
 	
-	public void addPrinterConfiguration(PrinterConfiguration configuration) throws AlreadyAssignedException {
+	public void addOrUpdatePrinterConfiguration(PrinterConfiguration configuration) throws AlreadyAssignedException {
 		getPrinterConfigurations();
 
-		PrinterConfiguration otherConfiguration = configurations.putIfAbsent(configuration.getName(), configuration);
-		if (otherConfiguration != null) {
-			throw new AlreadyAssignedException("There is already a printer called:" + configuration.getName(), (Printer)null);
-		}
-		
+		configurations.put(configuration.getName(), configuration);
 		saveConfigurations();
 	}
 
