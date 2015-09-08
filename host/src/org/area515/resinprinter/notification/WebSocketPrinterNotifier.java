@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.CloseReason;
+import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.DeploymentException;
 import javax.websocket.OnClose;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
-import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerContainer;
 import javax.websocket.server.ServerEndpoint;
@@ -66,7 +66,7 @@ public class WebSocketPrinterNotifier implements Notifier {
 		
 		for (Session currentSession : sessionsBySessionId.values()) {
 			try {
-				currentSession.getAsyncRemote().sendObject(printer);
+				currentSession.getAsyncRemote().sendObject(new PrinterEvent(printer, NotificationEvent.PrinterChanged));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -105,7 +105,7 @@ public class WebSocketPrinterNotifier implements Notifier {
 		
 		for (Session currentSession : sessionsBySessionId.values()) {
 			try {
-				currentSession.getAsyncRemote().sendObject(printer);
+				currentSession.getAsyncRemote().sendObject(new PrinterEvent(printer, NotificationEvent.PrinterChanged));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

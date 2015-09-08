@@ -17,9 +17,10 @@ import javax.xml.bind.Unmarshaller;
 
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
+import org.area515.resinprinter.job.PrintFileProcessingAid;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
-import org.area515.resinprinter.minercube.PrintFileProcessingAid.DataAid;
+import org.area515.resinprinter.job.PrintFileProcessingAid.DataAid;
 import org.area515.resinprinter.server.Main;
 
 public class MinerCubePrintFileProcessor implements PrintFileProcessor<Object> {
@@ -135,5 +136,10 @@ public class MinerCubePrintFileProcessor implements PrintFileProcessor<Object> {
 	@Override
 	public Object getGeometry(PrintJob printJob) throws JobManagerException {
 		return null;
+	}
+
+	@Override
+	public String getFriendlyName() {
+		return "Maze Cube";
 	}
 }

@@ -5,6 +5,7 @@ import java.io.File;
 
 public interface PrintFileProcessor<G> {
 	public String[] getFileExtensions();
+	public String getFriendlyName();
 	public boolean acceptsFile(File processingFile);
 	public BufferedImage getCurrentImage(PrintJob printJob);
 	public double getBuildAreaMM(PrintJob printJob);

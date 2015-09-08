@@ -10,6 +10,8 @@ import org.area515.resinprinter.services.MachineService;
 import org.area515.resinprinter.services.MediaService;
 import org.area515.resinprinter.services.PrinterService;
 import org.area515.resinprinter.services.SettingsService;
+import org.area515.util.ExceptionMarshaller;
+import org.area515.util.PrioritizeJSONPropertyJaxbAnnotationIntrospector;
 import org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
@@ -37,6 +39,7 @@ public class ApplicationConfig extends Application{
 
     public ApplicationConfig() {
     	singletons.add(buildJacksonJaxbJsonProvider());
+    	singletons.add(new ExceptionMarshaller());
     	singletons.add(FileService.INSTANCE);
     	singletons.add(MachineService.INSTANCE);
     	singletons.add(SettingsService.INSTANCE);

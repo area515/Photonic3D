@@ -110,7 +110,7 @@
 	    				applyErrorIfNecessary(data, false, false)
 	    				createJobWebSocket(filename,
 	    						function(evt) {
-							        var printJob = JSON.parse(evt.data);
+							        var printJob = JSON.parse(evt.data).printJob;
 							        if (printJob.jobStatus == 'Ready') {
 				    					$("#statustext").attr("placeholder", "Upload complete:" + uploadURL + " -> " + filename);
 				    					refreshListbox('/services/files/list', "filesselect");
@@ -204,7 +204,7 @@
 		var message;
 		if (xhr.status == "401") {
 			message = "You logged in wrong.";
-		} else if (xhr.status == "501") {
+		} else if (xhr.status == "400") {
 			message = xhr.responseText;
 		} else {
 			message = "Problem communicating with host printer. (http:" + xhr.status + ")";
@@ -303,7 +303,7 @@
 										createJobWebSocket(
 									  			 jobName,
 									  			 function (evt) {
-											        var printJob = JSON.parse(evt.data)
+											        var printJob = JSON.parse(evt.data).printJob;
 													if (printJob.jobStatus != 'Printing') {
 														updateStatusArea(0, "0", 0, 0, printJob.errorDescription);
 														$("#currentSliceImage").attr("src", "/services/machine/currentsliceImage/noJobSelected");

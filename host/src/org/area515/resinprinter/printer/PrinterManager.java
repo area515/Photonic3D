@@ -159,10 +159,11 @@ public class PrinterManager {
 		}
 		
 		printersByJob.remove(job);
-		
-		printJobsByPrinter.remove(job.getPrinter());
-		
-		job.setPrinter(null);
+		Printer printer = job.getPrinter();
+		if (printer != null) {
+			printJobsByPrinter.remove(printer);
+			job.setPrinter(null);
+		}
 	}
 	
 	public List<Printer> getPrinters() {
