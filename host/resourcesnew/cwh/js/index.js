@@ -48,7 +48,7 @@
         		var customMessage;
     			if (args.status == "401") {
     				customMessage = "You logged in wrong.";
-    			} else if (args.status == "501") {
+    			} else if (args.status == "400") {
     				customMessage = args.statusText;
     			} else if (args.startText == null) {
     				customMessage = "Problem communicating with host printer.";

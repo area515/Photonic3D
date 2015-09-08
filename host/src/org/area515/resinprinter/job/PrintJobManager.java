@@ -2,6 +2,9 @@ package org.area515.resinprinter.job;
 
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
@@ -12,34 +15,36 @@ import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 
-public class JobManager {
-	private static JobManager INSTANCE;
+public class PrintJobManager {
+	private static PrintJobManager INSTANCE;
 	
-	private ConcurrentHashMap<String, PrintJob> printJobsByName = new ConcurrentHashMap<String, PrintJob>();
+	private ConcurrentHashMap<UUID, PrintJob> printJobsByJobId = new ConcurrentHashMap<UUID, PrintJob>();
 	
-	public static JobManager Instance() {
+	public static PrintJobManager Instance() {
 		if (INSTANCE == null) {
-			INSTANCE = new JobManager();
+			INSTANCE = new PrintJobManager();
 		}
 		return INSTANCE;
 	}
 
-	private JobManager() {
+	private PrintJobManager() {
 	}
 	
 	public PrintJob createJob(File job) throws JobManagerException {
 		PrintJob newJob = new PrintJob(job);
-		PrintJob otherJob = printJobsByName.putIfAbsent(newJob.getJobFile().getName(), newJob);
+		PrintJob otherJob = printJobsByJobId.putIfAbsent(newJob.getId(), newJob);
+		
+		//This can't happen...
 		if (otherJob != null) {
 			throw new JobManagerException("The selected job is already running");
 		}
-		
+
 		if (!job.exists()) {
-			printJobsByName.remove(job.getName());
+			printJobsByJobId.remove(newJob.getId());
 			throw new JobManagerException("The selected job does not exist");
 		}
 		if (!job.isFile()) {
-			printJobsByName.remove(job.getName());
+			printJobsByJobId.remove(newJob.getId());
 			throw new JobManagerException("The selected job is not a file");
 		}
 		
@@ -53,7 +58,7 @@ public class JobManager {
 				}
 			}
 		} catch (JobManagerException e) {
-			printJobsByName.remove(job.getName());
+			printJobsByJobId.remove(newJob.getId());
 			throw e;
 		}
 		return newJob;
@@ -82,7 +87,7 @@ public class JobManager {
 				} finally {
 					//Don't need to close the printer or dissassociate the serial and display devices
 					printer.showBlankImage();
-					JobManager.Instance().removeJob(printJob);
+					PrintJobManager.Instance().removeJob(printJob);
 					PrinterManager.Instance().removeAssignment(printJob);
 					System.out.println("Job Ended:" + Thread.currentThread().getName());
 				}
@@ -92,15 +97,35 @@ public class JobManager {
 		return futureJobStatus;
 	}
 	
-	public PrintJob getJob(String jobId) {
-		return printJobsByName.get(jobId);
+	public PrintJob getJob(UUID jobId) {
+		return printJobsByJobId.get(jobId);
+	}
+	
+	public PrintJob getPrintJobByPrinterName(String printerName) {
+		for (PrintJob job : printJobsByJobId.values()) {
+			if (printerName.equals(job.getPrinter().getName())) {
+				return job;
+			}
+		}
+		
+		return null;
+	}
+	
+	public List<PrintJob> getJobsByFilename(String fileName) {
+		List<PrintJob> jobs = new ArrayList<PrintJob>();
+		for (PrintJob currentJob : printJobsByJobId.values()) {
+			if (currentJob.getJobFile().getName().equals(fileName)) {
+				jobs.add(currentJob);
+			}
+		}
+		
+		return jobs;
 	}
 	
 	public void removeJob(PrintJob job) {
 		if (job == null)
 			return;
 		
-		printJobsByName.remove(job.getJobFile().getName());
+		printJobsByJobId.remove(job.getId());
 	}
-
 }

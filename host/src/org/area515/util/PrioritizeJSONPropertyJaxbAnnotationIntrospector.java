@@ -1,4 +1,4 @@
-package org.area515.resinprinter.server;
+package org.area515.util;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;

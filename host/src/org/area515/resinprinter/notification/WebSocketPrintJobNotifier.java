@@ -76,7 +76,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 		
 		for (Session currentSession : sessionsBySessionId.values()) {
 			try {
-				currentSession.getAsyncRemote().sendObject(job);
+				currentSession.getAsyncRemote().sendObject(new PrintJobEvent(job, NotificationEvent.PrintJobChanged));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -111,13 +111,13 @@ public class WebSocketPrintJobNotifier implements Notifier {
 			try {
 				PrintJob job = new PrintJob(fileUploaded);
 				job.setFutureJobStatus(new StaticJobStatusFuture(JobStatus.Ready));
-				currentSession.getAsyncRemote().sendObject(job);
+				currentSession.getAsyncRemote().sendObject(new PrintJobEvent(job, NotificationEvent.FileUploadComplete));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
-
+	
 	@Override
 	public void geometryError(PrintJob job, List<StlError> errors) {
 		ConcurrentHashMap<String, Session> sessionsBySessionId = sessionsByPrintJobName.get(job.getJobFile().getName());
@@ -127,7 +127,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 		
 		for (Session currentSession : sessionsBySessionId.values()) {
 			try {
-				currentSession.getAsyncRemote().sendObject(errors);
+				currentSession.getAsyncRemote().sendObject(new PrintJobEvent(job, NotificationEvent.GeometryError, errors));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -143,7 +143,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 		
 		for (Session currentSession : sessionsBySessionId.values()) {
 			try {
-				currentSession.getAsyncRemote().sendObject(job);
+				currentSession.getAsyncRemote().sendObject(new PrintJobEvent(job, NotificationEvent.OutOfInk));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

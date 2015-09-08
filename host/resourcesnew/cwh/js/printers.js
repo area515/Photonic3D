@@ -67,6 +67,8 @@
 		}
 		
 		this.savePrinter = function savePrinter() {
+			controller.editPrinter.MachineConfigurationName = controller.editPrinter.configuration.name;
+			controller.editPrinter.SlicingProfileName = controller.editPrinter.configuration.name;
 			this.executeActionAndRefreshPrinters("Save Printer", "No printer selected to save.", '/services/printers/save', controller.editPrinter);
 	        controller.editPrinter = null;
 		}
