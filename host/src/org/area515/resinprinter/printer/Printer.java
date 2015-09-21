@@ -22,6 +22,7 @@ import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.gcode.GCodeControl;
 import org.area515.resinprinter.job.JobStatus;
+import org.area515.resinprinter.projector.ProjectorModel;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -34,14 +35,13 @@ public class Printer {
 	private Frame refreshFrame;
 	private DisplayState displayState = DisplayState.Blank;
 	private int calibrationSquareSize;
-	private BufferedImage blankImage;
-	private BufferedImage calibrationImage;
 	private BufferedImage displayImage;
 	private boolean started;
 	private String displayDeviceID;
 	
-	//For Serial Port
-	private SerialCommunicationsPort serialPort;
+	//For Serial Ports
+	private SerialCommunicationsPort printerFirmwareSerialPort;
+	private SerialCommunicationsPort projectorSerialPort;
 	
 	//For Job Status
 	private volatile JobStatus status;
@@ -51,6 +51,9 @@ public class Printer {
 	//GCode
 	private GCodeControl gCodeControl;
 
+	//Projector model
+	private ProjectorModel projectorModel;
+	
 	public static enum DisplayState {
 		Calibration,
 		Blank,
@@ -152,18 +155,6 @@ public class Printer {
 		}
 	}
 	
-	public void setSerialPort(SerialCommunicationsPort serialPort) {
-		this.serialPort = serialPort;
-		
-		//Read the welcome mat
-		try {
-			System.out.println("Firmware Welcome chitchat:" + getGCodeControl().readWelcomeChitChat());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	
 	public void setGraphicsData(GraphicsDevice device) {
 		refreshFrame = new JFrame() {
 			private static final long serialVersionUID = 5024551291098098753L;
@@ -246,6 +237,21 @@ public class Printer {
 		refreshFrame.repaint();
 	}
 
+	public void setProjectorModel(ProjectorModel projectorModel) {
+		this.projectorModel = projectorModel;
+	}
+	public void setProjectorPowerStatus(boolean powerOn) throws IOException {
+		if (projectorModel == null) {
+			throw new IOException("Projector model couldn't be detected");
+		}
+		
+		if (projectorSerialPort == null) {
+			throw new IOException("Serial port not available for projector.");
+		}
+		
+		projectorModel.setProjectorState(powerOn, projectorSerialPort);
+	}
+	
 	public PrinterConfiguration getConfiguration() {
 		return configuration;
 	}
@@ -257,19 +263,37 @@ public class Printer {
 	public GCodeControl getGCodeControl() {
 		return gCodeControl;
 	}
-
+	
+	public void setPrinterFirmwareSerialPort(SerialCommunicationsPort printerFirmwareSerialPort) {
+		this.printerFirmwareSerialPort = printerFirmwareSerialPort;
+		
+		//Read the welcome mat
+		try {
+			System.out.println("Firmware Welcome chitchat:" + getGCodeControl().readWelcomeChitChat());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	@JsonIgnore
-	public SerialCommunicationsPort getSerialPort() {
-		return serialPort;
+	public SerialCommunicationsPort getPrinterFirmwareSerialPort() {
+		return printerFirmwareSerialPort;
 	}
 	
+	public void setProjectorSerialPort(SerialCommunicationsPort projectorSerialPort) {
+		this.projectorSerialPort = projectorSerialPort;
+	}
+	@JsonIgnore
+	public SerialCommunicationsPort getProjectorSerialPort() {
+		return projectorSerialPort;
+	}
+
 	public String toString() {
-		return getName() + "(SerialPort:" + serialPort + ", Display:" + displayDeviceID + ")";
+		return getName() + "(SerialPort:" + printerFirmwareSerialPort + ", Display:" + displayDeviceID + ")";
 	}
 	
 	public void close() {
-		if (serialPort != null) {
-			serialPort.close();
+		if (printerFirmwareSerialPort != null) {
+			printerFirmwareSerialPort.close();
 		}
 		if (refreshFrame != null) {
 			refreshFrame.dispose();

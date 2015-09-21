@@ -5,25 +5,18 @@ import gnu.io.SerialPort;
 import java.io.IOException;
 import java.util.TooManyListenersException;
 
-import org.area515.resinprinter.printer.Printer;
-
 public class RXTXSynchronousReadBasedCommPort extends RXTXCommPort {
 	@Override
-	public String readUntilOkOrStoppedPrinting(Printer printer) throws IOException {
-    	StringBuilder builder = new StringBuilder();
-
-		String response = "";
-		while (response != null && !response.matches("(?is:ok.*)")) {
-			response = readLine(printer);
-			if (response != null) {
-				builder.append(response);
-			}
-			System.out.println("lineRead:" + response);
+	public byte[] read() throws IOException {
+		if (inputStream.available() > 0) {
+			byte[] buffer = new byte[inputStream.available()];
+			inputStream.read(buffer);
+			return buffer;
 		}
 		
-		return builder.toString();
+		return null;
 	}
-
+	
 	@Override
 	public void init(SerialPort serialPort) throws TooManyListenersException {
 	}

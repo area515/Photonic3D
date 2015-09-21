@@ -1,15 +1,9 @@
 package org.area515.resinprinter.serial;
 
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.UnsupportedCommOperationException;
-
 import java.io.IOException;
-import java.util.TooManyListenersException;
 
 import jssc.SerialPort;
 import jssc.SerialPortException;
-import jssc.SerialPortTimeoutException;
 
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -19,7 +13,6 @@ import org.area515.resinprinter.printer.Printer;
 public class JSSCCommPort implements SerialCommunicationsPort {
 	private SerialPort port;
 	private String cwhName;
-	private int timeout;
 	
 	@Override
 	public void open(String controllingDevice, int timeout,
@@ -83,63 +76,24 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 	}
 
 	@Override
-	public void write(String gcode) throws IOException {
+	public void write(byte[] gcode) throws IOException {
 		try {
-			port.writeString(gcode);
+			port.writeBytes(gcode);
 		} catch (SerialPortException e) {
 			throw new IOException("Couldn't write gcode to " + cwhName, e);
 		}
 	}
 
-	protected String readLine(Printer printer) throws IOException {
-		long startTime = System.currentTimeMillis();
-		StringBuilder builder = new StringBuilder();
-		
-		int value = -1;
-		while (true) {
-			try {
-				value = port.readBytes(1, timeout)[0];
-				if (value > -1) {
-					builder.append((char)value);
-				}
-				if (value == '\n') {//If we have read a line, then we've done our job
-					break;
-				}
-				if (value > -1) {//If we get a character, then keep reading
-					continue;
-				}
-			} catch (SerialPortException e) {
-				throw new IOException("Failed reading byte from port:" + cwhName, e);
-			} catch (SerialPortTimeoutException e) {
-			}
-			if (System.currentTimeMillis() - startTime > SUGGESTED_TIMEOUT_FOR_ONE_GCODE) { //If we've timed out, get out.First available serial port
-				break;
-			}
-			if (printer != null && !printer.isPrintInProgress()) {//Stop if they have asked us to quit printing
-				break;
-			}
-		}
-		
-		if (builder.length() == 0) {
-			return null;
-		}
-		
-		return builder.toString();
-	}
-	
 	@Override
-	public String readUntilOkOrStoppedPrinting(Printer printer) throws IOException {
-    	StringBuilder builder = new StringBuilder();
-
-		String response = "";
-		while (response != null && !response.matches("(?is:ok.*)")) {
-			response = readLine(printer);
-			if (response != null) {
-				builder.append(response);
+	public byte[] read() throws IOException {
+		try {
+			if (port.getInputBufferBytesCount() > 0) {
+				return port.readBytes(port.getInputBufferBytesCount());
 			}
-			System.out.println("lineRead:" + response);
+			
+			return null;
+		} catch (SerialPortException e) {
+			throw new IOException("Couldn't read bytes from serial port.", e);
 		}
-		
-		return builder.toString();
 	}
 }

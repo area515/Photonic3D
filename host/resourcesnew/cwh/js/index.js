@@ -62,7 +62,11 @@
 	        $http.get('/services/settings/visibleCards').success(function(data) {
             	$scope.visibleCards = data;
             });
+	        $http.get('/services/settings/integerVersion').success(function(data) {
+            	$scope.integerVersion = data;
+            });
 	        this.currentPage = 'dashboard';
+	        
     	})
     	
 	    bootcards.init( {

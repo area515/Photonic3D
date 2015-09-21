@@ -116,7 +116,9 @@ public class PrinterManager {
 				throw new JobManagerException("Couldn't find communications device called:" + comportId);
 			}
 			
-			SerialManager.Instance().assignSerialPort(printer, port);
+			SerialManager.Instance().assignSerialPortToFirmware(printer, port);
+			SerialManager.Instance().assignSerialPortToProjector(printer, port);
+			
 			printersByName.put(printer.getName(), printer);
 			printer.setStarted(true);
 			return printer;

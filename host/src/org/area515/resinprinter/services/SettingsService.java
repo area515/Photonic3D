@@ -22,4 +22,11 @@ public class SettingsService {
 	public List<String> getVisibleCards() {
 		return HostProperties.Instance().getVisibleCards();
 	}
+	
+	@GET
+	@Path("integerVersion")
+	@Produces(MediaType.APPLICATION_JSON)
+	public int getIntegerVersion() {
+		return HostProperties.Instance().getVersionNumber();
+	}
 }

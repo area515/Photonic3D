@@ -157,6 +157,14 @@ public class MachineConfig {
 		public void setDLP_Y_Res(double dLP_Y_Res) {
 			this.dLP_Y_Res = dLP_Y_Res;
 		}
+		
+		@XmlTransient
+		public ComPortSettings getComPortSettings() {
+			return comPortSettings;
+		}
+		public void setComPortSettings(ComPortSettings comPortSettings) {
+			this.comPortSettings = comPortSettings;
+		}
 	}
 	
 	@XmlAttribute(name="FileVersion")

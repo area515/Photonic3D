@@ -2,10 +2,15 @@ package org.area515.resinprinter.services;
 
 import java.awt.GraphicsDevice;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -22,10 +27,10 @@ import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.PrinterManager;
@@ -33,6 +38,7 @@ import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.services.NetInterface.WirelessNetwork;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -72,6 +78,66 @@ public class MachineService {
 		 }
 		 
 		 return identifierStrings;
+	 }
+	 
+	 @GET
+	 @Path("networkInterfaces/list")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public List<NetInterface> getNetworkInterfaces() {
+		MessageFormat discoverCommand = new MessageFormat(HostProperties.Instance().getDiscoverSSIDCommand());
+		
+		try {
+			List<NetInterface> ifaces = new ArrayList<NetInterface>();
+			Enumeration<NetworkInterface> networkEnum = NetworkInterface.getNetworkInterfaces();
+			while (networkEnum.hasMoreElements()) {
+				NetworkInterface iface = networkEnum.nextElement();
+				
+				Process listSSIDProcess = Runtime.getRuntime().exec(discoverCommand.format(iface.getName()));
+				ByteArrayOutputStream output = new ByteArrayOutputStream();
+				IOUtils.copy(listSSIDProcess.getInputStream(), output);
+				String[] ssids = new String(output.toString()).split("\n");
+				
+				NetInterface netFace = new NetInterface();
+				netFace.setName(iface.getName());
+				for (String ssid : ssids) {
+					if (ssid == null || ssid.trim().equals("")) {
+						continue;
+					}
+					WirelessNetwork wNet = new WirelessNetwork();
+					wNet.setSsid(ssid);
+					netFace.getWirelessNetworks().add(wNet);
+				}
+				ifaces.add(netFace);
+			}
+			
+			return ifaces;
+		} catch (SocketException e) {
+			e.printStackTrace();
+			throw new RuntimeException("An error occurred looking for network interfaces.", e);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException("An error occurred attempting to find available wifi networks.", e);
+		}
+	 }
+	 
+	 @GET
+	 @Path("networkInterfaces/get/{networkInterfaceName}/wireless/{ssid}/connect/{password}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public void connectToWifiSSID(@PathParam("networkInterfaceName") String networkInterfaceName, @PathParam("ssid") String ssid, @PathParam("password") String password) {
+		 //http://unix.stackexchange.com/questions/92799/connecting-to-wifi-network-through-command-line
+			MessageFormat connectCommand = new MessageFormat(HostProperties.Instance().getConnectToWifiSSIDCommand());
+		 
+			Process listSSIDProcess;
+			try {
+				listSSIDProcess = Runtime.getRuntime().exec(connectCommand.format(networkInterfaceName, ssid, password));
+				ByteArrayOutputStream output = new ByteArrayOutputStream();
+				IOUtils.copy(listSSIDProcess.getInputStream(), output);
+				System.out.println("Command Output:" + output.toString());
+			} catch (IOException e) {
+				e.printStackTrace();
+				throw new RuntimeException("An error occurred setting up network interfaces.", e);
+			}
+		 
 	 }
 	 
 	 @GET

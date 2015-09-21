@@ -32,15 +32,13 @@ public class CustomCommPort implements SerialCommunicationsPort {
 	}
 
 	@Override
-	public void write(String gcode) throws IOException {
-		// TODO Auto-generated method stub
-
+	public void write(byte[] gcode) throws IOException {
+		//Do nothing
 	}
 
 	@Override
-	public String readUntilOkOrStoppedPrinting(Printer printer)
-			throws IOException {
-		// TODO Auto-generated method stub
+	public byte[] read() throws IOException {
+		//Do nothing
 		return null;
 	}
 
