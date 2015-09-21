@@ -3,6 +3,7 @@ package org.area515.resinprinter.services;
 
 import java.awt.GraphicsDevice;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -491,6 +492,42 @@ public class PrinterService {
 			return new MachineResponse("motorson", true, printer.getGCodeControl().executeMotorsOn());
 	 }
 
+	 @GET
+	 @Path("startProjector/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse startProjector(@PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("startProjector", false, "Printer:" + printerName + " not started");
+			}
+			
+			try {
+				printer.setProjectorPowerStatus(true);
+				return new MachineResponse("startProjector", true, "Projector started.");
+			} catch (IOException e) {
+				e.printStackTrace();
+				return new MachineResponse("startProjector", false, e.getMessage());
+			}
+	 }
+	 
+	 @GET
+	 @Path("stopProjector/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public MachineResponse stopProjector(@PathParam("printername") String printerName) {
+			Printer printer = PrinterManager.Instance().getPrinter(printerName);
+			if (printer == null) {
+				return new MachineResponse("stopProjector", false, "Printer:" + printerName + " not started");
+			}
+			
+			try {
+				printer.setProjectorPowerStatus(false);
+				return new MachineResponse("stopProjector", true, "Projector stopped.");
+			} catch (IOException e) {
+				e.printStackTrace();
+				return new MachineResponse("stopProjector", false, e.getMessage());
+			}
+	 }
+	 
 	 @GET
 	 @Path("startJob/{fileName}/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)

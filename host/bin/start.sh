@@ -84,7 +84,7 @@ networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print $2}' 
 #Network build.number is always 1 greater than it the current version
 (( networkBuildNumber-- ))
 
-if [ "$networkBuildNumber" -gt "$currentBuildNumber" ]; then
+if [ "$networkBuildNumber" -gt "$currentBuildNumber" -o "$2" -eq "downgrade"]; then
 	echo Installing latest version of cwh: ${networkBuildNumber}
 	rm -r ${installDirectory}
 	mkdir -p ${installDirectory}
@@ -110,11 +110,16 @@ if [ ! -f "/etc/init.d/cwhservice" ]; then
 	update-rc.d cwhservice defaults
 fi
 
-echo Starting printer host server
-
-if [ "$2" != "debug" ]
-then
-        java -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
-else
+if [ "$2" -eq "debug" ];then
+		pkill -9 -f "org.area515.resinprinter.server.Main"
+		echo Starting printer host server(debug)
         java  -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
+elif [ "$2" -eq "testKit" ];then
+		pkill -9 -f "org.area515.resinprinter.test.FullTestSuite"
+		echo Starting test kit
+        java -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.junit.runner.JUnitCore org.area515.resinprinter.test.FullTestSuite > test.out 2> test.err &
+else
+		pkill -9 -f "org.area515.resinprinter.server.Main"
+		echo Starting printer host server
+        java -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
 fi
