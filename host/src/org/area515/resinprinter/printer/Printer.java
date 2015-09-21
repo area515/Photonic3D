@@ -267,11 +267,13 @@ public class Printer {
 	public void setPrinterFirmwareSerialPort(SerialCommunicationsPort printerFirmwareSerialPort) {
 		this.printerFirmwareSerialPort = printerFirmwareSerialPort;
 		
-		//Read the welcome mat
-		try {
-			System.out.println("Firmware Welcome chitchat:" + getGCodeControl().readWelcomeChitChat());
-		} catch (IOException e) {
-			e.printStackTrace();
+		//Read the welcome mat if it's not null
+		if (printerFirmwareSerialPort != null) {
+			try {
+				System.out.println("Firmware Welcome chitchat:" + getGCodeControl().readWelcomeChitChat());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	@JsonIgnore

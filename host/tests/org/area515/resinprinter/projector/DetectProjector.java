@@ -16,6 +16,8 @@ import org.junit.Test;
 public class DetectProjector {
 	@Test
 	public void noErrorsDetectingProjector() {
+		System.out.println("Projector detection test");
+
 		ComPortSettings newComPortSettings = new ComPortSettings();
 		newComPortSettings.setDatabits(8);
 		newComPortSettings.setParity("NONE");
@@ -28,13 +30,13 @@ public class DetectProjector {
 			System.out.println("Port:" + currentIdentifier.getName());
 			
 			SerialCommunicationsPort port = new JSSCCommPort();
-			System.out.println(SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
+			System.out.println("  JSSCCommPort projector detection:" + SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
 			
 			port = new RXTXEventBasedCommPort();
-			System.out.println(SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
+			System.out.println("  RXTXEventBasedCommPort projector detection:" + SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
 			
 			port = new RXTXSynchronousReadBasedCommPort();
-			System.out.println(SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
+			System.out.println("  RXTXSynchronousReadBasedCommPort projector detection:" + SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
 		}
 	}
 }

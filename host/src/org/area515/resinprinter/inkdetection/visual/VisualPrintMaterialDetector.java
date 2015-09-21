@@ -49,13 +49,13 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 		GenericHoughDetection<Circle> houghCircleDetection = new GenericHoughDetection<Circle>(edgesImage, null, circleDector, 0.50f, 0, false);
 		houghCircleDetection.houghTransform();
 		List<Circle> circles = houghCircleDetection.getShapes();
-		System.out.println(circles);
+		//System.out.println(circles);
 		
 		LineDetector lineDetector = new LineDetector(.005d);
 		GenericHoughDetection<Line> houghLineDetection = new GenericHoughDetection<Line>(edgesImage, null, lineDetector, 0.06f, 0, false);
 		houghLineDetection.houghTransform();
 		List<Line> lines = houghLineDetection.getShapes();
-		System.out.println(lines);
+		//System.out.println(lines);
 		
 		//This assumes the camera is oriented such that +y = direction that gravity pulls objects
 		List<Float> percentages = new ArrayList<Float>();

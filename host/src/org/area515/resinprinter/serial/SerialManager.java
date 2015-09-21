@@ -152,12 +152,17 @@ public class SerialManager {
 		if (otherPrintJob != null) {
 			throw new AlreadyAssignedException("SerialPort already assigned to this job:" + otherPrintJob, otherPrintJob);
 		}
-		
+		resources.comPort = identifier;
 		return resources;
 	}
 	
 	public void assignSerialPortToProjector(Printer printer, SerialCommunicationsPort identifier) throws AlreadyAssignedException, InappropriateDeviceException {
-		ComPortSettings newComPortSettings = new ComPortSettings(printer.getConfiguration().getMachineConfig().getMonitorDriverConfig().getComPortSettings());
+		ComPortSettings settings = printer.getConfiguration().getMachineConfig().getMonitorDriverConfig().getComPortSettings();
+		if (settings == null) {
+			return;
+		}
+		
+		ComPortSettings newComPortSettings = new ComPortSettings(settings);
 		DetectedResources resources = detectResourcesAndAssignPort(printer, identifier, newComPortSettings);
 		identifier = resources.comPort;
 		
@@ -251,7 +256,7 @@ public class SerialManager {
 	 * This should be called when you stop using the port.
 	 * This will prevent port locking on platforms like Linux.
 	 */
-	public void removeAssignment(Printer printer) {
+	public void removeAssignments(Printer printer) {
 		if (printer == null)
 			return;
 		

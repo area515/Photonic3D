@@ -117,7 +117,7 @@ if [ "$2" -eq "debug" ];then
 elif [ "$2" -eq "testKit" ];then
 		pkill -9 -f "org.area515.resinprinter.test.FullTestSuite"
 		echo Starting test kit
-        java -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.junit.runner.JUnitCore org.area515.resinprinter.test.FullTestSuite > test.out 2> test.err &
+        java -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.junit.runner.JUnitCore org.area515.resinprinter.test.FullTestSuite &
 else
 		pkill -9 -f "org.area515.resinprinter.server.Main"
 		echo Starting printer host server

@@ -124,7 +124,7 @@ public class PrinterManager {
 			return printer;
 		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
 			DisplayManager.Instance().removeAssignment(printer);
-			SerialManager.Instance().removeAssignment(printer);
+			SerialManager.Instance().removeAssignments(printer);
 			if (printer != null) {
 				printer.close();
 			}
@@ -132,7 +132,7 @@ public class PrinterManager {
 		} catch (Exception e) {
 			e.printStackTrace();
 			DisplayManager.Instance().removeAssignment(printer);
-			SerialManager.Instance().removeAssignment(printer);
+			SerialManager.Instance().removeAssignments(printer);
 			if (printer != null) {
 				printer.close();
 			}
