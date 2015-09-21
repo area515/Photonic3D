@@ -166,7 +166,7 @@ public class PrinterService {
 				throw new InappropriateDeviceException("Can't stop printer while a job is in progress. Please stop the active printjob first.");
 			}
 			DisplayManager.Instance().removeAssignment(printer);
-			SerialManager.Instance().removeAssignment(printer);
+			SerialManager.Instance().removeAssignments(printer);
 			if (printer != null) {
 				printer.close();
 			}

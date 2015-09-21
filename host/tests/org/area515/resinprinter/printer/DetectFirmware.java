@@ -16,6 +16,8 @@ import org.junit.Test;
 public class DetectFirmware {
 	@Test
 	public void noErrorsDetectingFirmware() {
+		System.out.println("Firmware detection test");
+
 		ComPortSettings newComPortSettings = new ComPortSettings();
 		newComPortSettings.setDatabits(8);
 		newComPortSettings.setParity("NONE");
@@ -28,13 +30,13 @@ public class DetectFirmware {
 			System.out.println("Port:" + currentIdentifier.getName());
 			
 			SerialCommunicationsPort port = new JSSCCommPort();
-			System.out.println(SerialManager.Instance().is3dFirmware(port, newComPortSettings));
+			System.out.println("  JSSCCommPort firmware detection:" + SerialManager.Instance().is3dFirmware(port, newComPortSettings));
 			
 			port = new RXTXEventBasedCommPort();
-			System.out.println(SerialManager.Instance().is3dFirmware(port, newComPortSettings));
+			System.out.println("  RXTXEventBasedCommPort firmware detection:" + SerialManager.Instance().is3dFirmware(port, newComPortSettings));
 			
 			port = new RXTXSynchronousReadBasedCommPort();
-			System.out.println(SerialManager.Instance().is3dFirmware(port, newComPortSettings));
-		}		
+			System.out.println("  RXTXSynchronousReadBasedCommPort firmware detection:" + SerialManager.Instance().is3dFirmware(port, newComPortSettings));
+		}
 	}
 }
