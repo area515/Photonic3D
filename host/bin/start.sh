@@ -9,10 +9,10 @@ else
 fi;
 
 if [ "$2" == "TestKit" ]; then 
-	download=cwh$2-0.${networkBuildNumber}.zip
+	downloadPrefix=cwh$2-0
 	installDirectory=/opt/cwh$2
 else
-	download=cwh-0.${networkBuildNumber}.zip
+	downloadPrefix=cwh-0
 	installDirectory=/opt/cwh
 fi;
 
@@ -96,7 +96,7 @@ if [ "$networkBuildNumber" -gt "$currentBuildNumber" -o "$2" == "downgrade" ]; t
 	rm -r ${installDirectory}
 	mkdir -p ${installDirectory}
 	cd ${installDirectory}
-	wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/${download}
+	wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/${downloadPrefix}.${networkBuildNumber}.zip
 	unzip cwh-0.${networkBuildNumber}.zip
 	chmod 777 *.sh
 	rm cwh-0.${networkBuildNumber}.zip
