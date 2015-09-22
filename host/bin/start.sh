@@ -8,7 +8,14 @@ else
 	repo=$1
 fi;
 
-installDirectory=/opt/cwh
+if [ "$2" == "TestKit" ]; then 
+	download=cwh$2-0.${networkBuildNumber}.zip
+	installDirectory=/opt/cwh$2
+else
+	download=cwh-0.${networkBuildNumber}.zip
+	installDirectory=/opt/cwh
+fi;
+
 #Its pretty hard to keep these updated, let me know when they get too old
 if [ "${cpu}" = "armv6l" ]; then 
 	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u33-b05/jdk-8u33-linux-arm-vfp-hflt.tar.gz"
@@ -84,12 +91,12 @@ networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print $2}' 
 #Network build.number is always 1 greater than it the current version
 (( networkBuildNumber-- ))
 
-if [ "$networkBuildNumber" -gt "$currentBuildNumber" -o "$2" -eq "downgrade"]; then
+if [ "$networkBuildNumber" -gt "$currentBuildNumber" -o "$2" == "downgrade" ]; then
 	echo Installing latest version of cwh: ${networkBuildNumber}
 	rm -r ${installDirectory}
 	mkdir -p ${installDirectory}
 	cd ${installDirectory}
-	wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/cwh-0.${networkBuildNumber}.zip
+	wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/${download}
 	unzip cwh-0.${networkBuildNumber}.zip
 	chmod 777 *.sh
 	rm cwh-0.${networkBuildNumber}.zip
@@ -110,11 +117,11 @@ if [ ! -f "/etc/init.d/cwhservice" ]; then
 	update-rc.d cwhservice defaults
 fi
 
-if [ "$2" -eq "debug" ];then
+if [ "$2" == "debug" ]; then
 		pkill -9 -f "org.area515.resinprinter.server.Main"
-		echo Starting printer host server(debug)
+		echo "Starting printer host server($2)"
         java  -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
-elif [ "$2" -eq "testKit" ];then
+elif [ "$2" == "TestKit" ]; then
 		pkill -9 -f "org.area515.resinprinter.test.FullTestSuite"
 		echo Starting test kit
         java -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.junit.runner.JUnitCore org.area515.resinprinter.test.FullTestSuite &
