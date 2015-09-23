@@ -65,7 +65,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	public String getDetectionResponseRegex() {
 		return detectionResponsePattern.pattern();
 	}
-	public void setDetectionResponsePattern(String detectionResponsePattern) {
+	public void setDetectionResponseRegex(String detectionResponsePattern) {
 		this.detectionResponsePattern = Pattern.compile(detectionResponsePattern);
 	}
 
