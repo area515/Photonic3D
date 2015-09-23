@@ -10,6 +10,7 @@ import org.area515.resinprinter.serial.SerialCommunicationsPort;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class HexCodeBasedProjector implements ProjectorModel {
 	private static final int PROJECTOR_TIMEOUT = 5000;
@@ -28,7 +29,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	public HexCodeBasedProjector() {
 	}
 
-	@JsonGetter
+	@JsonProperty
 	public String getOnHex() {
 		return DatatypeConverter.printHexBinary(onHex);
 	}
@@ -36,7 +37,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 		this.onHex = DatatypeConverter.parseHexBinary(onHex);
 	}
 
-	@JsonGetter
+	@JsonProperty
 	public String getOffHex() {
 		return DatatypeConverter.printHexBinary(offHex);
 	}
@@ -44,8 +45,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 		this.offHex = DatatypeConverter.parseHexBinary(offHex);
 	}
 	
-	@JsonGetter
-	@Override
+	@JsonProperty
 	public String getName() {
 		return name;
 	}
@@ -53,7 +53,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 		this.name = name;
 	}
 	
-	@JsonGetter
+	@JsonProperty
 	public String getDetectionHex() {
 		return DatatypeConverter.printHexBinary(detectionHex);
 	}
@@ -61,7 +61,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 		this.detectionHex = DatatypeConverter.parseHexBinary(detectionHex);
 	}
 
-	@JsonGetter
+	@JsonProperty
 	public String getDetectionResponseRegex() {
 		return detectionResponsePattern.pattern();
 	}
