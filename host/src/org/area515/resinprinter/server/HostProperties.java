@@ -376,7 +376,7 @@ public class HostProperties {
 			return projectors;
 		} catch (IOException e) {
 			e.printStackTrace();
-			return null;
+			return new ArrayList<ProjectorModel>();
 		}
 	}
 	
