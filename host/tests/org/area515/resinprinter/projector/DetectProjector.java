@@ -19,10 +19,11 @@ public class DetectProjector {
 		System.out.println("Projector detection test");
 
 		ComPortSettings newComPortSettings = new ComPortSettings();
+		newComPortSettings.setSpeed(115200);
 		newComPortSettings.setDatabits(8);
 		newComPortSettings.setParity("NONE");
-		newComPortSettings.setStopbits("0");
-		
+		newComPortSettings.setStopbits("1");
+
 		ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
 		for (CommPortIdentifier currentIdentifier : identifiers) {
 			newComPortSettings.setPortName(currentIdentifier.getName());

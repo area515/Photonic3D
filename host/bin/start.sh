@@ -91,15 +91,15 @@ networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print $2}' 
 #Network build.number is always 1 greater than it the current version
 (( networkBuildNumber-- ))
 
-if [ "$networkBuildNumber" -gt "$currentBuildNumber" -o "$2" == "downgrade" ]; then
+if [ "$networkBuildNumber" -gt "$currentBuildNumber" -o "$2" == "force" ]; then
 	echo Installing latest version of cwh: ${networkBuildNumber}
 	rm -r ${installDirectory}
 	mkdir -p ${installDirectory}
 	cd ${installDirectory}
 	wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/${downloadPrefix}.${networkBuildNumber}.zip
-	unzip cwh-0.${networkBuildNumber}.zip
+	unzip ${downloadPrefix}.${networkBuildNumber}.zip
 	chmod 777 *.sh
-	rm cwh-0.${networkBuildNumber}.zip
+	rm ${downloadPrefix}.${networkBuildNumber}.zip
 else
 	rm networkbuildnumber
 	mv currentbuildnumber build.number

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-start.sh WesGilster downgrade
+./start.sh area515 force
