@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.text.MessageFormat;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -46,9 +47,9 @@ public class MediaService {
 	
 	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
 	@GET
-	@Path("startrecordvideo/{printerName}")
+	@Path("startrecordvideo/{printerName}/x/{x}/y/{y}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MachineResponse startVideo(@PathParam("printerName") String printerName) {
+	public MachineResponse startVideo(@PathParam("printerName") String printerName, @PathParam("x") int x, @PathParam("y") String y) {
 		processLock.lock();
 		try {
 			if (rawH264ProducerProcess != null) {
@@ -58,7 +59,7 @@ public class MediaService {
 			System.out.println("Attempting to start video");
 			final String streamingCommand = HostProperties.Instance().getStreamingCommand();
 			try {
-				rawH264ProducerProcess = Runtime.getRuntime().exec(streamingCommand);
+				rawH264ProducerProcess = Runtime.getRuntime().exec(MessageFormat.format(streamingCommand, x, y));
 				final BufferedInputStream inputStream = new BufferedInputStream(rawH264ProducerProcess.getInputStream());
 				final FileOutputStream outputStream = new FileOutputStream(rawh264StreamFile);
 
@@ -166,9 +167,9 @@ public class MediaService {
 	
 	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
 	@GET
-	@Path("takesnapshot/{printerName}")
+	@Path("takesnapshot/{printerName}/x/{x}/y/{y}")
     @Produces("image/png")
-	public StreamingOutput takePicture(@PathParam("printerName") String printerName) {
+	public StreamingOutput takePicture(@PathParam("printerName") String printerName, @PathParam("x") final int x, @PathParam("y") final int y) {
 	    return new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
@@ -176,7 +177,7 @@ public class MediaService {
 				BufferedInputStream inputStream = null;
 				processLock.lock();
 				try {
-					Process imagingProcess = Runtime.getRuntime().exec(streamingCommand);
+					Process imagingProcess = Runtime.getRuntime().exec(MessageFormat.format(streamingCommand, x, y));
 					IOUtils.copy(imagingProcess.getInputStream(), output);
 				} finally {
 					if (inputStream != null) {

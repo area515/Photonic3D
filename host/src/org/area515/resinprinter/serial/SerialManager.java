@@ -65,7 +65,7 @@ public class SerialManager {
 	private String readUntilFinished(SerialCommunicationsPort currentIdentifier) throws IOException {
 		StringBuilder builder = new StringBuilder();
 		long start = System.currentTimeMillis();
-		while (System.currentTimeMillis() - start > TIME_OUT) {
+		while (System.currentTimeMillis() - start < TIME_OUT) {
 			byte[] data = currentIdentifier.read();
 			if (data == null) {
 				try {

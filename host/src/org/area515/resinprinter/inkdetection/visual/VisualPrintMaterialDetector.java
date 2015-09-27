@@ -22,7 +22,7 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 	@Override
 	public Float getPercentageOfPrintMaterialRemaining(Printer printer) {
 		//Make sure to use takePicture() method to keep everything synchronized...
-		StreamingOutput output = MediaService.INSTANCE.takePicture(printer.getName());
+		StreamingOutput output = MediaService.INSTANCE.takePicture(printer.getName(), 100, 100);
 		PipedInputStream inputStream = new PipedInputStream();
 		PipedOutputStream pipedOutputStream;
 		try {

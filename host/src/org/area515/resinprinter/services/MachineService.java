@@ -8,8 +8,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.text.Format;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -80,25 +83,54 @@ public class MachineService {
 		 return identifierStrings;
 	 }
 	 
+	private String[] getLinesOfText(MessageFormat discoverCommand, String friendlyErrorMessage, String... arguments) throws RuntimeException {
+		Process listSSIDProcess;
+		try {
+			listSSIDProcess = Runtime.getRuntime().exec(discoverCommand.format(arguments));
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
+			IOUtils.copy(listSSIDProcess.getInputStream(), output);
+			return new String(output.toString()).split("\r?\n");
+		} catch (IOException e) {
+			if (friendlyErrorMessage == null) {
+				e.printStackTrace();
+				return new String[]{};
+			}
+			
+			throw new RuntimeException(friendlyErrorMessage, e);
+		}
+	}
+	
 	 @GET
 	 @Path("networkInterfaces/list")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public List<NetInterface> getNetworkInterfaces() {
 		MessageFormat discoverCommand = new MessageFormat(HostProperties.Instance().getDiscoverSSIDCommand());
+		List<NetInterface> ifaces = new ArrayList<NetInterface>();
+		
+		//If the format doesn't understand interfaces then we can skip some actions
+		if (discoverCommand.getFormatsByArgumentIndex().length == 0) {
+			String[] ssids = getLinesOfText(discoverCommand, null);
+			NetInterface netFace = new NetInterface();
+			netFace.setName("WiFi Profiles");
+			for (String ssid : ssids) {
+				if (ssid == null || ssid.trim().equals("")) {
+					continue;
+				}
+				WirelessNetwork wNet = new WirelessNetwork();
+				wNet.setSsid(ssid);
+				netFace.getWirelessNetworks().add(wNet);
+			}
+			
+			return Collections.singletonList(netFace);
+		}
 		
 		try {
-			List<NetInterface> ifaces = new ArrayList<NetInterface>();
 			Enumeration<NetworkInterface> networkEnum = NetworkInterface.getNetworkInterfaces();
 			while (networkEnum.hasMoreElements()) {
 				NetworkInterface iface = networkEnum.nextElement();
-				
-				Process listSSIDProcess = Runtime.getRuntime().exec(discoverCommand.format(iface.getName()));
-				ByteArrayOutputStream output = new ByteArrayOutputStream();
-				IOUtils.copy(listSSIDProcess.getInputStream(), output);
-				String[] ssids = new String(output.toString()).split("\n");
-				
 				NetInterface netFace = new NetInterface();
 				netFace.setName(iface.getName());
+				String[] ssids = getLinesOfText(discoverCommand, null, iface.getName());
 				for (String ssid : ssids) {
 					if (ssid == null || ssid.trim().equals("")) {
 						continue;
@@ -114,9 +146,6 @@ public class MachineService {
 		} catch (SocketException e) {
 			e.printStackTrace();
 			throw new RuntimeException("An error occurred looking for network interfaces.", e);
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException("An error occurred attempting to find available wifi networks.", e);
 		}
 	 }
 	 
@@ -124,20 +153,10 @@ public class MachineService {
 	 @Path("networkInterfaces/get/{networkInterfaceName}/wireless/{ssid}/connect/{password}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public void connectToWifiSSID(@PathParam("networkInterfaceName") String networkInterfaceName, @PathParam("ssid") String ssid, @PathParam("password") String password) {
-		 //http://unix.stackexchange.com/questions/92799/connecting-to-wifi-network-through-command-line
+		    //http://unix.stackexchange.com/questions/92799/connecting-to-wifi-network-through-command-line
 			MessageFormat connectCommand = new MessageFormat(HostProperties.Instance().getConnectToWifiSSIDCommand());
-		 
-			Process listSSIDProcess;
-			try {
-				listSSIDProcess = Runtime.getRuntime().exec(connectCommand.format(networkInterfaceName, ssid, password));
-				ByteArrayOutputStream output = new ByteArrayOutputStream();
-				IOUtils.copy(listSSIDProcess.getInputStream(), output);
-				System.out.println("Command Output:" + output.toString());
-			} catch (IOException e) {
-				e.printStackTrace();
-				throw new RuntimeException("An error occurred setting up network interfaces.", e);
-			}
-		 
+			String[] data = getLinesOfText(connectCommand, "An error occurred attempting to connect to wireless network.", networkInterfaceName, ssid, password);
+			System.out.println(Arrays.toString(data));
 	 }
 	 
 	 @GET
