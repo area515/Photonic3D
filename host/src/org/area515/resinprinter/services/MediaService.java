@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.text.MessageFormat;
@@ -22,6 +23,7 @@ import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.server.HostProperties;
 
 import com.coremedia.iso.boxes.Container;
+import com.google.common.io.ByteStreams;
 import com.googlecode.mp4parser.FileDataSourceImpl;
 import com.googlecode.mp4parser.authoring.Movie;
 import com.googlecode.mp4parser.authoring.builder.FragmentedMp4Builder;
@@ -173,12 +175,12 @@ public class MediaService {
 	    return new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
-				String streamingCommand = HostProperties.Instance().getStreamingCommand();
-				BufferedInputStream inputStream = null;
+				String streamingCommand = HostProperties.Instance().getImagingCommand();
+				InputStream inputStream = null;
 				processLock.lock();
 				try {
 					Process imagingProcess = Runtime.getRuntime().exec(MessageFormat.format(streamingCommand, x, y));
-					IOUtils.copy(imagingProcess.getInputStream(), output);
+					ByteStreams.copy(imagingProcess.getInputStream(), output);
 				} finally {
 					if (inputStream != null) {
 						try {
