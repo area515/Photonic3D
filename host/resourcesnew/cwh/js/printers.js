@@ -14,22 +14,15 @@
             });
 	    }
 		
-		this.editCurrentPrinter = function editCurrentPrinter(editTitle) {
-			controller.editTitle = editTitle;
-			controller.editPrinter = JSON.parse(JSON.stringify(controller.currentPrinter));
-			//TODO: use data-toggle="modal" don't need js...
-        	$('#editModal').modal();
-		}
-		
-		this.executeActionAndRefreshPrinters = function executeActionAndRefreshPrinters(command, message, service, postData) {
-			if (controller.currentPrinter == null) {
+		this.executeActionAndRefreshPrinters = function executeActionAndRefreshPrinters(command, message, service, targetPrinter, postTargetPrinter) {
+			if (targetPrinter == null) {
     			$scope.$emit("MachineResponse", {machineResponse: {command:command, message:message, successFunction:null, afterErrorFunction:null}});
 		        return;
 			}
 
-			var printerName = encodeURIComponent(controller.currentPrinter.configuration.name);
-			if (postData == null) {
-		        $http.get(service + printerName).success(
+			var printerName = encodeURIComponent(targetPrinter.configuration.name);
+			if (postTargetPrinter) {
+		        $http.post(service, targetPrinter).success(
 		        		function (data) {
 		        			$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrinters, afterErrorFunction:null});
 		        		}).error(
@@ -37,7 +30,7 @@
 	 	        			$scope.$emit("HTTPError", {status:status, statusText:statusText});
 		        		})
 		    } else {
-		        $http.post(service, postData).success(
+		        $http.get(service + printerName).success(
 		        		function (data) {
 		        			$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrinters, afterErrorFunction:null});
 		        		}).error(
@@ -66,23 +59,32 @@
         	$('#editModal').modal();
 		}
 		
+		this.editCurrentPrinter = function editCurrentPrinter(editTitle) {
+			controller.editTitle = editTitle;
+			controller.editPrinter = JSON.parse(JSON.stringify(controller.currentPrinter));
+			//TODO: use data-toggle="modal" don't need js...
+        	$('#editModal').modal();
+		}
+
 		this.savePrinter = function savePrinter() {
-			controller.editPrinter.MachineConfigurationName = controller.editPrinter.configuration.name;
-			controller.editPrinter.SlicingProfileName = controller.editPrinter.configuration.name;
-			this.executeActionAndRefreshPrinters("Save Printer", "No printer selected to save.", '/services/printers/save', controller.editPrinter);
+			//These must be set before we save the printer, but this is probably going to overwrite the names on existing printers. Maybe this should only be done on new printers...
+			controller.editPrinter.configuration.MachineConfigurationName = controller.editPrinter.configuration.name;
+			controller.editPrinter.configuration.SlicingProfileName = controller.editPrinter.configuration.name;
+			this.executeActionAndRefreshPrinters("Save Printer", "No printer selected to save.", '/services/printers/save', controller.editPrinter, true);
 	        controller.editPrinter = null;
 		}
 		
 		this.startCurrentPrinter = function startCurrentPrinter() {
-			this.executeActionAndRefreshPrinters("Start Printer", "No printer selected to start.", '/services/printers/start/', null);
+			this.executeActionAndRefreshPrinters("Start Printer", "No printer selected to start.", '/services/printers/start/', controller.currentPrinter, false);
 		}
 		
 		this.stopCurrentPrinter = function stopCurrentPrinter() {
-			this.executeActionAndRefreshPrinters("Stop Printer", "No printer selected to Stop.", '/services/printers/stop/', null);
+			this.executeActionAndRefreshPrinters("Stop Printer", "No printer selected to Stop.", '/services/printers/stop/', controller.currentPrinter, false);
 		}
 		
 		this.deleteCurrentPrinter = function deleteCurrentPrinter() {
-			this.executeActionAndRefreshPrinters("Delete Printer", "No printer selected to Delete.", '/services/printers/delete/', null);
+			this.executeActionAndRefreshPrinters("Delete Printer", "No printer selected to Delete.", '/services/printers/delete/', controller.currentPrinter, false);
+	        controller.currentPrinter = null;
 		}
 		
 		this.changeCurrentPrinter = function changeCurrentPrinter(newPrinter) {
