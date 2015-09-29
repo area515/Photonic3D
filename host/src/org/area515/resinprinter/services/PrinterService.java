@@ -178,7 +178,7 @@ public class PrinterService {
 		}
 	 }
 	 
-	 @GET
+	 @POST
 	 @Path("createTemplatePrinter")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public Printer createTemplatePrinter() {
