@@ -1,7 +1,6 @@
 package org.area515.resinprinter.serial;
 
 import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
-import org.area515.resinprinter.printer.Printer;
 
 public class ConsoleCommPort implements SerialCommunicationsPort {
 	public static final String CONSOLE_COMM_PORT = "Console Testing";
@@ -29,13 +28,13 @@ public class ConsoleCommPort implements SerialCommunicationsPort {
 	}
 
 	@Override
-	public void write(String gcode) {
-		System.out.println("Printer received:" + gcode);
+	public void write(byte[] gcode) {
+		System.out.println("Printer received:" + new String(gcode));
 	}
 
 	@Override
-	public String readUntilOkOrStoppedPrinting(Printer printer) {
-		return "ok";
+	public byte[] read() {
+		return "ok\n".getBytes();
 	}
 
 	public String toString() {

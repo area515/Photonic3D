@@ -1,0 +1,189 @@
+<div class="row">
+	<div class="col-sm-4 bootcards-list" id="list">
+		<div class="panel panel-default">
+			<div class="panel-heading clearfix">
+				<span class="pull-left fa-stack fa-lg">
+					<i class="fa fa-stack-1x fa-2x fa-print"></i>
+					<i class="fa fa-stack-2x fa-2x fa-play text-danger" ng-show="printerControlsController.currentPrinter.printInProgress"></i>
+					<i class="fa fa-stack-3x fa-2x fa-ban text-danger" ng-hide="printerControlsController.currentPrinter.started"></i>
+				</span>
+				<h4 class="pull-left">Printer Controls: {{printerControlsController.currentPrinter.configuration.name}} </h4>
+			</div>
+			<div class="list-group">
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-arrows-h pull-left"></i>
+					<h4>X Axis</h4>
+					<span class="btn-group btn-xs" >
+						<span class="btn btn-xs btn-danger fa fa-angle-double-left">-50</span> 
+						<span class="btn btn-xs btn-danger fa fa-angle-left">-10</span> 
+						<span class="btn btn-xs btn-danger fa fa-angle-left">1</span>
+						<span class="btn btn-xs btn-danger fa fa-angle-left">.025</span>
+						<span class="btn btn-xs btn-primary fa fa-home"></span> 
+						<span class="btn btn-xs btn-success fa fa-angle-right">.025</span>
+						<span class="btn btn-xs btn-success fa fa-angle-right">1</span>
+						<span class="btn btn-xs btn-success fa fa-angle-right">10</span>
+						<span class="btn btn-xs btn-success fa fa-angle-double-right">50</span>
+					</span>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-expand pull-left"></i>
+					<h4>Y Axis</h4>
+					<span class="btn-group btn-xs clearfix" >
+						<span class="btn btn-xs btn-danger fa fa-angle-double-down">-50</span> 
+						<span class="btn btn-xs btn-danger fa fa-angle-down">-10</span> 
+						<span class="btn btn-xs btn-danger fa fa-angle-down">1</span>
+						<span class="btn btn-xs btn-danger fa fa-angle-down">.025</span>
+						<span class="btn btn-xs btn-primary fa fa-home"></span> 
+						<span class="btn btn-xs btn-success fa fa-angle-up">.025</span>
+						<span class="btn btn-xs btn-success fa fa-angle-up">1</span>
+						<span class="btn btn-xs btn-success fa fa-angle-up">10</span>
+						<span class="btn btn-xs btn-success fa fa-angle-double-up">50</span>
+					</span>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-arrows-v pull-left"></i>
+					<h4>Z Axis</h4>
+					<span class="btn-group btn-xs clearfix" >
+						<span class="btn btn-xs btn-danger fa fa-angle-double-down">-50</span> 
+						<span class="btn btn-xs btn-danger fa fa-angle-down">-10</span> 
+						<span class="btn btn-xs btn-danger fa fa-angle-down">1</span>
+						<span class="btn btn-xs btn-danger fa fa-angle-down">.025</span>
+						<span class="btn btn-xs btn-primary fa fa-home"></span> 
+						<span class="btn btn-xs btn-success fa fa-angle-up">.025</span>
+						<span class="btn btn-xs btn-success fa fa-angle-up">1</span>
+						<span class="btn btn-xs btn-success fa fa-angle-up">10</span>
+						<span class="btn btn-xs btn-success fa fa-angle-double-up">50</span>
+					</span>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-bolt pull-left"></i>
+					<h4>Motors</h4>
+					<span class="btn-group" >
+						<a class="btn btn-danger btn-sm" ng-click="">
+							<b class="fa fa-toggle-off"></b> 
+							<b class="cwh-text-indent">Disable</b>
+						</a>
+						<a class="btn btn-success btn-sm" ng-click="">
+							<b class="fa fa-toggle-on"></b>
+							<b class="cwh-text-indent">Enable</b>
+						</a>
+					</span>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-code pull-left"></i>
+					<h4>Execute Gcode</h4>
+					<div class="input-group">
+						<span class="input-group-btn">
+							<button class="btn btn-primary" type="button">Go</button>
+						</span>
+						<input type="text" class="form-control" placeholder="gcode">
+					</div>
+					<textarea class="form-control" rows="6"></textarea>
+				</div>
+			</div>
+			
+			<div class="panel-footer">
+				<span ng-include="'cardFooter.html'"></span>
+			</div>
+		</div>
+	</div>
+	<div class="col-sm-4 bootcards-list" id="list">
+		<div class="panel panel-default">
+			<div class="panel-heading clearfix">
+				<span class="pull-left fa-stack fa-lg">
+					<i class="fa fa-stack-1x fa-2x fa-print"></i>
+					<i class="fa fa-stack-2x fa-2x fa-play text-danger" ng-show="printerControlsController.currentPrinter.printInProgress"></i>
+					<i class="fa fa-stack-3x fa-2x fa-ban text-danger" ng-hide="printerControlsController.currentPrinter.started"></i>
+				</span>
+				<h4 class="pull-left">DLP Controls: {{printerControlsController.currentPrinter.configuration.name}} </h4>
+			</div>
+			<div class="list-group">
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-tv pull-left"></i>
+					<h4>Projector</h4>
+					<span class="btn-group" >
+						<a class="btn btn-danger btn-sm" ng-click="">
+							<b class="fa fa-toggle-off"></b> 
+							<b class="cwh-text-indent">Off</b>
+						</a>
+						<a class="btn btn-success btn-sm" ng-click="">
+							<b class="fa fa-toggle-on"></b> 
+							<b class="cwh-text-indent">On</b>
+						</a>
+					</span>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-adjust pull-left"></i>
+					<h4>Shutter</h4>
+					<span class="btn-group" >
+						<a class="btn btn-danger btn-sm" ng-click="">
+							<b class="fa fa-toggle-off"></b>
+							<b class="cwh-text-indent">Closed</b>
+						</a>
+						<a class="btn btn-success btn-sm" ng-click="">
+							<b class="fa fa-toggle-on"></b>
+							<b class="cwh-text-indent">Open</b>
+						</a>
+					</span>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-step-backward fa-rotate-90 pull-left"></i>
+					<h4>Lift Speed (mm/m)</h4>
+					<div class="input-group">
+						<span class="input-group-btn">
+							<button class="btn btn-primary" type="button">Go</button>
+						</span>
+						<input type="text" class="form-control" placeholder="mm/m">
+						<span class="input-group-addon input-large btn btn-success">+</span>
+						<span class="input-group-addon input-large btn btn-danger">-</span>
+					</div>				
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-sort-amount-asc fa-rotate-180 pull-left"></i>
+					<h4>Lift Distance (mm)</h4>
+					<div class="input-group">
+						<span class="input-group-btn">
+							<button class="btn btn-primary" type="button">Go</button>
+						</span>
+						<input type="text" class="form-control" placeholder="mm">
+						<span class="input-group-addon input-large btn btn-success">+</span>
+						<span class="input-group-addon input-large btn btn-danger">-</span>
+					</div>				
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-fire pull-left"></i>
+					<h4>Exposure Time (mm)</h4>
+					<div class="input-group">
+						<span class="input-group-btn">
+							<button class="btn btn-primary" type="button">Go</button>
+						</span>
+						<input type="text" class="form-control" placeholder="mm">
+						<span class="input-group-addon input-large btn btn-success">+</span>
+						<span class="input-group-addon input-large btn btn-danger">-</span>
+					</div>				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-th pull-left"></i>
+					<h4>Calibration Screen (pixels)</h4>
+					<div class="input-group">
+						<span class="input-group-btn">
+							<button class="btn btn-primary" type="button">Go</button>
+						</span>
+						<input type="text" class="form-control" placeholder="pixels">
+						<span class="input-group-addon input-large btn btn-success">+</span>
+						<span class="input-group-addon input-large btn btn-danger">-</span>
+					</div>
+				</div>
+				<div class="list-group-item">
+					<a class="btn btn-primary btn-sm" ng-click="">
+						<b class="fa fa-square-o"></b>
+						<b class="cwh-text-indent">Show Blank Screen</b>
+					</a>
+				</div>
+			</div>
+	
+			<div class="panel-footer">
+				<span ng-include="'cardFooter.html'"></span>
+			</div>
+		</div>
+	</div>
+</div>

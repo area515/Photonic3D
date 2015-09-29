@@ -4,8 +4,10 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.text.MessageFormat;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -21,6 +23,7 @@ import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.server.HostProperties;
 
 import com.coremedia.iso.boxes.Container;
+import com.google.common.io.ByteStreams;
 import com.googlecode.mp4parser.FileDataSourceImpl;
 import com.googlecode.mp4parser.authoring.Movie;
 import com.googlecode.mp4parser.authoring.builder.FragmentedMp4Builder;
@@ -46,9 +49,9 @@ public class MediaService {
 	
 	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
 	@GET
-	@Path("startrecordvideo/{printerName}")
+	@Path("startrecordvideo/{printerName}/x/{x}/y/{y}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MachineResponse startVideo(@PathParam("printerName") String printerName) {
+	public MachineResponse startVideo(@PathParam("printerName") String printerName, @PathParam("x") int x, @PathParam("y") String y) {
 		processLock.lock();
 		try {
 			if (rawH264ProducerProcess != null) {
@@ -58,7 +61,7 @@ public class MediaService {
 			System.out.println("Attempting to start video");
 			final String streamingCommand = HostProperties.Instance().getStreamingCommand();
 			try {
-				rawH264ProducerProcess = Runtime.getRuntime().exec(streamingCommand);
+				rawH264ProducerProcess = Runtime.getRuntime().exec(MessageFormat.format(streamingCommand, x, y));
 				final BufferedInputStream inputStream = new BufferedInputStream(rawH264ProducerProcess.getInputStream());
 				final FileOutputStream outputStream = new FileOutputStream(rawh264StreamFile);
 
@@ -166,18 +169,18 @@ public class MediaService {
 	
 	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
 	@GET
-	@Path("takesnapshot/{printerName}")
+	@Path("takesnapshot/{printerName}/x/{x}/y/{y}")
     @Produces("image/png")
-	public StreamingOutput takePicture(@PathParam("printerName") String printerName) {
+	public StreamingOutput takePicture(@PathParam("printerName") String printerName, @PathParam("x") final int x, @PathParam("y") final int y) {
 	    return new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
-				String streamingCommand = HostProperties.Instance().getStreamingCommand();
-				BufferedInputStream inputStream = null;
+				String streamingCommand = HostProperties.Instance().getImagingCommand();
+				InputStream inputStream = null;
 				processLock.lock();
 				try {
-					Process imagingProcess = Runtime.getRuntime().exec(streamingCommand);
-					IOUtils.copy(imagingProcess.getInputStream(), output);
+					Process imagingProcess = Runtime.getRuntime().exec(MessageFormat.format(streamingCommand, x, y));
+					ByteStreams.copy(imagingProcess.getInputStream(), output);
 				} finally {
 					if (inputStream != null) {
 						try {

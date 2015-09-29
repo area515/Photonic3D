@@ -6,7 +6,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import org.apache.http.util.ExceptionUtils;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
@@ -17,14 +16,18 @@ public class PrintJob {
 	private volatile long currentSliceTime = 0;
 	private volatile long averageSliceTime = 0;
 	private volatile long startTime = 0;
-	private volatile int exposureTime = 0;
-	private volatile double zLiftSpeed = 0;
-	private volatile double zLiftDistance = 0;
 	private volatile double totalCost = 0;
 	private volatile double currentSliceCost = 0;
-	private volatile boolean exposureTimeOverriden = false;
 	private volatile PrintFileProcessor<?> printFileProcessor;
 	
+	//Overridables
+	private volatile boolean overrideExposureTime;
+	private volatile int exposureTime = 0;
+	private volatile boolean overrideZLiftSpeed;
+	private volatile double zLiftSpeed;
+	private volatile boolean overrideZLiftDistance;
+	private volatile double zLiftDistance;
+
 	private UUID id = UUID.randomUUID();
 	private File jobFile;
 	private Printer printer;
@@ -78,26 +81,7 @@ public class PrintJob {
 		return printer;
 	}
 	
-	public int getExposureTime() {
-		return exposureTime;
-	}
-	public void setExposureTime(int exposureTime) {
-		this.exposureTime = exposureTime;
-	}
 	
-	public double getZLiftSpeed() {
-		return zLiftSpeed;
-	}
-	public void setZLiftSpeed(double zLiftSpeed) {
-		this.zLiftSpeed = zLiftSpeed;
-	}
-	
-	public double getZLiftDistance() {
-		return zLiftDistance;
-	}
-	public void setZLiftDistance(double zLiftDistance) {
-		this.zLiftDistance = zLiftDistance;
-	}
 	
 	public JobStatus getJobStatus() {
 		//If the futureJobStatus is done, we will certainly have the last status that will never be changed.
@@ -122,8 +106,8 @@ public class PrintJob {
 	}
 	
 	public void setFutureJobStatus(Future<JobStatus> futureJobStatus) {
-		futureJobStatusAssigned.countDown();
 		this.futureJobStatus = futureJobStatus;
+		futureJobStatusAssigned.countDown();
 	}
 	
 	public String getErrorDescription() {
@@ -164,40 +148,79 @@ public class PrintJob {
 	public void setPrintFileProcessor(PrintFileProcessor<?> printFileProcessor) {
 		this.printFileProcessor = printFileProcessor;
 	}
+	
 
+	public void stopOverridingZLiftDistance() {
+		overrideZLiftDistance = false;
+	}
 	public void overrideZLiftDistance(double zLiftDistance) throws InappropriateDeviceException {
 		if (printer == null) {
 			throw new InappropriateDeviceException("This print job:" + jobFile.getName() + " doesn't have a printer assigned.");
 		}
 		
 		try {
-			printer.getGCodeControl().executeGCodeWithTemplating(this, printer.getConfiguration().getSlicingProfile().getZLiftDistanceGCode());
+			overrideZLiftDistance = true;
 			this.zLiftDistance = zLiftDistance;
+			printer.getGCodeControl().executeGCodeWithTemplating(this, printer.getConfiguration().getSlicingProfile().getZLiftDistanceGCode());
 		} catch (InappropriateDeviceException e) {
 			throw e;
 		}
 	}
+	public boolean isZLiftDistanceOverriden() {
+		return overrideZLiftDistance;
+	}
+	public double getZLiftDistance() {
+		return zLiftDistance;
+	}
+	public void setZLiftDistance(double zLiftDistance) {
+		this.zLiftDistance = zLiftDistance;
+	}
+
 	
+	public void stopOverridingZLiftSpeed() {
+		overrideZLiftSpeed = false;
+	}
 	public void overrideZLiftSpeed(double zLiftSpeed) throws InappropriateDeviceException {
 		if (printer == null) {
 			throw new InappropriateDeviceException("This print job:" + jobFile.getName() + " doesn't have a printer assigned.");
 		}
 		
 		try {
-			printer.getGCodeControl().executeGCodeWithTemplating(this, printer.getConfiguration().getSlicingProfile().getZLiftDistanceGCode());
+			this.overrideZLiftSpeed = true;
 			this.zLiftSpeed = zLiftSpeed;
+			printer.getGCodeControl().executeGCodeWithTemplating(this, printer.getConfiguration().getSlicingProfile().getZLiftSpeedGCode());
 		} catch (InappropriateDeviceException e) {
 			throw e;
 		}
 	}
+	public boolean isZLiftSpeedOverriden() {
+		return overrideZLiftSpeed;
+	}
+	public double getZLiftSpeed() {
+		return zLiftSpeed;
+	}
+	public void setZLiftSpeed(double zLiftSpeed) {
+		this.zLiftSpeed = zLiftSpeed;
+	}
+
 	
+	public void stopOverridingExposureTime() {
+		this.overrideExposureTime = false;
+	}
 	public void overrideExposureTime(int exposureTime) {
 		this.exposureTime = exposureTime;
-		exposureTimeOverriden = true;
+		this.overrideExposureTime = true;
 	}
 	public boolean isExposureTimeOverriden() {
-		return exposureTimeOverriden;
+		return overrideExposureTime;
 	}
+	public int getExposureTime() {
+		return exposureTime;
+	}
+	public void setExposureTime(int exposureTime) {
+		this.exposureTime = exposureTime;
+	}
+
 	
 	public long getAverageSliceTime() {
 		return averageSliceTime;

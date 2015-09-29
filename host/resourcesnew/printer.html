@@ -1,27 +1,17 @@
-<div class="panel panel-default">
+<div class="panel panel-default" ng-show="printersController.currentPrinter">
 	<div class="panel-heading clearfix">
 		<h3 class="panel-title pull-left">Basic Printer Setup</h3>
 	    <div class="btn-group pull-right">
-			<a class="btn btn-success" href="/printers/add">
+			<a class="btn btn-success" ng-hide="printersController.currentPrinter.started" ng-click="printersController.startCurrentPrinter()">
 				<i class="fa fa-play"></i> 
 				<span>Start</span>
 			</a>
-	    </div>
-	    <div class="btn-group pull-right">
-			<a class="btn btn-danger" href="/printers/add">
+			<a class="btn btn-danger" ng-show="printersController.currentPrinter.started" ng-click="printersController.stopCurrentPrinter()">
 				<i class="fa fa-stop"></i> 
 				<span>Stop</span>
 			</a>
-	    </div>
-		<div class="btn-group pull-right">
-			<a class="btn btn-primary" href="/contacts/VBMJHwcLX3Vx/edit">
-				<i class="fa fa-pencil"></i>
-				<span>Edit</span>
-			</a>
-		</div>	
-	    <div class="btn-group pull-right">
-			<a class="btn btn-primary" href="/printers/add">
-				<i class="fa fa-hand-o-up"></i> 
+			<a class="btn btn-primary" ng-show="printersController.currentPrinter.started" href="./printerControlsPage?printerName={{printersController.currentPrinter.configuration.name}}" >
+				<i class="fa fa-wrench"></i> 
 				<span>Controls</span>
 			</a>
 	    </div>
@@ -33,7 +23,7 @@
 			  <i class="fa fa-stack-2x fa-2x fa-refresh fa-spin text-danger" ng-show="printersController.currentPrinter.configuration.AutoStart"></i>
 			</span>
 			<label>Name</label>
-			<h4 class="list-group-item-heading">{{printersController.currentPrinter.name}}</h4>
+			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.name}}</h4>
 		</div>
 		<div class="list-group-item">
 			<label>Serial Port</label>

@@ -25,6 +25,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.server.HostProperties;
 
 public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
@@ -77,6 +78,11 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 			Pattern sliceCountPattern = Pattern.compile("\\s*;\\s*Number\\s*of\\s*Slices\\s*=\\s*(\\d+)\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern gCodePattern = Pattern.compile("\\s*([^;]+)\\s*;?.*", Pattern.CASE_INSENSITIVE);
 			
+			//We can't set these values, that means they aren't set to helpful values when this job starts
+			//data.printJob.setExposureTime(data.inkConfiguration.getExposureTime());
+			//data.printJob.setZLiftDistance(data.slicingProfile.getLiftFeedRate());
+			//data.printJob.setZLiftSpeed(data.slicingProfile.getLiftDistance());
+
 			while ((currentLine = stream.readLine()) != null && printer.isPrintInProgress()) {
 					Matcher matcher = slicePattern.matcher(currentLine);
 					if (matcher.matches()) {
@@ -92,7 +98,8 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 							printer.waitForPauseIfRequired();
 						} else {
 							if (startOfLastImageDisplay > -1) {
-								printJob.setCurrentSliceTime(System.currentTimeMillis() - startOfLastImageDisplay);
+					//printJob.setCurrentSliceTime(System.currentTimeMillis() - startOfLastImageDisplay);
+								printJob.addNewSlice(System.currentTimeMillis() - startOfLastImageDisplay, 0);
 							}
 							startOfLastImageDisplay = System.currentTimeMillis();
 							
@@ -101,7 +108,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 								oldImage = currentlyDisplayedImage.get(printJob);
 							}
 							int incoming = Integer.parseInt(matcher.group(1));
-							printJob.setCurrentSlice(incoming);
+					//printJob.setCurrentSlice(incoming);
 							String imageNumber = String.format("%0" + padLength + "d", incoming);
 							String imageFilename = FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png";
 							File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
@@ -147,17 +154,25 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 					
 					matcher = liftSpeedPattern.matcher(currentLine);
 					if (matcher.matches()) {
-						double liftSpeed = Double.parseDouble(matcher.group(1));
-						printJob.setZLiftSpeed(liftSpeed);
-						System.out.println("Found:lift speed of:" + String.format("%1.3f", liftSpeed));
+						double foundLiftSpeed = Double.parseDouble(matcher.group(1));
+						if (printJob.isZLiftSpeedOverriden()) {
+							System.out.println("Override: LiftDistance:" + String.format("%1.3f", foundLiftSpeed) + " overrided to:" + String.format("%1.3f", printJob.getZLiftSpeed()));
+						} else {
+							printJob.setZLiftSpeed(foundLiftSpeed);
+							System.out.println("Found: LiftSpeed of:" + String.format("%1.3f", foundLiftSpeed));
+						}
 						continue;
 					}
 					
 					matcher = liftDistancePattern.matcher(currentLine);
 					if (matcher.matches()) {
-						double liftDistance = Double.parseDouble(matcher.group(1));
-						printJob.setZLiftDistance(liftDistance);
-						System.out.println("Found:lift distance of:" + String.format("%1.3f", liftDistance));
+						double foundLiftDistance = Double.parseDouble(matcher.group(1));
+						if (printJob.isZLiftDistanceOverriden()) {
+							System.out.println("Override: LiftDistance:" + String.format("%1.3f", foundLiftDistance) + " overrided to:" + String.format("%1.3f", printJob.getZLiftDistance()));
+						} else {
+							printJob.setZLiftDistance(foundLiftDistance);
+							System.out.println("Found: LiftDistance of:" + String.format("%1.3f", foundLiftDistance));
+						}
 						continue;
 					}
 					
@@ -205,6 +220,12 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 
 	@Override
 	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException {
+		List<PrintJob> printJobs = PrintJobManager.Instance().getJobsByFilename(processingFile.getName());
+		
+		if (printJobs.size() > 1) {
+			throw new JobManagerException("It currently isn't possible to print more than 1 " + getFriendlyName() + " file at once.");
+		}
+		
 		File extractDirectory = buildExtractionDirectory(processingFile.getName());
 		
 		if (extractDirectory.exists()) {
@@ -306,5 +327,10 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 	@Override
 	public Object getGeometry(PrintJob printJob) throws JobManagerException {
 		throw new JobManagerException("You can't get geometry from this type of file");
+	}
+
+	@Override
+	public String getFriendlyName() {
+		return "Creation Workshop Scene";
 	}
 }

@@ -8,6 +8,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @XmlRootElement(name="MachineConfig")
 public class MachineConfig {
 	public static final String NOT_CAPABLE = "Your printer configuration isn't capable of this feature";
@@ -155,6 +157,14 @@ public class MachineConfig {
 		public void setDLP_Y_Res(double dLP_Y_Res) {
 			this.dLP_Y_Res = dLP_Y_Res;
 		}
+		
+		@XmlTransient
+		public ComPortSettings getComPortSettings() {
+			return comPortSettings;
+		}
+		public void setComPortSettings(ComPortSettings comPortSettings) {
+			this.comPortSettings = comPortSettings;
+		}
 	}
 	
 	@XmlAttribute(name="FileVersion")
@@ -251,6 +261,7 @@ public class MachineConfig {
 		this.monitorDriverConfig = monitorDriverConfig;
 	}
 	
+	@JsonIgnore
 	public Integer getDisplayIndex() {
 		if (monitorDriverConfig == null || monitorDriverConfig.monitorID == null) {
 			return null;

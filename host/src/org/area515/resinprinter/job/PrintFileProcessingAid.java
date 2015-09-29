@@ -1,4 +1,4 @@
-package org.area515.resinprinter.minercube;
+package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
 import java.awt.Paint;
@@ -11,10 +11,6 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.job.InkDetector;
-import org.area515.resinprinter.job.JobStatus;
-import org.area515.resinprinter.job.PrintFileProcessor;
-import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
@@ -87,6 +83,10 @@ public class PrintFileProcessingAid {
 			outOfInk = Main.GLOBAL_EXECUTOR.submit(inkDetector);
 		}
 		
+		//Set the initial values for all variables.
+		data.printJob.setExposureTime(data.inkConfiguration.getExposureTime());
+		data.printJob.setZLiftDistance(data.slicingProfile.getLiftFeedRate());
+		data.printJob.setZLiftSpeed(data.slicingProfile.getLiftDistance());
 		return data;
 	}
 	
@@ -119,9 +119,9 @@ public class PrintFileProcessingAid {
 		if (inkDetector != null) {
 			outOfInk = Main.GLOBAL_EXECUTOR.submit(inkDetector);
 		}
-
+		
 		//Determine the dynamic amount of time we should expose our resin
-		if (data.slicingProfile.getExposureTimeCalculator() != null && data.slicingProfile.getExposureTimeCalculator().trim().length() > 0) {
+		if (!data.printJob.isExposureTimeOverriden() && data.slicingProfile.getExposureTimeCalculator() != null && data.slicingProfile.getExposureTimeCalculator().trim().length() > 0) {
 			data.printJob.setExposureTime(((Number)TemplateEngine.runScript(data.printJob, data.scriptEngine, data.slicingProfile.getExposureTimeCalculator())).intValue());
 		}
 		
@@ -147,10 +147,10 @@ public class PrintFileProcessingAid {
 			return data.printer.getStatus();
 		}
 		
-		if (data.slicingProfile.getzLiftDistanceCalculator() != null && data.slicingProfile.getzLiftDistanceCalculator().trim().length() > 0) {
+		if (!data.printJob.isZLiftDistanceOverriden() && data.slicingProfile.getzLiftDistanceCalculator() != null && data.slicingProfile.getzLiftDistanceCalculator().trim().length() > 0) {
 			data.printJob.setZLiftDistance(((Number)TemplateEngine.runScript(data.printJob, data.scriptEngine, data.slicingProfile.getzLiftDistanceCalculator())).doubleValue());
 		}
-		if (data.slicingProfile.getzLiftSpeedCalculator() != null && data.slicingProfile.getzLiftSpeedCalculator().trim().length() > 0) {
+		if (!data.printJob.isZLiftSpeedOverriden() && data.slicingProfile.getzLiftSpeedCalculator() != null && data.slicingProfile.getzLiftSpeedCalculator().trim().length() > 0) {
 			data.printJob.setZLiftSpeed(((Number)TemplateEngine.runScript(data.printJob, data.scriptEngine, data.slicingProfile.getzLiftSpeedCalculator())).doubleValue());
 		}
 		if (data.slicingProfile.getZLiftDistanceGCode() != null && data.slicingProfile.getZLiftDistanceGCode().trim().length() > 0) {
