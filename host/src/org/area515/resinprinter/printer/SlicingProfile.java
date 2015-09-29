@@ -10,6 +10,8 @@ import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
 import org.area515.resinprinter.job.InkDetector;
 import org.area515.util.TemplateEngine;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @XmlRootElement(name="SliceBuildConfig")
 public class SlicingProfile {
 	public static class InkConfig {
@@ -308,6 +310,7 @@ public class SlicingProfile {
 		this.selectedInk = selectedInk;
 	}
 	
+	@JsonIgnore
 	public InkConfig getSelectedInkConfig() {
 		for (InkConfig currentInkConfig : inkConfig) {
 			if (currentInkConfig.getName().equals(selectedInk)) {

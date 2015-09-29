@@ -4,14 +4,16 @@
 						<div class="panel-heading clearfix">
 							<h3 class="panel-title pull-left">All Printers</h3>
 							<div class="row">
-							   <div class="col-xs-4 pull-right">
-									<a class="btn btn-danger btn-block" ng-click="printersController.deleteCurrentPrinter()" ng-show="printersController.currentPrinter != null">
+								<div class="btn-group pull-right" >
+									<a class="btn btn-primary" ng-show="printersController.currentPrinter != null" ng-click="printersController.editCurrentPrinter('Edit Basic Printer')" >
+										<i class="fa fa-pencil"></i>
+										<span>Edit</span>
+									</a>
+									<a class="btn btn-danger" ng-show="printersController.currentPrinter != null" ng-click="printersController.deleteCurrentPrinter()">
 										<i class="fa fa-trash-o"></i> 
 										<span>Remove</span>
 									</a>
-							    </div>
-							    <div class="col-xs-3 pull-right">
-									<a class="btn btn-success btn-block" ng-click="printersController.editCurrentPrinter('Create Basic Printer')">
+									<a class="btn btn-success" ng-click="printersController.createNewPrinter('Create Basic Printer')">
 										<i class="fa fa-plus"></i> 
 										<span>Create</span>
 									</a>
@@ -19,16 +21,17 @@
 						</div>
 					</div>
 					<div class="list-group">
-							<a ng-class="{active:printer.name == printersController.currentPrinter.name}" ng-repeat="printer in printers"
+							<a ng-class="{active:printer.configuration.name == printersController.currentPrinter.configuration.name}" ng-repeat="printer in printers"
 								class="list-group-item"
 					 			ng-click="printersController.changeCurrentPrinter(printer)">
 					 			<span class="pull-left fa-stack fa-lg">
-								  <i class="fa fa-stack-1x fa-2x fa-print"></i>
-								  <i class="fa fa-stack-3x fa-2x fa-ban text-danger" ng-hide="printer.started"></i>
+									<i class="fa fa-stack-1x fa-2x fa-print"></i>
+			  						<i class="fa fa-stack-2x fa-2x fa-play text-danger" ng-show="printer.printInProgress"></i>
+									<i class="fa fa-stack-3x fa-2x fa-ban text-danger" ng-hide="printer.started"></i>
 								</span>
 								<!-- <img src="/images/Sofia Acey.jpg" class="img-rounded pull-left"/>-->
-								<h4 class="list-group-item-heading">{{printer.name}}</h4>
-								<p class="list-group-item-text">{{printer.status == null?"Port:" + printer.configuration.machineConfig.MotorsDriverConfig.ComPortSettings.PortName + " Display:" + printer.configuration.machineConfig.MonitorDriverConfig.OSMonitorID:"Status:" + printer.status}}</p>
+								<h4 class="list-group-item-heading">{{printer.configuration.name}}</h4>
+								<p class="list-group-item-text">{{printer.printInProgress?"Status:" + printer.status:"Port:" + printer.configuration.machineConfig.MotorsDriverConfig.ComPortSettings.PortName + " Display:" + printer.configuration.machineConfig.MonitorDriverConfig.OSMonitorID}}</p>
 							</a>
 					</div>
 					<div class="panel-footer">
@@ -37,7 +40,7 @@
 				</div>
 			</div>
 		
-			<div class="col-sm-7 bootcards-cards hidden-xs" id="listDetails">
+			<div class="col-sm-7 bootcards-cards">
 
 				<!-- contact details -->
 				

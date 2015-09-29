@@ -18,16 +18,14 @@ import org.area515.resinprinter.printer.Printer;
 
 public abstract class RXTXCommPort implements SerialCommunicationsPort {
 	private String name = null;
-	private InputStream inputStream;
+	protected InputStream inputStream;
 	private OutputStream outputStream;
 	private SerialPort serialPort;
-	protected long waitForGCodeTimeout = 0;
 
 	@Override
 	public void open(String printerName, int timeout, ComPortSettings settings) throws AlreadyAssignedException, InappropriateDeviceException {
 		String portName = settings.getPortName();
 		try {
-			this.waitForGCodeTimeout = SUGGESTED_TIMEOUT_FOR_ONE_GCODE;//Maximum time for a single gcode to execute.
 			CommPortIdentifier identifier = CommPortIdentifier.getPortIdentifier(portName);
 			// open serial port, and use class name for the appName.
 			serialPort = (SerialPort)identifier.open(printerName, timeout);
@@ -94,39 +92,8 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 	}
 	
 	@Override
-	public void write(String gcode) throws IOException {
-		outputStream.write(gcode.getBytes());
-	}
-
-	protected String readLine(Printer printer) throws IOException {
-		long startTime = System.currentTimeMillis();
-		StringBuilder builder = new StringBuilder();
-		
-		int value = -1;
-		while (true) {
-			value = inputStream.read();
-			if (value > -1) {
-				builder.append((char)value);
-			}
-			if (value == '\n') {//If we have read a line, then we've done our job
-				break;
-			}
-			if (value > -1) {//If we get a character, then keep reading
-				continue;
-			}
-			if (System.currentTimeMillis() - startTime > waitForGCodeTimeout) { //If we've timed out, get out.First available serial port
-				break;
-			}
-			if (printer != null && !printer.isPrintInProgress()) {//Stop if they have asked us to quit printing
-				break;
-			}
-		}
-		
-		if (builder.length() == 0) {
-			return null;
-		}
-		
-		return builder.toString();
+	public void write(byte[] gcode) throws IOException {
+		outputStream.write(gcode);
 	}
 
 	public String toString() {

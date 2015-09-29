@@ -12,7 +12,7 @@ public class PrinterConfiguration {
 	@XmlElement(name="SlicingProfileName")
 	private String slicingProfileName;
 	@XmlElement(name="AutoStart")
-	private boolean autostart;
+	private boolean autoStart;
 	
 	private MachineConfig machineConfig;
 	private SlicingProfile slicingProfile;
@@ -20,9 +20,10 @@ public class PrinterConfiguration {
 	public PrinterConfiguration() {
 	}
 	
-	public PrinterConfiguration(String machineConfigName, String slicingProfileName) {
+	public PrinterConfiguration(String machineConfigName, String slicingProfileName, boolean autoStart) {
 		 this.machineConfigName = machineConfigName;
 		 this.slicingProfileName = slicingProfileName;
+		 this.autoStart = autoStart;
 	}
 	
 	public String getMachineConfigName() {
@@ -55,11 +56,11 @@ public class PrinterConfiguration {
 	}
 	
 	@XmlTransient
-	public boolean isAutostart() {
-		return autostart;
+	public boolean isAutoStart() {
+		return autoStart;
 	}
-	public void setAutostart(boolean autostart) {
-		this.autostart = autostart;
+	public void setAutoStart(boolean autoStart) {
+		this.autoStart = autoStart;
 	}
 
 	@Override

@@ -116,13 +116,15 @@ public class PrinterManager {
 				throw new JobManagerException("Couldn't find communications device called:" + comportId);
 			}
 			
-			SerialManager.Instance().assignSerialPort(printer, port);
+			SerialManager.Instance().assignSerialPortToFirmware(printer, port);
+			SerialManager.Instance().assignSerialPortToProjector(printer, port);
+			
 			printersByName.put(printer.getName(), printer);
 			printer.setStarted(true);
 			return printer;
 		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
 			DisplayManager.Instance().removeAssignment(printer);
-			SerialManager.Instance().removeAssignment(printer);
+			SerialManager.Instance().removeAssignments(printer);
 			if (printer != null) {
 				printer.close();
 			}
@@ -130,7 +132,7 @@ public class PrinterManager {
 		} catch (Exception e) {
 			e.printStackTrace();
 			DisplayManager.Instance().removeAssignment(printer);
-			SerialManager.Instance().removeAssignment(printer);
+			SerialManager.Instance().removeAssignments(printer);
 			if (printer != null) {
 				printer.close();
 			}
@@ -159,10 +161,11 @@ public class PrinterManager {
 		}
 		
 		printersByJob.remove(job);
-		
-		printJobsByPrinter.remove(job.getPrinter());
-		
-		job.setPrinter(null);
+		Printer printer = job.getPrinter();
+		if (printer != null) {
+			printJobsByPrinter.remove(printer);
+			job.setPrinter(null);
+		}
 	}
 	
 	public List<Printer> getPrinters() {

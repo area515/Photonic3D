@@ -31,13 +31,14 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.LaxRedirectStrategy;
-import org.area515.resinprinter.job.JobManager;
+import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
+import org.area515.util.PrintFileFilter;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
  
@@ -75,7 +76,7 @@ public class FileService {
 					
 					//If the filename was blank we aren't interested in the file.
 					if (fileName == null || fileName.isEmpty()) {
-						return Response.status(Status.NOT_IMPLEMENTED).entity(NO_FILE).build();
+						return Response.status(Status.BAD_REQUEST).entity(NO_FILE).build();
 					}
 					
 					// Handle the body of that part with an InputStream
@@ -85,7 +86,7 @@ public class FileService {
 					File newUploadFile = new File(HostProperties.Instance().getUploadDir(), fileName);
 
 					if (!saveFile(istream, newUploadFile.getAbsoluteFile())) {
-						return Response.status(Status.NOT_IMPLEMENTED).entity(UNKNOWN_FILE + fileName).build();
+						return Response.status(Status.BAD_REQUEST).entity(UNKNOWN_FILE + fileName).build();
 					}
 
 				  } catch (IOException e) {
@@ -179,9 +180,11 @@ public class FileService {
 	 @Path("delete/{filename}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse deleteFile(@PathParam("filename") String fileName) {
-		PrintJob currentJob = JobManager.Instance().getJob(fileName);
-		if (currentJob != null && currentJob.getPrinter().isPrintInProgress()) {
-			return new MachineResponse("delete", false, "Can't delete job:" + fileName + " while print is in progress.");
+		List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(fileName);
+		for (PrintJob currentJob : jobs) {
+			if (currentJob != null && currentJob.getPrinter().isPrintInProgress()) {
+				return new MachineResponse("delete", false, "Can't delete job:" + fileName + " while print is in progress.");
+			}
 		}
 	
 		File currentFile = new File(HostProperties.Instance().getUploadDir(), fileName);
@@ -216,9 +219,11 @@ public class FileService {
 		}
 		
 		String fileName = filename;//uri.getPath().replaceFirst(".*/([^/]+)", "$1") + filetype;
-		PrintJob currentJob = JobManager.Instance().getJob(fileName);
-		if (currentJob != null && currentJob.getPrinter().isPrintInProgress()) {
-			return new MachineResponse("uploadviaurl", false, "Can't upload file:" + fileName + " while print is in progress.");
+		List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(fileName);
+		for (PrintJob currentJob : jobs) {
+			if (currentJob != null && currentJob.getPrinter().isPrintInProgress()) {
+				return new MachineResponse("delete", false, "Can't delete job:" + fileName + " while print is in progress.");
+			}
 		}
 		
 		File currentFile = new File(HostProperties.Instance().getUploadDir(), fileName);

@@ -211,9 +211,13 @@
 	<div class="navbar navbar-default navbar-fixed-bottom">
 		<div class="container">
 			<div class="bootcards-desktop-footer clearfix">
-				<p class="pull-left">CWH v0.114</p>
+				<span ng-include="'cardFooter.html'"></span>
 			</div>
 			<div class="btn-group">
+				<a href="./index.html" class="btn btn-default" data-title="CWH">
+					<i class="fa fa-2x fa-dashboard"></i>
+					CWH
+				</a>
 				<a href="./printersPage" class="btn btn-default" ng-click="index.currentPage = 'printersPage'" ng-class="{active:index.currentPage == 'printers'}" ng-show='visibleCards.indexOf("printers") > -1'>
 					<i class="fa fa-2x fa-print"></i>
 					Printers

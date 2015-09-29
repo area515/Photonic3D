@@ -2,10 +2,18 @@ package org.area515.resinprinter.services;
 
 import java.awt.GraphicsDevice;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.text.Format;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -22,24 +30,18 @@ import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.job.JobManager;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
-import org.area515.resinprinter.printer.BuildDirection;
-import org.area515.resinprinter.printer.MachineConfig;
-import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
-import org.area515.resinprinter.printer.MachineConfig.MonitorDriverConfig;
-import org.area515.resinprinter.printer.MachineConfig.MotorsDriverConfig;
+import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.PrinterManager;
-import org.area515.resinprinter.printer.SlicingProfile;
-import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.services.NetInterface.WirelessNetwork;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -47,7 +49,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Path("machine")
 public class MachineService {
-	
 	public static MachineService INSTANCE = new MachineService();
 	
 	private MachineService(){}
@@ -80,6 +81,82 @@ public class MachineService {
 		 }
 		 
 		 return identifierStrings;
+	 }
+	 
+	private String[] getLinesOfText(MessageFormat discoverCommand, String friendlyErrorMessage, String... arguments) throws RuntimeException {
+		Process listSSIDProcess;
+		try {
+			listSSIDProcess = Runtime.getRuntime().exec(discoverCommand.format(arguments));
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
+			IOUtils.copy(listSSIDProcess.getInputStream(), output);
+			return new String(output.toString()).split("\r?\n");
+		} catch (IOException e) {
+			if (friendlyErrorMessage == null) {
+				e.printStackTrace();
+				return new String[]{};
+			}
+			
+			throw new RuntimeException(friendlyErrorMessage, e);
+		}
+	}
+	
+	 @GET
+	 @Path("networkInterfaces/list")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public List<NetInterface> getNetworkInterfaces() {
+		MessageFormat discoverCommand = new MessageFormat(HostProperties.Instance().getDiscoverSSIDCommand());
+		List<NetInterface> ifaces = new ArrayList<NetInterface>();
+		
+		//If the format doesn't understand interfaces then we can skip some actions
+		if (discoverCommand.getFormatsByArgumentIndex().length == 0) {
+			String[] ssids = getLinesOfText(discoverCommand, null);
+			NetInterface netFace = new NetInterface();
+			netFace.setName("WiFi Profiles");
+			for (String ssid : ssids) {
+				if (ssid == null || ssid.trim().equals("")) {
+					continue;
+				}
+				WirelessNetwork wNet = new WirelessNetwork();
+				wNet.setSsid(ssid);
+				netFace.getWirelessNetworks().add(wNet);
+			}
+			
+			return Collections.singletonList(netFace);
+		}
+		
+		try {
+			Enumeration<NetworkInterface> networkEnum = NetworkInterface.getNetworkInterfaces();
+			while (networkEnum.hasMoreElements()) {
+				NetworkInterface iface = networkEnum.nextElement();
+				NetInterface netFace = new NetInterface();
+				netFace.setName(iface.getName());
+				String[] ssids = getLinesOfText(discoverCommand, null, iface.getName());
+				for (String ssid : ssids) {
+					if (ssid == null || ssid.trim().equals("")) {
+						continue;
+					}
+					WirelessNetwork wNet = new WirelessNetwork();
+					wNet.setSsid(ssid);
+					netFace.getWirelessNetworks().add(wNet);
+				}
+				ifaces.add(netFace);
+			}
+			
+			return ifaces;
+		} catch (SocketException e) {
+			e.printStackTrace();
+			throw new RuntimeException("An error occurred looking for network interfaces.", e);
+		}
+	 }
+	 
+	 @GET
+	 @Path("networkInterfaces/get/{networkInterfaceName}/wireless/{ssid}/connect/{password}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public void connectToWifiSSID(@PathParam("networkInterfaceName") String networkInterfaceName, @PathParam("ssid") String ssid, @PathParam("password") String password) {
+		    //http://unix.stackexchange.com/questions/92799/connecting-to-wifi-network-through-command-line
+			MessageFormat connectCommand = new MessageFormat(HostProperties.Instance().getConnectToWifiSSIDCommand());
+			String[] data = getLinesOfText(connectCommand, "An error occurred attempting to connect to wireless network.", networkInterfaceName, ssid, password);
+			System.out.println(Arrays.toString(data));
 	 }
 	 
 	 @GET
@@ -148,7 +225,7 @@ public class MachineService {
 		}
 		//=========================================================
 		try {
-			HostProperties.Instance().addPrinterConfiguration(currentConfiguration);
+			HostProperties.Instance().addOrUpdatePrinterConfiguration(currentConfiguration);
 			return new MachineResponse("create", true, "Created:" + currentConfiguration.getName() + "");
 		} catch (AlreadyAssignedException e) {
 			e.printStackTrace();
@@ -180,6 +257,7 @@ public class MachineService {
 			}
 	 }
 
+	 @Deprecated
 	 @GET
 	 @Path("startprinter/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -199,6 +277,7 @@ public class MachineService {
 		}
 	 }	 
 	 
+	 @Deprecated
 	 @GET
 	 @Path("stopprinter/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -212,7 +291,7 @@ public class MachineService {
 				throw new InappropriateDeviceException("Can't stop printer while a job is in progress");
 			}
 			DisplayManager.Instance().removeAssignment(printer);
-			SerialManager.Instance().removeAssignment(printer);
+			SerialManager.Instance().removeAssignments(printer);
 			if (printer != null) {
 				printer.close();
 			}
@@ -224,6 +303,7 @@ public class MachineService {
 		}
 	 }
 
+	 @Deprecated
 	 @GET
 	 @Path("printerstatus/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -236,6 +316,7 @@ public class MachineService {
 		return new MachineResponse("status", true, "Printer:" + printerName + " " + printer.getStatus());
 	 }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("showcalibrationscreen/{printername}/{pixels}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -254,6 +335,7 @@ public class MachineService {
 		}
 	 }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("showblankscreen/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -272,6 +354,7 @@ public class MachineService {
 		}
 	 }
 
+	 @Deprecated
 	 @GET
 	 @Path("gcode/{printername}/{gcode}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -286,6 +369,7 @@ public class MachineService {
 	 
 	 //X Axis Move (sedgwick open aperature)
 	 //MachineControl.cmdMoveX()
+	 @Deprecated
 	 @GET
 	 @Path("movex/{printername}/{distance}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -301,6 +385,7 @@ public class MachineService {
 	 
 	 //Y Axis Move (sedgwick close aperature)
 	 //MachineControl.cmdMoveY()
+	 @Deprecated
 	 @GET
 	 @Path("movey/{printername}/{distance}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -322,6 +407,7 @@ public class MachineService {
 	 // (-.025 small reverse)
 	 // (-1.0 medium reverse)
 	 // (-10.0 large reverse)
+	 @Deprecated
 	 @GET
 	 @Path("movez/{printername}/{distance}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -337,6 +423,7 @@ public class MachineService {
 			return new MachineResponse("movez", true, response);
 	 }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("homez/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -350,6 +437,7 @@ public class MachineService {
 			return new MachineResponse("homez", true, printer.getGCodeControl().executeZHome());
 	 }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("homex/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -363,6 +451,7 @@ public class MachineService {
 			return new MachineResponse("homex", true, printer.getGCodeControl().executeXHome());
 	 }	 
 
+	 @Deprecated
 	 @GET
 	 @Path("homey/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -378,6 +467,7 @@ public class MachineService {
 
 	 // Disable Motors
 	 //MachineControl.cmdMotorsOff()
+	 @Deprecated
 	 @GET
 	 @Path("motorsoff/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -392,6 +482,7 @@ public class MachineService {
 	 
 	 // Enable Motors
 	 //MachineControl.cmdMotorsOn()
+	 @Deprecated
 	 @GET
 	 @Path("motorson/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -404,6 +495,7 @@ public class MachineService {
 			return new MachineResponse("motorson", true, printer.getGCodeControl().executeMotorsOn());
 	 }
 
+	 @Deprecated
 	 @GET
 	 @Path("startjob/{jobname}/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -414,55 +506,26 @@ public class MachineService {
 		// Delete and Create handled in jobManager
 		PrintJob printJob = null;
 		try {
-			printJob = JobManager.Instance().createJob(selectedFile);
+			printJob = PrintJobManager.Instance().createJob(selectedFile);
 			Printer printer = PrinterManager.Instance().getPrinter(printername);
 			if (printer == null) {
 				throw new InappropriateDeviceException("Printer not started:" + printername);
 			}
 			
-			Future<JobStatus> status = JobManager.Instance().startJob(printJob, printer);
+			Future<JobStatus> status = PrintJobManager.Instance().startJob(printJob, printer);
 			return new MachineResponse("start", true, "Started:" + printJob.getId());
 		} catch (JobManagerException | AlreadyAssignedException e) {
-			JobManager.Instance().removeJob(printJob);
+			PrintJobManager.Instance().removeJob(printJob);
 			PrinterManager.Instance().removeAssignment(printJob);
 			e.printStackTrace();
 			return new MachineResponse("start", false, e.getMessage());
 		} catch (InappropriateDeviceException e) {
-			JobManager.Instance().removeJob(printJob);
+			PrintJobManager.Instance().removeJob(printJob);
 			e.printStackTrace();
 			return new MachineResponse("start", false, e.getMessage());
 		}
  	}
 
-	 /*@GET    //Not ready for this yet...
-	 @Path("remainingResin/{printername}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse getRemainingResin(@PathParam("printername") String printername) {
-		// Create job
-		File selectedFile = new File(HostProperties.Instance().getUploadDir(), jobname); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
-		
-		// Delete and Create handled in jobManager
-		PrintJob printJob = null;
-		try {
-			printJob = JobManager.Instance().createJob(selectedFile);
-			Printer printer = PrinterManager.Instance().getPrinter(printername);
-			if (printer == null) {
-				throw new InappropriateDeviceException("Printer not started:" + printername);
-			}
-			
-			Future<JobStatus> status = JobManager.Instance().startJob(printJob, printer);
-			return new MachineResponse("start", true, "Started:" + printJob.getId());
-		} catch (JobManagerException | AlreadyAssignedException e) {
-			JobManager.Instance().removeJob(printJob);
-			PrinterManager.Instance().removeAssignment(printJob);
-			e.printStackTrace();
-			return new MachineResponse("start", false, e.getMessage());
-		} catch (InappropriateDeviceException e) {
-			JobManager.Instance().removeJob(printJob);
-			e.printStackTrace();
-			return new MachineResponse("start", false, e.getMessage());
-		}
- 	}*/
 	 
 	 
 	 
@@ -479,6 +542,7 @@ public class MachineService {
 	 
 	 //The following methods are for Jobs
 	 //======================================
+	 @Deprecated
 	 @GET
      @Path("currentsliceImage/{jobname}")
      @Produces("image/png")
@@ -490,7 +554,8 @@ public class MachineService {
       * @return
       */
      public StreamingOutput getImage(@PathParam("jobname") String jobname) {
- 		final PrintJob job = JobManager.Instance().getJob(jobname);
+ 		final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobname);
+ 		final PrintJob job = jobs.size() > 0?jobs.get(0):null;
  		
 	    return new StreamingOutput() {
 			@Override
@@ -517,24 +582,30 @@ public class MachineService {
 	    };
      }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("stopjob/{jobname}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse stopJob(@PathParam("jobname") String jobname) {
-		PrintJob job = JobManager.Instance().getJob(jobname);
+ 		final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobname);
+ 		final PrintJob job = jobs.size() > 0?jobs.get(0):null;
+	 		
 		if (job == null) {
 			return new MachineResponse("stop", false, "Job:" + jobname + " not active");
 		}
+		
 		job.getPrinter().setStatus(JobStatus.Cancelled);
-		//TODO: need to unassign the printer!!!!!!!!!!
 	 	return new MachineResponse("stop", true, "Stopped:" + jobname);
 	 }	 
 	 
+	 @Deprecated
 	 @GET
 	 @Path("togglepause/{jobname}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse togglePause(@PathParam("jobname") String jobname) {
-		PrintJob job = JobManager.Instance().getJob(jobname);
+	 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobname);
+	 	final PrintJob job = jobs.size() > 0?jobs.get(0):null;
+		 		
 		if (job == null) {
 			return new MachineResponse("togglepause", false, "Job:" + jobname + " not active");
 		}
@@ -543,11 +614,14 @@ public class MachineService {
 		return new MachineResponse("togglepause", true, "Job:" + jobname + " " + status);
 	 }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("jobstatus/{jobname}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse getJobStatus(@PathParam("jobname") String jobname) {
-		PrintJob job = JobManager.Instance().getJob(jobname);
+	 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobname);
+	 	final PrintJob job = jobs.size() > 0?jobs.get(0):null;
+			 		
 		if (job == null) {
 			return new MachineResponse("status", false, "Job:" + jobname + " not active");
 		}
@@ -555,11 +629,14 @@ public class MachineService {
 		return new MachineResponse("status", true, "Job:" + jobname + " " + job.getPrinter().getStatus());
 	 }	 
 	 
+	 @Deprecated
 	 @GET
 	 @Path("totalslices/{jobname}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse getTotalSlices(@PathParam("jobname") String jobname) {
-		PrintJob job = JobManager.Instance().getJob(jobname);
+	 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobname);
+	 	final PrintJob job = jobs.size() > 0?jobs.get(0):null;
+			 		
 		if (job == null) {
 			return new MachineResponse("totalslices", false, "Job:" + jobname + " not active");
 		}
@@ -567,11 +644,14 @@ public class MachineService {
 		return new MachineResponse("totalslices", true, String.valueOf(job.getTotalSlices()));
 	 }
 
+	 @Deprecated
 	 @GET
 	 @Path("currentslice/{jobname}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse getCurrentSlice(@PathParam("jobname") String jobname) {
-		 PrintJob job = JobManager.Instance().getJob(jobname);
+	 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobname);
+	 	final PrintJob job = jobs.size() > 0?jobs.get(0):null;
+			 		
 		 if(job == null) {
 			 return new MachineResponse("currentslice", false, "Job:" + jobname + " not active");
 		 }
@@ -579,11 +659,14 @@ public class MachineService {
 		 return new MachineResponse("currentslice", true, String.valueOf(job.getCurrentSlice()));
 	 }
 
+	 @Deprecated
 	 @GET
 	 @Path("currentslicetime/{jobname}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse getCurrentSliceTime(@PathParam("jobname") String jobname) {
-		 PrintJob job = JobManager.Instance().getJob(jobname);
+	 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobname);
+	 	final PrintJob job = jobs.size() > 0?jobs.get(0):null;
+			 		
 		 if(job == null) {
 			 return new MachineResponse("slicetime", false, "Job:" + jobname + " not active");
 		 }
@@ -591,11 +674,14 @@ public class MachineService {
 		 return new MachineResponse("slicetime", true, String.valueOf(job.getCurrentSliceTime()));
 	 }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("averageslicetime/{jobname}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse getAverageslicetime(@PathParam("jobname") String jobname) {
-		 PrintJob job = JobManager.Instance().getJob(jobname);
+	 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobname);
+	 	final PrintJob job = jobs.size() > 0?jobs.get(0):null;
+			 		
 		 if(job == null) {
 			 return new MachineResponse("slicetime", false, "Job:" + jobname + " not active");
 		 }
@@ -603,11 +689,14 @@ public class MachineService {
 		 return new MachineResponse("slicetime", true, String.valueOf(job.getAverageSliceTime()));
 	 }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("zliftdistance/{jobname}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse getLiftDistance(@PathParam("jobname") String jobName) {
-			PrintJob printJob = JobManager.Instance().getJob(jobName);
+		 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobName);
+		 	final PrintJob printJob = jobs.size() > 0?jobs.get(0):null;
+			 		
 			if (printJob == null) {
 				return new MachineResponse("zliftdistance", false, "Job:" + jobName + " not started");
 			}
@@ -615,11 +704,14 @@ public class MachineService {
 			return new MachineResponse("zliftdistance", true, String.format("%1.3f", printJob.getZLiftDistance()));
 	 }	 
 	 
+	 @Deprecated
 	 @GET
 	 @Path("zliftdistance/{jobname}/{distance}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse setLiftDistance(@PathParam("jobname") String jobName, @PathParam("distance") double liftDistance) {
-			PrintJob printJob = JobManager.Instance().getJob(jobName);
+		 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobName);
+		 	final PrintJob printJob = jobs.size() > 0?jobs.get(0):null;
+			 		
 			if (printJob == null) {
 				return new MachineResponse("LiftDistance", false, "Job:" + jobName + " not started");
 			}
@@ -633,11 +725,14 @@ public class MachineService {
 			return new MachineResponse("LiftDistance", true, "Set lift distance to:" + liftDistance);
 	 }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("zliftspeed/{jobname}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse getLiftSpeed(@PathParam("jobname") String jobName) {
-			PrintJob printJob = JobManager.Instance().getJob(jobName);
+		 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobName);
+		 	final PrintJob printJob = jobs.size() > 0?jobs.get(0):null;
+			 		
 			if (printJob == null) {
 				return new MachineResponse("zliftspeed", false, "Job:" + jobName + " not started");
 			}
@@ -645,11 +740,14 @@ public class MachineService {
 			return new MachineResponse("zliftspeed", true, String.format("%1.3f", printJob.getZLiftSpeed()));
 	 }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("zliftspeed/{jobname}/{speed}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse setLiftSpeed(@PathParam("jobname") String jobName, @PathParam("speed") double speed) {
-			PrintJob printJob = JobManager.Instance().getJob(jobName);
+		 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobName);
+		 	final PrintJob printJob = jobs.size() > 0?jobs.get(0):null;
+			 		
 			if (printJob == null) {
 				return new MachineResponse("zliftspeed", false, "Job:" + jobName + " not started");
 			}
@@ -663,11 +761,14 @@ public class MachineService {
 			return new MachineResponse("zliftspeed", true, "Set lift speed to:" + speed);
 	 }
 	 	
+	 @Deprecated
 	 @GET
 	 @Path("exposuretime/{jobname}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse getExposureTime(@PathParam("jobname") String jobName) {
-			PrintJob printJob = JobManager.Instance().getJob(jobName);
+		 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobName);
+		 	final PrintJob printJob = jobs.size() > 0?jobs.get(0):null;
+			 		
 			if (printJob == null) {
 				return new MachineResponse("exposureTime", false, "Job:" + jobName + " not started");
 			}
@@ -675,11 +776,14 @@ public class MachineService {
 			return new MachineResponse("exposureTime", true, printJob.getExposureTime() + "");
 	 }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("exposuretime/{jobname}/{exposureTime}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse setExposureTime(@PathParam("jobname") String jobName, @PathParam("exposureTime") int exposureTime) {
-			PrintJob printJob = JobManager.Instance().getJob(jobName);
+		 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobName);
+		 	final PrintJob printJob = jobs.size() > 0?jobs.get(0):null;
+			 		
 			if (printJob == null) {
 				return new MachineResponse("exposureTime", false, "Job:" + jobName + " not started");
 			}
@@ -688,11 +792,14 @@ public class MachineService {
 			return new MachineResponse("exposureTime", true, "Exposure time set");
 	 }
 	 
+	 @Deprecated
 	 @GET
 	 @Path("geometry/{jobName}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse getGeometry(@PathParam("jobName") String jobName) {
-			PrintJob printJob = JobManager.Instance().getJob(jobName);
+		 	final List<PrintJob> jobs = PrintJobManager.Instance().getJobsByFilename(jobName);
+		 	final PrintJob printJob = jobs.size() > 0?jobs.get(0):null;
+			 		
 			if (printJob == null) {
 				return new MachineResponse("geometry", false, "Job:" + jobName + " must be started or a simulation must be in progress to get geometry.");
 			}

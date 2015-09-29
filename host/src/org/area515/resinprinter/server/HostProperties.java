@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.JAXBContext;
@@ -27,12 +26,19 @@ import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.notification.Notifier;
 import org.area515.resinprinter.printer.MachineConfig;
-import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
+import org.area515.resinprinter.projector.HexCodeBasedProjector;
+import org.area515.resinprinter.projector.ProjectorModel;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.services.MachineService;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class HostProperties {
 	public static String FULL_RIGHTS = "adminRole";
@@ -60,6 +66,7 @@ public class HostProperties {
 	private String manufacturer;
 	private Properties configurationProperties = new Properties();
 	private List<String> visibleCards;
+	private String hexCodeBasedProjectorsJson;
 	
 	//SSL settings:
 	private boolean useSSL;
@@ -78,6 +85,10 @@ public class HostProperties {
 	//This is for Media
 	private String streamingCommand;
 	private String imagingCommand;
+	
+	//This is for wifi
+	private String discoverSSIDCommand;
+	private String connectToWifiSSIDCommand;
 	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
@@ -200,6 +211,9 @@ public class HostProperties {
 			clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
 			streamingCommand = configurationProperties.getProperty("streamingCommand");
 			imagingCommand = configurationProperties.getProperty("imagingCommand");
+			discoverSSIDCommand = configurationProperties.getProperty("discoverSSIDCommand");
+			connectToWifiSSIDCommand = configurationProperties.getProperty("connectToWifiSSIDCommand");
+			hexCodeBasedProjectorsJson = configurationProperties.getProperty("hexCodeBasedProjectors");
 		}
 		
 		if (printDirString == null) {
@@ -219,7 +233,7 @@ public class HostProperties {
 			Properties newProperties = new Properties();
 			try {
 				newProperties.load(new FileInputStream(versionFile));
-				versionNumber = Integer.valueOf((String)newProperties.get("build.number"));
+				versionNumber = Integer.valueOf((String)newProperties.get("build.number")) - 1;
 			} catch (IOException e) {
 				System.out.println("Version file is missing:" + versionFile);
 			}
@@ -334,6 +348,14 @@ public class HostProperties {
 		return keystoreFile;
 	}
 
+	public String getDiscoverSSIDCommand() {
+		return discoverSSIDCommand;
+	}
+	
+	public String getConnectToWifiSSIDCommand() {
+		return connectToWifiSSIDCommand;
+	}
+
 	public String getStreamingCommand() {
 		return streamingCommand;
 	}
@@ -346,6 +368,18 @@ public class HostProperties {
 		return visibleCards;
 	}
 
+	public List<ProjectorModel> getAutodetectProjectors() {
+		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+		List<ProjectorModel> projectors;
+		try {
+			projectors = mapper.readValue(hexCodeBasedProjectorsJson, new TypeReference<List<HexCodeBasedProjector>>(){});
+			return projectors;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return new ArrayList<ProjectorModel>();
+		}
+	}
+	
 	public List<PrinterConfiguration> getPrinterConfigurations() {
 		if (configurations != null) {
 			return new ArrayList<PrinterConfiguration>(configurations.values());
@@ -420,21 +454,20 @@ public class HostProperties {
 				jaxbMarshaller.marshal(slicingProfile, slicingFile);
 
 				File printerFile = new File(printerDir, currentConfiguration.getName() + PRINTER_EXTENSION);
-				jaxbMarshaller.marshal(new PrinterConfiguration(currentConfiguration.getMachineConfigName(), currentConfiguration.getSlicingProfileName()), printerFile);
+				jaxbMarshaller.marshal(new PrinterConfiguration(
+						currentConfiguration.getMachineConfigName(), 
+						currentConfiguration.getSlicingProfileName(), 
+						currentConfiguration.isAutoStart()), printerFile);
 			} catch (JAXBException e) {
 				e.printStackTrace();
 			}
 		}
 	}
 	
-	public void addPrinterConfiguration(PrinterConfiguration configuration) throws AlreadyAssignedException {
+	public void addOrUpdatePrinterConfiguration(PrinterConfiguration configuration) throws AlreadyAssignedException {
 		getPrinterConfigurations();
 
-		PrinterConfiguration otherConfiguration = configurations.putIfAbsent(configuration.getName(), configuration);
-		if (otherConfiguration != null) {
-			throw new AlreadyAssignedException("There is already a printer called:" + configuration.getName(), (Printer)null);
-		}
-		
+		configurations.put(configuration.getName(), configuration);
 		saveConfigurations();
 	}
 
