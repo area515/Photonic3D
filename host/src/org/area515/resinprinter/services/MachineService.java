@@ -2,22 +2,33 @@ package org.area515.resinprinter.services;
 
 import java.awt.GraphicsDevice;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.management.ManagementFactory;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.text.Format;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Future;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
+import javax.mail.MessagingException;
+import javax.mail.Transport;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -42,16 +53,117 @@ import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.services.NetInterface.WirelessNetwork;
+import org.area515.util.MailUtilities;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.ByteStreams;
 
 @Path("machine")
 public class MachineService {
 	public static MachineService INSTANCE = new MachineService();
 	
-	private MachineService(){}
+	private MachineService() {}
+	
+	private static ZipEntry zipFile(File fileToZip, ZipOutputStream output) {
+		ZipEntry entry = new ZipEntry(fileToZip.getName());
+		InputStream inStream = null;
+		try {
+			inStream = new BufferedInputStream(new FileInputStream(fileToZip));
+			ByteStreams.copy(inStream, output);
+			inStream.close();
+			return entry;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			IOUtils.closeQuietly(inStream);
+		}
+	}
+	
+	private static ZipEntry zipStream(String name, InputStream inStream, ZipOutputStream output) {
+		ZipEntry entry = new ZipEntry(name);
+		try {
+			output.putNextEntry(entry);
+			ByteStreams.copy(inStream, output);
+			inStream.close();
+			return entry;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			IOUtils.closeQuietly(inStream);
+		}
+	}
+	
+	@GET
+	@Path("executeDiagnostic")
+	@Produces(MediaType.APPLICATION_JSON)
+	public void emailSupportLogs() {
+		String MASK = "Masked by CWH";
+		MessageFormat dumpStack = new MessageFormat(HostProperties.Instance().getDumpStackTraceCommand());
+
+		String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+		getLinesOfText(dumpStack, null, pid);
+		
+		ZipOutputStream zipOutputStream = null;
+		try {
+			zipOutputStream = new ZipOutputStream(new FileOutputStream("LogBundle.zip"));
+			String logFiles[] = new String[]{"log.scrout", "log.screrr", "log.out", "log.err"};
+			for (String logFile : logFiles) {
+				File file = new File(logFile);
+				if (file.exists()) {
+					ZipEntry entry = zipFile(file, zipOutputStream);
+					zipOutputStream.putNextEntry(entry);
+				}
+			}
+			
+			Properties properties = new Properties();
+			properties.putAll(HostProperties.Instance().getConfigurationProperties());
+			properties.put("CWH3DPrinterRealm.clientPassword", MASK);
+			properties.put("keypairPassword", MASK);
+			properties.put("keystorePassword", MASK);
+			properties.put("password", MASK);
+			
+			ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+			properties.store(byteStream, "Stored on " + new Date());
+			zipStream("config.properties", new ByteArrayInputStream(byteStream.toByteArray()), zipOutputStream);
+			
+			byteStream = new ByteArrayOutputStream();
+			System.getProperties().store(byteStream, "Stored on " + new Date());
+			zipStream("System.properties", new ByteArrayInputStream(byteStream.toByteArray()), zipOutputStream);
+			
+			zipOutputStream.finish();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException("Failure creating log bundle.", e);
+		} finally {
+			IOUtils.closeQuietly(zipOutputStream);
+		}
+		
+		Transport transport = null;
+		try {
+			MailUtilities.setMailProperties(HostProperties.Instance().getConfigurationProperties());
+			String emailAddress = (String)HostProperties.Instance().getConfigurationProperties().get("serviceEmailAddresses");
+			String[] serviceEmailAddresses = emailAddress.split("[;,]");
+			transport = MailUtilities.openTransportFromProperties();
+			MailUtilities.executeSMTPSend (
+					HostProperties.Instance().getDeviceName().replace(" ", "") + "@My3DPrinter", 
+					Arrays.asList(serviceEmailAddresses),
+					"Service Request", 
+					"Attached diagnostic information", 
+					transport,
+					(File[])null);
+		} catch (MessagingException | IOException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException("Failure emailing log bundle.");
+		} finally {
+			if (transport != null) {
+				try {transport.close();} catch (MessagingException e) {}
+			}
+		}
+	}
 	
 	 @Deprecated
 	 @GET
@@ -83,10 +195,10 @@ public class MachineService {
 		 return identifierStrings;
 	 }
 	 
-	private String[] getLinesOfText(MessageFormat discoverCommand, String friendlyErrorMessage, String... arguments) throws RuntimeException {
+	private String[] getLinesOfText(MessageFormat command, String friendlyErrorMessage, String... arguments) throws RuntimeException {
 		Process listSSIDProcess;
 		try {
-			listSSIDProcess = Runtime.getRuntime().exec(discoverCommand.format(arguments));
+			listSSIDProcess = Runtime.getRuntime().exec(command.format(arguments));
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			IOUtils.copy(listSSIDProcess.getInputStream(), output);
 			return new String(output.toString()).split("\r?\n");

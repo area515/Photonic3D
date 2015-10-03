@@ -19,6 +19,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.discover.Advertiser;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
@@ -35,9 +36,7 @@ import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.services.MachineService;
 
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class HostProperties {
@@ -90,6 +89,9 @@ public class HostProperties {
 	private String discoverSSIDCommand;
 	private String connectToWifiSSIDCommand;
 	
+	//This is for diagnostics
+	private String dumpStackTraceCommand;
+	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
 			INSTANCE = new HostProperties();
@@ -100,7 +102,6 @@ public class HostProperties {
 	private HostProperties() {
 		String printDirString = null;
 		String uploadDirString = null;
-		InputStream stream = null;
 		
 		if (!PROFILES_DIR.exists() && !PROFILES_DIR.mkdirs()) {
 			System.out.println("Couldn't make profiles directory. No write access or disk full?" );
@@ -112,109 +113,120 @@ public class HostProperties {
 			throw new IllegalArgumentException("Couldn't make machine directory. No write access or disk full?");
 		}
 
+		Properties overridenProperties = null;
+		InputStream stream = null;
 		File configPropertiesInPrintersDirectory = new File(printerDir, "config.properties");
 		if (configPropertiesInPrintersDirectory.exists()) {
 			try {
 				stream = new FileInputStream(configPropertiesInPrintersDirectory);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		if (stream == null) {
-			stream = HostProperties.class.getClassLoader().getResourceAsStream("config.properties");
-		}
-		
-		if (stream != null) {
-			try {
-				configurationProperties.load(stream);
+				overridenProperties = new Properties();
+				overridenProperties.load(stream);
 			} catch (IOException e) {
-				throw new IllegalArgumentException("Couldn't load config.properties file", e);
+				e.printStackTrace();
+			} finally {
+				IOUtils.closeQuietly(stream);
 			}
-
-			printDirString = configurationProperties.getProperty("printdir");
-			uploadDirString = configurationProperties.getProperty("uploaddir");
-			fakeSerial = new Boolean(configurationProperties.getProperty("fakeserial", "false"));
-			fakedisplay = new Boolean(configurationProperties.getProperty("fakedisplay", "false"));
-			hostGUI = configurationProperties.getProperty("hostGUI", "resources");
-			visibleCards = Arrays.asList(configurationProperties.getProperty("visibleCards", "printers,printJobs,printables,users,settings").split(","));
-
-			//This loads advertisers
-			for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
-				String currentPropertyString = currentProperty.getKey() + "";
-				if (currentPropertyString.startsWith("advertise.")) {
-					currentPropertyString = currentPropertyString.replace("advertise.", "");
-					if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
-						try {
-							advertisementClasses.add((Class<Advertiser>)Class.forName(currentPropertyString));
-						} catch (ClassNotFoundException e) {
-							System.out.println("Failed to load advertiser:" + currentPropertyString);
-						}
-					}
-				}
-			}			
-			
-			//This loads notifiers
-			for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
-				String currentPropertyString = currentProperty.getKey() + "";
-				if (currentPropertyString.startsWith("notify.")) {
-					currentPropertyString = currentPropertyString.replace("notify.", "");
-					if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
-						try {
-							notificationClasses.add((Class<Notifier>)Class.forName(currentPropertyString));
-						} catch (ClassNotFoundException e) {
-							System.out.println("Failed to load notifier:" + currentPropertyString);
-						}
-					}
-				}
-			}
-			
-			//This loads print file processors
-			for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
-				String currentPropertyString = currentProperty.getKey() + "";
-				if (currentPropertyString.startsWith("printFileProcessor.")) {
-					currentPropertyString = currentPropertyString.replace("printFileProcessor.", "");
-					if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
-						try {
-							PrintFileProcessor processor = ((Class<PrintFileProcessor>)Class.forName(currentPropertyString)).newInstance();
-							printFileProcessors.add(processor);
-						} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-							System.out.println("Failed to load PrintFileProcessor:" + currentPropertyString);
-						}
-					}
-				}
-			}
-			
-			
-			String serialCommClass = null;
-			try {
-				serialCommClass = configurationProperties.getProperty("SerialCommunicationsImplementation", "org.area515.resinprinter.serial.RXTXSynchronousReadBasedCommPort");
-				serialPortClass = (Class<SerialCommunicationsPort>)Class.forName(serialCommClass);
-			} catch (ClassNotFoundException e) {
-				System.out.println("Failed to load SerialCommunicationsImplementation:" + serialCommClass);
-			}
-			
-			//Here are all of the server configuration settings
-			String keystoreFilename = configurationProperties.getProperty("keystoreFilename");
-			if (keystoreFilename != null) {
-				keystoreFile = new File(keystoreFilename);
-			}
-			useSSL = new Boolean(configurationProperties.getProperty("useSSL", "false"));
-			printerHostPort = new Integer(configurationProperties.getProperty("printerHostPort", useSSL?"443":"9091"));
-			externallyAccessableName = configurationProperties.getProperty("externallyAccessableName");
-			keypairPassword = configurationProperties.getProperty("keypairPassword");
-			keystorePassword = configurationProperties.getProperty("keystorePassword");
-			deviceName = configurationProperties.getProperty("deviceName", "3D Multiprint Host");
-			manufacturer = configurationProperties.getProperty("manufacturer", "Wes & Sean");
-			securityRealmName = configurationProperties.getProperty("securityRealmName", "SecurityRealm");
-			clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", "");
-			clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
-			streamingCommand = configurationProperties.getProperty("streamingCommand");
-			imagingCommand = configurationProperties.getProperty("imagingCommand");
-			discoverSSIDCommand = configurationProperties.getProperty("discoverSSIDCommand");
-			connectToWifiSSIDCommand = configurationProperties.getProperty("connectToWifiSSIDCommand");
-			hexCodeBasedProjectorsJson = configurationProperties.getProperty("hexCodeBasedProjectors");
 		}
+		
+		stream = HostProperties.class.getClassLoader().getResourceAsStream("config.properties");
+		if (stream == null) {
+			throw new IllegalArgumentException("Server couldn't find your config.properties file.");
+		}
+		
+		try {
+			configurationProperties.load(stream);
+		} catch (IOException e) {
+			throw new IllegalArgumentException("Server couldn't find your config.properties file.", e);
+		} finally {
+			IOUtils.closeQuietly(stream);
+		}
+
+		if (overridenProperties != null) {
+			configurationProperties.putAll(overridenProperties);
+		}
+		
+		printDirString = configurationProperties.getProperty("printdir");
+		uploadDirString = configurationProperties.getProperty("uploaddir");
+		fakeSerial = new Boolean(configurationProperties.getProperty("fakeserial", "false"));
+		fakedisplay = new Boolean(configurationProperties.getProperty("fakedisplay", "false"));
+		hostGUI = configurationProperties.getProperty("hostGUI", "resources");
+		visibleCards = Arrays.asList(configurationProperties.getProperty("visibleCards", "printers,printJobs,printables,users,settings").split(","));
+
+		//This loads advertisers
+		for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
+			String currentPropertyString = currentProperty.getKey() + "";
+			if (currentPropertyString.startsWith("advertise.")) {
+				currentPropertyString = currentPropertyString.replace("advertise.", "");
+				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
+					try {
+						advertisementClasses.add((Class<Advertiser>)Class.forName(currentPropertyString));
+					} catch (ClassNotFoundException e) {
+						System.out.println("Failed to load advertiser:" + currentPropertyString);
+					}
+				}
+			}
+		}			
+		
+		//This loads notifiers
+		for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
+			String currentPropertyString = currentProperty.getKey() + "";
+			if (currentPropertyString.startsWith("notify.")) {
+				currentPropertyString = currentPropertyString.replace("notify.", "");
+				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
+					try {
+						notificationClasses.add((Class<Notifier>)Class.forName(currentPropertyString));
+					} catch (ClassNotFoundException e) {
+						System.out.println("Failed to load notifier:" + currentPropertyString);
+					}
+				}
+			}
+		}
+		
+		//This loads print file processors
+		for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
+			String currentPropertyString = currentProperty.getKey() + "";
+			if (currentPropertyString.startsWith("printFileProcessor.")) {
+				currentPropertyString = currentPropertyString.replace("printFileProcessor.", "");
+				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
+					try {
+						PrintFileProcessor processor = ((Class<PrintFileProcessor>)Class.forName(currentPropertyString)).newInstance();
+						printFileProcessors.add(processor);
+					} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+						System.out.println("Failed to load PrintFileProcessor:" + currentPropertyString);
+					}
+				}
+			}
+		}
+		
+		String serialCommClass = null;
+		try {
+			serialCommClass = configurationProperties.getProperty("SerialCommunicationsImplementation", "org.area515.resinprinter.serial.RXTXSynchronousReadBasedCommPort");
+			serialPortClass = (Class<SerialCommunicationsPort>)Class.forName(serialCommClass);
+		} catch (ClassNotFoundException e) {
+			System.out.println("Failed to load SerialCommunicationsImplementation:" + serialCommClass);
+		}
+		
+		//Here are all of the server configuration settings
+		String keystoreFilename = configurationProperties.getProperty("keystoreFilename");
+		if (keystoreFilename != null) {
+			keystoreFile = new File(keystoreFilename);
+		}
+		useSSL = new Boolean(configurationProperties.getProperty("useSSL", "false"));
+		printerHostPort = new Integer(configurationProperties.getProperty("printerHostPort", useSSL?"443":"9091"));
+		externallyAccessableName = configurationProperties.getProperty("externallyAccessableName");
+		keypairPassword = configurationProperties.getProperty("keypairPassword");
+		keystorePassword = configurationProperties.getProperty("keystorePassword");
+		deviceName = configurationProperties.getProperty("deviceName", "3D Multiprint Host");
+		manufacturer = configurationProperties.getProperty("manufacturer", "Wes & Sean");
+		securityRealmName = configurationProperties.getProperty("securityRealmName", "SecurityRealm");
+		clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", "");
+		clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
+		streamingCommand = configurationProperties.getProperty("streamingCommand");
+		imagingCommand = configurationProperties.getProperty("imagingCommand");
+		discoverSSIDCommand = configurationProperties.getProperty("discoverSSIDCommand");
+		connectToWifiSSIDCommand = configurationProperties.getProperty("connectToWifiSSIDCommand");
+		hexCodeBasedProjectorsJson = configurationProperties.getProperty("hexCodeBasedProjectors");
+		dumpStackTraceCommand = configurationProperties.getProperty("dumpStackTraceCommand");
 		
 		if (printDirString == null) {
 			printDir = new File(System.getProperty("java.io.tmpdir"), "printdir");
@@ -352,6 +364,10 @@ public class HostProperties {
 		return discoverSSIDCommand;
 	}
 	
+	public String getDumpStackTraceCommand() {
+		return dumpStackTraceCommand;
+	}
+
 	public String getConnectToWifiSSIDCommand() {
 		return connectToWifiSSIDCommand;
 	}

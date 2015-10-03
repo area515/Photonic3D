@@ -25,6 +25,7 @@
 						 var printerEvent = JSON.parse(event.data);
 						 controller.currentPrinter = printerEvent.printer;
 				};
+				//TODO: On error reconnect!!
 				ws.onclose = function() {
 				 	$scope.$on('$destroy', function() {
 				        ws.close();

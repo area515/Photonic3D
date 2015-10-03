@@ -1,2 +1,5 @@
-<small class="pull-left">CWH v0.{{integerVersion}}</small>
-<a class="btn btn-link btn-xs pull-right" href="https://github.com/area515/Creation-Workshop-Host/blob/master/README.md">Help</a>
+<span ng-controller="CardFooter as footer">
+	<small class="pull-left">CWH v0.{{integerVersion}}</small>
+	<a class="btn btn-link btn-xs pull-right" href="https://github.com/area515/Creation-Workshop-Host/blob/master/README.md">Help</a>
+	<a class="btn btn-link btn-xs pull-right" ng-click='footer.executeDiagnostic()'>Send Support Info</a>
+</span>
