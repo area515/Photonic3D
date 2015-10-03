@@ -25,8 +25,18 @@
     	}])//*/
     	
     	cwhApp.controller("IndexController", function ($scope, $http) {
-    		this.changeCurrentPage = function (newPageName) {
+    		this.changeCurrentPage = function changeCurrentPage(newPageName) {
     			this.currentPage = newPageName;
+    		}
+    		
+    		this.executeDiagnostic = function executeDiagnostic() {
+    	        $http.get(service + printerName).success(
+    	        		function (data) {
+    	        			$scope.$emit("MachineResponse", {machineResponse: {command:"Executed Diagnostic", message:"Successfully executed diagnostic"}, successFunction:null, afterErrorFunction:null});
+    	        		}).error(
+        				function (data, status, headers, config, statusText) {
+     	        			$scope.$emit("HTTPError", {status:status, statusText:data});
+    	        		})
     		}
 
 			$scope.$on("MachineResponse", function (event, args) {

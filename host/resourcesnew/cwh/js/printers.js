@@ -27,7 +27,7 @@
 		        			$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrinters, afterErrorFunction:null});
 		        		}).error(
 	    				function (data, status, headers, config, statusText) {
-	 	        			$scope.$emit("HTTPError", {status:status, statusText:statusText});
+	 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 		        		})
 		    } else {
 		        $http.get(service + printerName).success(
@@ -35,7 +35,7 @@
 		        			$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrinters, afterErrorFunction:null});
 		        		}).error(
 	    				function (data, status, headers, config, statusText) {
-	 	        			$scope.$emit("HTTPError", {status:status, statusText:statusText});
+	 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 		        		})
 			}
 		}
@@ -49,7 +49,7 @@
 		                	$('#editModal').modal();
 		        		}).error(
 	    				function (data, status, headers, config, statusText) {
-	 	        			$scope.$emit("HTTPError", {status:status, statusText:statusText});
+	 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 		        		})
 		        return;
 			}
