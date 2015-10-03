@@ -101,6 +101,7 @@ public class MachineService {
 	@Path("executeDiagnostic")
 	@Produces(MediaType.APPLICATION_JSON)
 	public void emailSupportLogs() {
+		File zippedFile = new File("LogBundle.zip");
 		String MASK = "Masked by CWH";
 		MessageFormat dumpStack = new MessageFormat(HostProperties.Instance().getDumpStackTraceCommand());
 
@@ -109,7 +110,7 @@ public class MachineService {
 		
 		ZipOutputStream zipOutputStream = null;
 		try {
-			zipOutputStream = new ZipOutputStream(new FileOutputStream("LogBundle.zip"));
+			zipOutputStream = new ZipOutputStream(new FileOutputStream(zippedFile));
 			String logFiles[] = new String[]{"log.scrout", "log.screrr", "log.out", "log.err"};
 			for (String logFile : logFiles) {
 				File file = new File(logFile);
@@ -154,11 +155,12 @@ public class MachineService {
 					"Service Request", 
 					"Attached diagnostic information", 
 					transport,
-					(File[])null);
+					zippedFile);
 		} catch (MessagingException | IOException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException("Failure emailing log bundle.");
 		} finally {
+			zippedFile.delete();
 			if (transport != null) {
 				try {transport.close();} catch (MessagingException e) {}
 			}
