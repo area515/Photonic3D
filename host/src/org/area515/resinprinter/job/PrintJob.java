@@ -129,7 +129,7 @@ public class PrintJob {
 				errorDescription = e.getMessage();
 			}
 			
-			if (!errorDescription.equals("")) {
+			if (!"".equals(errorDescription)) {
 				return errorDescription;
 			}
 			
