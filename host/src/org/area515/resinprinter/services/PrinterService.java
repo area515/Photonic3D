@@ -250,7 +250,7 @@ public class PrinterService {
 				"	bulbFocus,\n" +
 				"	fractions,\n" + 
 				"	colors,\n" +
-				"	MultipleGradientPaint.CycleMethod.NO_CYCLE)");
+				"	java.awt.MultipleGradientPaint.CycleMethod.NO_CYCLE)");
 		try {
 			return new Printer(configuration);
 		} catch (InappropriateDeviceException e) {
