@@ -3,7 +3,7 @@
 cpu=`uname -m`
 
 if [ -z "$1" ]; then
-	repo=area515
+	repo="area515/Creation-Workshop-Host"
 else
 	repo=$1
 fi;
@@ -70,7 +70,7 @@ mkdir -p ${installDirectory}
 cd ${installDirectory}
 cp build.number networkbuildnumber
 mv build.number currentbuildnumber
-wget -t 2 -T 20 https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/build.number
+wget -t 2 -T 20 https://github.com/${repo}/raw/master/host/build.number
 mv build.number networkbuildnumber
 
 if [ -f currentbuildnumber ]; then
@@ -89,7 +89,7 @@ if [ "$networkBuildNumber" -gt "$currentBuildNumber" ]; then
 	rm -r ${installDirectory}
 	mkdir -p ${installDirectory}
 	cd ${installDirectory}
-	wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/cwh-0.${networkBuildNumber}.zip
+	wget https://github.com/${repo}/raw/master/host/cwh-0.${networkBuildNumber}.zip
 	unzip cwh-0.${networkBuildNumber}.zip
 	chmod 777 *.sh
 	rm cwh-0.${networkBuildNumber}.zip

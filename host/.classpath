@@ -22,18 +22,7 @@
 	<classpathentry kind="lib" path="libs/resteasy/resteasy-jackson2-provider-3.0.9.Final.jar"/>
 	<classpathentry kind="lib" path="libs/resteasy/resteasy-jaxrs-3.0.9.Final.jar"/>
 	<classpathentry kind="lib" path="libs/resteasy/resteasy-multipart-provider-3.0.9.Final.jar"/>
-	<classpathentry kind="lib" path="libs/commons-cli-1.2/commons-cli-1.2.jar"/>
-	<classpathentry kind="lib" path="libs/commons-codec-1.9/commons-codec-1.9.jar"/>
-	<classpathentry kind="lib" path="libs/commons-io-2.4/commons-io-2.4.jar"/>
-	<classpathentry kind="lib" path="libs/commons-logging-1.2/commons-logging-1.2.jar"/>
 	<classpathentry kind="lib" path="libs/rxtx/RXTXcomm.jar" sourcepath="/3rdPartySource/src"/>
-	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/cling-core-2.0-alpha3.jar"/>
-	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/cling-support-2.0-alpha3.jar"/>
-	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/httpclient-4.3.3.jar"/>
-	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/httpcore-4.3.2.jar"/>
-	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/seamless-http-1.0-alpha3.jar"/>
-	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/seamless-util-1.0-alpha3.jar"/>
-	<classpathentry kind="lib" path="libs/cling-2.0-alpha3/seamless-xml-1.0-alpha3.jar"/>
 	<classpathentry kind="lib" path="libs/jetty/javax.websocket-api-1.1.jar"/>
 	<classpathentry kind="lib" path="libs/email/mail.jar"/>
 	<classpathentry kind="lib" path="libs/freemarker/freemarker-2.3.21.jar" sourcepath="/3rdPartySource/freemarker"/>
@@ -42,5 +31,16 @@
 	<classpathentry kind="lib" path="libs/junit/hamcrest-core-1.3.jar"/>
 	<classpathentry kind="lib" path="libs/junit/junit-4.12.jar"/>
 	<classpathentry kind="lib" path="libs/guava/guava-18.0.jar"/>
+	<classpathentry kind="lib" path="libs/cling/cling-core-2.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling/cling-support-2.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling/httpclient-4.3.3.jar"/>
+	<classpathentry kind="lib" path="libs/cling/httpcore-4.3.2.jar"/>
+	<classpathentry kind="lib" path="libs/cling/seamless-http-1.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling/seamless-util-1.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling/seamless-xml-1.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/commons-cli/commons-cli-1.2.jar"/>
+	<classpathentry kind="lib" path="libs/commons-codec/commons-codec-1.9.jar"/>
+	<classpathentry kind="lib" path="libs/commons-io/commons-io-2.4.jar"/>
+	<classpathentry kind="lib" path="libs/commons-logging/commons-logging-1.2.jar"/>
 	<classpathentry kind="output" path="srcbin"/>
 </classpath>

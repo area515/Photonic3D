@@ -3,7 +3,7 @@
 cpu=`uname -m`
 
 if [ -z "$1" ]; then
-	repo=area515
+	repo="area515/Creation-Workshop-Host"
 else
 	repo=$1
 fi;
