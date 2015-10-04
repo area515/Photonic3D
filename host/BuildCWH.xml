@@ -5,17 +5,7 @@
 		<property name="deployedServerZipFile" value="cwh-0.${build.number}.zip"/>
 		<property name="deployedTestZipFile" value="cwhTestKit-0.${build.number}.zip"/>
 		<property name="deployedClientZipFile" value="cwhClient-0.${build.number}.zip"/>
-		<!--<echo file="networkinstall.sh" append="false">#!/bin/bash
 
-rm -r cwh
-mkdir cwh
-cd cwh
-wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/${deployedServerZipFile}
-unzip ${deployedServerZipFile}
-chmod 777 start.sh
-chmod 777 debug.sh
-chmod 777 browseprinter.sh
-rm ${deployedServerZipFile}</echo>-->
 		<zip destfile="${deployedServerZipFile}">
 			<zipfileset dir="." includes="**/build.number"/>
 			<zipfileset dir="srcbin" includes="**/*.class"/>
@@ -25,19 +15,19 @@ rm ${deployedServerZipFile}</echo>-->
 			<zipfileset dir="bin" includes="**/*"/>
 			<zipfileset dir="resources" prefix="resources" includes="**/*"/>
 			<zipfileset dir="resourcesnew" prefix="resourcesnew" includes="**/*"/>
-			<zipfileset dir="libs\freemarker" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\commons-cli-1.2" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\commons-codec-1.9" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\commons-io-2.4" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\commons-logging-1.2" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\jetty" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\email" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\resteasy" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\rxtx" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\jssc" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\cling-2.0-alpha3" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\mp4parser" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\guava" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/freemarker" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/commons-cli" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/commons-codec" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/commons-io" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/commons-logging" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/jetty" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/email" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/resteasy" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/rxtx" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/jssc" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/cling" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/mp4parser" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/guava" prefix="lib" includes="**/*"/>
 		</zip>
 		<zip destfile="${deployedTestZipFile}">
 			<zipfileset dir="." includes="**/build.number"/>
@@ -49,26 +39,26 @@ rm ${deployedServerZipFile}</echo>-->
 			<zipfileset dir="testbin" includes="**/*.class"/>
 			<zipfileset dir="os" prefix="os" includes="**/*"/>
 			<zipfileset dir="bin" includes="**/*"/>
-			<zipfileset dir="libs\freemarker" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\commons-cli-1.2" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\commons-codec-1.9" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\commons-io-2.4" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\commons-logging-1.2" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\jetty" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\email" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\resteasy" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\rxtx" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\jssc" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\cling-2.0-alpha3" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\mp4parser" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\junit" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs\guava" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/freemarker" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/commons-cli" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/commons-codec" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/commons-io" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/commons-logging" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/jetty" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/email" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/resteasy" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/rxtx" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/jssc" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/cling" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/mp4parser" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/junit" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/guava" prefix="lib" includes="**/*"/>
 		</zip>
 		<zip destfile="${deployedClientZipFile}">
 			<zipfileset dir="srcbin/org/area515/resinprinter/client" prefix="org/area515/resinprinter/client" includes="**/*.class"/>
 			<zipfileset dir="srcbin/org/area515/resinprinter/slice" prefix="org/area515/resinprinter/slice" includes="**/*.class"/>
 			<zipfileset dir="srcbin/org/area515/resinprinter/stl" prefix="org/area515/resinprinter/stl" includes="**/*.class"/>
-			<zipfileset dir="libs\cling-2.0-alpha3" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/cling" prefix="lib" includes="**/*"/>
 			<zipfileset dir="bin" includes="**/browseprinter.*"/>
 			<zipfileset dir="bin" includes="**/slicebrowser.*"/>
 		</zip>

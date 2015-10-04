@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./start.sh area515 "TestKit"
+./start.sh "area515/Creation-Workshop-Host" "TestKit"
