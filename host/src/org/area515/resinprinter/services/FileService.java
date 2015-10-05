@@ -45,8 +45,8 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 @Path("files")
 public class FileService {
 	public static FileService INSTANCE = new FileService();
-	private static final String UNKNOWN_FILE = "I don't know how do deal with a file of this type:";
-	private static final String NO_FILE = "You didn't attempt to upload a file, or the filename was Blank.";
+	public static final String UNKNOWN_FILE = "I don't know how do deal with a file of this type:";
+	public static final String NO_FILE = "You didn't attempt to upload a file, or the filename was Blank.";
 	
 	private FileService() {
 	}
@@ -108,7 +108,7 @@ public class FileService {
 		}
 
 		// Parse Content-Disposition header to get the original file name
-		private String parseFileName(MultivaluedMap<String, String> headers) {
+		static String parseFileName(MultivaluedMap<String, String> headers) {
 			String[] contentDispositionHeader = headers.getFirst("Content-Disposition").split(";");
 			for (String name : contentDispositionHeader) {
 				if ((name.trim().startsWith("filename"))) {
@@ -122,7 +122,7 @@ public class FileService {
 		}
 
 		// save uploaded file to a defined location on the server
-		private boolean saveFile(InputStream uploadedInputStream, File permanentFile) throws IOException {
+		static boolean saveFile(InputStream uploadedInputStream, File permanentFile) throws IOException {
 			OutputStream output = null;
 			try {
 				File tempFile = File.createTempFile("upload", permanentFile.getName().substring(permanentFile.getName().lastIndexOf(".")));

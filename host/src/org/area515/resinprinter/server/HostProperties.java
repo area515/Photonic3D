@@ -52,6 +52,7 @@ public class HostProperties {
 	private static HostProperties INSTANCE = null;
 	private File uploadDir;
 	private File printDir;
+	private File upgradeDir;
 	private String hostGUI;
 	private boolean fakeSerial = false;
 	private boolean fakedisplay = false;
@@ -102,6 +103,7 @@ public class HostProperties {
 	private HostProperties() {
 		String printDirString = null;
 		String uploadDirString = null;
+		String upgradeDirString = null;
 		
 		if (!PROFILES_DIR.exists() && !PROFILES_DIR.mkdirs()) {
 			System.out.println("Couldn't make profiles directory. No write access or disk full?" );
@@ -147,6 +149,8 @@ public class HostProperties {
 		
 		printDirString = configurationProperties.getProperty("printdir");
 		uploadDirString = configurationProperties.getProperty("uploaddir");
+		upgradeDirString = configurationProperties.getProperty("upgradedir");
+		
 		fakeSerial = new Boolean(configurationProperties.getProperty("fakeserial", "false"));
 		fakedisplay = new Boolean(configurationProperties.getProperty("fakedisplay", "false"));
 		hostGUI = configurationProperties.getProperty("hostGUI", "resources");
@@ -240,6 +244,12 @@ public class HostProperties {
 			uploadDir = new File(uploadDirString);
 		}
 		
+		if (upgradeDirString == null) {
+			upgradeDir = new File(System.getProperty("java.io.tmpdir"), "upgradedir");
+		} else {
+			upgradeDir = new File(upgradeDirString);
+		}
+		
 		File versionFile = new File("build.number");
 		if (versionFile.exists()) {
 			Properties newProperties = new Properties();
@@ -251,7 +261,7 @@ public class HostProperties {
 			}
 		}
 		
-		if(!printDir.exists()){
+		if(!printDir.exists()) {
 			try {
 				FileUtils.forceMkdir(printDir);
 			} catch (IOException e) {
@@ -259,7 +269,7 @@ public class HostProperties {
 			}
 		}
 		
-		if(!uploadDir.exists()){
+		if(!uploadDir.exists()) {
 			try {
 				FileUtils.forceMkdir(uploadDir);
 			} catch (IOException e) {
@@ -267,9 +277,13 @@ public class HostProperties {
 			}
 		}
 		
-		System.out.println("WorkingDir: " + printDir);
-		System.out.println("SourceDir: " + uploadDir);
-		System.out.println("FakeSerial: " + fakeSerial);
+		if(!upgradeDir.exists()) {
+			try {
+				FileUtils.forceMkdir(upgradeDir);
+			} catch (IOException e) {
+				throw new IllegalArgumentException("Couldn't create upgrade directory", e);
+			}
+		}
 	}
 
 	public Properties getConfigurationProperties() {
@@ -310,6 +324,10 @@ public class HostProperties {
 	
 	public File getUploadDir(){
 		return uploadDir;
+	}
+	
+	public File getUpgradeDir(){
+		return upgradeDir;
 	}
 	
 	public File getWorkingDir(){
