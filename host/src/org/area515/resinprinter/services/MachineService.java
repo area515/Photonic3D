@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.zip.ZipEntry;
@@ -29,13 +30,18 @@ import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
 import javax.mail.MessagingException;
 import javax.mail.Transport;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.display.AlreadyAssignedException;
@@ -54,6 +60,8 @@ import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.services.NetInterface.WirelessNetwork;
 import org.area515.util.MailUtilities;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -167,6 +175,48 @@ public class MachineService {
 		}
 	}
 	
+	@POST
+	@Path("/stageOfflineInstall")
+	@Consumes("multipart/form-data")
+	public Response stageOfflineInstall(MultipartFormDataInput input) {
+		String fileName = "";
+		Map<String, List<InputPart>> formParts = input.getFormDataMap();
+
+		List<InputPart> inPart = formParts.get("file");
+		if (inPart == null) {
+			System.out.println("No file specified in multipart mime!");
+			return Response.status(500).build();
+		}
+
+		for (InputPart inputPart : inPart) {
+			try {
+				// Retrieve headers, read the Content-Disposition header to
+				// obtain the original name of the file
+				MultivaluedMap<String, String> headers = inputPart.getHeaders();
+				fileName = FileService.parseFileName(headers);
+
+				// If the filename was blank we aren't interested in the file.
+				if (fileName == null || fileName.isEmpty()) {
+					return Response.status(Status.BAD_REQUEST).entity(FileService.NO_FILE).build();
+				}
+
+				// Handle the body of that part with an InputStream
+				InputStream istream = inputPart.getBody(InputStream.class, null);
+				File newUploadFile = new File(HostProperties.Instance().getUpgradeDir(), fileName);
+
+				if (!FileService.saveFile(istream, newUploadFile.getAbsoluteFile())) {
+					return Response.status(Status.BAD_REQUEST).entity(FileService.UNKNOWN_FILE + fileName).build();
+				}
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		String output = "File saved to upgrade location : " + fileName;
+		return Response.status(Status.OK).entity(output).build();
+	}
+
 	 @Deprecated
 	 @GET
 	 @Path("printers")
