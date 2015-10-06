@@ -77,7 +77,7 @@ mkdir -p ${installDirectory}
 cd ${installDirectory}
 cp build.number networkbuildnumber
 mv build.number currentbuildnumber
-wget -t 2 -T 20 https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/build.number
+wget -t 2 -T 20 https://github.com/${repo}/raw/master/host/build.number
 mv build.number networkbuildnumber
 
 if [ -f currentbuildnumber ]; then
@@ -96,7 +96,7 @@ if [ "$networkBuildNumber" -gt "$currentBuildNumber" -o "$2" == "force" ]; then
 	rm -r ${installDirectory}
 	mkdir -p ${installDirectory}
 	cd ${installDirectory}
-	wget https://github.com/${repo}/Creation-Workshop-Host/raw/master/host/${downloadPrefix}.${networkBuildNumber}.zip
+	wget https://github.com/${repo}/raw/master/host/${downloadPrefix}.${networkBuildNumber}.zip
 	unzip ${downloadPrefix}.${networkBuildNumber}.zip
 	chmod 777 *.sh
 	rm ${downloadPrefix}.${networkBuildNumber}.zip
