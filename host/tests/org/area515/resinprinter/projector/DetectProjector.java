@@ -19,7 +19,7 @@ public class DetectProjector {
 		System.out.println("Projector detection test");
 
 		ComPortSettings newComPortSettings = new ComPortSettings();
-		newComPortSettings.setSpeed(9600);
+		newComPortSettings.setSpeed(115200);
 		newComPortSettings.setDatabits(8);
 		newComPortSettings.setParity("NONE");
 		newComPortSettings.setStopbits("1");
