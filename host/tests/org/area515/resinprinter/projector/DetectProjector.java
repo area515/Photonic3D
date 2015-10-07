@@ -17,6 +17,7 @@ import org.junit.Test;
 public class DetectProjector {
 	@Test
 	public void noErrorsInAutodetectProjectors() {
+		System.out.println("Projector json parse test");
 		HostProperties.Instance().getAutodetectProjectors();
 	}
 	
