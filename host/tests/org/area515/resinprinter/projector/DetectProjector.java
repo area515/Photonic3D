@@ -17,13 +17,13 @@ import org.junit.Test;
 public class DetectProjector {
 	@Test
 	public void noErrorsInAutodetectProjectors() {
-		System.out.println("Projector json parse test");
+		System.out.println("Projector json parse test.");
 		HostProperties.Instance().getAutodetectProjectors();
 	}
 	
 	@Test
 	public void noErrorsDetectingProjector() {
-		System.out.println("Projector detection test");
+		System.out.println("Projector detection test.");
 
 		ComPortSettings newComPortSettings = new ComPortSettings();
 		newComPortSettings.setSpeed(115200);

@@ -5,8 +5,8 @@ import org.junit.Test;
 public class EmailTests {
 	@Test
 	public void noFailuresInDianosticEmail() {
+		System.out.println("Testing dianostic support emailing capability");
 		MachineService.INSTANCE.emailSupportLogs();
-		System.out.println("Emailed logs");
 	}
 }
 
