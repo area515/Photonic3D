@@ -89,6 +89,7 @@ public class HostProperties {
 	//This is for wifi
 	private String discoverSSIDCommand;
 	private String connectToWifiSSIDCommand;
+	private String discoverNetworkInterfaceCommand;
 	
 	//This is for diagnostics
 	private String dumpStackTraceCommand;
@@ -229,6 +230,7 @@ public class HostProperties {
 		imagingCommand = configurationProperties.getProperty("imagingCommand");
 		discoverSSIDCommand = configurationProperties.getProperty("discoverSSIDCommand");
 		connectToWifiSSIDCommand = configurationProperties.getProperty("connectToWifiSSIDCommand");
+		discoverNetworkInterfaceCommand = configurationProperties.getProperty("discoverNetworkInterfaceCommand");
 		hexCodeBasedProjectorsJson = configurationProperties.getProperty("hexCodeBasedProjectors");
 		dumpStackTraceCommand = configurationProperties.getProperty("dumpStackTraceCommand");
 		
@@ -380,6 +382,10 @@ public class HostProperties {
 
 	public String getDiscoverSSIDCommand() {
 		return discoverSSIDCommand;
+	}
+	
+	public String getDiscoverNetworkInterfaceCommand() {
+		return discoverNetworkInterfaceCommand;
 	}
 	
 	public String getDumpStackTraceCommand() {

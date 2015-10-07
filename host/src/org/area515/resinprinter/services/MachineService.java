@@ -268,12 +268,14 @@ public class MachineService {
 	 @Path("networkInterfaces/list")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public List<NetInterface> getNetworkInterfaces() {
-		MessageFormat discoverCommand = new MessageFormat(HostProperties.Instance().getDiscoverSSIDCommand());
+		MessageFormat discoverSSIDCommand = new MessageFormat(HostProperties.Instance().getDiscoverSSIDCommand());
+		String discoverNICCommandString = HostProperties.Instance().getDiscoverNetworkInterfaceCommand();
+
 		List<NetInterface> ifaces = new ArrayList<NetInterface>();
 		
-		//If the format doesn't understand interfaces then we can skip some actions
-		if (discoverCommand.getFormatsByArgumentIndex().length == 0) {
-			String[] ssids = getLinesOfText(discoverCommand, null);
+		//If the discoverSSIDCommand doesn't understand interfaces then we can skip some actions
+		if (discoverSSIDCommand.getFormatsByArgumentIndex().length == 0) {
+			String[] ssids = getLinesOfText(discoverSSIDCommand, null);
 			NetInterface netFace = new NetInterface();
 			netFace.setName("WiFi Profiles");
 			for (String ssid : ssids) {
@@ -289,12 +291,21 @@ public class MachineService {
 		}
 		
 		try {
-			Enumeration<NetworkInterface> networkEnum = NetworkInterface.getNetworkInterfaces();
-			while (networkEnum.hasMoreElements()) {
-				NetworkInterface iface = networkEnum.nextElement();
+			String[] nics = null;
+			if (discoverNICCommandString == null) {
+				nics = getLinesOfText(discoverSSIDCommand, null);
+			} else {
+				List<NetworkInterface> nicList = Collections.list(NetworkInterface.getNetworkInterfaces());
+				nics = new String[nicList.size()];
+				for (int t = 0; t < nicList.size(); t++) {
+					nics[t] = nicList.get(t).getName();
+				}
+			}
+
+			for (String nicName : nics) {
 				NetInterface netFace = new NetInterface();
-				netFace.setName(iface.getName());
-				String[] ssids = getLinesOfText(discoverCommand, null, iface.getName());
+				netFace.setName(nicName);
+				String[] ssids = getLinesOfText(discoverSSIDCommand, null, nicName);
 				for (String ssid : ssids) {
 					if (ssid == null || ssid.trim().equals("")) {
 						continue;
