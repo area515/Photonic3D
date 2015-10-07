@@ -33,6 +33,7 @@ import javax.mail.Transport;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -292,8 +293,8 @@ public class MachineService {
 		
 		try {
 			String[] nics = null;
-			if (discoverNICCommandString == null) {
-				nics = getLinesOfText(discoverSSIDCommand, null);
+			if (discoverNICCommandString != null) {
+				nics = getLinesOfText(new MessageFormat(discoverNICCommandString), null);
 			} else {
 				List<NetworkInterface> nicList = Collections.list(NetworkInterface.getNetworkInterfaces());
 				nics = new String[nicList.size()];
@@ -324,7 +325,7 @@ public class MachineService {
 		}
 	 }
 	 
-	 @GET
+	 @PUT
 	 @Path("networkInterfaces/get/{networkInterfaceName}/wireless/{ssid}/connect/{password}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public void connectToWifiSSID(@PathParam("networkInterfaceName") String networkInterfaceName, @PathParam("ssid") String ssid, @PathParam("password") String password) {

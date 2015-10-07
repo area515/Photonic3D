@@ -16,7 +16,7 @@ import org.junit.Test;
 public class DetectFirmware {
 	@Test
 	public void noErrorsDetectingFirmware() {
-		System.out.println("Firmware detection test");
+		System.out.println("Firmware detection test.");
 
 		ComPortSettings newComPortSettings = new ComPortSettings();
 		newComPortSettings.setSpeed(115200);
