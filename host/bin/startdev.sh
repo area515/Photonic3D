@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./start.sh WesGilster
+./start.sh "WesGilster/Creation-Workshop-Host"

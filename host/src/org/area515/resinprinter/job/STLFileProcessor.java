@@ -86,7 +86,7 @@ public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 				data.slicer.paintSlice(g2);
 				ImageData imageData = data.imageSync.get(imageToBuild);
 				imageData.area = (double)data.slicer.getBuildArea();
-				data.aid.applyMask(g2);
+				data.aid.applyBulbMask(g2);
 				return data.getCurrentImage();
 			} finally {
 				lock.unlock();

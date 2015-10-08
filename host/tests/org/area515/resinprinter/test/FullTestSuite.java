@@ -4,6 +4,7 @@ import org.area515.resinprinter.inkdetection.visual.TestVisualPrintMaterialDetec
 import org.area515.resinprinter.printer.DetectFirmware;
 import org.area515.resinprinter.projector.DetectProjector;
 import org.area515.resinprinter.services.DetectWireless;
+import org.area515.resinprinter.services.EmailTests;
 import org.area515.resinprinter.services.MediaUsage;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -15,6 +16,7 @@ import org.junit.runners.Suite;
 	DetectWireless.class,
 	TestVisualPrintMaterialDetector.class,
 	MediaUsage.class,
+	EmailTests.class
 })
 
 public class FullTestSuite {

@@ -7,6 +7,8 @@ import org.junit.Test;
 public class TestVisualPrintMaterialDetector {
 	@Test
 	public void determineLiquidLevelInAToughSituation() throws IOException {
+		System.out.println("Determining liquid level in: ToughSituation.png.");
+		
 		long start = System.currentTimeMillis();
 		VisualPrintMaterialDetector detector = new VisualPrintMaterialDetector();
 		float liquidRemaining = detector.getPrintMaterialRemaining(TestVisualPrintMaterialDetector.class.getResourceAsStream("ToughSituation.png")) * 100;

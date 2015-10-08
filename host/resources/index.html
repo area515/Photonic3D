@@ -125,6 +125,19 @@
 			refreshStatus();
 		});
 
+		$("#sendDiagnostics").click(function( event ){
+			event.preventDefault();
+			$.ajax({
+				type: 'GET', 
+				url: '/services/machine/executeDiagnostic',
+				dataType: "json",
+	    		error: errorHandler,
+				success: function(data){
+					applyErrorIfNecessary(data, false, false)
+				}
+			});
+		});
+
 		$("#refreshprinterbutton").click(function( event ){
 			event.preventDefault();
 			refreshListbox('/services/files/list', "filesselect")
@@ -903,7 +916,7 @@
 								    <button id="pausejobbutton" name="button2id" class="btn btn-warning btn-block">Toggle Pause</button>
 								    <button id="stopjobbutton" name="button3id" class="btn btn-danger btn-block">Stop Job</button>
 								    <button id="deletejobbutton" name="button4id" class="btn btn-danger btn-block">Delete Job</button>
-								    <button id="refreshprinterbutton" name="button5id" class="btn btn-primary btn-block">Refresh Controls</button>
+								    <button id="sendDiagnostics" name="button5id" class="btn btn-primary btn-block">Send Diagnostics</button>
 								  </div>
 								</div>
 							</fieldset>
