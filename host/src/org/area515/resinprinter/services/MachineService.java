@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -41,8 +40,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.display.AlreadyAssignedException;
@@ -61,6 +60,7 @@ import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.services.NetInterface.WirelessNetwork;
 import org.area515.util.MailUtilities;
+import org.area515.util.TemplateEngine;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
@@ -112,10 +112,8 @@ public class MachineService {
 	public void emailSupportLogs() {
 		File zippedFile = new File("LogBundle.zip");
 		String MASK = "Masked by CWH";
-		MessageFormat dumpStack = new MessageFormat(HostProperties.Instance().getDumpStackTraceCommand());
-
 		String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
-		getLinesOfText(dumpStack, null, pid);
+		TemplateEngine.executeNativeCommand(HostProperties.Instance().getDumpStackTraceCommand(), null, pid);
 		
 		ZipOutputStream zipOutputStream = null;
 		try {
@@ -248,35 +246,22 @@ public class MachineService {
 		 return identifierStrings;
 	 }
 	 
-	private String[] getLinesOfText(MessageFormat command, String friendlyErrorMessage, String... arguments) throws RuntimeException {
-		Process listSSIDProcess;
-		try {
-			listSSIDProcess = Runtime.getRuntime().exec(command.format(arguments));
-			ByteArrayOutputStream output = new ByteArrayOutputStream();
-			IOUtils.copy(listSSIDProcess.getInputStream(), output);
-			return new String(output.toString()).split("\r?\n");
-		} catch (IOException e) {
-			if (friendlyErrorMessage == null) {
-				e.printStackTrace();
-				return new String[]{};
-			}
-			
-			throw new RuntimeException(friendlyErrorMessage, e);
-		}
-	}
-	
 	 @GET
 	 @Path("networkInterfaces/list")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public List<NetInterface> getNetworkInterfaces() {
-		MessageFormat discoverSSIDCommand = new MessageFormat(HostProperties.Instance().getDiscoverSSIDCommand());
-		String discoverNICCommandString = HostProperties.Instance().getDiscoverNetworkInterfaceCommand();
+		String[] discoverSSIDCommandString = HostProperties.Instance().getDiscoverSSIDCommand();
+		String[] discoverNICCommandString = HostProperties.Instance().getDiscoverNetworkInterfaceCommand();
 
 		List<NetInterface> ifaces = new ArrayList<NetInterface>();
+		int requiredArgs = 0;
+		for (String command : discoverSSIDCommandString) {
+			requiredArgs += new MessageFormat(command).getFormatsByArgumentIndex().length;
+		}
 		
 		//If the discoverSSIDCommand doesn't understand interfaces then we can skip some actions
-		if (discoverSSIDCommand.getFormatsByArgumentIndex().length == 0) {
-			String[] ssids = getLinesOfText(discoverSSIDCommand, null);
+		if (requiredArgs == 0) {
+			String[] ssids = TemplateEngine.executeNativeCommand(discoverSSIDCommandString, null);
 			NetInterface netFace = new NetInterface();
 			netFace.setName("WiFi Profiles");
 			for (String ssid : ssids) {
@@ -294,7 +279,7 @@ public class MachineService {
 		try {
 			String[] nics = null;
 			if (discoverNICCommandString != null) {
-				nics = getLinesOfText(new MessageFormat(discoverNICCommandString), null);
+				nics = TemplateEngine.executeNativeCommand(discoverNICCommandString, null);
 			} else {
 				List<NetworkInterface> nicList = Collections.list(NetworkInterface.getNetworkInterfaces());
 				nics = new String[nicList.size()];
@@ -306,7 +291,7 @@ public class MachineService {
 			for (String nicName : nics) {
 				NetInterface netFace = new NetInterface();
 				netFace.setName(nicName);
-				String[] ssids = getLinesOfText(discoverSSIDCommand, null, nicName);
+				String[] ssids = TemplateEngine.executeNativeCommand(discoverSSIDCommandString, null, nicName);
 				for (String ssid : ssids) {
 					if (ssid == null || ssid.trim().equals("")) {
 						continue;
@@ -330,8 +315,7 @@ public class MachineService {
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public void connectToWifiSSID(@PathParam("networkInterfaceName") String networkInterfaceName, @PathParam("ssid") String ssid, @PathParam("password") String password) {
 		    //http://unix.stackexchange.com/questions/92799/connecting-to-wifi-network-through-command-line
-			MessageFormat connectCommand = new MessageFormat(HostProperties.Instance().getConnectToWifiSSIDCommand());
-			String[] data = getLinesOfText(connectCommand, "An error occurred attempting to connect to wireless network.", networkInterfaceName, ssid, password);
+			String[] data = TemplateEngine.executeNativeCommand(HostProperties.Instance().getConnectToWifiSSIDCommand(), "An error occurred attempting to connect to wireless network.", networkInterfaceName, ssid, password);
 			System.out.println(Arrays.toString(data));
 	 }
 	 

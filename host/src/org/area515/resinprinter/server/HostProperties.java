@@ -83,16 +83,16 @@ public class HostProperties {
 	private String clientPassword;
 	
 	//This is for Media
-	private String streamingCommand;
-	private String imagingCommand;
+	private String[] streamingCommand;
+	private String[] imagingCommand;
 	
 	//This is for wifi
-	private String discoverSSIDCommand;
-	private String connectToWifiSSIDCommand;
-	private String discoverNetworkInterfaceCommand;
+	private String[] discoverSSIDCommand;
+	private String[] connectToWifiSSIDCommand;
+	private String[] discoverNetworkInterfaceCommand;
 	
 	//This is for diagnostics
-	private String dumpStackTraceCommand;
+	private String[] dumpStackTraceCommand;
 	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
@@ -226,13 +226,15 @@ public class HostProperties {
 		securityRealmName = configurationProperties.getProperty("securityRealmName", "SecurityRealm");
 		clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", "");
 		clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
-		streamingCommand = configurationProperties.getProperty("streamingCommand");
-		imagingCommand = configurationProperties.getProperty("imagingCommand");
-		discoverSSIDCommand = configurationProperties.getProperty("discoverSSIDCommand");
-		connectToWifiSSIDCommand = configurationProperties.getProperty("connectToWifiSSIDCommand");
-		discoverNetworkInterfaceCommand = configurationProperties.getProperty("discoverNetworkInterfaceCommand");
+		
+
+		streamingCommand = getJSonStringArray("streamingCommand");
+		imagingCommand = getJSonStringArray("imagingCommand");
+		discoverSSIDCommand = getJSonStringArray("discoverSSIDCommand");
+		connectToWifiSSIDCommand = getJSonStringArray("connectToWifiSSIDCommand");
+		discoverNetworkInterfaceCommand = getJSonStringArray("discoverNetworkInterfaceCommand");
 		hexCodeBasedProjectorsJson = configurationProperties.getProperty("hexCodeBasedProjectors");
-		dumpStackTraceCommand = configurationProperties.getProperty("dumpStackTraceCommand");
+		dumpStackTraceCommand = getJSonStringArray("dumpStackTraceCommand");
 		
 		if (printDirString == null) {
 			printDir = new File(System.getProperty("java.io.tmpdir"), "printdir");
@@ -288,6 +290,19 @@ public class HostProperties {
 		}
 	}
 
+	private String[] getJSonStringArray(String property) {
+		String json = configurationProperties.getProperty(property);
+		if (json == null)
+			return null;
+		
+		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+		try {
+			return mapper.readValue(json, new TypeReference<String[]>(){});
+		} catch (IOException e) {
+			throw new IllegalArgumentException("Property:" + property + " didn't parse correctly.", e);
+		}
+	}
+	
 	public Properties getConfigurationProperties() {
 		return configurationProperties;
 	}
@@ -380,27 +395,27 @@ public class HostProperties {
 		return keystoreFile;
 	}
 
-	public String getDiscoverSSIDCommand() {
+	public String[] getDiscoverSSIDCommand() {
 		return discoverSSIDCommand;
 	}
 	
-	public String getDiscoverNetworkInterfaceCommand() {
+	public String[] getDiscoverNetworkInterfaceCommand() {
 		return discoverNetworkInterfaceCommand;
 	}
 	
-	public String getDumpStackTraceCommand() {
+	public String[] getDumpStackTraceCommand() {
 		return dumpStackTraceCommand;
 	}
 
-	public String getConnectToWifiSSIDCommand() {
+	public String[] getConnectToWifiSSIDCommand() {
 		return connectToWifiSSIDCommand;
 	}
 
-	public String getStreamingCommand() {
+	public String[] getStreamingCommand() {
 		return streamingCommand;
 	}
 	
-	public String getImagingCommand() {
+	public String[] getImagingCommand() {
 		return imagingCommand;
 	}
 
