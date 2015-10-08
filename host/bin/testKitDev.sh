@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./start.sh WesGilster "TestKit"
+./start.sh "WesGilster/Creation-Workshop-Host" "TestKit"

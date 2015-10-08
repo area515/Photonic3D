@@ -84,8 +84,8 @@ public class MinerCubePrintFileProcessor implements PrintFileProcessor<Object> {
 				//graphics.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
 				graphics.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
 			}
-
-			aid.applyMask(graphics);
+			
+			aid.applyBulbMask(graphics);
 			data.printer.showImage(image);
 			printCube.currentImage = image;
 			

@@ -1,8 +1,10 @@
 package org.area515.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.text.MessageFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +12,7 @@ import java.util.Map;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
+import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
 
@@ -23,6 +26,30 @@ import freemarker.template.TemplateExceptionHandler;
 public class TemplateEngine {
 	private static StringTemplateLoader templateLoader = new StringTemplateLoader();
 	private static Configuration config = null;
+	
+	public static String[] executeNativeCommand(String[] commands, String friendlyErrorMessage, String... arguments) throws RuntimeException {
+		if (commands == null || commands.length == 0)
+			return new String[]{};;
+		
+		Process listSSIDProcess;
+		try {
+			String[] replacedCommands = new String[commands.length];
+			for (int t = 0; t < commands.length; t++) {
+				replacedCommands[t] = MessageFormat.format(commands[t], arguments);
+			}
+			listSSIDProcess = Runtime.getRuntime().exec(replacedCommands);
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
+			IOUtils.copy(listSSIDProcess.getInputStream(), output);
+			return new String(output.toString()).split("\r?\n");
+		} catch (IOException e) {
+			if (friendlyErrorMessage == null) {
+				e.printStackTrace();
+				return new String[]{};
+			}
+			
+			throw new RuntimeException(friendlyErrorMessage, e);
+		}
+	}
 	
 	public static final TemplateExceptionHandler INFO_IGNORE_HANDLER = new TemplateExceptionHandler() {
 		public void handleTemplateException(TemplateException te, Environment env, Writer out) throws TemplateException {

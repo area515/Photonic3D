@@ -184,7 +184,7 @@ public class PrintFileProcessingAid {
 		return JobStatus.Completed;
 	}
 	
-	public void applyMask(Graphics2D g2) {
+	public void applyBulbMask(Graphics2D g2) {
 		if (data.slicingProfile.getProjectorGradientCalculator() != null && data.slicingProfile.getProjectorGradientCalculator().length() > 0) {
 			Paint maskPaint;
 			try {

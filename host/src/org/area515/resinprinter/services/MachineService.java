@@ -2,28 +2,45 @@ package org.area515.resinprinter.services;
 
 import java.awt.GraphicsDevice;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.management.ManagementFactory;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.text.Format;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Future;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
+import javax.mail.MessagingException;
+import javax.mail.Transport;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
@@ -42,17 +59,163 @@ import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.services.NetInterface.WirelessNetwork;
+import org.area515.util.MailUtilities;
+import org.area515.util.TemplateEngine;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.ByteStreams;
 
 @Path("machine")
 public class MachineService {
 	public static MachineService INSTANCE = new MachineService();
 	
-	private MachineService(){}
+	private MachineService() {}
 	
+	private static ZipEntry zipFile(File fileToZip, ZipOutputStream output) {
+		ZipEntry entry = new ZipEntry(fileToZip.getName());
+		InputStream inStream = null;
+		try {
+			inStream = new BufferedInputStream(new FileInputStream(fileToZip));
+			ByteStreams.copy(inStream, output);
+			inStream.close();
+			return entry;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			IOUtils.closeQuietly(inStream);
+		}
+	}
+	
+	private static ZipEntry zipStream(String name, InputStream inStream, ZipOutputStream output) {
+		ZipEntry entry = new ZipEntry(name);
+		try {
+			output.putNextEntry(entry);
+			ByteStreams.copy(inStream, output);
+			inStream.close();
+			return entry;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			IOUtils.closeQuietly(inStream);
+		}
+	}
+	
+	@GET
+	@Path("executeDiagnostic")
+	@Produces(MediaType.APPLICATION_JSON)
+	public void emailSupportLogs() {
+		File zippedFile = new File("LogBundle.zip");
+		String MASK = "Masked by CWH";
+		String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+		TemplateEngine.executeNativeCommand(HostProperties.Instance().getDumpStackTraceCommand(), null, pid);
+		
+		ZipOutputStream zipOutputStream = null;
+		try {
+			zipOutputStream = new ZipOutputStream(new FileOutputStream(zippedFile));
+			String logFiles[] = new String[]{"log.scrout", "log.screrr", "log.out", "log.err"};
+			for (String logFile : logFiles) {
+				File file = new File(logFile);
+				if (file.exists()) {
+					ZipEntry entry = zipFile(file, zipOutputStream);
+					zipOutputStream.putNextEntry(entry);
+				}
+			}
+			
+			Properties properties = new Properties();
+			properties.putAll(HostProperties.Instance().getConfigurationProperties());
+			properties.put("CWH3DPrinterRealm.clientPassword", MASK);
+			properties.put("keypairPassword", MASK);
+			properties.put("keystorePassword", MASK);
+			properties.put("password", MASK);
+			
+			ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+			properties.store(byteStream, "Stored on " + new Date());
+			zipStream("config.properties", new ByteArrayInputStream(byteStream.toByteArray()), zipOutputStream);
+			
+			byteStream = new ByteArrayOutputStream();
+			System.getProperties().store(byteStream, "Stored on " + new Date());
+			zipStream("System.properties", new ByteArrayInputStream(byteStream.toByteArray()), zipOutputStream);
+			
+			zipOutputStream.finish();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException("Failure creating log bundle.", e);
+		} finally {
+			IOUtils.closeQuietly(zipOutputStream);
+		}
+		
+		Transport transport = null;
+		try {
+			MailUtilities.setMailProperties(HostProperties.Instance().getConfigurationProperties());
+			String emailAddress = (String)HostProperties.Instance().getConfigurationProperties().get("serviceEmailAddresses");
+			String[] serviceEmailAddresses = emailAddress.split("[;,]");
+			transport = MailUtilities.openTransportFromProperties();
+			MailUtilities.executeSMTPSend (
+					HostProperties.Instance().getDeviceName().replace(" ", "") + "@My3DPrinter", 
+					Arrays.asList(serviceEmailAddresses),
+					"Service Request", 
+					"Attached diagnostic information", 
+					transport,
+					zippedFile);
+		} catch (MessagingException | IOException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException("Failure emailing log bundle.");
+		} finally {
+			zippedFile.delete();
+			if (transport != null) {
+				try {transport.close();} catch (MessagingException e) {}
+			}
+		}
+	}
+	
+	@POST
+	@Path("/stageOfflineInstall")
+	@Consumes("multipart/form-data")
+	public Response stageOfflineInstall(MultipartFormDataInput input) {
+		String fileName = "";
+		Map<String, List<InputPart>> formParts = input.getFormDataMap();
+
+		List<InputPart> inPart = formParts.get("file");
+		if (inPart == null) {
+			System.out.println("No file specified in multipart mime!");
+			return Response.status(500).build();
+		}
+
+		for (InputPart inputPart : inPart) {
+			try {
+				// Retrieve headers, read the Content-Disposition header to
+				// obtain the original name of the file
+				MultivaluedMap<String, String> headers = inputPart.getHeaders();
+				fileName = FileService.parseFileName(headers);
+
+				// If the filename was blank we aren't interested in the file.
+				if (fileName == null || fileName.isEmpty()) {
+					return Response.status(Status.BAD_REQUEST).entity(FileService.NO_FILE).build();
+				}
+
+				// Handle the body of that part with an InputStream
+				InputStream istream = inputPart.getBody(InputStream.class, null);
+				File newUploadFile = new File(HostProperties.Instance().getUpgradeDir(), fileName);
+
+				if (!FileService.saveFile(istream, newUploadFile.getAbsoluteFile())) {
+					return Response.status(Status.BAD_REQUEST).entity(FileService.UNKNOWN_FILE + fileName).build();
+				}
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		String output = "File saved to upgrade location : " + fileName;
+		return Response.status(Status.OK).entity(output).build();
+	}
+
 	 @Deprecated
 	 @GET
 	 @Path("printers")
@@ -83,33 +246,22 @@ public class MachineService {
 		 return identifierStrings;
 	 }
 	 
-	private String[] getLinesOfText(MessageFormat discoverCommand, String friendlyErrorMessage, String... arguments) throws RuntimeException {
-		Process listSSIDProcess;
-		try {
-			listSSIDProcess = Runtime.getRuntime().exec(discoverCommand.format(arguments));
-			ByteArrayOutputStream output = new ByteArrayOutputStream();
-			IOUtils.copy(listSSIDProcess.getInputStream(), output);
-			return new String(output.toString()).split("\r?\n");
-		} catch (IOException e) {
-			if (friendlyErrorMessage == null) {
-				e.printStackTrace();
-				return new String[]{};
-			}
-			
-			throw new RuntimeException(friendlyErrorMessage, e);
-		}
-	}
-	
 	 @GET
 	 @Path("networkInterfaces/list")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public List<NetInterface> getNetworkInterfaces() {
-		MessageFormat discoverCommand = new MessageFormat(HostProperties.Instance().getDiscoverSSIDCommand());
+		String[] discoverSSIDCommandString = HostProperties.Instance().getDiscoverSSIDCommand();
+		String[] discoverNICCommandString = HostProperties.Instance().getDiscoverNetworkInterfaceCommand();
+
 		List<NetInterface> ifaces = new ArrayList<NetInterface>();
+		int requiredArgs = 0;
+		for (String command : discoverSSIDCommandString) {
+			requiredArgs += new MessageFormat(command).getFormatsByArgumentIndex().length;
+		}
 		
-		//If the format doesn't understand interfaces then we can skip some actions
-		if (discoverCommand.getFormatsByArgumentIndex().length == 0) {
-			String[] ssids = getLinesOfText(discoverCommand, null);
+		//If the discoverSSIDCommand doesn't understand interfaces then we can skip some actions
+		if (requiredArgs == 0) {
+			String[] ssids = TemplateEngine.executeNativeCommand(discoverSSIDCommandString, null);
 			NetInterface netFace = new NetInterface();
 			netFace.setName("WiFi Profiles");
 			for (String ssid : ssids) {
@@ -125,12 +277,21 @@ public class MachineService {
 		}
 		
 		try {
-			Enumeration<NetworkInterface> networkEnum = NetworkInterface.getNetworkInterfaces();
-			while (networkEnum.hasMoreElements()) {
-				NetworkInterface iface = networkEnum.nextElement();
+			String[] nics = null;
+			if (discoverNICCommandString != null) {
+				nics = TemplateEngine.executeNativeCommand(discoverNICCommandString, null);
+			} else {
+				List<NetworkInterface> nicList = Collections.list(NetworkInterface.getNetworkInterfaces());
+				nics = new String[nicList.size()];
+				for (int t = 0; t < nicList.size(); t++) {
+					nics[t] = nicList.get(t).getName();
+				}
+			}
+
+			for (String nicName : nics) {
 				NetInterface netFace = new NetInterface();
-				netFace.setName(iface.getName());
-				String[] ssids = getLinesOfText(discoverCommand, null, iface.getName());
+				netFace.setName(nicName);
+				String[] ssids = TemplateEngine.executeNativeCommand(discoverSSIDCommandString, null, nicName);
 				for (String ssid : ssids) {
 					if (ssid == null || ssid.trim().equals("")) {
 						continue;
@@ -149,13 +310,12 @@ public class MachineService {
 		}
 	 }
 	 
-	 @GET
+	 @PUT
 	 @Path("networkInterfaces/get/{networkInterfaceName}/wireless/{ssid}/connect/{password}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public void connectToWifiSSID(@PathParam("networkInterfaceName") String networkInterfaceName, @PathParam("ssid") String ssid, @PathParam("password") String password) {
 		    //http://unix.stackexchange.com/questions/92799/connecting-to-wifi-network-through-command-line
-			MessageFormat connectCommand = new MessageFormat(HostProperties.Instance().getConnectToWifiSSIDCommand());
-			String[] data = getLinesOfText(connectCommand, "An error occurred attempting to connect to wireless network.", networkInterfaceName, ssid, password);
+			String[] data = TemplateEngine.executeNativeCommand(HostProperties.Instance().getConnectToWifiSSIDCommand(), "An error occurred attempting to connect to wireless network.", networkInterfaceName, ssid, password);
 			System.out.println(Arrays.toString(data));
 	 }
 	 
