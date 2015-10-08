@@ -10,7 +10,6 @@
 <style>
 .vcenter{
     display: inline-block;
-    vertical-align: middle;
     width: 40%;
 }
 </style>
@@ -713,7 +712,7 @@
 
 <body>
 <div class="panel with-nav-tabs panel-default">
-	<div class="jumbotron well">
+	<div class="jumbotron well" style="margin-bottom:0px;border:0px;">
 		<p>
 			Use the controls below to interact with your machine.
 		</p>
@@ -744,25 +743,46 @@
 
 
     			<div class="col-md-12 column">
-    				<h3 class="text-center">Job Status</h3>
-    				<div class="col-md-12">
+    				
+    				<div class="panel panel-default">
+    					<div class="panel-heading">
+    						<h3 class="panel-title">Status</h3>
+    					</div>
+    					<div class="panel-body">
     					<input id="statustext" name="textinput" type="text" placeholder="Unknown" readonly class="form-control input-md text-center">
+    					</div>
     				</div>
 
-    				<h3 class="text-center">Job Progress</h3>
-    				<div id="progresslabel" class="text-center">Slices</div>
-    				<p id="progresstext" class="text-center">0/0</p>
-    				<p id="totalcost" class="text-center">$0.00</p>
-    				<progress id="sliceprogress" style="width: 100%"></progress>
+    				<div class="panel panel-default">
+    					<div class="panel-heading">
+    						<h3 class="panel-title">Job Progress</h3>
+    					</div>
+    					<div class="panel-body">
 
-    				<div class="row text-center">
-    					<img class="vcenter" id="currentSliceImage" src="/services/machine/currentsliceImage/noJobSelected" alt="Current Slice" width="50%" height="50%">
-    					<video class="vcenter" width="275" height="206" controls>
-    						<source src="video/camera.mp4" type="video/mp4">
-    							Your browser does not support the video tag.
-    					</video>
-    					<button id="startrecordbutton" name="button1id" class="btn btn-success btn-block" onclick="startVideoRecord()">Record Video</button>
-    					<button id="stoprecordbutton" name="button3id" class="btn btn-danger btn-block" onclick="stopVideoRecord()">Stop Recording Video</button>
+
+    						<div id="progresslabel" class="text-center">Slices</div>
+    						<p id="progresstext" class="text-center">0/0</p>
+    						<p id="totalcost" class="text-center">$0.00</p>
+    						<progress id="sliceprogress" style="width: 100%"></progress>
+    					</div>
+    				</div>
+    				
+    				<div class="panel panel-default">
+    					<div class="panel-heading">
+    						<h3 class="panel-title">Video</h3>
+    					</div>
+    					<div class="panel-body">
+    						<div class="row text-center">
+    							<img class="vcenter" id="currentSliceImage" src="/services/machine/currentsliceImage/noJobSelected" alt="Current Slice" width="50%" height="50%">
+    							<video class="vcenter" width="275" height="206" controls>
+    								<source src="video/camera.mp4" type="video/mp4">
+    									Your browser does not support the video tag.
+    							</video>
+    							
+    						</div>
+    						<button id="startrecordbutton" name="button1id" class="btn btn-success btn-block" onclick="startVideoRecord()">Record Video</button>
+    							<button id="stoprecordbutton" name="button3id" class="btn btn-danger btn-block" onclick="stopVideoRecord()">Stop Recording Video</button>
+    					</div>
     				</div>
 
 						<!-- <div>
@@ -778,52 +798,67 @@
             <div class="tab-pane fade" id="tabjobs">
 
             	<div class="col-md-6 column">
-            		<form class="form-horizontal">
-            			<fieldset>
-            				<legend>Job Controls</legend>
-            				<div class="form-group">
-            					<label class="col-md-4 control-label" for="selectmultiple">Uploads</label>
-            					<div class="col-md-8">
-            						<select id="filesselect" name="selectmultiple" class="form-control block-level" multiple="multiple">
-            						</select>
-            					</div>
-            				</div>
+            		<div class="panel panel-default">
+            			<div class="panel-heading">
+            				<h3 class="panel-title">Job Controls</h3>
+            			</div>
+            			<div class="panel-body">
 
-            				<div class="form-group">
-            					<label class="col-md-4 control-label" for="button1id">Actions</label>
+            				<form class="form-horizontal">
+            					<fieldset>
+
+            						<div class="form-group">
+            							<label class="col-md-4 control-label" for="selectmultiple">Uploads</label>
+            							<div class="col-md-8">
+            								<select id="filesselect" name="selectmultiple" class="form-control block-level" multiple="multiple">
+            								</select>
+            							</div>
+            						</div>
+
+            						<div class="form-group">
+            							<label class="col-md-4 control-label" for="button1id">Actions</label>
+            							<div class="col-md-8">
+            								<button id="startjobbutton" name="button1id" class="btn btn-success btn-block">Start Job</button>
+            								<button id="pausejobbutton" name="button2id" class="btn btn-warning btn-block">Toggle Pause</button>
+            								<button id="stopjobbutton" name="button3id" class="btn btn-danger btn-block">Stop Job</button>
+            								<button id="deletejobbutton" name="button4id" class="btn btn-danger btn-block">Delete Job</button>
+            								<button id="sendDiagnostics" name="button5id" class="btn btn-primary btn-block">Send Diagnostics</button>
+            							</div>
+            						</div>
+            					</fieldset>
+            				</form>
+            				<form id="uploadform" enctype="multipart/form-data">
+            					<label class="col-md-4 control-label" for="filebutton">Upload</label>
             					<div class="col-md-8">
-            						<button id="startjobbutton" name="button1id" class="btn btn-success btn-block">Start Job</button>
-            						<button id="pausejobbutton" name="button2id" class="btn btn-warning btn-block">Toggle Pause</button>
-            						<button id="stopjobbutton" name="button3id" class="btn btn-danger btn-block">Stop Job</button>
-            						<button id="deletejobbutton" name="button4id" class="btn btn-danger btn-block">Delete Job</button>
-            						<button id="sendDiagnostics" name="button5id" class="btn btn-primary btn-block">Send Diagnostics</button>
+            						<input id="choosefilebutton" name="file" type="file" />
+            						<input id="uploadfilebutton" type="button" value="Upload" />
             					</div>
+            					<label class="col-md-4 control-label" for="filebutton">Upload STL</label>
+            					<div class="col-md-8">
+            						<input id="chooseurltext" name="stlfile" type="text" />
+            						<input id="uploadurlbutton" type="button" value="Upload URL" />
+            					</div>
+            				</form>
+            				<label class="col-md-4 control-label" for="uploadprogress">Upload Progress</label>
+            				<div class="col-md-8">
+            					<progress id="uploadprogress" style="width:100%"></progress>
             				</div>
-            			</fieldset>
-            		</form>
-            		<form id="uploadform" enctype="multipart/form-data">
-            			<label class="col-md-4 control-label" for="filebutton">Upload</label>
-            			<div class="col-md-8">
-            				<input id="choosefilebutton" name="file" type="file" />
-            				<input id="uploadfilebutton" type="button" value="Upload" />
             			</div>
-            			<label class="col-md-4 control-label" for="filebutton">Upload STL</label>
-            			<div class="col-md-8">
-            				<input id="chooseurltext" name="stlfile" type="text" />
-            				<input id="uploadurlbutton" type="button" value="Upload URL" />
-            			</div>
-            		</form>
-            		<label class="col-md-4 control-label" for="uploadprogress">Upload Progress</label>
-            		<div class="col-md-8">
-            			<progress id="uploadprogress" style="width:100%"></progress>
             		</div>
             	</div>
-
             </div>
 
 
-            <div class="tab-pane fade" id="tabmotors">Motors tab
+            <div class="tab-pane fade" id="tabmotors">
+
             	<div id="motorscontrolcontainer">
+
+            		<div class="panel panel-default">
+            			<div class="panel-heading">
+            				<h3 class="panel-title">Motors</h3>
+            			</div>
+            			<div class="panel-body">
+
             		<div class="col-md-1 column">
             			<h3 class="text-center">X</h3>
             			<button type="button" class="btn btn-primary btn-block" onclick="requestForPrinter('homex', null)">Home X</button>
@@ -870,7 +905,8 @@
             				<button type="button" class="btn btn-block btn-primary" onclick="sendGCode()">Go</button>
             			</div>
             		</div>		
-
+</div>
+</div>
 
             	</div>
 
@@ -879,9 +915,15 @@
 
             <div class="tab-pane fade" id="tabdlp">
             	<div class="col-md-6 column">
+
+            	<div class="panel panel-default">
+            			<div class="panel-heading">
+            				<h3 class="panel-title">DLP</h3>
+            			</div>
+            			<div class="panel-body">
 						<form class="form-horizontal">
 						<fieldset>
-							<legend>DLP Controls</legend>
+							
 							<div class="col-md-4 column">
 						   		<h5 class="text-center">Lift Speed (mm/m)</h5>
 								<button type="button" class="btn btn-block btn-success" value="0.25" onclick="setZLiftSpeed(this.value)">+</button>
@@ -916,6 +958,8 @@
 							</div>
 						</fieldset>
 				   	</form>
+				   	</div>
+				  </div>
 				</div>
 
             </div>
@@ -924,10 +968,15 @@
 
             <div class="tab-pane fade" id="tabselectprinter">
             	<div class="col-md-6 column">
+            	<div class="panel panel-default">
+            			<div class="panel-heading">
+            				<h3 class="panel-title">Select Printer</h3>
+            			</div>
+            			<div class="panel-body">
             		<form class="form-horizontal">
             			<fieldset>
 
-            				<legend>Select Printer</legend>
+            				
             				
 
             				<div class="form-group">
@@ -951,15 +1000,19 @@
             			</fieldset>
             		</form>
             	</div>
-
+            	</div>
+            	</div>
             </div>
 
             <div class="tab-pane fade" id="tabnewprinter">
             	<div class="col-md-6 column">
+            	<div class="panel panel-default">
+            			<div class="panel-heading">
+            				<h3 class="panel-title">Create Printer</h3>
+            			</div>
+            			<div class="panel-body">
             		<form class="form-horizontal">
             			<fieldset>
-
-            				<legend>Create Printer</legend>
             				<label class="col-md-4 control-label">New Printer Name</label>
             				<input type="text" class="form-control" id="newPrinterNameText" placeholder="Enter new printer name">
 
@@ -988,7 +1041,8 @@
             			</fieldset>
             		</form>
             	</div>
-
+            	</div>
+            	</div>
             </div>
 
 
