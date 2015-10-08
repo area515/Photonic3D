@@ -59,9 +59,14 @@ public class MediaService {
 			}
 
 			System.out.println("Attempting to start video");
-			final String streamingCommand = HostProperties.Instance().getStreamingCommand();
+			final String[] streamingCommand = HostProperties.Instance().getStreamingCommand();
 			try {
-				rawH264ProducerProcess = Runtime.getRuntime().exec(MessageFormat.format(streamingCommand, x, y));
+				String[] replacedCommands = new String[streamingCommand.length];
+				for (int t = 0; t < streamingCommand.length; t++) {
+					replacedCommands[t] = MessageFormat.format(streamingCommand[t], x, y);
+				}				
+				
+				rawH264ProducerProcess = Runtime.getRuntime().exec(replacedCommands);
 				final BufferedInputStream inputStream = new BufferedInputStream(rawH264ProducerProcess.getInputStream());
 				final FileOutputStream outputStream = new FileOutputStream(rawh264StreamFile);
 
@@ -175,11 +180,16 @@ public class MediaService {
 	    return new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
-				String streamingCommand = HostProperties.Instance().getImagingCommand();
+				String[] streamingCommand = HostProperties.Instance().getImagingCommand();
+				String[] replacedCommands = new String[streamingCommand.length];
+				for (int t = 0; t < streamingCommand.length; t++) {
+					replacedCommands[t] = MessageFormat.format(streamingCommand[t], x, y);
+				}				
+				
 				InputStream inputStream = null;
 				processLock.lock();
 				try {
-					Process imagingProcess = Runtime.getRuntime().exec(MessageFormat.format(streamingCommand, x, y));
+					Process imagingProcess = Runtime.getRuntime().exec(replacedCommands);
 					ByteStreams.copy(imagingProcess.getInputStream(), output);
 				} finally {
 					if (inputStream != null) {
