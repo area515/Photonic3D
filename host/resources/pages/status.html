@@ -3,14 +3,19 @@
     <!--
         Status panel
     -->
+    
     <div class="panel panel-default">
         <div class="panel-heading">
           <h3 class="panel-title">Status</h3>
         </div>
         <div class="panel-body">
+            <label for="statustext">Status: </label>
+            
+  
             <input id="statustext" name="textinput" type="text" placeholder="Unknown" class="form-control input-md text-center" readonly="readonly"/>
         </div>
     </div>
+    
 
     <!--
         Job Progress panel
@@ -22,9 +27,25 @@
         <div class="panel-body">
 
              <div class="col-md-6">
-                 <div id="progresslabel" class="text-center">Slices</div>
-                 <p id="progresstext" class="text-center">0/0</p>
-                 <p id="totalcost" class="text-center">$0.00</p>
+                 <form class="form-inline">
+                      <label for="progresstest" class="col-sm-2 control-label">Slices: </label>
+                      <div class="form-group">
+                        <input type="text" id="progresstest" name="progresstest" value="0/0" class="form-control">
+                      </div>
+                      <!-- rest of form -->
+                  </form>
+                  <form class="form-inline">
+                        <label for="totalcost" class="col-sm-2 control-label">Cost: </label>
+                      <div class="form-group">
+                        <input type="text" id="totalcost" name="totalcost" value="$0.00" class="form-control">
+                      </div>
+
+                  </form>
+
+
+                 <!-- <div id="progresslabel" class="text-center">Slices</div>
+                 <p id="progresstext" class="text-center">0/0</p> -->
+                 <!-- <p id="totalcost" class="text-center">$0.00</p> -->
                  <img class="img-responsive" id="currentSliceImage" src="img/graphic-stacked-fruit-apple.jpg" alt="img/graphic-stacked-fruit-apple.jpg"/>
             </div>
 
@@ -42,10 +63,10 @@
         <div class="panel-body">
 
             <div class="row text-center">
-                <!-- <video class="vcenter" width="275" height="206" controls>
+                <video class="vcenter" width="275" height="206" controls>
                     <source src="video/camera.mp4" type="video/mp4"></source>
                     Your browser does not support the video tag.
-                </video> -->
+                </video>
             </div>
 
             <button id="startrecordbutton" name="button1id" class="btn btn-success btn-block" onclick="startVideoRecord()">Record Video</button>

@@ -8,7 +8,13 @@ $( document ).ready(function() {
   $("#tabselectprinter").load("pages/selectprinter.html");
   $("#tabnewprinter").load("pages/newprinter.html");
 
-  alert("Welcome to the print wizard demo\n\nEnjoy!!");
+  //alert("Welcome to the print wizard demo\n\nEnjoy!!");
+
+  $(document).on('click','.navbar-collapse.in',function(e) {
+    if( $(e.target).is('a') ) {
+        $(this).collapse('hide');
+    }
+  });
 
 //   $(".maincontent").on('click',function(e) {
 //    e.preventDefault(); // stops link form loading
