@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Bootstrap Case</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+  <script type="text/javascript" src="js/cwh-pageloader.js"></script>
+
+</head>
+<body>
+
+<nav class="navbar navbar-default collapse navbar-collapse navHeaderCollapse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">WebSiteName</a>
+    </div>
+    <div>
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#tabstatus" data-toggle="tab">Status</a></li>
+        <li class=""><a href="#tabjobs" data-toggle="tab">Jobs</a></li>
+        <li class=""><a href="#tabmotors" data-toggle="tab">Motors</a></li>
+        <li class=""><a href="#tabdlp" data-toggle="tab">DLP</a></li>
+        <li class="dropdown">
+        <a href="#" data-toggle="dropdown">Printer<span class="caret"></span></a>
+        <ul class="dropdown-menu" role="menu">
+          <li><a href="#tabselectprinter" data-toggle="tab">Select Printer</a></li>
+          <li><a href="#tabnewprinter" data-toggle="tab">New Printer</a></li>
+        </ul>
+      </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- <div class="jumbotron">
+    <h1>My first Bootstrap website!</h1>      
+    <p>This page will grow as we add more and more components from Bootstrap...</p>      
+    <a href="#" class="btn btn-info btn-lg"><span class="glyphicon glyphicon-search"></span> Search</a>
+  </div> -->
+
+  <div class="panel with-nav-tabs panel-default" style="border:0px;">
+  
+    <div class="panel-body">
+        <div class="tab-content">
+
+          <div class="tab-pane fade in active maincontent" id="tabstatus"></div>
+          <div class="tab-pane fade in maincontent" id="tabjobs"></div>
+          <div class="tab-pane fade in maincontent" id="tabmotors"></div>
+          <div class="tab-pane fade in maincontent" id="tabdlp"></div>
+          <div class="tab-pane fade in maincontent" id="tabselectprinter"></div>
+          <div class="tab-pane fade in maincontent" id="tabnewprinter"></div>
+
+        </div>
+    </div>
+  </div>
+
+
+</div>
+
+</body>
+</html>

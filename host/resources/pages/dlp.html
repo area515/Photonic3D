@@ -1,0 +1,47 @@
+<div class="col-md-6 column">
+
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h3 class="panel-title">DLP</h3>
+		</div>
+		<div class="panel-body">
+			<form class="form-horizontal">
+				<fieldset>
+
+					<div class="col-md-4 column">
+						<h5 class="text-center">Lift Speed (mm/m)</h5>
+						<button type="button" class="btn btn-block btn-success" value="0.25" onclick="setZLiftSpeed(this.value)">+</button>
+						<input type="text" class="form-control" id="liftSpeedText" placeholder="millimeters per minute" value="1"/>
+						<button type="button" class="btn btn-block btn-danger" value="-.25" onclick="setZLiftSpeed(this.value)">-</button>
+						<button type="button" class="btn btn-block btn-primary" value="0" onclick="setZLiftSpeed(this.value)">Go</button>
+					</div>
+					<div class="col-md-4 column">
+						<h5 class="text-center">Lift Distance (mm)</h5>
+						<button type="button" class="btn btn-block btn-success" value="0.5" onclick="setZLiftDistance(this.value)">+</button>
+						<input type="text" class="form-control" id="liftDistanceText" placeholder="millimeters" value="5"/>
+						<button type="button" class="btn btn-block btn-danger" value="-0.5" onclick="setZLiftDistance(this.value)">-</button>
+						<button type="button" class="btn btn-block btn-primary" value="0" onclick="setZLiftDistance(this.value)">Go</button>
+					</div>
+					<div class="col-md-4 column">
+						<h5 class="text-center">DLP Exposure Time (ms)</h5>
+						<button type="button" class="btn btn-block btn-success" value="300" onclick="sendExposureTime(this.value)">+</button>
+						<input type="text" class="form-control" id="exposureTimeText" placeholder="milliseconds"/>
+						<button type="button" class="btn btn-block btn-danger" value="-300" onclick="sendExposureTime(this.value)">-</button>
+						<button type="button" class="btn btn-block btn-primary" value="0" onclick="sendExposureTime(this.value)">Go</button>
+					</div>
+					<div class="col-md-4 column">
+						<h5 class="text-center">Show calibration screen (pixels)</h5>
+						<button type="button" class="btn btn-block btn-success" value="10" onclick="showCalibrationScreen(this.value)">+</button>
+						<input type="text" class="form-control" id="calibrationPixelsText" placeholder="pixels" value="10"/>
+						<button type="button" class="btn btn-block btn-danger" value="-10" onclick="showCalibrationScreen(this.value)">-</button>
+						<button type="button" class="btn btn-block btn-primary" value="0" onclick="showCalibrationScreen(this.value)">Go</button>
+					</div>
+					<div class="col-md-4 column">
+						<h5 class="text-center">Show blank screen</h5>
+						<button type="button" class="btn btn-block btn-primary" onclick="requestForPrinter('showblankscreen', null)">Go</button>
+					</div>
+				</fieldset>
+			</form>
+		</div>
+	</div>
+</div>
