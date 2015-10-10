@@ -1,0 +1,58 @@
+<div id="motorscontrolcontainer">
+
+    <div class="panel panel-default">
+         <div class="panel-heading">
+              <h3 class="panel-title">Motors</h3>
+        </div>
+        <div class="panel-body">
+
+          <div class="col-md-1 column">
+               <h3 class="text-center">X</h3>
+               <button type="button" class="btn btn-primary btn-block" onclick="requestForPrinter('homex', null)">Home X</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movex', '50.0')">50.0</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movex', '10.0')">10.0</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movex', '1.0')">1.0</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movex', '.025')">.025</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movex', '-.025')">-.025</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movex', '-1.0')">-1.0</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movex', '-10.0')">-10.0</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movex', '-50.0')">-50.0</button>
+         </div>
+         <div class="col-lg-1 column">
+               <h3 class="text-center">Y</h3>
+               <button type="button" class="btn btn-primary btn-block" onclick="requestForPrinter('homey', null)">Home Y</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movey', '50.0')">50.0</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movey', '10.0')">10.0</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movey', '1.0')">1.0</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movey', '.025')">.025</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movey', '-.025')">-.025</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movey', '-1.0')">-1.0</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movey', '-10.0')">-10.0</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movey', '-50.0')">-50.0</button>
+         </div>
+         <div class="col-md-1 column">
+               <h3 class="text-center">Z</h3>
+               <button type="button" class="btn btn-primary btn-block" onclick="requestForPrinter('homez', null)">Home Z</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movez', '50.0')">50.0</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movez', '10.0')">10.0</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movez', '1.0')">1.0</button>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('movez', '.025')">.025</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movez', '-.025')">-.025</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movez', '-1.0')">-1.0</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movez', '-10.0')">-10.0</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('movez', '-50.0')">-50.0</button>
+         </div>
+         <div class="col-md-2 column">
+               <h3 class="text-center">Motors</h3>
+               <button type="button" class="btn btn-block btn-success" onclick="requestForPrinter('motorson', null)">Enable</button>
+               <button type="button" class="btn btn-block btn-danger" onclick="requestForPrinter('motorsoff', null)">Disable</button>
+               <h3 class="text-center">Manual GCode</h3>
+               <div class="row">
+               <input type="text" class="form-control" id="sendGcodeText" placeholder="gcode"/>
+                    <button type="button" class="btn btn-block btn-primary" onclick="sendGCode()">Go</button>
+              </div>
+        </div>		
+  </div>
+</div>
+
+</div>

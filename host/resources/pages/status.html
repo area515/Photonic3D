@@ -1,0 +1,57 @@
+<div class="col-md-12 column">
+
+    <!--
+        Status panel
+    -->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Status</h3>
+        </div>
+        <div class="panel-body">
+            <input id="statustext" name="textinput" type="text" placeholder="Unknown" class="form-control input-md text-center" readonly="readonly"/>
+        </div>
+    </div>
+
+    <!--
+        Job Progress panel
+    -->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Job Progress</h3>
+        </div>
+        <div class="panel-body">
+
+             <div class="col-md-6">
+                 <div id="progresslabel" class="text-center">Slices</div>
+                 <p id="progresstext" class="text-center">0/0</p>
+                 <p id="totalcost" class="text-center">$0.00</p>
+                 <img class="img-responsive" id="currentSliceImage" src="img/graphic-stacked-fruit-apple.jpg" alt="img/graphic-stacked-fruit-apple.jpg"/>
+            </div>
+
+            <progress id="sliceprogress" style="width: 100%"></progress>
+        </div>
+    </div>
+
+    <!--
+        Video panel
+    -->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Video</h3>
+        </div>
+        <div class="panel-body">
+
+            <div class="row text-center">
+                <!-- <video class="vcenter" width="275" height="206" controls>
+                    <source src="video/camera.mp4" type="video/mp4"></source>
+                    Your browser does not support the video tag.
+                </video> -->
+            </div>
+
+            <button id="startrecordbutton" name="button1id" class="btn btn-success btn-block" onclick="startVideoRecord()">Record Video</button>
+            <button id="stoprecordbutton" name="button3id" class="btn btn-danger btn-block" onclick="stopVideoRecord()">Stop Recording Video</button>
+        </div>
+    </div> 
+
+
+</div>
