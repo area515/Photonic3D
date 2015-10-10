@@ -1,39 +1,40 @@
-<div class="col-md-12 column">
-
     <!--
         Status panel
     -->
-    
-    <div class="panel panel-default">
-        <div class="panel-heading">
-          <h3 class="panel-title">Overview</h3>
-        </div>
+    <div class="row form-group">
+        <div class="col-xs-12 col-md-6">
 
-        
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">Overview</h3>
+                </div>
 
-        <div class="panel-body">
-            <div class="col-md-6">
+                <div class="panel-body">
+                    
 
-                <form class="form-horizontal">
-                    <div class="form-group">
-                        <label for="statustext" class="col-sm-2 control-label">Status</label>
-                            <div class="col-sm-4">
-                                <input id="statustext" name="textinput" type="text" placeholder="Unknown" class="form-control input-md text-center" readonly="readonly"/>
+                        <form class="form-horizontal">
+
+                            <div class="form-group">
+                                <label for="printernametext" class="col-xs-4 col-sm-4 col-md-2 control-label">Printer</label>
+                                <div class="col-xs-8 col-sm-8 col-md-4">
+                                    <input type="text" id="printernametext" name="printernametext" value="None Selected" class="form-control">
+                                </div>
                             </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="printernametext" class="col-sm-2 control-label">Printer</label>
-                        <div class="col-sm-4">
-                            <input type="text" id="printernametext" name="printernametext" value="None Selected" class="form-control">
-                        </div>
-                    </div>
+                            <div class="form-group">
+                                    <label for="statustext" class="col-xs-4 col-sm-4 col-md-2 control-label">Printer</label>
+                                    <div class="col-xs-8 col-sm-8 col-md-4">
+                                        <input id="statustext" name="textinput" type="text" placeholder="Unknown" class="form-control input-md text-center" readonly="readonly"/>
+                                    </div>
+                            </div>
 
-                </form>
+                        </form>
 
+                    
+                    <!-- <label for="statustext">Status: </label>  
+                    <input id="statustext" name="textinput" type="text" placeholder="Unknown" class="form-control input-md text-center" readonly="readonly"/> -->
+                </div>
             </div>
-            <!-- <label for="statustext">Status: </label>  
-            <input id="statustext" name="textinput" type="text" placeholder="Unknown" class="form-control input-md text-center" readonly="readonly"/> -->
         </div>
     </div>
     
@@ -41,60 +42,75 @@
     <!--
         Job Progress panel
     -->
-    <div class="row">
-    <div class="col-md-3">
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <h3 class="panel-title">Job Progress</h3>
-        </div>
-        <div class="panel-body">
+    
+    <div class="row form-group">
+        <div class="col-xs-12 col-md-6">
+            <div class="panel panel-default">
+                
+                <div class="panel-image">
+                    <img class="img-responsive center-block" id="currentSliceImage" src="img/graphic-stacked-fruit-apple.jpg" alt="img/graphic-stacked-fruit-apple.jpg"/>
+                </div>
 
-             <!-- <div class="col-md-6"> -->
-                 <form class="form-horizontal">
-                    <div class="form-group">
-                      <label for="progresstest" class="col-md-4 control-label">Slices</label>
-                      <div class="col-md-8">
-                        <input type="text" id="progresstest" name="progresstest" value="0/0" class="form-control">
-                     </div>
-                      
+                    <div class="panel-footer text-center">
+                        <form class="form-horizontal">
+                            
+                            <div class="form-group">
+                                <div class="col-xs-12 col-md-12">
+                                    <progress id="sliceprogress" style="width: 100%"></progress>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                              <label for="progresstest" class="col-xs-4 col-sm-4 col-md-2 control-label">Slices</label>
+                              <div class="col-xs-8 col-sm-8 col-md-4">
+                                <input type="text" id="progresstest" name="progresstest" value="0/0" class="form-control">
+                             </div>
+                            </div>
+
+                             <div class="form-group">
+                              <label for="totalcost" class="col-xs-4 col-sm-4 col-md-2 control-label">Cost</label>
+                              <div class="col-xs-8 col-sm-8 col-md-4">
+                                <input type="text" id="totalcost" name="totalcost" value="$0.00" class="form-control">
+                              </div>
+                            </div>
+
+
+
+                          </form>
                     </div>
-                     <div class="form-group">
-                      <label for="totalcost" class="col-sm-4 control-label">Cost</label>
-                      <div class="col-sm-8">
-                        <input type="text" id="totalcost" name="totalcost" value="$0.00" class="form-control">
-                      </div>
-                    </div>
 
-                  </form>
-                  
-                 <img class="img-responsive" id="currentSliceImage" src="img/graphic-stacked-fruit-apple.jpg" alt="img/graphic-stacked-fruit-apple.jpg"/>
-            <!-- </div> -->
-
-            <progress id="sliceprogress" style="width: 100%"></progress>
-        </div>
-    </div>
-    </div>
-    </div>
-    <!--
-        Video panel
-    -->
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <h3 class="panel-title">Video</h3>
-        </div>
-        <div class="panel-body">
-
-            <div class="row text-center">
-                <video class="vcenter" width="275" height="206" controls>
-                    <source src="video/camera.mp4" type="video/mp4"></source>
-                    Your browser does not support the video tag.
-                </video>
             </div>
-
-            <button id="startrecordbutton" name="button1id" class="btn btn-success btn-block" onclick="startVideoRecord()">Record Video</button>
-            <button id="stoprecordbutton" name="button3id" class="btn btn-danger btn-block" onclick="stopVideoRecord()">Stop Recording Video</button>
         </div>
-    </div> 
+    
+        <!--
+            Video panel
+        -->
+        <div class="col-xs-12 col-md-6">
+            <div class="panel panel-default">
 
+                <div class="panel-image">
+                    <div class="embed-responsive embed-responsive-4by3 video-wrapper">
+                        <video class="embed-responsive-item" style="width:100%;vertical-align:center;display: inline-block;" controls>
+                            <source src="video/camera.mp4" type="video/mp4"></source>
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </div>
+                <!-- <div class="panel-body">
+                </div> -->
+                <div class="panel-footer text-center">
+                    <button id="startrecordbutton" name="button1id" class="btn btn-default btn-block" onclick="startVideoRecord()">
+                        <!-- <span class="glyphicon glyphicon-record" style=""></span> -->
+                        Record Video
+                    </button>
+                    <button id="stoprecordbutton" name="button3id" class="btn btn-default btn-block" onclick="stopVideoRecord()">
+                        <!-- <span class="glyphicon glyphicon-stop" style="vertical-align:middle"></span> -->
+                        Stop Recording Video
+                    </button>
 
-</div>
+                </div>
+            </div> 
+        </div>
+
+    </div>
+<!-- </div> -->
