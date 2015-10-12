@@ -30,6 +30,17 @@
       $(':button').click(function (event) {
         event.preventDefault();
       });
+
+      // when the screen is smaller, the nav bar will collapse
+      // after selecting something from the navbar, it will stay open
+      // this snippet will close the navbar after a selection is made
+     $(document).on('click','.navbar-collapse.in',function(e) {
+        if( $(e.target).is('a') ) {
+            $(this).collapse('hide');
+        }
+      }); 
+
+    currentPrinter = "None";
       
     $('progress').attr({value:0,max:1});
 
@@ -94,6 +105,13 @@
           });
       }
     });
+
+
+    $("#configsSelect").on('change', function(){
+      var selected = $(this).find("option:selected").val();
+      refreshPrinterConfigs(selected);
+    });
+
     $("#refreshstatusbutton").click(function( event ){
       event.preventDefault();
       refreshStatus();
@@ -105,6 +123,7 @@
       refreshListbox('/services/machine/ports', "portSelect");
       refreshListbox('/services/machine/displays', "displaySelect");
       refreshListbox('/services/machine/printers', "printerSelect");
+      refreshListBox('/services/machines/printers', "configsSelect")
     });
 
     $("#startjobbutton").click(function(event){
@@ -156,6 +175,7 @@
     refreshListbox('/services/files/list', "filesselect")
     
     refreshListbox('/services/machine/printers', "printerSelect");
+    refreshListbox('/services/machine/printers', "configsSelect");
     
     //$( "#refreshfilesbutton" ).trigger( "click" );
     //$( "#refreshstatusbutton" ).trigger( "click" );
@@ -202,6 +222,57 @@
       }
   }
   
+  function updatePrinterConfigs(){
+
+
+
+  }
+
+  function refreshPrinterConfigs(printerConfig){
+       
+    $.ajax({
+      type: 'GET', 
+      url: '/services/printers/getprinterconfiguration/' + encodeURIComponent(printerConfig),
+      dataType: "json",
+        error: errorHandler,
+      success: function(data){
+        // alert("success");
+        var config = data;
+        // console.log(config.MonitorDriverConfig.OSMonitorID);
+        
+        $('#newPrinterNameText').val(config.name);
+        $('#platformXText').val(config.machineConfig.PlatformXSize);
+        $('#platformYText').val(config.machineConfig.PlatformYSize);
+        $('#platformZText').val(config.machineConfig.PlatformZSize);
+        $('#textResolutionX').val(config.machineConfig.MonitorDriverConfig.DLP_X_Res);
+        $('#textResolutionY').val(config.machineConfig.MonitorDriverConfig.DLP_Y_Res);
+        
+        $("#displaySelect").val(config.machineConfig.MonitorDriverConfig.OSMonitorID);
+        $("#portSelect").val(String(config.machineConfig.MotorsDriverConfig.ComPortSettings.PortName));
+        $("#baudRateSelect").val(config.machineConfig.MotorsDriverConfig.ComPortSettings.Speed);
+        
+
+      },
+      error: function (request, status, error) {
+        //serverException.type = Exception simpleName
+        //serverexception.message = Exception message
+        var serverException = JSON.parse(request.responseText);
+
+        if(serverException.type == 'InappropriateDeviceException'){
+          alert("Unable to find " + printerName + " on selected port\n" + serverException.message);
+        }
+        else if(serverexception.type == 'JobManagerException'){
+          alert(serverException.message);
+        }
+        else if(serverexception.type == 'AlreadyAssignedException'){
+          alert(serverException.message);
+        }
+        $("body").css("cursor", "default");
+      }
+
+    });
+  }
+
   function refreshStatus() {
     var jobName = getSelectedOptionFromListBoxOrThrowError('filesselect', "Please select a job first");
     
@@ -301,7 +372,7 @@
   
   function createJobWebSocket(jobName, onMessageFunction) {
       if ("WebSocket" in window) {
-         var ws = new WebSocket(createWebSocketURL("printjobnotification/" + encodeURIComponent(jobName)));
+         var ws = new WebSocket(createWebSocketURL("/printjobnotification/" + encodeURIComponent(jobName)));
          ws.onopen = function() {
          };
          ws.onmessage = onMessageFunction;
@@ -392,6 +463,11 @@
         error: errorHandler,
       success: function(data){
         retainSelectionAndPopulate(listbox, data)
+        if(listbox == "configsSelect"){
+          if( $('#configsSelect').has('option').length > 0 ) {
+            refreshPrinterConfigs($('#configsSelect').find(":selected").text());
+          }
+        }
       }
     });
   }
@@ -420,8 +496,9 @@
     var printerName = $('#newPrinterNameText').val(); 
     var display = getSelectedOptionFromListBoxOrThrowError('displaySelect', "Please select a display first");
     var commPort = getSelectedOptionFromListBoxOrThrowError('portSelect', "Please select a serial communications port first");
+    var baudRate = getSelectedOptionFromListBoxOrThrowError('baudRateSelect', "Please select a baud rate first");
     
-    var requestValue = '/machine/createprinter/' + encodeURIComponent(printerName) + "/" + encodeURIComponent(display) + "/" + encodeURIComponent(commPort);
+    var requestValue = '/machine/createprinterwithbaudrate/' + encodeURIComponent(printerName) + "/" + encodeURIComponent(display) + "/" + encodeURIComponent(commPort) + "/" + encodeURIComponent(baudRate);
 
     requestAndUpdatePrinters(requestValue);
   }
@@ -434,20 +511,27 @@
     requestAndUpdatePrinters(requestValue);
   }
   
+
+
   function startPrinterAndUpdatePrinters() {
     var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
     
     var requestValue = '/machine/startprinter/' + encodeURIComponent(printerName);
 
-    requestAndUpdatePrinters(requestValue);
+    requestStartAndUpdatePrinters(requestValue, printerName);
   }
   
   function stopPrinterAndUpdatePrinters() {
-    var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
+    // var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
+    // alert("Stopping printer");
+    if(currentPrinter == "None"){
+      alert("Unable to stop printer - not connected to a printer");
+    }else{
     
-    var requestValue = '/machine/stopprinter/' + encodeURIComponent(printerName);
-
-    requestAndUpdatePrinters(requestValue);
+    var requestValue = '/machine/stopprinter/' + encodeURIComponent(currentPrinter);
+    
+    requestStopAndUpdatePrinters(requestValue);
+    }
   }
   
   function deletefile() {
@@ -592,11 +676,106 @@
       success: function(data){
         if (applyErrorIfNecessary(data, true, false)) {
           refreshListbox('/services/machine/printers', "printerSelect");
+          refreshListbox('/services/machine/printers', "configsSelect");
+          $('#configsSelect')
+            .append($("<option></option>")
+            .attr("value","createnew")
+            .text("Create New"));
         }
       }
     });
+  }
+
+  function requestStartAndUpdatePrinters(requestValue, printerName) {
+    $("body").css("cursor", "wait");
+    $.ajax({
+      type: 'GET',
+      url: '/services' + requestValue,
+      dataType: "json",
+        error: errorHandler,
+      success: function(data){
+        if (applyErrorIfNecessary(data, true, false)) {
+          refreshListbox('/services/machine/printers', "printerSelect");
+          refreshListbox('/services/machine/printers', "configsSelect");
+          $('#configsSelect')
+            .append($("<option></option>")
+            .attr("value","createnew")
+            .text("Create New"));
+        }
+
+        currentPrinter = printerName;
+        $("#statustext").attr("placeholder", "Connected");
+        $("#printernametext").val(currentPrinter);
+        // $('#statustext').removeClass('btn-success').addClass('btn-primary ');
+        console.log("Call success, new printer: " + currentPrinter);
+      },
+      error: function (request, status, error) {
+        //serverException.type = Exception simpleName
+        //serverexception.message = Exception message
+        // alert(request.responseText);
+        var serverException = JSON.parse(request.responseText);
+        if(serverException.type == "InappropriateDeviceException"){
+          alert("Unable to find " + printerName + " on selected port\n" + serverException.message);
+        }
+        else if(serverException.type == "JobManagerException"){
+          alert(serverException.message);
+        }
+        else if(serverException.type == "AlreadyAssignedException"){
+          currentPrinter = printerName;
+          $("#statustext").attr("placeholder", "Connected");
+          $("#printernametext").val(currentPrinter);
+          console.log("Printer already assigned, setting to current printer: " + currentPrinter);
+
+        }
+        $("body").css("cursor", "default");
+      }
+    });
   } 
-  
+
+  function requestStopAndUpdatePrinters(requestValue) {
+    alert("stopping printer");
+    $("body").css("cursor", "wait");
+    alert("stopping printer");
+    alert("sending message");
+    $.ajax({
+      type: 'GET',
+      url: '/services' + requestValue,
+      dataType: "json",
+        error: errorHandler,
+      success: function(data){
+        if (applyErrorIfNecessary(data, true, false)) {
+          refreshListbox('/services/machine/printers', "printerSelect");
+          refreshListbox('/services/machine/printers', "configsSelect");
+        }
+        currentPrinter = "None";
+        alert("Printer has been stopped");
+        $("body").css("cursor", "default");
+      }
+        ,
+      error: function (request, status, error) {
+        //serverException.type = Exception simpleName
+        //serverexception.message = Exception message
+        var serverException = JSON.parse(request.responseText);
+
+        if(serverException.type == 'InappropriateDeviceException'){
+          alert("Unable to find " + printerName + " on selected port\n" + serverException.message);
+        }
+        else if(serverException.type == 'JobManagerException'){
+          alert(serverException.message);
+        }
+        else if(serverException.type == 'AlreadyAssignedException'){
+          alert(serverException.message);
+        }
+        else{
+          alert("Unknown exception has occured.");
+        }
+        $("body").css("cursor", "default");
+      }
+      
+    });
+    
+  }
+
   function requestAndUpdateFiles(requestValue) {
     $("body").css("cursor", "wait");
     $.ajax({
@@ -668,6 +847,18 @@
     
     throw errorMessage;
   }
+
+  function getCurrentPrinterOrThrowError(errorMessage) {
+    //var listbox = $('#' + listboxId + ' option:selected').val();
+    
+    if (currentPrinter == "None") {
+      return currentPrinter;
+    }
+    
+    throw errorMessage;
+  }
+
+
 </script>
 
 
@@ -687,17 +878,18 @@
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <li class="active"><a href="#tabstatus" data-toggle="tab">Status</a></li>
+        <li class="active"><a href="#tabstatus" data-toggle="tab">Overview</a></li>
         <li class=""><a href="#tabjobs" data-toggle="tab">Jobs</a></li>
         <li class=""><a href="#tabmotors" data-toggle="tab">Motors</a></li>
         <li class=""><a href="#tabdlp" data-toggle="tab">DLP</a></li>
-        <li class="dropdown">
+        <li class=""><a href="#tabnewprinter" data-toggle="tab">Printer</a></li>
+        <!-- <li class="dropdown">
         <a href="#" data-toggle="dropdown">Printer<span class="caret"></span></a>
         <ul class="dropdown-menu" role="menu">
           <li><a href="#tabselectprinter" data-toggle="tab">Select Printer</a></li>
           <li><a href="#tabnewprinter" data-toggle="tab">New Printer</a></li>
         </ul>
-      </li>
+      </li> -->
       </ul>
     </div>
   </div>
@@ -718,11 +910,12 @@
                 Status panel
             -->
             <div class="row form-group">
+
                 <div class="col-xs-12 col-md-6">
 
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                          <h3 class="panel-title">Overview</h3>
+                          <h3 class="panel-title">Info</h3>
                         </div>
 
                         <div class="panel-body">
@@ -733,12 +926,12 @@
                                     <div class="form-group">
                                         <label for="printernametext" class="col-xs-4 col-sm-4 col-md-2 control-label">Printer</label>
                                         <div class="col-xs-8 col-sm-8 col-md-4">
-                                            <input type="text" id="printernametext" name="printernametext" value="None Selected" class="form-control">
+                                            <input type="text" id="printernametext" name="printernametext" value="None Selected" class="form-control text-center" readonly="readonly">
                                         </div>
                                     </div>
 
                                     <div class="form-group">
-                                            <label for="statustext" class="col-xs-4 col-sm-4 col-md-2 control-label">Printer</label>
+                                            <label for="statustext" class="col-xs-4 col-sm-4 col-md-2 control-label">Status</label>
                                             <div class="col-xs-8 col-sm-8 col-md-4">
                                                 <input id="statustext" name="textinput" type="text" placeholder="Unknown" class="form-control input-md text-center" readonly="readonly"/>
                                             </div>
@@ -751,6 +944,57 @@
                             <input id="statustext" name="textinput" type="text" placeholder="Unknown" class="form-control input-md text-center" readonly="readonly"/> -->
                         </div>
                     </div>
+                </div>
+                    <!-- End status panel -->
+
+
+                    <!-- start ... uh start printer panel -->
+                <div class="col-xs-12 col-md-6">
+
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                          <h3 class="panel-title">Connect</h3>
+                        </div>
+
+                        <div class="panel-body">
+                            
+
+                                <form class="form-horizontal">
+
+                                    <div class="form-group">
+                                       <label class="col-md-4 control-label" for="selectPrinters">Printers</label>
+                                       <div class="col-md-8">
+                                            <select id="printerSelect" name="selectPrinters" class="form-control block-level text-center">
+                                            </select>
+                                      </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                           <label class="col-md-5 control-label" for="button1id"></label>
+                                           <div class="col-md-2">
+                                                <button id="startprinterbutton" name="button1id" class="btn btn-default btn-block">Start</button>
+                                           </div>
+                                           <div class="col-md-2">
+                                                <button id="stopprinterbutton" name="button2id" class="btn btn-default btn-block">Stop</button>
+                                           </div>
+                                           <div class="col-md-2">
+                                                <button id="deleteprinterbutton" name="button4id" class="btn btn-default btn-block">Delete</button>
+                                          </div>
+                                    </div>
+
+                                </form>
+
+                            
+                            <!-- <label for="statustext">Status: </label>  
+                            <input id="statustext" name="textinput" type="text" placeholder="Unknown" class="form-control input-md text-center" readonly="readonly"/> -->
+                        </div>
+                    </div>
+
+
+                    
+
+            <!-- end start printer panel -->
+
                 </div>
             </div>
             
@@ -779,14 +1023,14 @@
                                     <div class="form-group">
                                       <label for="progresstest" class="col-xs-4 col-sm-4 col-md-2 control-label">Slices</label>
                                       <div class="col-xs-8 col-sm-8 col-md-4">
-                                        <input type="text" id="progresstest" name="progresstest" value="0/0" class="form-control">
+                                        <input type="text" id="progresstest" name="progresstest" value="0/0" class="form-control text-center">
                                      </div>
                                     </div>
 
                                      <div class="form-group">
                                       <label for="totalcost" class="col-xs-4 col-sm-4 col-md-2 control-label">Cost</label>
                                       <div class="col-xs-8 col-sm-8 col-md-4">
-                                        <input type="text" id="totalcost" name="totalcost" value="$0.00" class="form-control">
+                                        <input type="text" id="totalcost" name="totalcost" value="$0.00" class="form-control text-center">
                                       </div>
                                     </div>
 
@@ -1011,7 +1255,7 @@
           Select Printers page
         -->
           <div class="tab-pane fade in maincontent" id="tabselectprinter">
-            <div class="col-md-6 column">
+            <!-- <div class="col-md-6 column">
                  <div class="panel panel-default">
                      <div class="panel-heading">
                           <h3 class="panel-title">Select Printer</h3>
@@ -1042,55 +1286,249 @@
                         </form>
                      </div>
                   </div>
-            </div>
+            </div> -->
 
           </div>
         <!-- 
           New Printers page
         -->
           <div class="tab-pane fade in maincontent" id="tabnewprinter">
-            <div class="col-md-6 column">
-                 <div class="panel panel-default">
+            
+          <!-- start tab content --> 
+            <div class="col-md-12 column">
+                 <!-- <div class="panel panel-default">
                      <div class="panel-heading">
-                          <h3 class="panel-title">Create Printer</h3>
+                          <h3 class="panel-title">Create/Modify Printer</h3>
                     </div>
-                    <div class="panel-body">
-                      <form class="form-horizontal">
-                           <!-- <fieldset> -->
+                    <div class="panel-body"> -->
+                      
+                    <!-- inside modify printer content -->
+
+                      <div class="col-md-6 column">
+                        <div class="panel panel-default">
+                          
+                          <div class="panel-heading">
+                            <h3 class="panel-title">Configuration</h3>
+                          </div>
+
+                          <div class="panel-body">
+                            
+                            <form class="form-horizontal">
+                              <fieldset>
+
                                 <div class="form-group">
-                                  <label class="col-md-4 control-label">New Name</label>
+                                  <label class="col-md-4 control-label" for="selectConfigs">Modify/Create</label>
                                   <div class="col-md-8">
-                                    <input type="text" class="form-control" id="newPrinterNameText" placeholder="Enter new printer name"/>  
+                                        <select id="configsSelect" name="selectConfigs" class="form-control block-level text-center">
+                                        </select>
                                   </div>
                                 </div>
-                                
+
+                                <div class="form-group">
+                                  <label class="col-md-4 control-label" for="createprinterbutton">Save Printer</label>
+                                  <div class="col-md-8">
+                                       <button id="createprinterbutton" name="buttoncreateprinter" class="btn btn-default btn-block">Save</button>
+                                  </div>
+                                </div>
+
+                                <div class="form-group">
+                                  <label class="col-md-4 control-label" for="exportconfigbutton">Export Config</label>
+                                  <div class="col-md-8">
+                                       <button id="exportconfigbutton" name="buttonexportconfig" class="btn btn-default btn-block disabled">Export</button>
+                                  </div>
+                                </div>
+
+                                <div class="form-group">
+                                  <label class="col-md-4 control-label" for="importprinterbutton">Import Config</label>
+                                  <div class="col-md-8">
+                                       <button id="importconfigbutton" name="buttonimportconfig" class="btn btn-default btn-block disabled">Import</button>
+                                  </div>
+                                </div>
+
+                              </fieldset>
+                            </form>
+
+                          </div>
+
+
+                        </div>
+                      </div>
+
+                    <!-- end modify printer content -->
+
+
+                    <!-- inside machine settings content -->
+
+                      <div class="col-md-6 column">
+                        <div class="panel panel-default">
+                          
+                          <div class="panel-heading">
+                            <h3 class="panel-title">Machine</h3>
+                          </div>
+
+                          <div class="panel-body">
+                            
+                            <form class="form-horizontal">
+                              <fieldset>
+
+                                <div class="form-group">
+                                  <label class="col-md-4 control-label">Name</label>
+                                  <div class="col-md-8">
+                                    <input type="text" class="form-control text-center" id="newPrinterNameText" placeholder="printer name"/>  
+                                  </div>
+                                </div>
+
+                                <div class="form-group">
+                                  <label class="col-md-4 control-label">Platform X</label>
+                                  <div class="col-md-8">
+                                    <input type="text" id="platformXText" class="form-control text-center" id="textPlatformX" placeholder="size (mm)"/>  
+                                  </div>
+                                </div>
+
+                                <div class="form-group">
+                                  <label class="col-md-4 control-label">Platform Y</label>
+                                  <div class="col-md-8">
+                                    <input type="text" id="platformYText" class="form-control text-center" id="textPlatformY" placeholder="size (mm)"/>  
+                                  </div>
+                                </div>
+
+                                <div class="form-group">
+                                  <label class="col-md-4 control-label">Platform Z</label>
+                                  <div class="col-md-8">
+                                    <input type="text" id="platformZText" class="form-control text-center" id="textPlatformZ" placeholder="size (mm)"/>  
+                                  </div>
+                                </div>
+
+                              </fieldset>
+                            </form>
+
+                          </div>
+
+
+                        </div>
+                      </div>
+
+                    <!-- end machine settings content -->
+
+                    <!-- inside machine settings content -->
+
+                      <div class="col-md-6 column">
+                        <div class="panel panel-default">
+                          
+                          <div class="panel-heading">
+                            <h3 class="panel-title">Serial Port</h3>
+                          </div>
+
+                          <div class="panel-body">
+                            
+                            <form class="form-horizontal">
+                              <fieldset>
 
                                 <div class="form-group">
                                      <label class="col-md-4 control-label" for="selectPorts">Serial Ports</label>
                                      <div class="col-md-8">
-                                          <select id="portSelect" name="selectPorts" class="form-control block-level" multiple="multiple">
+                                          <select id="portSelect" name="selectPorts" class="form-control block-level text-center">
                                           </select>
                                     </div>
                                 </div>
 
-                              <div class="form-group">
-                               <label class="col-md-4 control-label" for="selectDisplays">Displays</label>
-                               <div class="col-md-8">
-                                    <select id="displaySelect" name="selectDisplays" class="form-control block-level" multiple="multiple">
-                                    </select>
-                              </div>
-                        </div>              
+                                <div class="form-group">
+                                   <label class="col-md-8 control-label" for="buttonSerialPortsRefresh"></label>
+                                   <div class="col-md-4">
+                                        <button id="refreshSerialPortsButton" name="buttonSerialPortsRefresh" class="btn btn-default btn-block">Refresh</button>
+                                   </div>
+                                </div>
 
-                        <div class="form-group">
-                         <label class="col-md-4 control-label" for="button1id"></label>
-                         <div class="col-md-8">
-                              <button id="createprinterbutton" name="button3id" class="btn btn-success btn-block">Create Printer</button>
+                                <div class="form-group">
+                                     <label class="col-md-4 control-label" for="selectbaudrate">Baud rate</label>
+                                     <div class="col-md-8">
+                                          <select id="baudRateSelect" name="selectBaudRate" class="form-control block-level text-center">
+                                            <option value="2400">2400</option>
+                                            <option value="4800">4800</option>
+                                            <option value="9600" selected>9600</option>
+                                            <option value="19200">19200</option>
+                                            <option value="38400">38400</option>
+                                            <option value="57600">57600</option>
+                                            <option value="115200">115200</option>
+                                          </select>
+                                      </div>
+                                </div>
+
+                                <div class="form-group">
+                                   <label class="col-md-8 control-label" for="buttonTestSerialPort"></label>
+                                   <div class="col-md-4">
+                                        <button id="testSerialPortButton" name="buttonTestSerialPort" class="btn btn-default btn-block">Test</button>
+                                   </div>
+                                </div>
+
+                              </fieldset>
+                            </form>
+
+                          </div>
+
+
                         </div>
-                  </div>
-            </fieldset>
-            </form>
-            </div>
-            </div>
+                      </div>
+
+                    <!-- end SerialPort settings content -->
+
+                    <!-- inside projector settings content -->
+
+                      <div class="col-md-6 column">
+                        <div class="panel panel-default">
+                          
+                          <div class="panel-heading">
+                            <h3 class="panel-title">Projector</h3>
+                          </div>
+
+                          <div class="panel-body">
+                            
+                            <form class="form-horizontal">
+                              <fieldset>
+
+                                <div class="form-group">
+                                  <label class="col-md-4 control-label">Resolution X</label>
+                                  <div class="col-md-8">
+                                    <input type="text" id="textResolutionX" class="form-control text-center" id="resolutionXText" placeholder="1024"/>  
+                                  </div>
+                                </div>
+
+                                <div class="form-group">
+                                  <label class="col-md-4 control-label">Resolution Y</label>
+                                  <div class="col-md-8">
+                                    <input type="text" id="textResolutionY" class="form-control text-center" id="resolutionYText" placeholder="768"/>  
+                                  </div>
+                                </div>
+
+                                <div class="form-group">
+                                     <label class="col-md-4 control-label" for="selectDisplays">Displays</label>
+                                     <div class="col-md-8">
+                                          <select id="displaySelect" name="selectDisplays" class="form-control block-level text-center">
+                                          </select>
+                                     </div>
+                                </div>
+
+                                <div class="form-group">
+                                   <label class="col-md-8 control-label" for="buttonDisplaysRefresh"></label>
+                                   <div class="col-md-4">
+                                        <button id="refreshDisplaysButton" name="buttonDisplaysRefresh" class="btn btn-default btn-block text-center">Refresh</button>
+                                   </div>
+                                </div>
+
+                              </fieldset>
+                            </form>
+
+                          </div>
+
+
+                        </div>
+                      </div>
+
+                    <!-- end projector settings content -->
+
+
+                    <!-- </div>
+                  </div> -->
             </div>
 
           </div>

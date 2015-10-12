@@ -368,14 +368,18 @@ public class MachineService {
 	 
 	 //The following methods are for Printers
 	 //======================================
-	 @Deprecated
 	 @GET
 	 @Path("createprinter/{printername}/{display}/{comport}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse createPrinter(@PathParam("printername") String printername, @PathParam("display") String displayId, @PathParam("comport") String comport) {
 		//TODO: This data needs to be set by the user interface...
 		//========================================================
+		System.out.println("Starting: " + printername + "|" + displayId + "|" + comport);
 		PrinterConfiguration currentConfiguration = PrinterService.INSTANCE.createTemplatePrinter(printername, displayId, comport, 134, 75, 185);
+		
+//		Gson gson = new Gson();
+//		System.out.println(gson.toJson(currentConfiguration));
+		
 		if (displayId.equals(DisplayManager.SIMULATED_DISPLAY) &&
 			comport.equals(ConsoleCommPort.CONSOLE_COMM_PORT)) {
 			currentConfiguration.getSlicingProfile().setgCodeLift("Lift Z; Lift the platform");
@@ -386,11 +390,64 @@ public class MachineService {
 		//=========================================================
 		try {
 			HostProperties.Instance().addOrUpdatePrinterConfiguration(currentConfiguration);
+			System.out.println("Completed starting printer");
+//			return currentConfiguration;
 			return new MachineResponse("create", true, "Created:" + currentConfiguration.getName() + "");
 		} catch (AlreadyAssignedException e) {
 			e.printStackTrace();
+//			return currentConfiguration;
 			return new MachineResponse("create", false, e.getMessage());
 		}
+	 }
+	 
+	 @POST
+	 @Path("createprinterconfig/")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 @Consumes(MediaType.APPLICATION_JSON)
+	 public PrinterConfiguration createPrinterConfig(PrinterConfiguration printer) throws AlreadyAssignedException{
+		//TODO: This data needs to be set by the user interface...
+			//========================================================
+			//System.out.println("Starting: " + printername + "|" + displayId + "|" + comport);
+			//PrinterConfiguration currentConfiguration = PrinterService.INSTANCE.createTemplatePrinter(printername, displayId, comport, 134, 75, 185);
+			PrinterConfiguration currentConfiguration; 
+			try {
+				// get existing printer by name, then change printer configs using incoming
+				currentConfiguration = PrinterService.INSTANCE.getPrinterConfiguration(printer.getName());
+			} catch (InappropriateDeviceException ide) {
+				// not an update, create a new printer, then change printer configs using incoming
+				currentConfiguration = PrinterService.INSTANCE.createTemplatePrinter(printer.getName(), 
+																					 printer.getMachineConfig().getOSMonitorID(), 
+																					 printer.getMachineConfig().getMotorsDriverConfig().getComPortSettings().getPortName(), 
+																					 134, 75, 185);
+			}
+			
+			// Set new config values
+			
+//			Gson gson = new Gson();
+//			System.out.println(gson.toJson(currentConfiguration));
+			
+			if (currentConfiguration.getMachineConfig().getOSMonitorID().equals(DisplayManager.SIMULATED_DISPLAY) &&
+				String.valueOf(currentConfiguration.getMachineConfig().getMotorsDriverConfig().getComPortSettings().getSpeed()).equals(ConsoleCommPort.CONSOLE_COMM_PORT)) {
+				currentConfiguration.getSlicingProfile().setgCodeLift("Lift Z; Lift the platform");
+				currentConfiguration.getSlicingProfile().getSelectedInkConfig().setNumberOfFirstLayers(3);
+				currentConfiguration.getSlicingProfile().getSelectedInkConfig().setFirstLayerExposureTime(10000);
+				currentConfiguration.getSlicingProfile().getSelectedInkConfig().setExposureTime(3000);
+			}
+			//=========================================================
+			try {
+				HostProperties.Instance().addOrUpdatePrinterConfiguration(currentConfiguration);
+				System.out.println("Completed starting printer");
+				return currentConfiguration;
+				//return new MachineResponse("create", true, "Created:" + currentConfiguration.getName() + "");
+			} catch (AlreadyAssignedException e) {
+				e.printStackTrace();
+				throw e;
+				//return new MachineResponse("create", false, e.getMessage());
+			}
+		 
+		 
+//		 System.out.println("I received: " + printer.toString());
+//		 return new MachineResponse("create", true, "Echo:" + printer.getName() + "");
 	 }
 	 
 	 @Deprecated
@@ -421,7 +478,7 @@ public class MachineService {
 	 @GET
 	 @Path("startprinter/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse startPrinter(@PathParam("printername") String printerName) {
+	 public MachineResponse startPrinter(@PathParam("printername") String printerName) throws Exception {
 		Printer printer = null;
 		try {
 			PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
@@ -433,7 +490,8 @@ public class MachineService {
 			return new MachineResponse("start", true, "Started:" + printer.getName() + "");
 		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
 			e.printStackTrace();
-			return new MachineResponse("start", false, e.getMessage());
+//			return new MachineResponse("start", false, e.getMessage());
+			throw e;
 		}
 	 }	 
 	 
@@ -441,8 +499,9 @@ public class MachineService {
 	 @GET
 	 @Path("stopprinter/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse stopPrinter(@PathParam("printername") String printerName) {
-		try {
+	 public MachineResponse stopPrinter(@PathParam("printername") String printerName) throws InappropriateDeviceException {
+		System.out.println("Stopping printer");
+		 try {
 			Printer printer = PrinterManager.Instance().getPrinter(printerName);
 			if (printer == null) {
 				throw new InappropriateDeviceException("This printer isn't started:" + printerName);
@@ -459,7 +518,8 @@ public class MachineService {
 			return new MachineResponse("stop", true, "Stopped:" + printerName);
 		} catch (InappropriateDeviceException e) {
 			e.printStackTrace();
-			return new MachineResponse("stop", false, e.getMessage());
+			throw e;
+//			return new MachineResponse("stop", false, e.getMessage());
 		}
 	 }
 
