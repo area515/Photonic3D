@@ -229,48 +229,61 @@
   }
 
   function refreshPrinterConfigs(printerConfig){
-       
-    $.ajax({
-      type: 'GET', 
-      url: '/services/printers/getprinterconfiguration/' + encodeURIComponent(printerConfig),
-      dataType: "json",
-        error: errorHandler,
-      success: function(data){
-        // alert("success");
-        var config = data;
-        // console.log(config.MonitorDriverConfig.OSMonitorID);
-        
-        $('#newPrinterNameText').val(config.name);
-        $('#platformXText').val(config.machineConfig.PlatformXSize);
-        $('#platformYText').val(config.machineConfig.PlatformYSize);
-        $('#platformZText').val(config.machineConfig.PlatformZSize);
-        $('#textResolutionX').val(config.machineConfig.MonitorDriverConfig.DLP_X_Res);
-        $('#textResolutionY').val(config.machineConfig.MonitorDriverConfig.DLP_Y_Res);
-        
-        $("#displaySelect").val(config.machineConfig.MonitorDriverConfig.OSMonitorID);
-        $("#portSelect").val(String(config.machineConfig.MotorsDriverConfig.ComPortSettings.PortName));
-        $("#baudRateSelect").val(config.machineConfig.MotorsDriverConfig.ComPortSettings.Speed);
-        
 
-      },
-      error: function (request, status, error) {
-        //serverException.type = Exception simpleName
-        //serverexception.message = Exception message
-        var serverException = JSON.parse(request.responseText);
+    if (printerConfig != "Create New"){
+      $.ajax({
+        type: 'GET', 
+        url: '/services/printers/getprinterconfiguration/' + encodeURIComponent(printerConfig),
+        dataType: "json",
+          error: errorHandler,
+        success: function(data){
+          // alert("success");
+          var config = data;
+          // console.log(config.MonitorDriverConfig.OSMonitorID);
+          
+          $('#newPrinterNameText').val(config.name);
+          $('#platformXText').val(config.machineConfig.PlatformXSize);
+          $('#platformYText').val(config.machineConfig.PlatformYSize);
+          $('#platformZText').val(config.machineConfig.PlatformZSize);
+          $('#textResolutionX').val(config.machineConfig.MonitorDriverConfig.DLP_X_Res);
+          $('#textResolutionY').val(config.machineConfig.MonitorDriverConfig.DLP_Y_Res);
+          
+          $("#displaySelect").val(config.machineConfig.MonitorDriverConfig.OSMonitorID);
+          $("#portSelect").val(String(config.machineConfig.MotorsDriverConfig.ComPortSettings.PortName));
+          $("#baudRateSelect").val(config.machineConfig.MotorsDriverConfig.ComPortSettings.Speed);
+          
 
-        if(serverException.type == 'InappropriateDeviceException'){
-          alert("Unable to find " + printerName + " on selected port\n" + serverException.message);
-        }
-        else if(serverexception.type == 'JobManagerException'){
-          alert(serverException.message);
-        }
-        else if(serverexception.type == 'AlreadyAssignedException'){
-          alert(serverException.message);
-        }
-        $("body").css("cursor", "default");
-      }
+        },
+        error: function (request, status, error) {
+          //serverException.type = Exception simpleName
+          //serverexception.message = Exception message
+          var serverException = JSON.parse(request.responseText);
 
-    });
+          if(serverException.type == 'InappropriateDeviceException'){
+            alert("Unable to find " + printerName + " on selected port\n" + serverException.message);
+          }
+          else if(serverexception.type == 'JobManagerException'){
+            alert(serverException.message);
+          }
+          else if(serverexception.type == 'AlreadyAssignedException'){
+            alert(serverException.message);
+          }
+          $("body").css("cursor", "default");
+        }
+
+      });
+    } else{
+          $('#newPrinterNameText').val("");
+          $('#platformXText').val("");
+          $('#platformYText').val("");
+          $('#platformZText').val("");
+          $('#textResolutionX').val("");
+          $('#textResolutionY').val("");
+          
+          $("#displaySelect").val("Simulated display");
+          $("#portSelect").val("Autodetect 3d printer firmware");
+          $("#baudRateSelect").val("9600");
+    }
   }
 
   function refreshStatus() {
@@ -464,6 +477,7 @@
       success: function(data){
         retainSelectionAndPopulate(listbox, data)
         if(listbox == "configsSelect"){
+          $('#configsSelect').append($("<option></option>").attr("value","Create New").text("Create New"));
           if( $('#configsSelect').has('option').length > 0 ) {
             refreshPrinterConfigs($('#configsSelect').find(":selected").text());
           }
@@ -677,10 +691,10 @@
         if (applyErrorIfNecessary(data, true, false)) {
           refreshListbox('/services/machine/printers', "printerSelect");
           refreshListbox('/services/machine/printers', "configsSelect");
-          $('#configsSelect')
-            .append($("<option></option>")
-            .attr("value","createnew")
-            .text("Create New"));
+          // $('#configsSelect')
+          //   .append($("<option></option>")
+          //   .attr("value","createnew")
+          //   .text("Create New"));
         }
       }
     });
@@ -733,10 +747,10 @@
   } 
 
   function requestStopAndUpdatePrinters(requestValue) {
-    alert("stopping printer");
+    // alert("stopping printer");
     $("body").css("cursor", "wait");
-    alert("stopping printer");
-    alert("sending message");
+    // alert("stopping printer");
+    // alert("sending message");
     $.ajax({
       type: 'GET',
       url: '/services' + requestValue,
@@ -748,7 +762,7 @@
           refreshListbox('/services/machine/printers', "configsSelect");
         }
         currentPrinter = "None";
-        alert("Printer has been stopped");
+        // alert("Printer has been stopped");
         $("body").css("cursor", "default");
       }
         ,
