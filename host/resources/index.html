@@ -240,7 +240,7 @@
           // alert("success");
           var config = data;
           // console.log(config.MonitorDriverConfig.OSMonitorID);
-          
+          alert("refreshed config: " + printerConfig)
           $('#newPrinterNameText').val(config.name);
           $('#platformXText').val(config.machineConfig.PlatformXSize);
           $('#platformYText').val(config.machineConfig.PlatformYSize);
@@ -507,14 +507,26 @@
   }
   
   function createPrinterAndUpdatePrinters() {
-    var printerName = $('#newPrinterNameText').val(); 
-    var display = getSelectedOptionFromListBoxOrThrowError('displaySelect', "Please select a display first");
-    var commPort = getSelectedOptionFromListBoxOrThrowError('portSelect', "Please select a serial communications port first");
-    var baudRate = getSelectedOptionFromListBoxOrThrowError('baudRateSelect', "Please select a baud rate first");
-    
-    var requestValue = '/machine/createprinterwithbaudrate/' + encodeURIComponent(printerName) + "/" + encodeURIComponent(display) + "/" + encodeURIComponent(commPort) + "/" + encodeURIComponent(baudRate);
+    var printerName = $('#configsSelect').find(":selected").text();
 
-    requestAndUpdatePrinters(requestValue);
+    requestCreateNewPrinterConfiguration(printerName);
+    
+    // get a dummy config, 
+    // change the settings, 
+    // make createprinterconfiguration
+
+    // if printerName != "Create New"
+    // get configuration by name
+    // change configs
+    // make createprinterconfiguration
+
+    // var display = getSelectedOptionFromListBoxOrThrowError('displaySelect', "Please select a display first");
+    // var commPort = getSelectedOptionFromListBoxOrThrowError('portSelect', "Please select a serial communications port first");
+    // var baudRate = getSelectedOptionFromListBoxOrThrowError('baudRateSelect', "Please select a baud rate first");
+    
+    // var requestValue = '/machine/createprinterwithbaudrate/' + encodeURIComponent(printerName) + "/" + encodeURIComponent(display) + "/" + encodeURIComponent(commPort) + "/" + encodeURIComponent(baudRate);
+
+    // requestAndUpdatePrinters(requestValue);
   }
   
   function deletePrinterAndUpdatePrinters() {
@@ -819,6 +831,95 @@
       }
     });
   }
+
+  function requestCreateNewPrinterConfiguration(printerName) {
+    //printers/getdummyconfiguration
+
+
+    $("body").css("cursor", "wait");
+    
+    if(printerName == "Create New"){
+     request = '/printers/getdummyconfiguration';
+    } else{
+      request = '/printers/getprinterconfiguration/' + printerName;
+    }
+
+
+    $.ajax({
+      type: 'GET',
+      url: '/services' + request,
+      dataType: "json",
+        error: errorHandler,
+      success: function(data){
+        //JSON.parse(request.responseText);
+        // update the dummy config
+        alert(JSON.stringify(data));
+        data.name = $('#newPrinterNameText').val();
+        data.machineConfig.PlatformXSize = $('#platformXText').val();
+        data.machineConfig.PlatformYSize = $('#platformYText').val();
+        data.machineConfig.PlatformZSize = $('#platformZText').val();
+        data.machineConfig.MonitorDriverConfig.DLP_X_Res = $('#textResolutionX').val();
+        data.machineConfig.MonitorDriverConfig.DLP_Y_Res = $('#textResolutionY').val();
+          
+        data.machineConfig.MonitorDriverConfig.OSMonitorID = $("#displaySelect").find(":selected").text();
+        data.machineConfig.MotorsDriverConfig.ComPortSettings.PortName = $("#portSelect").find(":selected").text();
+        data.machineConfig.MotorsDriverConfig.ComPortSettings.Speed = parseInt($("#baudRateSelect").find(":selected").text());
+
+        // createprinterconfiguration
+
+        alert(JSON.stringify(data));
+
+        requestCreatePrinterConfiguration(data);
+        $("body").css("cursor", "default");
+      },
+      error: function (request, status, error) {
+        alert("Failed to save printer");
+        $("body").css("cursor", "default");
+      }
+    });
+  }
+
+  function requestCreatePrinterConfiguration(printerConfig){
+    $.ajax({
+      type: 'POST',
+      url: '/services/machine/createprinterconfig',
+      data: JSON.stringify(printerConfig),
+      dataType : "json",
+      contentType : "application/json",
+      success: function(data){
+        alert("Printer saved: " + data.name);
+        $("body").css("cursor", "default");
+        // alert(JSON.stringify(data));
+         // newest
+        refreshListbox('/services/machine/printers', "configsSelect");
+        refreshListbox('/services/machine/printers', "printerSelect");
+        alert(data.name);
+        $("#configsSelect").val(data.name).change();
+        
+      },
+      error: function (request, status, error) {
+          alert("Failed to save printer");
+          $("body").css("cursor", "default");
+      }
+    });  
+  }
+
+  function requestPrinterConfiguration(requestValue) {
+    //printers/getdummyconfiguration
+    $("body").css("cursor", "wait");
+    $.ajax({
+      type: 'GET',
+      url: '/services' + requestValue,
+      dataType: "json",
+        error: errorHandler,
+      success: function(data){
+        if (applyErrorIfNecessary(data, true, false) && updateStatus) {
+          refreshStatus();
+        }
+      }
+    });
+  }
+
   
   function requestForPrinter(command, parameters){
      var printerName = getSelectedOptionFromListBoxOrThrowError('printerSelect', "Please select a printer first");
