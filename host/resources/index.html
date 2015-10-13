@@ -240,7 +240,7 @@
           // alert("success");
           var config = data;
           // console.log(config.MonitorDriverConfig.OSMonitorID);
-          alert("refreshed config: " + printerConfig)
+          //alert("refreshed config: " + printerConfig)
           $('#newPrinterNameText').val(config.name);
           $('#platformXText').val(config.machineConfig.PlatformXSize);
           $('#platformYText').val(config.machineConfig.PlatformYSize);
@@ -853,7 +853,7 @@
       success: function(data){
         //JSON.parse(request.responseText);
         // update the dummy config
-        alert(JSON.stringify(data));
+        //alert(JSON.stringify(data));
         data.name = $('#newPrinterNameText').val();
         data.machineConfig.PlatformXSize = $('#platformXText').val();
         data.machineConfig.PlatformYSize = $('#platformYText').val();
@@ -867,7 +867,7 @@
 
         // createprinterconfiguration
 
-        alert(JSON.stringify(data));
+        //alert(JSON.stringify(data));
 
         requestCreatePrinterConfiguration(data);
         $("body").css("cursor", "default");
@@ -893,7 +893,7 @@
          // newest
         refreshListbox('/services/machine/printers', "configsSelect");
         refreshListbox('/services/machine/printers', "printerSelect");
-        alert(data.name);
+        //alert(data.name);
         $("#configsSelect").val(data.name).change();
         
       },
