@@ -93,6 +93,8 @@ public class PrinterService {
 	 @Path("getprinterconfiguration/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public PrinterConfiguration getPrinterConfiguration(@PathParam("printername") String printerName) throws InappropriateDeviceException {
+		
+		System.out.println("getting configuration for " + printerName); 
 		Printer printer = PrinterManager.Instance().getPrinter(printerName);
 		if (printer == null) {
 			PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
