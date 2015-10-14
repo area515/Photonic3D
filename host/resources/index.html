@@ -229,7 +229,7 @@
   }
 
   function refreshPrinterConfigs(printerConfig){
-
+    //alert(printerConfig);
     if (printerConfig != "Create New"){
       $.ajax({
         type: 'GET', 
@@ -479,12 +479,40 @@
         if(listbox == "configsSelect"){
           $('#configsSelect').append($("<option></option>").attr("value","Create New").text("Create New"));
           if( $('#configsSelect').has('option').length > 0 ) {
+            // alert("Success refresh configs")
+            // alert(serviceUrl);
+            // alert(JSON.stringify(data));
             refreshPrinterConfigs($('#configsSelect').find(":selected").text());
           }
         }
       }
     });
   }
+
+  function refreshListboxWithNewConfig(serviceUrl, listbox, newConfigName) {
+    $.ajax({
+      type: 'GET',
+      url: serviceUrl,
+      dataType: "json",
+        error: errorHandler,
+      success: function(data){
+        retainSelectionAndPopulate(listbox, data)
+        if(listbox == "configsSelect"){
+          $('#configsSelect').append($("<option></option>").attr("value","Create New").text("Create New"));
+          if( $('#configsSelect').has('option').length > 0 ) {
+            // alert("Success refresh configs")
+            // alert(serviceUrl);
+            // alert(JSON.stringify(data));
+            //refreshPrinterConfigs($('#configsSelect').find(":selected").text());
+
+            $("#configsSelect").val(newConfigName).change();
+          }
+        }
+      }
+    });
+  }
+
+
   
   function retainSelectionAndPopulate(selectListbox, data) {
     var retainSelectedOptions = [];
@@ -891,10 +919,10 @@
         $("body").css("cursor", "default");
         // alert(JSON.stringify(data));
          // newest
-        refreshListbox('/services/machine/printers', "configsSelect");
+        refreshListboxWithNewConfig('/services/machine/printers', "configsSelect", data.name);
         refreshListbox('/services/machine/printers', "printerSelect");
         //alert(data.name);
-        $("#configsSelect").val(data.name).change();
+        // $("#configsSelect").val(data.name).change();
         
       },
       error: function (request, status, error) {

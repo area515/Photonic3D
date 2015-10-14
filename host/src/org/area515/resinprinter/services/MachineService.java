@@ -228,7 +228,10 @@ public class MachineService {
 		 for (PrinterConfiguration current : identifiers) {
 			 identifierStrings.add(current.getName());
 		 }
-		 
+		 System.out.println(identifiers.size());
+		 for(String printer : identifierStrings){
+			 System.out.println(printer);
+		 }
 		 return identifierStrings;
 	 }
 	 
@@ -405,15 +408,15 @@ public class MachineService {
 	 @Produces(MediaType.APPLICATION_JSON)
 	 @Consumes(MediaType.APPLICATION_JSON)
 	 public PrinterConfiguration createPrinterConfig(PrinterConfiguration printer) throws AlreadyAssignedException{
-		 return printer;
-//		try {
-//			//HostProperties.Instance().addOrUpdatePrinterConfiguration(printer);
+//		 return printer;
+		try {
+			HostProperties.Instance().addOrUpdatePrinterConfiguration(printer);
 //			System.out.println("Completed starting printer");
-//			return printer;
-//		} catch (AlreadyAssignedException e) {
-//			e.printStackTrace();
-//			throw e;
-//		}
+			return printer;
+		} catch (AlreadyAssignedException e) {
+			e.printStackTrace();
+			throw e;
+		}
 		 
 	 }
 	 
