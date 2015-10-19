@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.zip.ZipEntry;
@@ -38,9 +37,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
@@ -51,6 +48,9 @@ import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
+import org.area515.resinprinter.network.NetInterface;
+import org.area515.resinprinter.network.NetworkManager;
+import org.area515.resinprinter.network.NetInterface.WirelessNetwork;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.PrinterManager;
@@ -58,10 +58,8 @@ import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
-import org.area515.resinprinter.services.NetInterface.WirelessNetwork;
+import org.area515.util.IOUtilities;
 import org.area515.util.MailUtilities;
-import org.area515.util.TemplateEngine;
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -107,13 +105,21 @@ public class MachineService {
 	}
 	
 	@GET
+	@Path("reboot")
+	@Produces(MediaType.APPLICATION_JSON)
+	public void reboot() {
+		//After executing this method, don't expect this VM to stick around much longer
+		IOUtilities.executeNativeCommand(HostProperties.Instance().getRebootCommand(), null, null);
+	}
+	
+	@GET
 	@Path("executeDiagnostic")
 	@Produces(MediaType.APPLICATION_JSON)
 	public void emailSupportLogs() {
 		File zippedFile = new File("LogBundle.zip");
 		String MASK = "Masked by CWH";
 		String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
-		TemplateEngine.executeNativeCommand(HostProperties.Instance().getDumpStackTraceCommand(), null, pid);
+		IOUtilities.executeNativeCommand(HostProperties.Instance().getDumpStackTraceCommand(), null, pid);
 		
 		ZipOutputStream zipOutputStream = null;
 		try {
@@ -178,42 +184,7 @@ public class MachineService {
 	@Path("/stageOfflineInstall")
 	@Consumes("multipart/form-data")
 	public Response stageOfflineInstall(MultipartFormDataInput input) {
-		String fileName = "";
-		Map<String, List<InputPart>> formParts = input.getFormDataMap();
-
-		List<InputPart> inPart = formParts.get("file");
-		if (inPart == null) {
-			System.out.println("No file specified in multipart mime!");
-			return Response.status(500).build();
-		}
-
-		for (InputPart inputPart : inPart) {
-			try {
-				// Retrieve headers, read the Content-Disposition header to
-				// obtain the original name of the file
-				MultivaluedMap<String, String> headers = inputPart.getHeaders();
-				fileName = FileService.parseFileName(headers);
-
-				// If the filename was blank we aren't interested in the file.
-				if (fileName == null || fileName.isEmpty()) {
-					return Response.status(Status.BAD_REQUEST).entity(FileService.NO_FILE).build();
-				}
-
-				// Handle the body of that part with an InputStream
-				InputStream istream = inputPart.getBody(InputStream.class, null);
-				File newUploadFile = new File(HostProperties.Instance().getUpgradeDir(), fileName);
-
-				if (!FileService.saveFile(istream, newUploadFile.getAbsoluteFile())) {
-					return Response.status(Status.BAD_REQUEST).entity(FileService.UNKNOWN_FILE + fileName).build();
-				}
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-		String output = "File saved to upgrade location : " + fileName;
-		return Response.status(Status.OK).entity(output).build();
+		return FileService.uploadFile(input, HostProperties.Instance().getUpgradeDir());
 	}
 
 	 @Deprecated
@@ -250,73 +221,27 @@ public class MachineService {
 	 @Path("networkInterfaces/list")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public List<NetInterface> getNetworkInterfaces() {
-		String[] discoverSSIDCommandString = HostProperties.Instance().getDiscoverSSIDCommand();
-		String[] discoverNICCommandString = HostProperties.Instance().getDiscoverNetworkInterfaceCommand();
-
-		List<NetInterface> ifaces = new ArrayList<NetInterface>();
-		int requiredArgs = 0;
-		for (String command : discoverSSIDCommandString) {
-			requiredArgs += new MessageFormat(command).getFormatsByArgumentIndex().length;
-		}
-		
-		//If the discoverSSIDCommand doesn't understand interfaces then we can skip some actions
-		if (requiredArgs == 0) {
-			String[] ssids = TemplateEngine.executeNativeCommand(discoverSSIDCommandString, null);
-			NetInterface netFace = new NetInterface();
-			netFace.setName("WiFi Profiles");
-			for (String ssid : ssids) {
-				if (ssid == null || ssid.trim().equals("")) {
-					continue;
-				}
-				WirelessNetwork wNet = new WirelessNetwork();
-				wNet.setSsid(ssid);
-				netFace.getWirelessNetworks().add(wNet);
-			}
-			
-			return Collections.singletonList(netFace);
-		}
-		
+		Class<NetworkManager> managerClass = HostProperties.Instance().getNetworkManagerClass();
 		try {
-			String[] nics = null;
-			if (discoverNICCommandString != null) {
-				nics = TemplateEngine.executeNativeCommand(discoverNICCommandString, null);
-			} else {
-				List<NetworkInterface> nicList = Collections.list(NetworkInterface.getNetworkInterfaces());
-				nics = new String[nicList.size()];
-				for (int t = 0; t < nicList.size(); t++) {
-					nics[t] = nicList.get(t).getName();
-				}
-			}
-
-			for (String nicName : nics) {
-				NetInterface netFace = new NetInterface();
-				netFace.setName(nicName);
-				String[] ssids = TemplateEngine.executeNativeCommand(discoverSSIDCommandString, null, nicName);
-				for (String ssid : ssids) {
-					if (ssid == null || ssid.trim().equals("")) {
-						continue;
-					}
-					WirelessNetwork wNet = new WirelessNetwork();
-					wNet.setSsid(ssid);
-					netFace.getWirelessNetworks().add(wNet);
-				}
-				ifaces.add(netFace);
-			}
-			
-			return ifaces;
-		} catch (SocketException e) {
+			NetworkManager networkManager = managerClass.newInstance();
+			return networkManager.getNetworkInterfaces();
+		} catch (InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
-			throw new RuntimeException("An error occurred looking for network interfaces.", e);
+			return null;
 		}
 	 }
 	 
 	 @PUT
-	 @Path("networkInterfaces/get/{networkInterfaceName}/wireless/{ssid}/connect/{password}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public void connectToWifiSSID(@PathParam("networkInterfaceName") String networkInterfaceName, @PathParam("ssid") String ssid, @PathParam("password") String password) {
-		    //http://unix.stackexchange.com/questions/92799/connecting-to-wifi-network-through-command-line
-			String[] data = TemplateEngine.executeNativeCommand(HostProperties.Instance().getConnectToWifiSSIDCommand(), "An error occurred attempting to connect to wireless network.", networkInterfaceName, ssid, password);
-			System.out.println(Arrays.toString(data));
+	 @Path("wirelessConnect/{password}")
+	 @Consumes(MediaType.APPLICATION_JSON)
+	 public void connectToWifiSSID(WirelessNetwork network, @PathParam("password") String password) {
+		Class<NetworkManager> managerClass = HostProperties.Instance().getNetworkManagerClass();
+		try {
+			NetworkManager networkManager = managerClass.newInstance();
+			networkManager.connectToWirelessNetwork(network, password);
+		} catch (InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
 	 }
 	 
 	 @GET

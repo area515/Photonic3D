@@ -10,6 +10,8 @@ import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
+import org.area515.util.IOUtilities;
+import org.area515.util.IOUtilities.ParseState;
 import org.area515.util.TemplateEngine;
 
 import freemarker.template.TemplateException;
@@ -31,44 +33,18 @@ public abstract class GCodeControl {
     private SerialCommunicationsPort getSerialPort() {
     	return printer.getPrinterFirmwareSerialPort();
     }
-    
-	private String readLine(Printer printer) throws IOException {
-		long startTime = System.currentTimeMillis();
-		
-		while (true) {
-			byte[] newBuffer = getSerialPort().read();
-			if (newBuffer != null) {
-				builder.append(new String(newBuffer));
-			}
-			
-			if (builder.length() > 0) {
-				for (; parseLocation < builder.length(); parseLocation++) {
-					if (builder.charAt(parseLocation) == '\n') {
-						parseLocation = 0;
-						return builder.delete(0, parseLocation).toString();
-					}
-				}
-			}
-			
-			if (System.currentTimeMillis() - startTime > SUGGESTED_TIMEOUT_FOR_ONE_GCODE) { //If we've timed out, get out.First available serial port
-				return null;
-			}
-			
-			if (printer != null && !printer.isPrintInProgress()) {//Stop if they have asked us to quit printing
-				return null;
-			}
-		}
-	}
 	
 	private String readUntilOkOrStoppedPrinting(Printer printer) throws IOException {
-    	StringBuilder builder = new StringBuilder();
-
 		String response = "";
 		while (response != null && !response.matches("(?is:ok.*)")) {
-			response = readLine(printer);
+			ParseState state = IOUtilities.readLine(printer, getSerialPort(), builder, parseLocation, SUGGESTED_TIMEOUT_FOR_ONE_GCODE, IOUtilities.CPU_LIMITING_DELAY);
+			response = state.currentLine;
+			parseLocation = state.parseLocation;
+			
 			if (response != null) {
 				builder.append(response);
 			}
+			
 			System.out.println("lineRead:" + response);
 		}
 		

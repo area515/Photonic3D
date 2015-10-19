@@ -74,7 +74,7 @@
 			//alert("here");
     		var formData = new FormData($('#uploadform')[0]);
     		$.ajax({
-        		url: '/services/files/upload',  //Server script to process data
+        		url: '/services/files/uploadPrintableFile',  //Server script to process data
         		type: 'POST',
         		xhr: function() {  // Custom XMLHttpRequest
             		var myXhr = $.ajaxSettings.xhr();

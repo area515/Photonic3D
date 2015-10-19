@@ -2,7 +2,7 @@ package org.area515.resinprinter.server;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,12 +25,15 @@ import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintFileProcessor;
+import org.area515.resinprinter.network.LinuxNetworkManager;
+import org.area515.resinprinter.network.NetworkManager;
 import org.area515.resinprinter.notification.Notifier;
 import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.projector.HexCodeBasedProjector;
 import org.area515.resinprinter.projector.ProjectorModel;
+import org.area515.resinprinter.serial.RXTXSynchronousReadBasedCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.services.MachineService;
@@ -52,7 +55,6 @@ public class HostProperties {
 	private static HostProperties INSTANCE = null;
 	private File uploadDir;
 	private File printDir;
-	private File upgradeDir;
 	private String hostGUI;
 	private boolean fakeSerial = false;
 	private boolean fakedisplay = false;
@@ -61,10 +63,12 @@ public class HostProperties {
 	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
 	private List<PrintFileProcessor> printFileProcessors = new ArrayList<PrintFileProcessor>();
 	private Class<SerialCommunicationsPort> serialPortClass;
+	private Class<NetworkManager> networkManagerClass;
 	private int versionNumber;
 	private String deviceName;
 	private String manufacturer;
 	private Properties configurationProperties = new Properties();
+	private Properties overridenConfigurationProperties = new Properties();
 	private List<String> visibleCards;
 	private String hexCodeBasedProjectorsJson;
 	
@@ -82,17 +86,11 @@ public class HostProperties {
 	private String clientUsername;
 	private String clientPassword;
 	
-	//This is for Media
+	//These are OS specific commands
 	private String[] streamingCommand;
 	private String[] imagingCommand;
-	
-	//This is for wifi
-	private String[] discoverSSIDCommand;
-	private String[] connectToWifiSSIDCommand;
-	private String[] discoverNetworkInterfaceCommand;
-	
-	//This is for diagnostics
 	private String[] dumpStackTraceCommand;
+	private String[] rebootCommand;
 	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
@@ -104,7 +102,6 @@ public class HostProperties {
 	private HostProperties() {
 		String printDirString = null;
 		String uploadDirString = null;
-		String upgradeDirString = null;
 		
 		if (!PROFILES_DIR.exists() && !PROFILES_DIR.mkdirs()) {
 			System.out.println("Couldn't make profiles directory. No write access or disk full?" );
@@ -116,19 +113,19 @@ public class HostProperties {
 			throw new IllegalArgumentException("Couldn't make machine directory. No write access or disk full?");
 		}
 
-		Properties overridenProperties = null;
 		InputStream stream = null;
 		File configPropertiesInPrintersDirectory = new File(printerDir, "config.properties");
 		if (configPropertiesInPrintersDirectory.exists()) {
 			try {
 				stream = new FileInputStream(configPropertiesInPrintersDirectory);
-				overridenProperties = new Properties();
-				overridenProperties.load(stream);
+				overridenConfigurationProperties.load(stream);
 			} catch (IOException e) {
 				e.printStackTrace();
 			} finally {
 				IOUtils.closeQuietly(stream);
 			}
+		} else {
+			configPropertiesInPrintersDirectory.getParentFile().mkdirs();
 		}
 		
 		stream = HostProperties.class.getClassLoader().getResourceAsStream("config.properties");
@@ -144,13 +141,12 @@ public class HostProperties {
 			IOUtils.closeQuietly(stream);
 		}
 
-		if (overridenProperties != null) {
-			configurationProperties.putAll(overridenProperties);
+		if (overridenConfigurationProperties != null) {
+			configurationProperties.putAll(overridenConfigurationProperties);
 		}
 		
 		printDirString = configurationProperties.getProperty("printdir");
 		uploadDirString = configurationProperties.getProperty("uploaddir");
-		upgradeDirString = configurationProperties.getProperty("upgradedir");
 		
 		fakeSerial = new Boolean(configurationProperties.getProperty("fakeserial", "false"));
 		fakedisplay = new Boolean(configurationProperties.getProperty("fakedisplay", "false"));
@@ -203,14 +199,22 @@ public class HostProperties {
 			}
 		}
 		
-		String serialCommClass = null;
+		String serialCommString = null;
 		try {
-			serialCommClass = configurationProperties.getProperty("SerialCommunicationsImplementation", "org.area515.resinprinter.serial.RXTXSynchronousReadBasedCommPort");
-			serialPortClass = (Class<SerialCommunicationsPort>)Class.forName(serialCommClass);
+			serialCommString = configurationProperties.getProperty("SerialCommunicationsImplementation", RXTXSynchronousReadBasedCommPort.class.getName());
+			serialPortClass = (Class<SerialCommunicationsPort>)Class.forName(serialCommString);
 		} catch (ClassNotFoundException e) {
-			System.out.println("Failed to load SerialCommunicationsImplementation:" + serialCommClass);
+			System.out.println("Failed to load SerialCommunicationsImplementation:" + serialCommString);
 		}
 		
+		String networkManagerName = null;
+		try {
+			networkManagerName = configurationProperties.getProperty("NetworkManagerImplementation", LinuxNetworkManager.class.getName());
+			networkManagerClass = (Class<NetworkManager>)Class.forName(networkManagerName);
+		} catch (ClassNotFoundException e) {
+			System.out.println("Failed to load NetworkManagerImplementation:" + networkManagerName);
+		}
+
 		//Here are all of the server configuration settings
 		String keystoreFilename = configurationProperties.getProperty("keystoreFilename");
 		if (keystoreFilename != null) {
@@ -230,11 +234,9 @@ public class HostProperties {
 
 		streamingCommand = getJSonStringArray("streamingCommand");
 		imagingCommand = getJSonStringArray("imagingCommand");
-		discoverSSIDCommand = getJSonStringArray("discoverSSIDCommand");
-		connectToWifiSSIDCommand = getJSonStringArray("connectToWifiSSIDCommand");
-		discoverNetworkInterfaceCommand = getJSonStringArray("discoverNetworkInterfaceCommand");
 		hexCodeBasedProjectorsJson = configurationProperties.getProperty("hexCodeBasedProjectors");
 		dumpStackTraceCommand = getJSonStringArray("dumpStackTraceCommand");
+		rebootCommand = getJSonStringArray("rebootCommand");
 		
 		if (printDirString == null) {
 			printDir = new File(System.getProperty("java.io.tmpdir"), "printdir");
@@ -246,12 +248,6 @@ public class HostProperties {
 			uploadDir = new File(System.getProperty("java.io.tmpdir"), "uploaddir");
 		} else {
 			uploadDir = new File(uploadDirString);
-		}
-		
-		if (upgradeDirString == null) {
-			upgradeDir = new File(System.getProperty("java.io.tmpdir"), "upgradedir");
-		} else {
-			upgradeDir = new File(upgradeDirString);
 		}
 		
 		File versionFile = new File("build.number");
@@ -280,14 +276,6 @@ public class HostProperties {
 				throw new IllegalArgumentException("Couldn't create upload directory", e);
 			}
 		}
-		
-		if(!upgradeDir.exists()) {
-			try {
-				FileUtils.forceMkdir(upgradeDir);
-			} catch (IOException e) {
-				throw new IllegalArgumentException("Couldn't create upgrade directory", e);
-			}
-		}
 	}
 
 	private String[] getJSonStringArray(String property) {
@@ -300,6 +288,19 @@ public class HostProperties {
 			return mapper.readValue(json, new TypeReference<String[]>(){});
 		} catch (IOException e) {
 			throw new IllegalArgumentException("Property:" + property + " didn't parse correctly.", e);
+		}
+	}
+	
+	public void markOneTimeInstallPerformed(boolean install) {
+		FileWriter writer = null;
+		try {
+			writer = new FileWriter(new File(printerDir, "config.properties"));
+			overridenConfigurationProperties.setProperty("performedOneTimeInstall", install + "");
+			overridenConfigurationProperties.store(writer, "Wrote File because we performed one time install");
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			IOUtils.closeQuietly(writer);
 		}
 	}
 	
@@ -344,7 +345,7 @@ public class HostProperties {
 	}
 	
 	public File getUpgradeDir(){
-		return upgradeDir;
+		return new File("");
 	}
 	
 	public File getWorkingDir(){
@@ -371,6 +372,10 @@ public class HostProperties {
 		return serialPortClass;
 	}
 	
+	public Class<NetworkManager> getNetworkManagerClass() {
+		return networkManagerClass;
+	}
+	
 	public List<Class<Advertiser>> getAdvertisers() {
 		return advertisementClasses;
 	}
@@ -395,22 +400,14 @@ public class HostProperties {
 		return keystoreFile;
 	}
 
-	public String[] getDiscoverSSIDCommand() {
-		return discoverSSIDCommand;
-	}
-	
-	public String[] getDiscoverNetworkInterfaceCommand() {
-		return discoverNetworkInterfaceCommand;
-	}
-	
 	public String[] getDumpStackTraceCommand() {
 		return dumpStackTraceCommand;
 	}
 
-	public String[] getConnectToWifiSSIDCommand() {
-		return connectToWifiSSIDCommand;
+	public String[] getRebootCommand() {
+		return rebootCommand;
 	}
-
+	
 	public String[] getStreamingCommand() {
 		return streamingCommand;
 	}

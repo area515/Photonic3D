@@ -47,8 +47,8 @@ public class Main {
 			return thread;
 		}
 	});
+	
 	public static void main(String[] args) throws Exception {
-
 		int port = HostProperties.Instance().getPrinterHostPort();
 		/*
 		 * Sequence
@@ -173,6 +173,9 @@ public class Main {
 			}
 		}
 
+		//At this point we can safely say that an install is officially complete.
+		HostProperties.Instance().markOneTimeInstallPerformed(true);
+		
 		//Wait in the Main method until we are shutdown by the OS
 		try {
 			server.join();
