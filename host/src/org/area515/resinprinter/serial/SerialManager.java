@@ -15,6 +15,7 @@ import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.projector.ProjectorModel;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.util.IOUtilities;
 
 public class SerialManager {
 	private static SerialManager INSTANCE = null;
@@ -25,7 +26,7 @@ public class SerialManager {
 	private ConcurrentHashMap<SerialCommunicationsPort, Printer> printersBySerialPort = new ConcurrentHashMap<SerialCommunicationsPort, Printer>();
 
 	/** Milliseconds to block while waiting for port open */
-	private static final int TIME_OUT = 2000;
+	public static final int TIME_OUT = 2000;
 	
 	public static class DetectedResources {
 		SerialCommunicationsPort comPort;
@@ -62,36 +63,18 @@ public class SerialManager {
 		}
 	}
 	
-	private String readUntilFinished(SerialCommunicationsPort currentIdentifier) throws IOException {
-		StringBuilder builder = new StringBuilder();
-		long start = System.currentTimeMillis();
-		while (System.currentTimeMillis() - start < TIME_OUT) {
-			byte[] data = currentIdentifier.read();
-			if (data == null) {
-				try {
-					Thread.sleep(300);
-				} catch (InterruptedException e) {
-				}
-			} else {
-				builder.append(new String(data));
-				start = System.currentTimeMillis();
-			}
-		}
-		
-		return builder.toString();
-	}
 	
 	public boolean is3dFirmware(SerialCommunicationsPort currentIdentifier, ComPortSettings newComPortSettings) {
 		try {
 			currentIdentifier.open(AUTO_DETECT_3D_FIRMWARE, TIME_OUT, newComPortSettings);
 			
 			//Marlin and other firmware sends garbage on a new connect.
-			readUntilFinished(currentIdentifier);
+			IOUtilities.readWithTimeout(currentIdentifier, TIME_OUT, IOUtilities.CPU_LIMITING_DELAY);
 			
 			//Send an absolute positioning gcode and determine if the other end responds with an ok. If so, it's probably 3dFirmware.
 			currentIdentifier.write("G91\r\n".getBytes());
 			
-			String detection = readUntilFinished(currentIdentifier);
+			String detection = IOUtilities.readWithTimeout(currentIdentifier, TIME_OUT, IOUtilities.CPU_LIMITING_DELAY);
 			String lines[] = detection.split("\n");
 			if (lines.length == 0) {
 				return false;
@@ -100,7 +83,7 @@ public class SerialManager {
 				return true;
 			}
 			return false;
-		} catch (AlreadyAssignedException | InappropriateDeviceException | IOException e) {
+		} catch (InterruptedException | AlreadyAssignedException | InappropriateDeviceException | IOException e) {
 			return false;
 		} finally {
 			if (currentIdentifier != null) {
