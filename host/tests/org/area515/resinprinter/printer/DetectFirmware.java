@@ -37,7 +37,7 @@ public class DetectFirmware {
 				for (int t = 0; t < 10; t++) {
 					System.out.println("  " + t + ". JSSCCommPort firmware detection:" + SerialManager.Instance().is3dFirmware(port, newComPortSettings));
 				}
-				port = new RXTXEventBasedCommPort();
+				/*port = new RXTXEventBasedCommPort();
 				for (int t = 0; t < 10; t++) {
 					System.out.println("  " + t + ". RXTXEventBasedCommPort firmware detection:" + SerialManager.Instance().is3dFirmware(port, newComPortSettings));
 				}
@@ -45,7 +45,7 @@ public class DetectFirmware {
 				port = new RXTXSynchronousReadBasedCommPort();
 				for (int t = 0; t < 10; t++) {
 					System.out.println("  " + t + ". RXTXSynchronousReadBasedCommPort firmware detection:" + SerialManager.Instance().is3dFirmware(port, newComPortSettings));
-				}
+				}*/
 			}
 		}
 	}

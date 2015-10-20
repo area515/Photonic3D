@@ -40,11 +40,11 @@ public class DetectProjector {
 			SerialCommunicationsPort port = new JSSCCommPort();
 			System.out.println("  JSSCCommPort projector detection:" + SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
 			
-			port = new RXTXEventBasedCommPort();
+			/*port = new RXTXEventBasedCommPort();
 			System.out.println("  RXTXEventBasedCommPort projector detection:" + SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
 			
 			port = new RXTXSynchronousReadBasedCommPort();
-			System.out.println("  RXTXSynchronousReadBasedCommPort projector detection:" + SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
+			System.out.println("  RXTXSynchronousReadBasedCommPort projector detection:" + SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));*/
 		}
 	}
 }
