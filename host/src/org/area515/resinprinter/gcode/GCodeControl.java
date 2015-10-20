@@ -10,6 +10,7 @@ import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
+import org.area515.resinprinter.serial.SerialManager;
 import org.area515.util.IOUtilities;
 import org.area515.util.IOUtilities.ParseState;
 import org.area515.util.TemplateEngine;
@@ -35,20 +36,20 @@ public abstract class GCodeControl {
     }
 	
 	private String readUntilOkOrStoppedPrinting(Printer printer) throws IOException {
-		String response = "";
-		while (response != null && !response.matches("(?is:ok.*)")) {
-			ParseState state = IOUtilities.readLine(printer, getSerialPort(), builder, parseLocation, SUGGESTED_TIMEOUT_FOR_ONE_GCODE, IOUtilities.CPU_LIMITING_DELAY);
-			response = state.currentLine;
+		StringBuilder responseBuilder = new StringBuilder();
+		ParseState state = null;
+		do {
+			state = IOUtilities.readLine(printer, getSerialPort(), builder, parseLocation, SUGGESTED_TIMEOUT_FOR_ONE_GCODE, IOUtilities.CPU_LIMITING_DELAY);
 			parseLocation = state.parseLocation;
 			
-			if (response != null) {
-				builder.append(response);
+			if (state.currentLine != null) {
+				responseBuilder.append(state.currentLine);
 			}
 			
-			System.out.println("lineRead:" + response);
-		}
+			System.out.println("lineRead:" + state.currentLine);
+		} while (state.currentLine != null && !state.currentLine.matches("(?is:ok.*)"));
 		
-		return builder.toString();
+		return responseBuilder.toString();
 	}
 
     public String sendGcodeReturnIfPrinterStops(String cmd) throws IOException {
@@ -90,7 +91,14 @@ public abstract class GCodeControl {
      * @throws IOException
      */
     public String readWelcomeChitChat() throws IOException {
-    	return executeSetAbsolutePositioning();
+		try {
+			StringBuilder builder = new StringBuilder();
+			builder.append(IOUtilities.readWithTimeout(getSerialPort(), SerialManager.TIME_OUT, SerialManager.CPU_LIMITING_DELAY));
+			builder.append(executeSetAbsolutePositioning());
+			return builder.toString();
+		} catch (InterruptedException e) {
+			return null;
+		}
     }
     public String executeSetAbsolutePositioning() {
     	return sendGcode("G91\r\n");

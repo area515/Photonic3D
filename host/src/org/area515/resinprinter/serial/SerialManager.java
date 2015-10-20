@@ -26,7 +26,8 @@ public class SerialManager {
 	private ConcurrentHashMap<SerialCommunicationsPort, Printer> printersBySerialPort = new ConcurrentHashMap<SerialCommunicationsPort, Printer>();
 
 	/** Milliseconds to block while waiting for port open */
-	public static final int TIME_OUT = 2000;
+	public static final int TIME_OUT = 1000;
+	public static final int CPU_LIMITING_DELAY = 200;
 	
 	public static class DetectedResources {
 		SerialCommunicationsPort comPort;
@@ -63,18 +64,17 @@ public class SerialManager {
 		}
 	}
 	
-	
 	public boolean is3dFirmware(SerialCommunicationsPort currentIdentifier, ComPortSettings newComPortSettings) {
 		try {
 			currentIdentifier.open(AUTO_DETECT_3D_FIRMWARE, TIME_OUT, newComPortSettings);
 			
 			//Marlin and other firmware sends garbage on a new connect.
-			IOUtilities.readWithTimeout(currentIdentifier, TIME_OUT, IOUtilities.CPU_LIMITING_DELAY);
+			String chitChat = IOUtilities.readWithTimeout(currentIdentifier, TIME_OUT, CPU_LIMITING_DELAY);
 			
 			//Send an absolute positioning gcode and determine if the other end responds with an ok. If so, it's probably 3dFirmware.
 			currentIdentifier.write("G91\r\n".getBytes());
 			
-			String detection = IOUtilities.readWithTimeout(currentIdentifier, TIME_OUT, IOUtilities.CPU_LIMITING_DELAY);
+			String detection = IOUtilities.readWithTimeout(currentIdentifier, TIME_OUT, CPU_LIMITING_DELAY);
 			String lines[] = detection.split("\n");
 			if (lines.length == 0) {
 				return false;
@@ -102,6 +102,8 @@ public class SerialManager {
 			ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
 			for (CommPortIdentifier currentIdentifier : identifiers) {
 				SerialCommunicationsPort check = getSerialDevice(currentIdentifier.getName());
+				newComPortSettings.setPortName(check.getName());
+				
 				if (!printersBySerialPort.containsKey(check)) {
 					if (identifierName.equals(FIRST_AVAILABLE_PORT)) {
 						identifier = check;
@@ -125,10 +127,9 @@ public class SerialManager {
 			}
 			
 			if (identifier == null) {
+				newComPortSettings.setPortName(identifierName);
 				throw new InappropriateDeviceException("No serial ports found for:" + identifierName);
 			}
-			
-			newComPortSettings.setPortName(identifier.getName());
 		}
 
 		Printer otherPrintJob = printersBySerialPort.putIfAbsent(identifier, printer);

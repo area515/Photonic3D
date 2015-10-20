@@ -375,12 +375,9 @@ public class MachineService {
 			if (printer.isPrintInProgress()) {
 				throw new InappropriateDeviceException("Can't stop printer while a job is in progress");
 			}
+			PrinterManager.Instance().stopPrinter(printer);
 			DisplayManager.Instance().removeAssignment(printer);
 			SerialManager.Instance().removeAssignments(printer);
-			if (printer != null) {
-				printer.close();
-			}
-			PrinterManager.Instance().stopPrinter(printer);
 			return new MachineResponse("stop", true, "Stopped:" + printerName);
 		} catch (InappropriateDeviceException e) {
 			e.printStackTrace();
