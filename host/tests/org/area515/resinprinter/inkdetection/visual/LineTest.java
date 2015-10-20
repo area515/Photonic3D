@@ -13,7 +13,7 @@ import org.junit.Test;
 
 public class LineTest {
 	@Test
-	public static void generateHoughSpace() throws IOException {
+	public void generateHoughSpace() throws IOException {
 		BufferedImage image = ImageIO.read(CircleTest.class.getResource("ToughSituation.png"));
 		//BufferedImage image = ImageIO.read(new File("test64circle.jpg"));
 		CannyEdgeDetector8BitGray detector = new CannyEdgeDetector8BitGray();
