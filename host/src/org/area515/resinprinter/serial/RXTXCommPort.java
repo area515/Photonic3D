@@ -79,7 +79,9 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 		if (outputStream != null) {
 			try {outputStream.close();} catch (IOException e) {}
 		}
-		serialPort.close();
+		if (serialPort != null) {
+			serialPort.close();
+		}
 	}
 
 	@Override
