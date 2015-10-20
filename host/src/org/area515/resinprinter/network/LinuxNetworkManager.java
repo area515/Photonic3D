@@ -31,7 +31,7 @@ public class LinuxNetworkManager implements NetworkManager {
 			parseActions.add(new ParseAction(new String[]{"scan_results\n"}, "bssid.*", SearchStyle.RepeatUntilFound));
 			parseActions.add(new ParseAction(new String[]{""}, "\\s*([A-Fa-f0-9:]+)\\s+(\\d+)\\s+(\\d+)\\s+([\\[\\]\\+\\-\\w]+)\\s+(\\w*)\\s*", SearchStyle.RepeatWhileFound));
 			
-			List<String[]> output = IOUtilities.communicateWithNativeCommand(parseActions, null, nicName);
+			List<String[]> output = IOUtilities.communicateWithNativeCommand(parseActions, "^>|\n", true, null, nicName);
 			for (String[] lines : output) {
 				if (lines == null) {
 					continue;
@@ -127,6 +127,6 @@ public class LinuxNetworkManager implements NetworkManager {
 		parseActions.add(new ParseAction(new String[]{"reconfigure\n"}, "\\s*>", SearchStyle.RepeatUntilFound));
 		parseActions.add(new ParseAction(new String[]{"quit\n"}, "\\s*>", SearchStyle.RepeatUntilFound));
 		
-		IOUtilities.communicateWithNativeCommand(parseActions, null, wireless.getParentInterface().getName(), password, encryption.getPairwiseCipher().get(0) + "");
+		IOUtilities.communicateWithNativeCommand(parseActions, "^>|\n", true, null, wireless.getParentInterface().getName(), password, encryption.getPairwiseCipher().get(0) + "");
 	}
 }

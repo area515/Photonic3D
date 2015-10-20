@@ -92,7 +92,7 @@ public class IOUtilitiesTest {
 		Mockito.when(stream.available()).thenReturn(firstBytes.length).thenReturn(firstBytes.length);
 		Mockito.when(stream.read(Mockito.any(byte[].class), Mockito.eq(0), Mockito.eq(firstBytes.length))).thenAnswer(new InputStreamReadDelayedAnswer(0, firstBytes));
 		
-		ParseState state = IOUtilities.readLine(stream, builder, 0, 0, cpuDelay);
+		ParseState state = IOUtilities.readLine(stream, builder, "[\n]", 0, 0, cpuDelay);
 		
 		Assert.assertEquals(0, state.parseLocation);
 		Assert.assertEquals(line, state.currentLine);
@@ -127,7 +127,7 @@ public class IOUtilitiesTest {
 		actions.add(new ParseAction(new String[]{"scan_results\n"}, "bssid.*", SearchStyle.RepeatUntilFound));
 		actions.add(new ParseAction(new String[]{""}, "\\s*([A-Fa-f0-9:]+)\\s+(\\d+)\\s+(\\d+)\\s+([\\[\\]\\+\\-\\w]+)\\s+(\\w*)\\s*", SearchStyle.RepeatWhileFound));
 		
-		List<String[]> dataReturned = IOUtilities.communicateWithNativeCommand(actions, null, "wlan0");
+		List<String[]> dataReturned = IOUtilities.communicateWithNativeCommand(actions, "^>|\n", true, null, "wlan0");
 		Assert.assertEquals("SomeNetwork", dataReturned.get(0)[4]);
 		Assert.assertEquals("CenturyLink9999", dataReturned.get(1)[4]);
 		Assert.assertEquals("SomeHouse", dataReturned.get(2)[4]);
@@ -169,22 +169,22 @@ public class IOUtilitiesTest {
 			.thenThrow(new IllegalArgumentException("The read method should never have been called this time."));
 		
 		//This tests that an inputstream read wasn't able to complete a full line read in the given timeout period.
-		ParseState state = IOUtilities.readLine(stream, builder, 0, timeout, cpuDelay);
+		ParseState state = IOUtilities.readLine(stream, builder, "[\n]", 0, timeout, cpuDelay);
 		Assert.assertEquals(1, state.parseLocation);
 		Assert.assertEquals(null, state.currentLine);
 
 		//The next read should be able to read the the ok
-		state = IOUtilities.readLine(stream, builder, state.parseLocation, timeout, cpuDelay);
+		state = IOUtilities.readLine(stream, builder, "[\n]", state.parseLocation, timeout, cpuDelay);
 		Assert.assertEquals(0, state.parseLocation);
 		Assert.assertEquals("ok\n", state.currentLine);
 
 		//Again, this read won't be able to read the full amount of data in the timeout period.
-		state = IOUtilities.readLine(stream, builder, state.parseLocation, timeout, cpuDelay);
+		state = IOUtilities.readLine(stream, builder, "[\n]", state.parseLocation, timeout, cpuDelay);
 		Assert.assertEquals(4, state.parseLocation);
 		Assert.assertEquals(null, state.currentLine);
 
 		//There is nothing left on the stream to read so it continues to parse the rest of the StringBuilder
-		state = IOUtilities.readLine(stream, builder, state.parseLocation, timeout, 10);
+		state = IOUtilities.readLine(stream, builder, "[\n]", state.parseLocation, timeout, 10);
 		Assert.assertEquals(0, state.parseLocation);
 		Assert.assertEquals("world\n", state.currentLine);
 	}

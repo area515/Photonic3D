@@ -26,6 +26,7 @@ public class IOUtilities {
 	public static class ParseState {
 		public int parseLocation;
 		public String currentLine;
+		public String eol;
 	}
 	
 	public static class ParseAction {
@@ -40,7 +41,7 @@ public class IOUtilities {
 		}
 	}
 	
-	public static List<String[]> communicateWithNativeCommand(List<ParseAction> parseActions, String friendlyErrorMessage, String... arguments) {
+	public static List<String[]> communicateWithNativeCommand(List<ParseAction> parseActions, String eolRegEx, boolean removeNewLineChar, String friendlyErrorMessage, String... arguments) {
 		if (parseActions == null || parseActions.size() == 0)
 			return null;
 		
@@ -70,12 +71,15 @@ public class IOUtilities {
 				Matcher matcher = null;
 				Pattern pattern = Pattern.compile(parseAction.waitForRegEx);
 				do {
-					ParseState state = IOUtilities.readLine(inputStream, builder, parseLocation, NATIVE_COMMAND_TIMEOUT, CPU_LIMITING_DELAY);
+					ParseState state = IOUtilities.readLine(inputStream, builder, eolRegEx, parseLocation, NATIVE_COMMAND_TIMEOUT, CPU_LIMITING_DELAY);
 					if (state.currentLine == null) {
 						return returnList;
 					}
 					
-					matcher = pattern.matcher(state.currentLine.substring(0, state.currentLine.length() - 1));
+					if (removeNewLineChar && state.currentLine.endsWith("\n")) {
+						state.currentLine = state.currentLine.substring(0, state.currentLine.length() - 1);
+					}
+					matcher = pattern.matcher(state.currentLine);
 					if (matcher.matches() && matcher.groupCount() > 0) {
 						String[] groups = new String[matcher.groupCount()];
 						for (int group = 1; group <= matcher.groupCount(); group++) {
@@ -188,7 +192,7 @@ public class IOUtilities {
 		}
 	}	
 	
-	public static ParseState readLine(InputStream stream, StringBuilder builder, int parseLocation, int timeoutMillis, int cpuLimitingDelay) throws IOException {
+	public static ParseState readLine(InputStream stream, StringBuilder builder, String eolRegex, int parseLocation, int timeoutMillis, int cpuLimitingDelay) throws IOException {
 		long startTime = System.currentTimeMillis();
 		boolean workPerformed = false;
 		while (true) {
@@ -205,14 +209,16 @@ public class IOUtilities {
 			
 			if (builder.length() > 0) {
 				workPerformed = true;
-				for (; parseLocation < builder.length(); parseLocation++) {
-					if (builder.charAt(parseLocation) == '\n') {
-						ParseState state = new ParseState();
-						state.currentLine = builder.substring(0, parseLocation + 1);
-						state.parseLocation = 0;
-						builder.delete(0, parseLocation + 1);
-						return state;
-					}
+				Pattern eolPattern = Pattern.compile(eolRegex);
+				Matcher matcher = eolPattern.matcher(builder.toString());
+				if (matcher.find(parseLocation)) {
+					ParseState state = new ParseState();
+					state.currentLine = builder.substring(0, matcher.end());
+					state.parseLocation = 0;
+					builder.delete(0, matcher.end());
+					return state;
+				} else {
+					parseLocation = builder.length();
 				}
 			}
 			
