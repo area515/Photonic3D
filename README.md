@@ -15,6 +15,7 @@ Where is a video of how to use CWH with CWS and Zip files?
 [Here](https://www.youtube.com/watch?v=J3HTCkxlKcw).
 
 Where is a video of how to setup CWH from scratch on the Raspberry Pi?
+-------------------------------------------------------------------------------  
 [Here](https://www.youtube.com/watch?v=ng1Sj2ktWhU).
 
 How do I use this new version of the GUI you've started?  
