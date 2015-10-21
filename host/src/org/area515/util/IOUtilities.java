@@ -26,7 +26,6 @@ public class IOUtilities {
 	public static class ParseState {
 		public int parseLocation;
 		public String currentLine;
-		public String eol;
 	}
 	
 	public static class ParseAction {
@@ -48,7 +47,7 @@ public class IOUtilities {
 		StringBuilder builder = new StringBuilder();
 		int parseLocation = 0;
 		List<String[]> returnList = new ArrayList<String[]>();
-		Process listSSIDProcess;
+		Process listSSIDProcess = null;
 		try {
 			InputStream inputStream = null;
 			OutputStream outputStream = null;
@@ -66,6 +65,7 @@ public class IOUtilities {
 					firstIteration = false;
 				} else {
 					outputStream.write(replacedCommands[0].getBytes());
+					outputStream.flush();
 				}
 				
 				Matcher matcher = null;
@@ -103,6 +103,11 @@ public class IOUtilities {
 			}
 			
 			throw new RuntimeException(friendlyErrorMessage, e);
+		} finally {
+			//Don't leave straggling processes
+			if (listSSIDProcess != null) {
+				listSSIDProcess.destroy();
+			}
 		}
 	}
 	
@@ -246,7 +251,7 @@ public class IOUtilities {
 		if (commands == null || commands.length == 0)
 			return new String[]{};
 		
-		Process listSSIDProcess;
+		Process listSSIDProcess = null;
 		try {
 			String[] replacedCommands = new String[commands.length];
 			for (int t = 0; t < commands.length; t++) {
@@ -263,6 +268,10 @@ public class IOUtilities {
 			}
 			
 			throw new RuntimeException(friendlyErrorMessage, e);
+		} finally {
+			if (listSSIDProcess != null) {
+				listSSIDProcess.destroy();
+			}
 		}
 	}
 }
