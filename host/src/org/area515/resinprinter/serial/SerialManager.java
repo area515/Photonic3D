@@ -26,7 +26,7 @@ public class SerialManager {
 	private ConcurrentHashMap<SerialCommunicationsPort, Printer> printersBySerialPort = new ConcurrentHashMap<SerialCommunicationsPort, Printer>();
 
 	/** Milliseconds to block while waiting for port open */
-	public static final int TIME_OUT = 1000;
+	public static final int TIME_OUT = 2000;
 	public static final int CPU_LIMITING_DELAY = 200;
 	
 	public static class DetectedResources {
