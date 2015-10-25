@@ -191,12 +191,10 @@ public class PrinterService {
 			if (printer.isPrintInProgress()) {
 				throw new InappropriateDeviceException("Can't stop printer while a job is in progress. Please stop the active printjob first.");
 			}
+			//You must stop the printer before removing assignments otherwise the serial ports won't get closed.
+			PrinterManager.Instance().stopPrinter(printer);
 			DisplayManager.Instance().removeAssignment(printer);
 			SerialManager.Instance().removeAssignments(printer);
-			if (printer != null) {
-				printer.close();
-			}
-			PrinterManager.Instance().stopPrinter(printer);
 			return new MachineResponse("stopPrinter", true, "Stopped:" + printerName);
 		} catch (InappropriateDeviceException e) {
 			e.printStackTrace();

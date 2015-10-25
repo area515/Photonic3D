@@ -80,7 +80,7 @@ public class PrinterManager {
 		if (printer.isPrintInProgress()) {
 			throw new InappropriateDeviceException("Can't stop printer while printer:" + printer + " is in status:" + printer.getStatus());
 		}
-		
+
 		printersByName.remove(printer.getName());
 		printer.close();
 	}

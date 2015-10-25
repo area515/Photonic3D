@@ -16,16 +16,16 @@ public class RXTXEventBasedCommPort extends RXTXCommPort implements SerialPortEv
 	
 	public void init(SerialPort serialPort) throws TooManyListenersException {
 		serialPort.addEventListener(this);
-		/*serialPort.notifyOnBreakInterrupt(true);
-		serialPort.notifyOnCarrierDetect(true);
-		serialPort.notifyOnCTS(true);*/
 		serialPort.notifyOnDataAvailable(true);
-		/*serialPort.notifyOnDSR(true);
+		serialPort.notifyOnBreakInterrupt(true);
+		serialPort.notifyOnCarrierDetect(true);
+		serialPort.notifyOnCTS(true);
+		serialPort.notifyOnDSR(true);
 		serialPort.notifyOnFramingError(true);
 		serialPort.notifyOnOutputEmpty(true);
 		serialPort.notifyOnOverrunError(true);
 		serialPort.notifyOnParityError(true);
-		serialPort.notifyOnRingIndicator(true);*/
+		serialPort.notifyOnRingIndicator(true);
 	}
 	
 	@Override
@@ -50,7 +50,6 @@ public class RXTXEventBasedCommPort extends RXTXCommPort implements SerialPortEv
 		}
 	}
 
-	
 	@Override
 	public void serialEvent(SerialPortEvent event) {
 		if (event.getEventType() != SerialPortEvent.DATA_AVAILABLE) {
