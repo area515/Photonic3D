@@ -9,8 +9,11 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.junit.Test;
+
 public class LineTest {
-	public static void main(String[] args) throws IOException {
+	@Test
+	public void generateHoughSpace() throws IOException {
 		BufferedImage image = ImageIO.read(CircleTest.class.getResource("ToughSituation.png"));
 		//BufferedImage image = ImageIO.read(new File("test64circle.jpg"));
 		CannyEdgeDetector8BitGray detector = new CannyEdgeDetector8BitGray();

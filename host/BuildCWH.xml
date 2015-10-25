@@ -51,7 +51,7 @@
 			<zipfileset dir="libs/jssc" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/cling" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/mp4parser" prefix="lib" includes="**/*"/>
-			<zipfileset dir="libs/junit" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/testing" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/guava" prefix="lib" includes="**/*"/>
 		</zip>
 		<zip destfile="${deployedClientZipFile}">

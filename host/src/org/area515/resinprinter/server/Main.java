@@ -49,9 +49,12 @@ public class Main {
 			return thread;
 		}
 	});
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> db689446e1447c6918ad772bad8fe8d509589527
 	public static void main(String[] args) throws Exception {
-
 		int port = HostProperties.Instance().getPrinterHostPort();
 		/*
 		 * Sequence Setup ResourceHandler for html files Setup
@@ -188,7 +191,10 @@ public class Main {
 			}
 		}
 
-		// Wait in the Main method until we are shutdown by the OS
+		//At this point we can safely say that an install is officially complete.
+		HostProperties.Instance().markOneTimeInstallPerformed(true);
+		
+		//Wait in the Main method until we are shutdown by the OS
 		try {
 			server.join();
 		} catch (Exception e) {

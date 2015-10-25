@@ -51,61 +51,54 @@ public class FileService {
 	private FileService() {
 	}
 	
-		@POST
-		@Path("/upload")
-		@Consumes("multipart/form-data")
-		public Response uploadFile(MultipartFormDataInput input) {
+	public static Response uploadFile(MultipartFormDataInput input, File directory) {
+		String fileName = "";
+		Map<String, List<InputPart>> formParts = input.getFormDataMap();
+	
+		List<InputPart> inPart = formParts.get("file");
+		if (inPart == null) {
+			System.out.println("No file specified in multipart mime!");
+			return Response.status(500).build();
+		}
+		
+		File newUploadFile = null;
+		for (InputPart inputPart : inPart) {
+			try {
+				// Retrieve headers, read the Content-Disposition header to
+				// obtain the original name of the file
+				MultivaluedMap<String, String> headers = inputPart.getHeaders();
+				fileName = parseFileName(headers);
 
-			String fileName = "";
-
-			Map<String, List<InputPart>> formParts = input.getFormDataMap();
-
-			List<InputPart> inPart = formParts.get("file");
-			if (inPart == null) {
-				System.out.println("No file specified in multipart mime!");
-				return Response.status(500).build();
-			}
-			
-			for (InputPart inputPart : inPart) {
-
-				 try {
-
-					// Retrieve headers, read the Content-Disposition header to obtain the original name of the file
-					MultivaluedMap<String, String> headers = inputPart.getHeaders();
-					fileName = parseFileName(headers);
-					
-					//If the filename was blank we aren't interested in the file.
-					if (fileName == null || fileName.isEmpty()) {
-						return Response.status(Status.BAD_REQUEST).entity(NO_FILE).build();
-					}
-					
-					// Handle the body of that part with an InputStream
-					InputStream istream = inputPart.getBody(InputStream.class, null);
-
-//					fileName = SERVER_UPLOAD_LOCATION_FOLDER + fileName;
-					File newUploadFile = new File(HostProperties.Instance().getUploadDir(), fileName);
-
-					if (!saveFile(istream, newUploadFile.getAbsoluteFile())) {
-						return Response.status(Status.BAD_REQUEST).entity(UNKNOWN_FILE + fileName).build();
-					}
-
-				  } catch (IOException e) {
-					e.printStackTrace();
-				  }
-
+				// If the filename was blank we aren't interested in the file.
+				if (fileName == null || fileName.isEmpty()) {
+					return Response.status(Status.BAD_REQUEST).entity(NO_FILE).build();
 				}
 
-	                String output = "File saved to server location : " + fileName;
+				// Handle the body of that part with an InputStream
+				InputStream istream = inputPart.getBody(InputStream.class, null);
 
-//	                response.header("Access-Control-Allow-Origin", "*");
-//	                response.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
-//	                response.header("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
-//	                response.header("Access-Control-Max-Age", "1728000");
-//	                response.entity(output);
-//	          return response.build();      
-////	                Response.status(200).header("Access-Control-Allow-Origin", "*");
-			return Response.status(Status.OK).entity(output).build();
+				// fileName = SERVER_UPLOAD_LOCATION_FOLDER + fileName;
+				newUploadFile = new File(directory, fileName);
+
+				if (!saveFile(istream, newUploadFile.getAbsoluteFile())) {
+					return Response.status(Status.BAD_REQUEST).entity(UNKNOWN_FILE + fileName).build();
+				}
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
+
+	    String output = "File saved to location: " + newUploadFile;
+		return Response.status(Status.OK).entity(output).build();
+	}
+
+	@POST
+	@Path("/uploadPrintableFile")
+	@Consumes("multipart/form-data")
+	public Response uploadPrintableFile(MultipartFormDataInput input) {
+		return uploadFile(input, HostProperties.Instance().getUploadDir());
+	}
 
 		// Parse Content-Disposition header to get the original file name
 		static String parseFileName(MultivaluedMap<String, String> headers) {

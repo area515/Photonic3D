@@ -39,6 +39,11 @@ if [ -z "${xinitProcess}" ]; then
     xhost +x
 fi
 
+#Copy the zip file from the current directory into the cwh directory for offline install
+mkdir -p ${installDirectory}
+mv ${downloadPrefix}.*.zip ${installDirectory}
+
+#install java if version is too old
 javaInstalled=`which java`
 if [ "$javaInstalled" = "" ]; then
 	javaMajorVersion=0
@@ -73,7 +78,7 @@ if [ "$javaMinorVersion" -lt 8 -a "$javaMajorVersion" -le 1 ]; then
 	rm ${downloadJavaFile}
 fi
 
-mkdir -p ${installDirectory}
+#Determine if a new install is available
 cd ${installDirectory}
 cp build.number networkbuildnumber
 mv build.number currentbuildnumber
@@ -91,8 +96,20 @@ networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print $2}' 
 #Network build.number is always 1 greater than it the current version
 (( networkBuildNumber-- ))
 
-if [ "$networkBuildNumber" -gt "$currentBuildNumber" -o "$2" == "force" ]; then
-	echo Installing latest version of cwh: ${networkBuildNumber}
+if [ -f ${downloadPrefix}.*.zip ]; then
+	echo Performing offline install of ${downloadPrefix}: ${networkBuildNumber}
+	
+	mv ${downloadPrefix}.*.zip ~
+	rm -r ${installDirectory}
+	mkdir -p ${installDirectory}
+	cd ${installDirectory}
+	mv ~/${downloadPrefix}.*.zip .
+	unzip ${downloadPrefix}.*.zip
+	chmod 777 *.sh
+	rm ${downloadPrefix}.*.zip
+elif [ "$networkBuildNumber" -gt "$currentBuildNumber" -o "$2" == "force" ]; then
+	echo Installing latest version of ${downloadPrefix}: ${networkBuildNumber}
+	
 	rm -r ${installDirectory}
 	mkdir -p ${installDirectory}
 	cd ${installDirectory}
@@ -101,6 +118,8 @@ if [ "$networkBuildNumber" -gt "$currentBuildNumber" -o "$2" == "force" ]; then
 	chmod 777 *.sh
 	rm ${downloadPrefix}.${networkBuildNumber}.zip
 else
+	echo No install required
+	
 	rm networkbuildnumber
 	mv currentbuildnumber build.number
 fi
@@ -117,6 +136,16 @@ if [ ! -f "/etc/init.d/cwhservice" ]; then
 	update-rc.d cwhservice defaults
 fi
 
+echo Determinging if one time install has occurred
+performedOneTimeInstall=$(grep performedOneTimeInstall ~/3dPrinters/config.properties | awk -F= '{print $2}')
+if [ -f "oneTimeInstall.sh" -a [${performedOneTimeInstall} != "true"] ]; then
+	./oneTimeInstall.sh
+fi
+
+if [ -f "eachStart.sh" ]; then
+	./eachStart.sh
+fi
+
 if [ "$2" == "debug" ]; then
 		pkill -9 -f "org.area515.resinprinter.server.Main"
 		echo "Starting printer host server($2)"
@@ -124,7 +153,7 @@ if [ "$2" == "debug" ]; then
 elif [ "$2" == "TestKit" ]; then
 		pkill -9 -f "org.area515.resinprinter.test.FullTestSuite"
 		echo Starting test kit
-        java -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.junit.runner.JUnitCore org.area515.resinprinter.test.FullTestSuite &
+        java -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.junit.runner.JUnitCore org.area515.resinprinter.test.HardwareCompatibilityTestSuite &
 else
 		pkill -9 -f "org.area515.resinprinter.server.Main"
 		echo Starting printer host server

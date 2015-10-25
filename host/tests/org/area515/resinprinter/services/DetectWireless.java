@@ -1,6 +1,7 @@
 package org.area515.resinprinter.services;
 
-import org.area515.resinprinter.services.NetInterface.WirelessNetwork;
+import org.area515.resinprinter.network.NetInterface;
+import org.area515.resinprinter.network.NetInterface.WirelessNetwork;
 import org.junit.Test;
 
 public class DetectWireless {
