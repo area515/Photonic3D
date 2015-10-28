@@ -1,6 +1,9 @@
 package org.area515.util;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -9,10 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
+
+import com.google.common.io.ByteStreams;
 
 public class IOUtilities {
 	public static int CPU_LIMITING_DELAY = 300;
@@ -37,6 +44,38 @@ public class IOUtilities {
 			this.command = command;
 			this.waitForRegEx = waitForRegEx;
 			this.searchStyle = searchStyle;
+		}
+	}
+	
+	public static ZipEntry zipFile(File fileToZip, ZipOutputStream zipOutputStream) {
+		ZipEntry entry = new ZipEntry(fileToZip.getName());
+		InputStream inStream = null;
+		try {
+			zipOutputStream.putNextEntry(entry);
+			inStream = new BufferedInputStream(new FileInputStream(fileToZip));
+			ByteStreams.copy(inStream, zipOutputStream);
+			inStream.close();
+			return entry;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			IOUtils.closeQuietly(inStream);
+		}
+	}
+	
+	public static ZipEntry zipStream(String name, InputStream inStream, ZipOutputStream output) {
+		ZipEntry entry = new ZipEntry(name);
+		try {
+			output.putNextEntry(entry);
+			ByteStreams.copy(inStream, output);
+			inStream.close();
+			return entry;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			IOUtils.closeQuietly(inStream);
 		}
 	}
 	

@@ -29,4 +29,5 @@ public interface Notifier {
 	public void printerChanged(Printer printer);
 	public void fileUploadComplete(File fileUploaded);
 	public void geometryError(PrintJob job, List<StlError> error);
+	public void hostSettingsChanged();
 }
