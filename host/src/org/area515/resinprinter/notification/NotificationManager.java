@@ -71,6 +71,12 @@ public class NotificationManager {
 		}
 	}	
 	
+	public static void hostSettingsChanged() {
+		for (Notifier currentNotifier : notifiers) {
+			currentNotifier.hostSettingsChanged();
+		}
+	}	
+	
 	public static void fileUploadComplete(File fileUploaded) {
 		for (Notifier currentNotifier : notifiers) {
 			currentNotifier.fileUploadComplete(fileUploaded);

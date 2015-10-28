@@ -111,4 +111,9 @@ public class WebSocketPrinterNotifier implements Notifier {
 			}
 		}
 	}
+
+	@Override
+	public void hostSettingsChanged() {
+		//TODO: check if SSL changed?
+	}
 }

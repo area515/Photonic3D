@@ -1,17 +1,21 @@
 package org.area515.resinprinter.server;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.ZipOutputStream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -27,6 +31,7 @@ import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.network.LinuxNetworkManager;
 import org.area515.resinprinter.network.NetworkManager;
+import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.notification.Notifier;
 import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.PrinterConfiguration;
@@ -37,6 +42,7 @@ import org.area515.resinprinter.serial.RXTXSynchronousReadBasedCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.services.MachineService;
+import org.area515.util.IOUtilities;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -67,8 +73,6 @@ public class HostProperties {
 	private int versionNumber;
 	private String deviceName;
 	private String manufacturer;
-	private Properties configurationProperties = new Properties();
-	private Properties overridenConfigurationProperties = new Properties();
 	private List<String> visibleCards;
 	private String hexCodeBasedProjectorsJson;
 	
@@ -99,6 +103,16 @@ public class HostProperties {
 		return INSTANCE;
 	}
 	
+	private Properties getMergedProperties() {
+		Properties configurationProperties = getClasspathProperties();
+		Properties overridenConfigurationProperties = loadOverriddenConfigurationProperties();
+		if (overridenConfigurationProperties != null) {
+			configurationProperties.putAll(overridenConfigurationProperties);
+		}
+		
+		return configurationProperties;
+	}
+	
 	private HostProperties() {
 		String printDirString = null;
 		String uploadDirString = null;
@@ -113,38 +127,7 @@ public class HostProperties {
 			throw new IllegalArgumentException("Couldn't make machine directory. No write access or disk full?");
 		}
 
-		InputStream stream = null;
-		File configPropertiesInPrintersDirectory = new File(printerDir, "config.properties");
-		if (configPropertiesInPrintersDirectory.exists()) {
-			try {
-				stream = new FileInputStream(configPropertiesInPrintersDirectory);
-				overridenConfigurationProperties.load(stream);
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				IOUtils.closeQuietly(stream);
-			}
-		} else {
-			configPropertiesInPrintersDirectory.getParentFile().mkdirs();
-		}
-		
-		stream = HostProperties.class.getClassLoader().getResourceAsStream("config.properties");
-		if (stream == null) {
-			throw new IllegalArgumentException("Server couldn't find your config.properties file.");
-		}
-		
-		try {
-			configurationProperties.load(stream);
-		} catch (IOException e) {
-			throw new IllegalArgumentException("Server couldn't find your config.properties file.", e);
-		} finally {
-			IOUtils.closeQuietly(stream);
-		}
-
-		if (overridenConfigurationProperties != null) {
-			configurationProperties.putAll(overridenConfigurationProperties);
-		}
-		
+		Properties configurationProperties = getMergedProperties();
 		printDirString = configurationProperties.getProperty("printdir");
 		uploadDirString = configurationProperties.getProperty("uploaddir");
 		
@@ -232,11 +215,11 @@ public class HostProperties {
 		clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
 		
 
-		streamingCommand = getJSonStringArray("streamingCommand");
-		imagingCommand = getJSonStringArray("imagingCommand");
+		streamingCommand = getJSonStringArray(configurationProperties, "streamingCommand");
+		imagingCommand = getJSonStringArray(configurationProperties, "imagingCommand");
 		hexCodeBasedProjectorsJson = configurationProperties.getProperty("hexCodeBasedProjectors");
-		dumpStackTraceCommand = getJSonStringArray("dumpStackTraceCommand");
-		rebootCommand = getJSonStringArray("rebootCommand");
+		dumpStackTraceCommand = getJSonStringArray(configurationProperties, "dumpStackTraceCommand");
+		rebootCommand = getJSonStringArray(configurationProperties, "rebootCommand");
 		
 		if (printDirString == null) {
 			printDir = new File(System.getProperty("java.io.tmpdir"), "printdir");
@@ -278,7 +261,24 @@ public class HostProperties {
 		}
 	}
 
-	private String[] getJSonStringArray(String property) {
+	private Properties getClasspathProperties() {
+		InputStream stream = HostProperties.class.getClassLoader().getResourceAsStream("config.properties");
+		if (stream == null) {
+			throw new IllegalArgumentException("Server couldn't find your config.properties file.");
+		}
+		
+		Properties configurationProperties = new Properties();
+		try {
+			configurationProperties.load(stream);
+			return configurationProperties;
+		} catch (IOException e) {
+			throw new IllegalArgumentException("Server couldn't find your config.properties file.", e);
+		} finally {
+			IOUtils.closeQuietly(stream);
+		}
+	}
+	
+	private String[] getJSonStringArray(Properties configurationProperties, String property) {
 		String json = configurationProperties.getProperty(property);
 		if (json == null)
 			return null;
@@ -291,23 +291,53 @@ public class HostProperties {
 		}
 	}
 	
-	public void markOneTimeInstallPerformed(boolean install) {
-		FileWriter writer = null;
-		try {
-			writer = new FileWriter(new File(printerDir, "config.properties"));
-			overridenConfigurationProperties.setProperty("performedOneTimeInstall", install + "");
-			overridenConfigurationProperties.store(writer, "Wrote File because we performed one time install");
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			IOUtils.closeQuietly(writer);
+	public void exportDiagnostic(ZipOutputStream zipOutputStream) throws IOException {
+		String MASK = "Masked by CWH";
+
+		Properties properties = getClasspathProperties();
+		properties.put("CWH3DPrinterRealm.clientPassword", MASK);
+		properties.put("keypairPassword", MASK);
+		properties.put("keystorePassword", MASK);
+		properties.put("password", MASK);
+		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+		properties.store(byteStream, "Stored on " + new Date());
+		IOUtilities.zipStream("config.properties", new ByteArrayInputStream(byteStream.toByteArray()), zipOutputStream);
+		
+		properties = loadOverriddenConfigurationProperties();
+		properties.put("CWH3DPrinterRealm.clientPassword", MASK);
+		properties.put("keypairPassword", MASK);
+		properties.put("keystorePassword", MASK);
+		properties.put("password", MASK);
+		byteStream = new ByteArrayOutputStream();
+		properties.store(byteStream, "Stored on " + new Date());
+		IOUtilities.zipStream("3dPrinterDirconfig.properties", new ByteArrayInputStream(byteStream.toByteArray()), zipOutputStream);
+		
+		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+		IOUtilities.zipStream("currentPrinterConfigurations.json", new ByteArrayInputStream(mapper.writeValueAsBytes(getPrinterConfigurations())), zipOutputStream);
+		
+		IOUtilities.zipFile(new File("build.number"), zipOutputStream);
+		
+		dumpFiles(PRINTER_EXTENSION, printerDir, zipOutputStream);
+		dumpFiles(PROFILES_EXTENSION, PROFILES_DIR, zipOutputStream);
+		dumpFiles(MACHINE_EXTENSION, MACHINE_DIR, zipOutputStream);
+	}
+
+	private void dumpFiles(final String extension, File directory, ZipOutputStream zipOutputStream) {
+		File fileList[] = directory.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				if (name.endsWith(extension)) {
+					return true;
+				}
+				
+				return false;
+			}
+		});
+		for (File currentFile : fileList) {
+			IOUtilities.zipFile(currentFile, zipOutputStream);
 		}
 	}
 	
-	public Properties getConfigurationProperties() {
-		return configurationProperties;
-	}
-
 	public String getClientUsername() {
 		return clientUsername;
 	}
@@ -420,6 +450,51 @@ public class HostProperties {
 		return visibleCards;
 	}
 
+	public CwhEmailSettings loadEmailSettings() {
+		Properties properties = getMergedProperties();
+		CwhEmailSettings settings = new CwhEmailSettings(
+										properties.getProperty("smtpServer"),
+										Integer.valueOf(properties.getProperty("smtpPort")),
+										properties.getProperty("username"),
+										properties.getProperty("password"),
+										properties.getProperty("toEmailAddresses"),
+										properties.getProperty("serviceEmailAddresses"),
+										Boolean.valueOf(properties.getProperty("mail.smtp.starttls.enable")));
+		return settings;
+	}
+	
+	public void saveEmailSettings(CwhEmailSettings settings) {
+		Properties emailProperties = new Properties();
+		StringBuilder toEmails = new StringBuilder();
+		List<String> emails = settings.getNotificationEmailAddresses();
+		for (int t = 0; t < emails.size(); t++) {
+			if (t > 0) {
+				toEmails.append(",");
+			}
+			
+			toEmails.append(emails.get(t));
+		}
+		emailProperties.setProperty("toEmailAddresses", toEmails.toString());
+		emails = settings.getServiceEmailAddresses();
+		for (int t = 0; t < emails.size(); t++) {
+			if (t > 0) {
+				toEmails.append(",");
+			}
+			
+			toEmails.append(emails.get(t));
+		}
+		emailProperties.setProperty("serviceEmailAddresses", toEmails.toString());
+		emailProperties.setProperty("username", settings.getUserName());
+		emailProperties.setProperty("password", settings.getPassword());
+		emailProperties.setProperty("smtpServer", settings.getSmtpServer());
+		emailProperties.setProperty("smtpPort", settings.getSmtpPort() + "");
+		emailProperties.setProperty("mail.smtp.starttls.enable", settings.isUseTLS() + "");
+		
+		saveOverriddenConfigurationProperties(emailProperties);
+		
+		NotificationManager.hostSettingsChanged();
+	}
+	
 	public List<ProjectorModel> getAutodetectProjectors() {
 		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
 		List<ProjectorModel> projectors;
@@ -514,8 +589,61 @@ public class HostProperties {
 				e.printStackTrace();
 			}
 		}
+		
+		NotificationManager.hostSettingsChanged();
 	}
 	
+	private Properties loadOverriddenConfigurationProperties() {
+		Properties overridenConfigurationProperties = new Properties();
+		File configPropertiesInPrintersDirectory = new File(printerDir, "config.properties");
+		if (configPropertiesInPrintersDirectory.exists()) {
+			FileInputStream stream = null;
+			try {
+				stream = new FileInputStream(configPropertiesInPrintersDirectory);
+				overridenConfigurationProperties.load(stream);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				IOUtils.closeQuietly(stream);
+			}
+		} else {
+			saveOverriddenConfigurationProperties(overridenConfigurationProperties);
+		}
+		
+		return overridenConfigurationProperties;
+	}
+	
+	private void saveOverriddenConfigurationProperties(Properties overridenConfigurationProperties) {
+		File configPropertiesInPrintersDirectory = new File(printerDir, "config.properties");
+		printerDir.mkdirs();
+		FileOutputStream stream = null;
+		Properties currentProperties = null;
+		try {
+			//Do this check, otherwise we'll end up calling loadOverriddenConfigurationProperties/saveOverriddenConfigurationProperties recursively forever.
+			if (configPropertiesInPrintersDirectory.exists()) {
+				currentProperties = loadOverriddenConfigurationProperties();
+			} else {
+				currentProperties = new Properties();
+			}
+			currentProperties.putAll(overridenConfigurationProperties);
+			stream = new FileOutputStream(configPropertiesInPrintersDirectory);
+			currentProperties.store(stream, "File created by CWH");
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException("Couldn't create:" + configPropertiesInPrintersDirectory, e);
+		} finally {
+			IOUtils.closeQuietly(stream);
+		}
+	}
+	
+	public void markOneTimeInstallPerformed(boolean install) {
+		Properties oneTimeInstall = new Properties();
+		oneTimeInstall.setProperty("performedOneTimeInstall", install + "");
+		saveOverriddenConfigurationProperties(oneTimeInstall);
+		
+		NotificationManager.hostSettingsChanged();
+	}
+
 	public void addOrUpdatePrinterConfiguration(PrinterConfiguration configuration) throws AlreadyAssignedException {
 		getPrinterConfigurations();
 
