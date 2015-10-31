@@ -13,6 +13,7 @@ import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.CwhEmailSettings;
+import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.MailUtilities;
@@ -30,9 +31,10 @@ public class EmailOnCompletionNotifier implements Notifier {
 			
 			Transport transport = null;
 			try {
+				HostInformation info = HostProperties.Instance().loadHostInformation();
 				transport = MailUtilities.openTransportFromSettings(settings);
 				MailUtilities.executeSMTPSend (
-						HostProperties.Instance().getDeviceName().replace(" ", "") + "@My3DPrinter", 
+						info.getDeviceName().replace(" ", "") + "@My3DPrinter", 
 						settings.getNotificationEmailAddresses(),
 						"Print Job Complete", 
 						"Print job complete for job:" + job.getJobFile().getName() + " on printer:" + printer.getName(), 

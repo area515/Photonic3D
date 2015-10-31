@@ -21,6 +21,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
+import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -157,8 +158,9 @@ public class JettySecurityUtils {
 				ipAddress, 
 				HostProperties.Instance().getKeypairPassword(), 
 				HostProperties.Instance().getKeystorePassword())) {
+			HostInformation info = HostProperties.Instance().loadHostInformation();
     		generateRSAKeypairAndKeystore(
-    				"cn=" + ipAddress + ",ou=" + HostProperties.Instance().getDeviceName() + ",ou=" + HostProperties.Instance().getManufacturer(),
+    				"cn=" + ipAddress + ",ou=" + info.getDeviceName() + ",ou=" + info.getManufacturer(),
     				new Date(new Date().getYear() + 5, 1, 1),
     				keystoreFile + "", 
     				ipAddress, 

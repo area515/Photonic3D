@@ -2,6 +2,8 @@ package org.area515.resinprinter.discover;
 
 import java.net.URI;
 
+import org.area515.resinprinter.client.Main;
+import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.UpnpServiceImpl;
@@ -23,16 +25,21 @@ import org.fourthline.cling.model.types.UDN;
 import org.fourthline.cling.support.connectionmanager.AbstractPeeringConnectionManagerService;
 
 public class UPNPAdvertiser implements Advertiser {
-	public static UPNPSetup INSTANCE = new UPNPSetup();
+	public static UPNPSetup INSTANCE;
 	
 	private UpnpServiceImpl upnpService;
 	
 	public static class UPNPSetup {
-		private String deviceName =  HostProperties.Instance().getDeviceName();
+		private String deviceName = null;
+		private String manufacturer = null;
 		private int deviceVersion = HostProperties.Instance().getVersionNumber();
-		private String manufacturer = HostProperties.Instance().getManufacturer();
-		private String deviceType = "3DPrinterHost";
+		private String deviceType = Main.PRINTER_TYPE;
 		private int upnpStreamPort = 5001;
+		
+		public UPNPSetup(HostInformation info) {
+			this.deviceName = info.getDeviceName();
+			this.manufacturer = info.getManufacturer();
+		}
 		
 		public String getDeviceName() {
 			return deviceName;
@@ -43,6 +50,10 @@ public class UPNPAdvertiser implements Advertiser {
 	}
 	
 	public UPNPSetup getSetup() {
+		if (INSTANCE == null) {
+			INSTANCE = new UPNPSetup(HostProperties.Instance().loadHostInformation());
+		}
+		
 		return INSTANCE;
 	}
 	
@@ -57,7 +68,7 @@ public class UPNPAdvertiser implements Advertiser {
 						new ModelDetails(
 								getSetup().deviceName, 
 								getSetup().deviceName, 
-							"v" + getSetup().deviceVersion), 
+								"v" + getSetup().deviceVersion), 
 							webPresentationURI, 
 					new DLNADoc[] {
 							new DLNADoc("DMS", DLNADoc.Version.V1_5),
