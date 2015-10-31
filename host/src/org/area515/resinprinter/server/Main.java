@@ -173,8 +173,8 @@ public class Main {
 			}
 		}
 
-		//At this point we can safely say that an install is officially complete.
-		HostProperties.Instance().markOneTimeInstallPerformed(true);
+		//At this point we can safely say that a startup is officially complete.
+		HostProperties.Instance().hostStartupComplete();
 		
 		//Wait in the Main method until we are shutdown by the OS
 		try {

@@ -9,16 +9,22 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 import javax.mail.MessagingException;
 import javax.mail.Transport;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -27,6 +33,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -49,7 +56,9 @@ import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.CwhEmailSettings;
+import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.server.Main;
 import org.area515.util.IOUtilities;
 import org.area515.util.MailUtilities;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -62,14 +71,101 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class MachineService {
 	public static MachineService INSTANCE = new MachineService();
 	
+	private Future<Boolean> restartProcess;
+	
 	private MachineService() {}
 	
-	@GET
-	@Path("restartHost")
+	private String getRemoteIpAddress(HttpServletRequest request) {
+		String forwardHeader = HostProperties.Instance().getForwardHeader();
+		if (forwardHeader != null) {
+			String ipAddress = request.getHeader(forwardHeader);
+			if (ipAddress == null || ipAddress.trim().equals("") || ipAddress.equalsIgnoreCase("unknown")) {
+				return null;
+			}
+			return ipAddress;
+		}
+
+		return request.getRemoteAddr();
+	}
+	
+	@POST
+	@Path("cancelNetworkRestartProcess")
 	@Produces(MediaType.APPLICATION_JSON)
-	public void reboot() {
-		//After executing this method, don't expect this VM to stick around much longer
-		IOUtilities.executeNativeCommand(HostProperties.Instance().getRebootCommand(), null, null);
+	public void cancelRestartOperation() {
+		if (restartProcess != null) {
+			if (!restartProcess.cancel(true)) {
+				throw new IllegalArgumentException("Couldn't cancel the network reconfiguration process.");
+			}
+			
+			try {
+				restartProcess.get();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				throw new IllegalArgumentException("Problem occurred while waiting for the network reconfiguraiton process to terminate.");
+			}
+		}
+	}
+	
+	/**
+	 * Here is how the network reconfiguration process works.
+	 * 1. The Restful client should first reconfigure the WIFI AP of their choice with the connectToWifiSSID() method.
+	 * 2. Once that step is successful, this method should be called immediately afterwards.
+	 * 3. If this method returns false, the NetworkInterface was not found and the configuration process ENDS HERE.
+	 * 4. If this method is able to return true, it means the proper NetworkInterface managing this socket connection was found.
+	 * 5. The NetworkInterface will be monitored for a disruption in network connectivity and Websocket ping events will start being 
+	 * 	produced from this host at the interval of "millisecondsBetweenPings".
+	 * 7. Once the Restful client receives it's first ping event, it should ask the user to unplug the ethernet cable.
+	 * 8. The user should then either cancel the operation, or unplug the ethernet cable.
+	 * 9. If the user cancels the operation, the Restful client needs to call cancelRestartOperation() to prevent an unnecessary outage.
+	 * 10. If the user unplugs the ethernet cable, the proper NetworkInterface(discovered in step 3) is found to be down and this 
+	 * 	Host(and it's network) are restarted.
+	 * 11. Since this Host is now in the middle of restarting, it isn't able to send WebSocket ping events any longer.
+	 * 12. The Restful client then discovers that ping events are no longer coming and it's timeout period hasn't been exhausted, 
+	 * 	so it let's the user know that they should shut down the Restful client(probably a browser) and restart the printer with the Multicast client.
+	 * 13. The Multicast client eventually finds the Raspberry Pi on the new Wifi IP address and we are back in business...
+	 * 
+	 * @param request
+	 * @param timeoutMilliseconds
+	 * @param millisecondsBetweenPings
+	 * @return
+	 */
+	@POST
+	@Path("startNetworkRestartProcess")
+	@Produces(MediaType.APPLICATION_JSON)
+	public boolean restartHostAfterNetworkCableUnplugged(
+			@Context HttpServletRequest request, 
+			@PathParam("timeoutMilliseconds") final long timeoutMilliseconds,
+			@PathParam("millisecondsBetweenPings") final long millisecondsBetweenPings ) {
+		
+		String ipAddress = request.getLocalAddr();
+		try {
+			final NetworkInterface iFace = NetworkInterface.getByInetAddress(InetAddress.getByName(ipAddress));
+			final long startTime = System.currentTimeMillis();
+			restartProcess = Main.GLOBAL_EXECUTOR.submit(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					while (iFace.isUp() || (timeoutMilliseconds > 0 && System.currentTimeMillis() - startTime < timeoutMilliseconds)) {
+						try {
+							Thread.sleep(millisecondsBetweenPings);
+						} catch (InterruptedException e) {
+							return false;
+						}
+					}
+		
+					if (!iFace.isUp()) {
+						//After executing this method, don't expect this VM to stick around much longer
+						IOUtilities.executeNativeCommand(HostProperties.Instance().getRebootCommand(), null, null);
+					}
+					
+					return true;
+				}
+			});
+			
+			return true;
+		} catch (SocketException | UnknownHostException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	@GET
@@ -108,9 +204,10 @@ public class MachineService {
 		Transport transport = null;
 		try {
 			CwhEmailSettings settings = HostProperties.Instance().loadEmailSettings();
+			HostInformation info = HostProperties.Instance().loadHostInformation();
 			transport = MailUtilities.openTransportFromSettings(settings);
 			MailUtilities.executeSMTPSend(
-					HostProperties.Instance().getDeviceName().replace(" ", "") + "@My3DPrinter",
+					info.getDeviceName().replace(" ", "") + "@My3DPrinter",
 					settings.getServiceEmailAddresses(),
 					"Service Request",
 					"Attached diagnostic information",
@@ -138,7 +235,7 @@ public class MachineService {
 	 @GET
 	 @Path("printers")
 	 @Produces(MediaType.APPLICATION_JSON)
-	// @RolesAllowed("Admin")
+	 // @RolesAllowed("Admin")
 	 public List<String> getPrinters() {
 		 
 		 List<PrinterConfiguration> identifiers = HostProperties.Instance().getPrinterConfigurations();

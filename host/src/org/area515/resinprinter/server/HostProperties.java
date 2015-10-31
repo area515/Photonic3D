@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipOutputStream;
 
 import javax.xml.bind.JAXBContext;
@@ -71,10 +73,10 @@ public class HostProperties {
 	private Class<SerialCommunicationsPort> serialPortClass;
 	private Class<NetworkManager> networkManagerClass;
 	private int versionNumber;
-	private String deviceName;
-	private String manufacturer;
 	private List<String> visibleCards;
 	private String hexCodeBasedProjectorsJson;
+	private String forwardHeader;
+	private CountDownLatch hostReady = new CountDownLatch(1);
 	
 	//SSL settings:
 	private boolean useSSL;
@@ -208,13 +210,11 @@ public class HostProperties {
 		externallyAccessableName = configurationProperties.getProperty("externallyAccessableName");
 		keypairPassword = configurationProperties.getProperty("keypairPassword");
 		keystorePassword = configurationProperties.getProperty("keystorePassword");
-		deviceName = configurationProperties.getProperty("deviceName", "3D Multiprint Host");
-		manufacturer = configurationProperties.getProperty("manufacturer", "Wes & Sean");
 		securityRealmName = configurationProperties.getProperty("securityRealmName", "SecurityRealm");
 		clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", "");
 		clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
+		forwardHeader = configurationProperties.getProperty("forwardHeader", null);
 		
-
 		streamingCommand = getJSonStringArray(configurationProperties, "streamingCommand");
 		imagingCommand = getJSonStringArray(configurationProperties, "imagingCommand");
 		hexCodeBasedProjectorsJson = configurationProperties.getProperty("hexCodeBasedProjectors");
@@ -354,14 +354,6 @@ public class HostProperties {
 		return versionNumber;
 	}
 
-	public String getDeviceName() {
-		return deviceName;
-	}
-
-	public String getManufacturer() {
-		return manufacturer;
-	}
-
 	public int getPrinterHostPort() {
 		return printerHostPort;
 	}
@@ -422,6 +414,10 @@ public class HostProperties {
 		return useSSL;
 	}
 
+	public String getForwardHeader() {
+		return forwardHeader;
+	}
+
 	public String getExternallyAccessableName() {
 		return externallyAccessableName;
 	}
@@ -449,7 +445,37 @@ public class HostProperties {
 	public List<String> getVisibleCards() {
 		return visibleCards;
 	}
-
+	
+	public boolean isHostReady() {
+		return hostReady.getCount() == 0;
+	}
+	
+	public boolean waitForReady(long timeout, TimeUnit unit) {
+		try {
+			return hostReady.await(timeout, unit);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			return isHostReady();
+		}
+	}
+	
+	public HostInformation loadHostInformation() {
+		Properties configurationProperties = getMergedProperties();
+		HostInformation settings = new HostInformation(
+				configurationProperties.getProperty("deviceName", "3D Multiprint Host"),
+				configurationProperties.getProperty("manufacturer", "Wes & Sean"));
+		return settings;
+	}
+	public void saveHostInformation(HostInformation device) {
+		Properties hostInfoformationProperties = new Properties();
+		hostInfoformationProperties.setProperty("deviceName", device.getDeviceName());
+		hostInfoformationProperties.setProperty("manufacturer", device.getManufacturer());
+		
+		saveOverriddenConfigurationProperties(hostInfoformationProperties);
+		
+		NotificationManager.hostSettingsChanged();
+	}
+	
 	public CwhEmailSettings loadEmailSettings() {
 		Properties properties = getMergedProperties();
 		CwhEmailSettings settings = new CwhEmailSettings(
@@ -462,7 +488,6 @@ public class HostProperties {
 										Boolean.valueOf(properties.getProperty("mail.smtp.starttls.enable")));
 		return settings;
 	}
-	
 	public void saveEmailSettings(CwhEmailSettings settings) {
 		Properties emailProperties = new Properties();
 		StringBuilder toEmails = new StringBuilder();
@@ -636,10 +661,14 @@ public class HostProperties {
 		}
 	}
 	
-	public void markOneTimeInstallPerformed(boolean install) {
+	public void hostStartupComplete() {
 		Properties oneTimeInstall = new Properties();
-		oneTimeInstall.setProperty("performedOneTimeInstall", install + "");
+		oneTimeInstall.setProperty("performedOneTimeInstall", "true");
 		saveOverriddenConfigurationProperties(oneTimeInstall);
+		
+		while (hostReady.getCount() > 0) {
+			hostReady.getCount();
+		}
 		
 		NotificationManager.hostSettingsChanged();
 	}

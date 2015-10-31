@@ -1,4 +1,4 @@
-package org.area515.resinprinter.test;
+package org.area515.resinprinter.network;
 
 import java.io.BufferedReader;
 import java.io.IOException;
