@@ -31,6 +31,8 @@
 				        ws.close();
 				    });
 				};
+			} else {
+				$scope.$emit("MachineResponse",  {machineResponse: {command:"Browser Too Old", message:"You will need to use a modern browser to run this application."}});
 			}
 		}
 		

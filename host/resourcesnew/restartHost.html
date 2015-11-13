@@ -1,0 +1,20 @@
+<form class="form-horizontal" >
+<div class="modal-header">
+		<div class="btn-group pull-left">
+			<button class="btn btn-danger" data-dismiss="modal" ng-click="settingsController.cancelRestartProcess()">
+				Cancel
+			</button>
+		</div>
+		<h4 class="modal-title">
+				Restart Host
+		</h4>
+</div>
+<div class="modal-body">
+		<div class="panel-body">
+			<p><i class="fa fa-spinner fa-spin"></i>{{settingsController.restartMessage}}</p>
+		</div>
+</div>
+</form>
+<div class="modal-footer">
+	<span ng-include="'cardFooter.html'"></span>
+</div>

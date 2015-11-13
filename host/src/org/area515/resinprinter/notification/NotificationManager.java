@@ -71,6 +71,12 @@ public class NotificationManager {
 		}
 	}	
 	
+	public static void sendPingMessage(String message) {
+		for (Notifier currentNotifier : notifiers) {
+			currentNotifier.sendPingMessage(message);
+		}
+	}
+	
 	public static void hostSettingsChanged() {
 		for (Notifier currentNotifier : notifiers) {
 			currentNotifier.hostSettingsChanged();

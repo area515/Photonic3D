@@ -85,6 +85,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 
 	@Override
 	public void printerChanged(Printer printer) {
+		//Not for print jobs
 	}
 	
 	@Override
@@ -152,6 +153,11 @@ public class WebSocketPrintJobNotifier implements Notifier {
 
 	@Override
 	public void hostSettingsChanged() {
-		//TODO: check if SSL changed?
+		//Not for print jobs
+	}
+
+	@Override
+	public void sendPingMessage(String message) {
+		//Not for print jobs
 	}
 }

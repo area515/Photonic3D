@@ -6,10 +6,6 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.area515.resinprinter.network.NetInterface.EncryptionClass;
-import org.area515.resinprinter.network.NetInterface.WirelessCipher;
-import org.area515.resinprinter.network.NetInterface.WirelessEncryption;
-import org.area515.resinprinter.network.NetInterface.WirelessNetwork;
 import org.area515.util.IOUtilities;
 import org.area515.util.IOUtilities.ParseAction;
 import org.area515.util.IOUtilities.SearchStyle;
@@ -34,7 +30,7 @@ public class LinuxNetworkManager implements NetworkManager {
 			WirelessNetwork currentWireless = new WirelessNetwork();
 			netFace.getWirelessNetworks().add(currentWireless);
 			currentWireless.setSsid(lines[4]);
-			currentWireless.setParentInterface(netFace);
+			currentWireless.setParentInterfaceName(netFace.getName());
 			Matcher matcher = networkEncryptionClass.matcher(lines[3]);
 			while (matcher.find()) {
 				StringTokenizer tokenizer = new StringTokenizer(matcher.group(1), "+-");
@@ -84,12 +80,12 @@ public class LinuxNetworkManager implements NetworkManager {
 	}
 
 	@Override
-	public void connectToWirelessNetwork(WirelessNetwork wireless, String password) {
-		String[] configuredNetworkIds = IOUtilities.executeNativeCommand(new String[]{"/bin/sh", "-c", "wpa_cli -i {0} list_network | grep -v \"network id / ssid / bssid / flags\" | awk '''{print $1}'''"}, wireless.getParentInterface().getName());
+	public void connectToWirelessNetwork(WirelessNetwork wireless) {
+		String[] configuredNetworkIds = IOUtilities.executeNativeCommand(new String[]{"/bin/sh", "-c", "wpa_cli -i {0} list_network | grep -v \"network id / ssid / bssid / flags\" | awk '''{print $1}'''"}, wireless.getParentInterfaceName());
 		for (String networkId : configuredNetworkIds) {
 			//We are going to take over the first network
 			if (networkId.equals("0")) {
-				String[] okFail = IOUtilities.executeNativeCommand(new String[]{"/bin/sh", "-c", "wpa_cli -i {0} remove_network 0"}, wireless.getParentInterface().getName());
+				String[] okFail = IOUtilities.executeNativeCommand(new String[]{"/bin/sh", "-c", "wpa_cli -i {0} remove_network 0"}, wireless.getParentInterfaceName());
 				if (!okFail[0].equals("OK")) {
 					throw new IllegalArgumentException("I wasn't able to remove your wireless network id:0 in order to reconfigure it");
 				}
@@ -141,6 +137,6 @@ public class LinuxNetworkManager implements NetworkManager {
 		parseActions.add(new ParseAction(new String[]{"reconfigure\n"}, "\\s*>", SearchStyle.RepeatUntilFound));
 		parseActions.add(new ParseAction(new String[]{"quit\n"}, "\\s*>", SearchStyle.RepeatUntilFound));
 		
-		IOUtilities.communicateWithNativeCommand(parseActions, "^>|\n", true, null, wireless.getParentInterface().getName(), wireless.getSsid(), password, encryption.getPairwiseCipher().size() > 0?(encryption.getPairwiseCipher().get(0) + ""):null);
+		IOUtilities.communicateWithNativeCommand(parseActions, "^>|\n", true, null, wireless.getParentInterfaceName(), wireless.getSsid(), wireless.getPassword(), encryption.getPairwiseCipher().size() > 0?(encryption.getPairwiseCipher().get(0) + ""):null);
 	}
 }

@@ -501,6 +501,7 @@ public class HostProperties {
 		}
 		emailProperties.setProperty("toEmailAddresses", toEmails.toString());
 		emails = settings.getServiceEmailAddresses();
+		toEmails.setLength(0);
 		for (int t = 0; t < emails.size(); t++) {
 			if (t > 0) {
 				toEmails.append(",");
@@ -667,7 +668,7 @@ public class HostProperties {
 		saveOverriddenConfigurationProperties(oneTimeInstall);
 		
 		while (hostReady.getCount() > 0) {
-			hostReady.getCount();
+			hostReady.countDown();
 		}
 		
 		NotificationManager.hostSettingsChanged();
