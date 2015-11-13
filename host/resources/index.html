@@ -133,7 +133,7 @@
 				dataType: "json",
 	    		error: errorHandler,
 				success: function(data){
-					applyErrorIfNecessary(data, false, false)
+					$("#statustext").attr("placeholder", "Diagnostic sent");
 				}
 			});
 		});

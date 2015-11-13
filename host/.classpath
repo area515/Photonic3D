@@ -29,12 +29,6 @@
 	<classpathentry kind="lib" path="libs/mp4parser/mp4parser.jar"/>
 	<classpathentry kind="lib" path="libs/jssc/jssc-2.8.0.jar" sourcepath="/3rdPartySource/jssc/src/jssc-2.6.0-src.jar"/>
 	<classpathentry kind="lib" path="libs/guava/guava-18.0.jar"/>
-	<classpathentry kind="lib" path="libs/cling/cling-support-2.0-alpha3.jar"/>
-	<classpathentry kind="lib" path="libs/cling/httpclient-4.3.3.jar"/>
-	<classpathentry kind="lib" path="libs/cling/httpcore-4.3.2.jar"/>
-	<classpathentry kind="lib" path="libs/cling/seamless-http-1.0-alpha3.jar"/>
-	<classpathentry kind="lib" path="libs/cling/seamless-util-1.0-alpha3.jar"/>
-	<classpathentry kind="lib" path="libs/cling/seamless-xml-1.0-alpha3.jar"/>
 	<classpathentry kind="lib" path="libs/commons-cli/commons-cli-1.2.jar"/>
 	<classpathentry kind="lib" path="libs/commons-codec/commons-codec-1.9.jar"/>
 	<classpathentry kind="lib" path="libs/commons-io/commons-io-2.4.jar"/>
@@ -47,5 +41,11 @@
 	<classpathentry kind="lib" path="libs/testing/junit-4.12.jar"/>
 	<classpathentry kind="lib" path="libs/testing/hamcrest-core-1.3.jar"/>
 	<classpathentry kind="lib" path="libs/cling/cling-core-2.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling/cling-support-2.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling/httpclient-4.3.3.jar"/>
+	<classpathentry kind="lib" path="libs/cling/httpcore-4.3.2.jar"/>
+	<classpathentry kind="lib" path="libs/cling/seamless-http-1.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling/seamless-util-1.0-alpha3.jar"/>
+	<classpathentry kind="lib" path="libs/cling/seamless-xml-1.0-alpha3.jar"/>
 	<classpathentry kind="output" path="srcbin"/>
 </classpath>

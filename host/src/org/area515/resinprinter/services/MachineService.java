@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.zip.ZipOutputStream;
@@ -47,8 +48,9 @@ import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.network.NetInterface;
-import org.area515.resinprinter.network.NetInterface.WirelessNetwork;
 import org.area515.resinprinter.network.NetworkManager;
+import org.area515.resinprinter.network.WirelessNetwork;
+import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.PrinterManager;
@@ -99,6 +101,9 @@ public class MachineService {
 			
 			try {
 				restartProcess.get();
+			} catch (CancellationException e) {
+				restartProcess = null;
+				return; //This is the normal expected outcome
 			} catch (InterruptedException | ExecutionException e) {
 				e.printStackTrace();
 				throw new IllegalArgumentException("Problem occurred while waiting for the network reconfiguraiton process to terminate.");
@@ -107,17 +112,23 @@ public class MachineService {
 	}
 	
 	/**
-	 * Here is how the network reconfiguration process works.
+	 * This process ensures that the user unplugs the network cable in order to complete the network reconfiguration process.
+	 * Since it's not immediately obvious how to notify a client after the only network link to that client has been torn down, I
+	 * described that process below:
+	 * 
 	 * 1. The Restful client should first reconfigure the WIFI AP of their choice with the connectToWifiSSID() method.
-	 * 2. Once that step is successful, this method should be called immediately afterwards.
-	 * 3. If this method returns false, the NetworkInterface was not found and the configuration process ENDS HERE.
-	 * 4. If this method is able to return true, it means the proper NetworkInterface managing this socket connection was found.
-	 * 5. The NetworkInterface will be monitored for a disruption in network connectivity and Websocket ping events will start being 
+	 * 2. The Restful client opens a websocket connection to /hostNotification url.
+	 * 3. Once that step is successful, this method should be called immediately afterwards.
+	 * 4. If this method returns false, the NetworkInterface was not found and the configuration process ENDS HERE.
+	 * 5. If this method is able to return true, it means this method found the proper NetworkInterface managing this HTTP socket
+	 * 	connection.
+	 * 6. The NetworkInterface will be monitored for a disruption in network connectivity and Websocket ping events will start being 
 	 * 	produced from this host at the interval of "millisecondsBetweenPings".
 	 * 7. Once the Restful client receives it's first ping event, it should ask the user to unplug the ethernet cable.
 	 * 8. The user should then either cancel the operation, or unplug the ethernet cable.
-	 * 9. If the user cancels the operation, the Restful client needs to call cancelRestartOperation() to prevent an unnecessary outage.
-	 * 10. If the user unplugs the ethernet cable, the proper NetworkInterface(discovered in step 3) is found to be down and this 
+	 * 9. If the user cancels the operation, the Restful client needs to call cancelRestartOperation() to notify the server that it should should
+	 * 	not continue to wait for the user to unplug the cable.
+	 * 10. If the user unplugs the ethernet cable, the proper NetworkInterface(discovered in step 4) is found to be down and this 
 	 * 	Host(and it's network) are restarted.
 	 * 11. Since this Host is now in the middle of restarting, it isn't able to send WebSocket ping events any longer.
 	 * 12. The Restful client then discovers that ping events are no longer coming and it's timeout period hasn't been exhausted, 
@@ -127,10 +138,10 @@ public class MachineService {
 	 * @param request
 	 * @param timeoutMilliseconds
 	 * @param millisecondsBetweenPings
-	 * @return
+	 * @return true if the proper network interface is found and the caller should start expecting shutdown pings
 	 */
 	@POST
-	@Path("startNetworkRestartProcess")
+	@Path("startNetworkRestartProcess/{timeoutMilliseconds}/{millisecondsBetweenPings}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public boolean restartHostAfterNetworkCableUnplugged(
 			@Context HttpServletRequest request, 
@@ -139,12 +150,18 @@ public class MachineService {
 		
 		String ipAddress = request.getLocalAddr();
 		try {
+			if (restartProcess != null) {
+				cancelRestartOperation();
+			}
+			
 			final NetworkInterface iFace = NetworkInterface.getByInetAddress(InetAddress.getByName(ipAddress));
 			final long startTime = System.currentTimeMillis();
 			restartProcess = Main.GLOBAL_EXECUTOR.submit(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
 					while (iFace.isUp() || (timeoutMilliseconds > 0 && System.currentTimeMillis() - startTime < timeoutMilliseconds)) {
+						NotificationManager.sendPingMessage("Please unplug your network cable to finish the restart process.");
+						
 						try {
 							Thread.sleep(millisecondsBetweenPings);
 						} catch (InterruptedException e) {
@@ -262,13 +279,22 @@ public class MachineService {
 	 }
 	 
 	 @GET
-	 @Path("networkInterfaces/list")
+	 @Path("wirelessNetworks/list")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public List<NetInterface> getNetworkInterfaces() {
+	 public List<WirelessNetwork> getWirelessNetworks() {
 		Class<NetworkManager> managerClass = HostProperties.Instance().getNetworkManagerClass();
 		try {
 			NetworkManager networkManager = managerClass.newInstance();
-			return networkManager.getNetworkInterfaces();
+			List<NetInterface> interfaces = networkManager.getNetworkInterfaces();
+			List<WirelessNetwork> wInterfaces = new ArrayList<WirelessNetwork>();
+			
+			for (NetInterface network : interfaces) {
+				for (WirelessNetwork wnetwork : network.getWirelessNetworks()) {
+					wInterfaces.add(wnetwork);
+				}
+			}
+			
+			return wInterfaces;
 		} catch (InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
 			return null;
@@ -276,13 +302,13 @@ public class MachineService {
 	 }
 	 
 	 @PUT
-	 @Path("wirelessConnect/{password}")
+	 @Path("wirelessConnect")
 	 @Consumes(MediaType.APPLICATION_JSON)
-	 public void connectToWifiSSID(WirelessNetwork network, @PathParam("password") String password) {
+	 public void connectToWifiSSID(WirelessNetwork network) {
 		Class<NetworkManager> managerClass = HostProperties.Instance().getNetworkManagerClass();
 		try {
 			NetworkManager networkManager = managerClass.newInstance();
-			networkManager.connectToWirelessNetwork(network, password);
+			networkManager.connectToWirelessNetwork(network);
 		} catch (InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
 		}

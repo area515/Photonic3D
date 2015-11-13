@@ -6,10 +6,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.area515.resinprinter.network.LinuxNetworkManager;
-import org.area515.resinprinter.network.NetInterface;
-import org.area515.resinprinter.network.NetInterface.WirelessNetwork;
-
 public class LinuxManualWifiConnect {
 	public static void main(String[] args) throws IOException {
 		LinuxNetworkManager manager = new LinuxNetworkManager();
@@ -30,6 +26,8 @@ public class LinuxManualWifiConnect {
 		int netIndex = Integer.valueOf(input);
 		System.out.println("Type your password:");
 		input = inputStream.readLine();
-		manager.connectToWirelessNetwork(wnetworks.get(netIndex), input);
+		WirelessNetwork wFace = wnetworks.get(netIndex);
+		wFace.setPassword(input);
+		manager.connectToWirelessNetwork(wFace);
 	}
 }

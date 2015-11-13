@@ -83,4 +83,8 @@ public class EmailOnCompletionNotifier implements Notifier {
 	@Override
 	public void hostSettingsChanged() {
 	}
+
+	@Override
+	public void sendPingMessage(String message) {
+	}
 }
