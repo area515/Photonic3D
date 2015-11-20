@@ -49,11 +49,7 @@ public class Main {
 			return thread;
 		}
 	});
-<<<<<<< HEAD
 
-=======
-	
->>>>>>> db689446e1447c6918ad772bad8fe8d509589527
 	public static void main(String[] args) throws Exception {
 		int port = HostProperties.Instance().getPrinterHostPort();
 		/*
