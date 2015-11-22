@@ -87,4 +87,9 @@ public class EmailOnCompletionNotifier implements Notifier {
 	@Override
 	public void sendPingMessage(String message) {
 	}
+
+	@Override
+	public Long getTimeOfLastClientPing() {
+		return null;
+	}
 }

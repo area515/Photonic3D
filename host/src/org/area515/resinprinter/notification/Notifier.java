@@ -33,4 +33,5 @@ public interface Notifier {
 	public void geometryError(PrintJob job, List<StlError> error);
 	public void hostSettingsChanged();
 	public void sendPingMessage(String message);
+	public Long getTimeOfLastClientPing();
 }

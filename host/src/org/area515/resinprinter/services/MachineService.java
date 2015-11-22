@@ -138,15 +138,17 @@ public class MachineService {
 	 * @param request
 	 * @param timeoutMilliseconds
 	 * @param millisecondsBetweenPings
+	 * @param maxUnmatchedPings
 	 * @return true if the proper network interface is found and the caller should start expecting shutdown pings
 	 */
 	@POST
-	@Path("startNetworkRestartProcess/{timeoutMilliseconds}/{millisecondsBetweenPings}")
+	@Path("startNetworkRestartProcess/{timeoutMilliseconds}/{millisecondsBetweenPings}/{maxUnmatchedPings}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public boolean restartHostAfterNetworkCableUnplugged(
 			@Context HttpServletRequest request, 
 			@PathParam("timeoutMilliseconds") final long timeoutMilliseconds,
-			@PathParam("millisecondsBetweenPings") final long millisecondsBetweenPings ) {
+			@PathParam("millisecondsBetweenPings") final long millisecondsBetweenPings,
+			@PathParam("maxUnmatchedPings") final int maxUnmatchedPings) {
 		
 		String ipAddress = request.getLocalAddr();
 		try {
@@ -159,8 +161,10 @@ public class MachineService {
 			restartProcess = Main.GLOBAL_EXECUTOR.submit(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					while (iFace.isUp() || (timeoutMilliseconds > 0 && System.currentTimeMillis() - startTime < timeoutMilliseconds)) {
-						NotificationManager.sendPingMessage("Please unplug your network cable to finish the restart process.");
+					boolean iFaceUp = true;
+					while (iFaceUp = iFace.isUp() && timeoutMilliseconds > 0 && System.currentTimeMillis() - startTime < timeoutMilliseconds) {
+						NotificationManager.sendPingMessage("Please unplug your network cable to finish this setup process.");
+						//System.out.println("  InterfaceUp:"+ iFace.isUp());
 						
 						try {
 							Thread.sleep(millisecondsBetweenPings);
@@ -169,8 +173,8 @@ public class MachineService {
 						}
 					}
 		
-					if (!iFace.isUp()) {
-						//After executing this method, don't expect this VM to stick around much longer
+					if (!iFaceUp) {
+						//After executing this method, don't expect this JVM to stick around much longer
 						IOUtilities.executeNativeCommand(HostProperties.Instance().getRebootCommand(), null, null);
 					}
 					

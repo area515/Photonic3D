@@ -10,6 +10,7 @@ import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.DeploymentException;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
+import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerContainer;
@@ -25,6 +26,8 @@ import org.area515.util.JacksonEncoder;
 public class WebSocketHostNotifier implements Notifier {
 	private static ConcurrentHashMap<String, Session> sessionsBySessionId = new ConcurrentHashMap<String, Session>();
 	
+	private Long lastClientPing;
+	
 	@OnOpen
 	public void onOpen(Session session) {
 		sessionsBySessionId.putIfAbsent(session.getId(), session);
@@ -38,6 +41,11 @@ public class WebSocketHostNotifier implements Notifier {
 	@OnError
 	public void onError(Session session, Throwable cause) {
 		sessionsBySessionId.remove(session.getId());
+	}
+	
+	@OnMessage
+	public void onPingMessage(String message, Session session) {
+		lastClientPing = System.currentTimeMillis();
 	}
 	
 	@Override
@@ -96,5 +104,9 @@ public class WebSocketHostNotifier implements Notifier {
 		for (Session currentSession : sessionsBySessionId.values()) {
 			currentSession.getAsyncRemote().sendObject(new HostEvent(message, NotificationEvent.Ping));
 		}
+	}
+	@Override
+	public Long getTimeOfLastClientPing() {
+		return lastClientPing;
 	}
 }

@@ -132,4 +132,9 @@ public class WebSocketPrinterNotifier implements Notifier {
 	public void sendPingMessage(String message) {
 		//Not for printers
 	}
+	@Override
+	public Long getTimeOfLastClientPing() {
+		//Not for printers
+		return null;
+	}
 }
