@@ -15,7 +15,7 @@
 							ng-model="settingsController.selectedNetworkInterface" 
 							ng-options="item.ssid group by item.parentInterfaceName for item in settingsController.networkInterfaces"
 							required>
-						  <option value="">Select a Wifi access point</option>
+						  <option value="">{{settingsController.loadingNetworksMessage}}</option>
 						</select>
 					</div>
 					<div class="list-group-item">
@@ -24,7 +24,7 @@
 						<input type="password" class="form-control" ng-model="settingsController.selectedNetworkInterface.password">
 					</div>
 					<div class="list-group-item">
-						<button class="btn btn-primary btn-sm">
+						<button ng-disabled="settingsController.shutdownInProgress" class="btn btn-primary btn-sm">
 							<b class="fa fa-repeat"></b>
 							<b class="cwh-text-indent">Reconfigure</b>
 						</button>

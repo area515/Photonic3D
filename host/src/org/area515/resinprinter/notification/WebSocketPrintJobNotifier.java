@@ -160,4 +160,9 @@ public class WebSocketPrintJobNotifier implements Notifier {
 	public void sendPingMessage(String message) {
 		//Not for print jobs
 	}
+	@Override
+	public Long getTimeOfLastClientPing() {
+		//Not for print jobs
+		return null;
+	}
 }
