@@ -83,6 +83,32 @@ public class PrinterService {
 	 }
 	 
 	 @GET
+	 @Path("getdummyconfiguration")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public PrinterConfiguration getDummyConfiguration(){
+		 return PrinterService.INSTANCE.createTemplatePrinter("dummy", "none", "none", 134, 75, 185);
+	 }
+	 
+	 @GET
+	 @Path("getprinterconfiguration/{printername}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public PrinterConfiguration getPrinterConfiguration(@PathParam("printername") String printerName) throws InappropriateDeviceException {
+		
+		System.out.println("getting configuration for " + printerName); 
+		Printer printer = PrinterManager.Instance().getPrinter(printerName);
+		if (printer == null) {
+			PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
+			if (currentConfiguration == null) {
+				throw new InappropriateDeviceException("No printer with that name:" + printerName);
+			}
+			
+			printer = new Printer(currentConfiguration);
+		}
+		 
+		return printer.getConfiguration();
+	 }
+	 
+	 @GET
 	 @POST
 	 @Path("delete/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
