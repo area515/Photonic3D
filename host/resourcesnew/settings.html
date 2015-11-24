@@ -1,0 +1,94 @@
+<div class="row">
+	<div class="col-sm-4 bootcards-list" id="list">
+			<div class="panel panel-default">
+				<div class="panel-heading clearfix">
+					<span class="pull-left fa-stack fa-lg">
+						<i class="fa fa-stack-1x fa-2x fa-wifi"></i>
+					</span>
+					<h4 class="pull-left">Wifi Setup </h4>
+				</div>
+				<form class="list-group" ng-submit="settingsController.connectToWireless()">
+					<div class="list-group-item">
+						<i class="fa fa-2x fa-plug pull-left"></i>
+						<h4>Access Point</h4>
+						<select name="type" id="AccessPoint" class="form-control"
+							ng-model="settingsController.selectedNetworkInterface" 
+							ng-options="item.ssid group by item.parentInterfaceName for item in settingsController.networkInterfaces"
+							required>
+						  <option value="">{{settingsController.loadingNetworksMessage}}</option>
+						</select>
+					</div>
+					<div class="list-group-item">
+						<i class="fa fa-2x fa-key pull-left"></i>
+						<h4>Password</h4>
+						<input type="password" class="form-control" ng-model="settingsController.selectedNetworkInterface.password">
+					</div>
+					<div class="list-group-item">
+						<button ng-disabled="settingsController.shutdownInProgress" class="btn btn-primary btn-sm">
+							<b class="fa fa-repeat"></b>
+							<b class="cwh-text-indent">Reconfigure</b>
+						</button>
+					</div>
+				</form>
+				
+				<div class="panel-footer">
+					<span ng-include="'cardFooter.html'"></span>
+				</div>
+			</div>
+	</div>
+	<div class="col-sm-4 bootcards-list" id="list">
+		<div class="panel panel-default">
+			<div class="panel-heading clearfix">
+				<span class="pull-left fa-stack fa-lg">
+					<i class="fa fa-stack-1x fa-2x fa-envelope"></i>
+				</span>
+				<h4 class="pull-left">Email Settings</h4>
+			</div>
+			<div class="list-group">
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-at pull-left"></i>
+					<h4>Email Address</h4>
+					<input class="form-control" ng-model="settingsController.emailSettings.notificationEmailAddresses">
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-at pull-left"></i>
+					<h4>Support Email Address</h4>
+					<input class="form-control" ng-model="settingsController.emailSettings.serviceEmailAddresses">
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-user pull-left"></i>
+					<h4>Username</h4>
+					<input class="form-control" ng-model="settingsController.emailSettings.userName">
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-key pull-left"></i>
+					<h4>Password</h4>
+					<input class="form-control" type="password" ng-model="settingsController.emailSettings.password">
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-server pull-left"></i>
+					<h4>SMTP Hostname</h4>
+					<input class="form-control" ng-model="settingsController.emailSettings.smtpServer">			
+				</div>
+				<div class="list-group-item">
+					<a class="btn btn-primary btn-sm"  ng-click="settingsController.saveEmailSettings()">
+						<b class="fa fa-wrench"></b>
+						<b class="cwh-text-indent">Save</b>
+					</a>
+				</div>
+			</div>
+	
+			<div class="panel-footer">
+				<span ng-include="'cardFooter.html'"></span>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModal" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<span ng-include="'restartHost.html'"></span>
+		</div>
+	</div>
+</div>

@@ -1,4 +1,4 @@
-<form class="form-horizontal" method="POST" action="/contacts/">
+<form class="form-horizontal" >
 <div class="modal-header">
 		<div class="btn-group pull-left">
 			<button class="btn btn-danger" data-dismiss="modal">
@@ -11,13 +11,11 @@
 				Save
 			</button>
 		</div>
-	<h4 class="modal-title">
-			{{printersController.editTitle}}
-	</h4>
+		<h4 class="modal-title">
+				{{printersController.editTitle}}
+		</h4>
 </div>
 <div class="modal-body">
-		<input type="hidden" name="companyId" value="">
-		<input type="hidden" name="_method" value="put">
 		<div class="form-group">
 			<label class="col-xs-4 control-label">Printer Name</label>
 			<div class="col-xs-8">

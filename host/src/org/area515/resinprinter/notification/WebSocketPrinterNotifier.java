@@ -9,6 +9,7 @@ import javax.websocket.CloseReason;
 import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.DeploymentException;
 import javax.websocket.OnClose;
+import javax.websocket.OnError;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
@@ -19,8 +20,10 @@ import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.slice.StlError;
+import org.area515.util.JacksonEncoder;
+import org.area515.util.PrintJobJacksonDecoder;
 
-@ServerEndpoint("/printerNotification/{printerName}")
+@ServerEndpoint(value="/printerNotification/{printerName}", encoders={JacksonEncoder.class})
 public class WebSocketPrinterNotifier implements Notifier {
 	private static ConcurrentHashMap<String, ConcurrentHashMap<String, Session>> sessionsByPrinterName = new ConcurrentHashMap<String, ConcurrentHashMap<String, Session>>();
 	
@@ -44,6 +47,13 @@ public class WebSocketPrinterNotifier implements Notifier {
 		}
 	}
 	
+	@OnError
+	public void onError(Session session, Throwable cause) {
+		for (ConcurrentHashMap<String, Session> sessions : sessionsByPrinterName.values()) {
+			sessions.remove(session.getId());
+		}
+	}
+	
 	@Override
 	public void register(ServerContainer container) throws InappropriateDeviceException {
 		try {
@@ -55,6 +65,7 @@ public class WebSocketPrinterNotifier implements Notifier {
 
 	@Override
 	public void jobChanged(Printer printer, PrintJob job) {
+		//Not for printers
 	}
 
 	@Override
@@ -110,5 +121,20 @@ public class WebSocketPrinterNotifier implements Notifier {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	@Override
+	public void hostSettingsChanged() {
+		//Not for printers
+	}
+	
+	@Override
+	public void sendPingMessage(String message) {
+		//Not for printers
+	}
+	@Override
+	public Long getTimeOfLastClientPing() {
+		//Not for printers
+		return null;
 	}
 }

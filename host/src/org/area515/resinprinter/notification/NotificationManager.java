@@ -2,6 +2,7 @@ package org.area515.resinprinter.notification;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -71,9 +72,33 @@ public class NotificationManager {
 		}
 	}	
 	
+	public static void sendPingMessage(String message) {
+		for (Notifier currentNotifier : notifiers) {
+			currentNotifier.sendPingMessage(message);
+		}
+	}
+	
+	public static void hostSettingsChanged() {
+		for (Notifier currentNotifier : notifiers) {
+			currentNotifier.hostSettingsChanged();
+		}
+	}	
+	
 	public static void fileUploadComplete(File fileUploaded) {
 		for (Notifier currentNotifier : notifiers) {
 			currentNotifier.fileUploadComplete(fileUploaded);
 		}
+	}
+	
+	public static Long getTimeOfLastClientPing() {
+		Long latestPing = null;
+		for (Notifier currentNotifier : notifiers) {
+			Long currentPing = currentNotifier.getTimeOfLastClientPing();
+			if (currentPing != null && (latestPing == null || currentPing > latestPing)) {
+				latestPing = currentPing;
+			}
+		}
+		
+		return latestPing;
 	}
 }

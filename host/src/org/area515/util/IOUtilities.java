@@ -1,6 +1,9 @@
 package org.area515.util;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -9,18 +12,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
+
+import com.google.common.io.ByteStreams;
 
 public class IOUtilities {
 	public static int CPU_LIMITING_DELAY = 300;
 	public static int NATIVE_COMMAND_TIMEOUT = 10000;
 	
 	public static enum SearchStyle {
-		RepeatUntilFound,
-		RepeatWhileFound
+		RepeatUntilMatch,
+		RepeatWhileMatching,
+		RepeatUntilMatchWithNullGroup
 	}
 	
 	public static class ParseState {
@@ -32,11 +40,50 @@ public class IOUtilities {
 		public String[] command;
 		public String waitForRegEx;
 		public SearchStyle searchStyle;
+		public String parseReturnValue;
 		
 		public ParseAction(String[] command, String waitForRegEx, SearchStyle searchStyle) {
 			this.command = command;
 			this.waitForRegEx = waitForRegEx;
 			this.searchStyle = searchStyle;
+		}
+		public ParseAction(String[] command, String waitForRegEx, String parseReturnValue, SearchStyle searchStyle) {
+			this.command = command;
+			this.waitForRegEx = waitForRegEx;
+			this.searchStyle = searchStyle;
+			this.parseReturnValue = parseReturnValue;
+		}
+	}
+	
+	public static ZipEntry zipFile(File fileToZip, ZipOutputStream zipOutputStream) {
+		ZipEntry entry = new ZipEntry(fileToZip.getName());
+		InputStream inStream = null;
+		try {
+			zipOutputStream.putNextEntry(entry);
+			inStream = new BufferedInputStream(new FileInputStream(fileToZip));
+			ByteStreams.copy(inStream, zipOutputStream);
+			inStream.close();
+			return entry;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			IOUtils.closeQuietly(inStream);
+		}
+	}
+	
+	public static ZipEntry zipStream(String name, InputStream inStream, ZipOutputStream output) {
+		ZipEntry entry = new ZipEntry(name);
+		try {
+			output.putNextEntry(entry);
+			ByteStreams.copy(inStream, output);
+			inStream.close();
+			return entry;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			IOUtils.closeQuietly(inStream);
 		}
 	}
 	
@@ -68,8 +115,10 @@ public class IOUtilities {
 					outputStream.flush();
 				}
 				
+				boolean matcherGroupHasValue = false;
 				Matcher matcher = null;
 				Pattern pattern = Pattern.compile(parseAction.waitForRegEx);
+				Pattern returnValuePattern = parseAction.parseReturnValue != null?Pattern.compile(parseAction.parseReturnValue):null;
 				do {
 					ParseState state = IOUtilities.readLine(inputStream, builder, eolRegEx, parseLocation, NATIVE_COMMAND_TIMEOUT, CPU_LIMITING_DELAY);
 					if (state.currentLine == null) {
@@ -79,11 +128,27 @@ public class IOUtilities {
 					if (removeNewLineChar && state.currentLine.endsWith("\n")) {
 						state.currentLine = state.currentLine.substring(0, state.currentLine.length() - 1);
 					}
+					if (returnValuePattern != null) {
+						matcher = returnValuePattern.matcher(state.currentLine);
+						if (matcher.matches() && matcher.groupCount() > 0) {
+							for (int group = 1; group <= matcher.groupCount(); group++) {
+								String[] dest = new String[arguments.length + 1];
+								System.arraycopy(arguments, 0, dest, 0, arguments.length);
+								dest[arguments.length] = matcher.group(group);
+								arguments = dest;
+							}
+							if (parseAction.searchStyle == SearchStyle.RepeatUntilMatch) {
+								returnValuePattern = null;//Reset this to null so that we use our regular line parser after this point...
+							}
+						}
+					}
+					
 					matcher = pattern.matcher(state.currentLine);
 					if (matcher.matches() && matcher.groupCount() > 0) {
 						String[] groups = new String[matcher.groupCount()];
 						for (int group = 1; group <= matcher.groupCount(); group++) {
 							groups[group - 1] = matcher.group(group);
+							matcherGroupHasValue = groups[group -1] == null;
 						}
 						returnList.add(groups);
 					}
@@ -91,8 +156,9 @@ public class IOUtilities {
 					/*if (!matcher.matches() && parseAction.searchStyle == SearchStyle.RepeatUntilFound) {
 						System.out.println("UNMATCHED OUTPUT:" + state.currentLine);
 					}*/
-				} while ((!matcher.matches() && parseAction.searchStyle == SearchStyle.RepeatUntilFound) ||
-						  (matcher.matches() && parseAction.searchStyle == SearchStyle.RepeatWhileFound));
+				} while ((parseAction.searchStyle == SearchStyle.RepeatUntilMatch && !matcher.matches()) ||
+						  (parseAction.searchStyle == SearchStyle.RepeatWhileMatching && matcher.matches()) ||
+						  (parseAction.searchStyle == SearchStyle.RepeatUntilMatchWithNullGroup && (matcherGroupHasValue || !matcher.matches())));
 			}
 			
 			return returnList;

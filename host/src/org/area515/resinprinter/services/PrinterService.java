@@ -272,7 +272,7 @@ public class PrinterService {
 	 			"	bulbCenter,\n" + 
 	 			"	totalSizeOfGradient,\n" +
 				"	bulbFocus,\n" +
-				"	fractions,\n" + 
+				"	fractions,\n" +
 				"	colors,\n" +
 				"	java.awt.MultipleGradientPaint.CycleMethod.NO_CYCLE)");
 		try {

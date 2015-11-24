@@ -6,9 +6,13 @@ public class ConsoleCommPort implements SerialCommunicationsPort {
 	public static final String CONSOLE_COMM_PORT = "Console Testing";
 	
 	private String name = CONSOLE_COMM_PORT;
+	private int readCount;
+	private int timeout;
 	
 	@Override
 	public void open(String printerName, int timeout, ComPortSettings settings) {
+		readCount = 0;
+		this.timeout = timeout;
 		System.out.println("Printer opened");
 	}
 
@@ -34,6 +38,18 @@ public class ConsoleCommPort implements SerialCommunicationsPort {
 
 	@Override
 	public byte[] read() {
+		switch (readCount) {
+		case 0:
+			readCount = 1;
+			return "Console chitchat\n".getBytes();
+		case 1:
+			try {
+				Thread.sleep(timeout+1);
+			} catch (InterruptedException e) {}
+			readCount = 2;
+			return null;
+		}
+		
 		return "ok\n".getBytes();
 	}
 
