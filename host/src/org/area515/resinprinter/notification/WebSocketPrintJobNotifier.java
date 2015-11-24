@@ -85,6 +85,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 
 	@Override
 	public void printerChanged(Printer printer) {
+		//Not for print jobs
 	}
 	
 	@Override
@@ -148,5 +149,20 @@ public class WebSocketPrintJobNotifier implements Notifier {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	@Override
+	public void hostSettingsChanged() {
+		//Not for print jobs
+	}
+
+	@Override
+	public void sendPingMessage(String message) {
+		//Not for print jobs
+	}
+	@Override
+	public Long getTimeOfLastClientPing() {
+		//Not for print jobs
+		return null;
 	}
 }

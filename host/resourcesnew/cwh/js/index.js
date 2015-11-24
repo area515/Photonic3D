@@ -17,6 +17,11 @@
     	        controller: 'PrinterControlsController',
     	        controllerAs: 'printerControlsController'
     	    })
+    	    $routeProvider.when('/settingsPage', {
+    	        templateUrl: '/settings.html',
+    	        controller: 'SettingsController',
+    	        controllerAs: 'settingsController'
+    	    })
     	    $routeProvider.otherwise({
     	    	redirectTo: '/dashboardPage'
     	    });
@@ -29,16 +34,6 @@
     			this.currentPage = newPageName;
     		}
     		
-    		this.executeDiagnostic = function executeDiagnostic() {
-    	        $http.get(service + printerName).success(
-    	        		function (data) {
-    	        			$scope.$emit("MachineResponse", {machineResponse: {command:"Executed Diagnostic", message:"Successfully executed diagnostic"}, successFunction:null, afterErrorFunction:null});
-    	        		}).error(
-        				function (data, status, headers, config, statusText) {
-     	        			$scope.$emit("HTTPError", {status:status, statusText:data});
-    	        		})
-    		}
-
 			$scope.$on("MachineResponse", function (event, args) {
 				//args = machineResponse, successFunction, afterErrorFunction
             	if (!args.machineResponse.response) {
@@ -51,6 +46,13 @@
                 	}
             	} else if (args.successFunction != null) {
             		args.successFunction(args.machineResponse);
+            	} else {
+            		$scope.currentError = args.machineResponse;
+                	
+                	$('#errorModal').modal().after
+                	if (args.afterErrorFunction != null) {
+                		args.afterErrorFunction(args.machineResponse);
+                	}
             	}
             });
 			$scope.$on("HTTPError", function (event, args){
@@ -60,6 +62,7 @@
     				customMessage = "You logged in wrong.";
     			} else if (args.status == "400") {
     				customMessage = args.statusText;
+    				args.status = "";
     			} else if (args.startText == null) {
     				customMessage = "Problem communicating with host printer.";
     			} else {

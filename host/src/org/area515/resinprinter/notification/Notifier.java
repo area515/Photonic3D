@@ -16,7 +16,9 @@ public interface Notifier {
 		PrinterChanged,
 		PrintJobChanged,
 		GeometryError,
-		FileUploadComplete
+		FileUploadComplete,
+		SettingsChanged,
+		Ping
 	}
 	
 	//Management methods for Notifier
@@ -29,4 +31,7 @@ public interface Notifier {
 	public void printerChanged(Printer printer);
 	public void fileUploadComplete(File fileUploaded);
 	public void geometryError(PrintJob job, List<StlError> error);
+	public void hostSettingsChanged();
+	public void sendPingMessage(String message);
+	public Long getTimeOfLastClientPing();
 }

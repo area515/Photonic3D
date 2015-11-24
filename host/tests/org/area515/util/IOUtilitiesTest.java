@@ -121,11 +121,11 @@ public class IOUtilitiesTest {
 		mockRuntime(LinuxNetworkManagerTest.SCAN_WIFI_DATA);
 
 		List<ParseAction> actions = new ArrayList<ParseAction>();
-		actions.add(new ParseAction(new String[]{"/bin/sh", "-c", "wpa_cli -i {0}"}, ">", SearchStyle.RepeatUntilFound));
-		actions.add(new ParseAction(new String[]{"scan\n"}, "[\\r\\s]*<\\d+>\\s*CTRL-EVENT-SCAN-RESULTS", SearchStyle.RepeatUntilFound));
-		actions.add(new ParseAction(new String[]{""}, "\\s*>", SearchStyle.RepeatUntilFound));
-		actions.add(new ParseAction(new String[]{"scan_results\n"}, "bssid.*", SearchStyle.RepeatUntilFound));
-		actions.add(new ParseAction(new String[]{""}, "\\s*([A-Fa-f0-9:]+)\\s+(\\d+)\\s+(\\d+)\\s+([\\[\\]\\+\\-\\w]+)\\s+(\\w*)\\s*", SearchStyle.RepeatWhileFound));
+		actions.add(new ParseAction(new String[]{"/bin/sh", "-c", "wpa_cli -i {0}"}, ">", SearchStyle.RepeatUntilMatch));
+		actions.add(new ParseAction(new String[]{"scan\n"}, "[\\r\\s]*<\\d+>\\s*CTRL-EVENT-SCAN-RESULTS\\s*", SearchStyle.RepeatUntilMatch));
+		actions.add(new ParseAction(new String[]{""}, "\\s*>", SearchStyle.RepeatUntilMatch));
+		actions.add(new ParseAction(new String[]{"scan_results\n"}, "bssid.*", SearchStyle.RepeatUntilMatch));
+		actions.add(new ParseAction(new String[]{""}, "\\s*([A-Fa-f0-9:]+)\\s+(\\d+)\\s+(\\d+)\\s+([\\[\\]\\+\\-\\w]+)\\s+(\\w*)\\s*", SearchStyle.RepeatWhileMatching));
 		
 		List<String[]> dataReturned = IOUtilities.communicateWithNativeCommand(actions, "^>|\n", true, null, "wlan0");
 		Assert.assertEquals("SomeNetwork", dataReturned.get(0)[4]);

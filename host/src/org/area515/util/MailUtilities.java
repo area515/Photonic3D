@@ -21,19 +21,72 @@ import javax.mail.internet.MimeMultipart;
 
 //TODO: this shouldn't be a static util should be Singleton
 public class MailUtilities {
-	private MailUtilities(){}
-	private static Properties mailProperties = null;
+	//private static EmailSettings mailSettings = null;
 	public static final String SMTP_USE_TLS = "mail.smtp.starttls.enable";
 	public static final String SMTP_HOST = "mail.smtp.host";
-
-	private static Session session = null;
-	//props.put("mail.smtp.socketFactory.port", "465");
-	//props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
-	//props.put("mail.smtp.auth", "true");
-	//props.put("mail.smtp.port", "465");
-	//props.put("mail.smtp.auth", "true");
-
 	
+	private static Session session = null;
+
+	public static class EmailSettings {
+		private String smtpServer;
+		private int smtpPort;
+		private String userName;
+		private String password;
+		private boolean useTLS;
+		
+		//TODO: Support these settings eventually...
+		//props.put("mail.smtp.socketFactory.port", "465");
+		//props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+		//props.put("mail.smtp.auth", "true");
+		//props.put("mail.smtp.port", "465");
+		//props.put("mail.smtp.auth", "true");
+
+		protected EmailSettings() {}
+		
+		public EmailSettings(String smtpServer, int smtpPort, String userName, String password, boolean useTLS) {
+			this.smtpServer = smtpServer;
+			this.smtpPort = smtpPort;
+			this.userName = userName;
+			this.password = password;
+			this.useTLS = useTLS;
+		}
+
+		public int getSmtpPort() {
+			return smtpPort;
+		}
+		public void setSmtpPort(int smtpPort) {
+			this.smtpPort = smtpPort;
+		}
+		
+		public String getSmtpServer() {
+			return smtpServer;
+		}
+		public void setSmtpServer(String smtpServer) {
+			this.smtpServer = smtpServer;
+		}
+
+		public String getUserName() {
+			return userName;
+		}
+		public void setUserName(String userName) {
+			this.userName = userName;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+		public void setPassword(String password) {
+			this.password = password;
+		}
+
+		public boolean isUseTLS() {
+			return useTLS;
+		}
+		public void setUseTLS(boolean useTLS) {
+			this.useTLS = useTLS;
+		}
+	}
+
 	public static void executeSMTPSend(
 			String fromEmailAddress, 
 			List<String> toEmailAddresses, 
@@ -64,70 +117,32 @@ public class MailUtilities {
         transport.sendMessage(message, message.getAllRecipients());
 	}
 	
-	public static Transport openTransportFromProperties() throws MessagingException {
-		Properties mailProperties = MailUtilities.getMailProperties();
-
-		String username = (String)mailProperties.remove("username");
-		String password = (String)mailProperties.remove("password");
-		String smtpServer = (String)mailProperties.remove("smtpServer");
-		String port = (String)mailProperties.remove("smtpPort");
-		Integer smtpPort = port != null? Integer.valueOf(port): null;
+	public static Transport openTransportFromSettings(EmailSettings mailSettings) throws MessagingException {
+		String username = mailSettings.getUserName();
+		String smtpServer = mailSettings.getSmtpServer();
+		String password = mailSettings.getPassword();
+		Integer smtpPort = mailSettings.getSmtpPort();
 		
-		return MailUtilities.openTransport(username, password, smtpServer, smtpPort);
-	}
-	
-	public static Transport openTransport(
-			String username, 
-			String password, 
-			String smtpServer, 
-			Integer smtpPort) throws MessagingException {
-		
+		Properties mailProperties = new Properties();
 		if (username == null || username.equals("")) {
+			//This is for unauthenticated communication
 			mailProperties.setProperty(SMTP_HOST, smtpServer);
 		}
-		
+		if (mailSettings.isUseTLS()) {
+			mailProperties.setProperty("mail.smtp.starttls.enable", "true");
+		}
         session = Session.getInstance(mailProperties);
         Transport transport = session.getTransport("smtp");
 
         if (username == null || username.equals("")) {
         	transport.connect();
-        } else if (smtpPort == null) {
+        } else if (smtpPort == null || smtpPort < 0) {
 	        transport.connect(smtpServer, username, password);
         } else {
 	        transport.connect(smtpServer, smtpPort, username, password);
         }
         
         return transport;
-	}
-	
-	public static Transport executeSMTPSend(
-			String fromEmailAddress, 
-			List<String> toEmailAddresses, 
-			String username, 
-			String password, 
-			String smtpServer, 
-			Integer smtpPort,
-			String subject,
-			String body,
-			File... fileAttachments
-			) throws MessagingException, UnsupportedEncodingException, IOException {
-
-		Transport transport = openTransport(username, password, smtpServer, smtpPort);
-		
-		executeSMTPSend(fromEmailAddress, toEmailAddresses, subject, body, transport, fileAttachments);
-		
-		return transport;
-	}
-	
-	public static void setMailProperties(Properties mailProperties) {
-		MailUtilities.mailProperties = new Properties(mailProperties);
-		MailUtilities.mailProperties.putAll(mailProperties);
-	}
-	
-	public static Properties getMailProperties() {
-		Properties properties = new Properties(mailProperties);
-		properties.putAll(mailProperties);
-		return properties;
 	}
 	
 	public static Address[] buildAddresses(String addresses[]) throws AddressException, UnsupportedEncodingException  {
