@@ -55,7 +55,7 @@ What features does CWH have?
 17. [Script](https://github.com/area515/Creation-Workshop-Host/blob/master/host/bin/browseprinter.sh)(or a native Windows app)to find CWH based printers on the local network with zero network setup.
 18. Capability of building printer configurations with simulated Serial ports and displays.
 19. Two clicks and a password for Linux Wifi management to support a turnkey hardware solution.
-20. Automatic projector model detection (1 model currently supported, others supported at request)
+20. Automatic projector model detection (1 model currently supported, others supported at request and hardware accessability)
 21. 3d firmware printer port detection.
 22. Hardware compatibility test suite.
 
