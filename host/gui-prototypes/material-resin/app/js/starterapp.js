@@ -74,41 +74,61 @@ app.factory('SharedService', function() {
   };
 });
 
-function getId($scope, $http, SharedService, $location) {
-    $http.get('http://api.github.com/users/ergobot').
+// function getId($scope, $http, SharedService, $location) {
+//     $http.get('http://api.github.com/users/ergobot').
+//         success(function(data) {
+//             alert(JSON.stringify);
+//             alert($location.path());
+//             alert($location.protocol()+ "://" + $location.host() +":"+ $location.port());  
+//             SharedService.sharedObject.id = data.id;
+//             alert(SharedService.sharedObject.id);
+//             $scope.id = SharedService.sharedObject.id;
+//         });
+// }
+
+// function echo($scope, $http, SharedService, $location) {
+//     var baseservice = "services";
+//     var machineservice = "machine";
+//     var method = "echo";
+//     var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method;
+//     alert(fullurl);
+//     $http.get(fullurl).
+//         success(function(data) {
+//             alert(JSON.stringify);
+//             alert(data);
+//             alert($location.path());
+//             alert($location.protocol()+ "://" + $location.host() +":"+ $location.port());  
+//             SharedService.sharedObject.id = data;
+//             alert(SharedService.sharedObject.id);
+//             $scope.id = SharedService.sharedObject.id;
+//         });
+// }
+
+function refreshPrinters($scope, $http, SharedService, $location) {
+    var baseservice = "services";
+    var machineservice = "printers";
+    var method = "list";
+    var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method;
+    // alert(fullurl);
+    $http.get(fullurl).
         success(function(data) {
-            alert(JSON.stringify);
-            alert($location.path());
-            alert($location.protocol()+ "://" + $location.host() +":"+ $location.port());  
-            SharedService.sharedObject.id = data.id;
-            alert(SharedService.sharedObject.id);
-            $scope.id = SharedService.sharedObject.id;
+            // alert(JSON.stringify);
+            // alert(data);
+            // alert($location.path());
+            // alert($location.protocol()+ "://" + $location.host() +":"+ $location.port());  
+            $scope.printers = data;
+
+            // alert(data.length);
         });
 }
 
-function echo($scope, $http, SharedService, $location) {
-    var baseservice = "services";
-    var machineservice = "machine";
-    var method = "echo";
-    var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method;
-    alert(fullurl);
-    $http.get(fullurl).
-        success(function(data) {
-            alert(JSON.stringify);
-            alert(data);
-            alert($location.path());
-            alert($location.protocol()+ "://" + $location.host() +":"+ $location.port());  
-            SharedService.sharedObject.id = data;
-            alert(SharedService.sharedObject.id);
-            $scope.id = SharedService.sharedObject.id;
-        });
-}
 
 app.controller('PrinterCtrl', function($scope, $mdSidenav, $compile, SharedService, $http, $location) {
   console.log('inside printer controller');
   // alert('inside the printer controller')
   // $mdSidenav('left').close();
   //_.extend($scope, SharedService);
+  refreshPrinters($scope, $http, SharedService, $location);
 
   $scope.imagePath = SharedService.currentSlice;
   $scope.altImagePath = 'views/printer/blank.png';
@@ -117,18 +137,6 @@ app.controller('PrinterCtrl', function($scope, $mdSidenav, $compile, SharedServi
   $scope.connection = SharedService.sharedObject.connection;
   $scope.status = SharedService.sharedObject.status;
 
-  $scope.refreshId = function(){
-    //getId($scope, $http, SharedService, $location);
-    echo($scope, $http, SharedService, $location);
-  };
-  
-  $scope.printers = [{
-    name: "Little SLA"
-  }, {
-    name: "LittleRP"
-  }, {
-    name: "Sedgwick"
-  }];
   $scope.selectedprinter = "hello";
    $scope.model = SharedService.sharedObject;
 
@@ -343,10 +351,28 @@ app.directive('jobprogress', function($rootScope) {
 });
 
 
-app.controller('JobsCtrl', function($scope, $mdSidenav, $compile, Upload) {
+function refreshFiles($scope, $http, SharedService, $location) {
+    var baseservice = "services";
+    var machineservice = "files";
+    var method = "list";
+    var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method;
+    // alert(fullurl);
+    $http.get(fullurl).
+        success(function(data) {
+            // alert(JSON.stringify);
+            // alert(data);
+            // alert($location.path());
+            // alert($location.protocol()+ "://" + $location.host() +":"+ $location.port());  
+            $scope.files = data;
+        });
+}
+
+app.controller('JobsCtrl', function($scope, $mdSidenav, $compile, Upload, $http, SharedService, $location) {
   console.log('inside jobs controller');
   // $mdSidenav('left').close()
-
+  refreshFiles($scope, $http, SharedService, $location);
+  refreshPrinters($scope, $http, SharedService, $location);
+   $scope.selectedprinter = null;
   // upload on file select or drop
     $scope.upload = function (file) {
         Upload.upload({
@@ -361,6 +387,8 @@ app.controller('JobsCtrl', function($scope, $mdSidenav, $compile, Upload) {
             console.log('progress: ' + progressPercentage + '% ' + evt.config.data.file.name);
         });
     };
+
+
 
 });
 
