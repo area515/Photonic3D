@@ -51,9 +51,10 @@ What features does CWH have?
 13. Sophisticated javascript calculators that compute gradients, exposure time, lift speed and distance.
 14. Notification of Printer events through webSockets.
 15. Simple printer setup for Zip/CWS based printing.
-16. Automatic updates.
-17. [Script](https://github.com/area515/Creation-Workshop-Host/blob/master/host/bin/browseprinter.sh) to find CWH based printers on the local network with zero network setup.
+16. Automatic updates via online installs or manual updates through offline installs
+17. [Script](https://github.com/area515/Creation-Workshop-Host/blob/master/host/bin/browseprinter.sh)(or a native Windows app)to find CWH based printers on the local network with zero network setup.
 18. Capability of building printer configurations with simulated Serial ports and displays.
+19. Two clicks and a password for Linux Wifi management to support a turnkey hardware solution.
 
 Do you want to install the latest stable build?
 -------------------------------------------------------------------------------
