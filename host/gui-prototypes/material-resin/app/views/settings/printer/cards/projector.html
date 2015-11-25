@@ -1,0 +1,53 @@
+ <md-card class="flex" ng-controller="SettingsCtrl">
+      
+      <md-toolbar class="md-theme-light">
+          <h2 class="md-toolbar-tools">
+            <span>Projector</span>
+          </h2>
+        </md-toolbar>
+
+      <md-card-content>
+
+         <md-content flex layout="row">
+          <md-input-container class="flex-100">
+            <label flex>Resolution X</label>
+            <input flex ng-model="user.title">
+          </md-input-container>
+        </md-content>
+
+         <md-content flex layout="row">
+          <md-input-container class="flex-100">
+            <label flex>Resolution Y</label>
+            <input flex ng-model="user.title">
+          </md-input-container>
+        </md-content>
+
+        <md-list>
+
+           <md-list-item class="md-3-line">
+            <div class="md-list-item flex">
+             <md-input-container class="md-block">
+                <label>Displays</label>
+                <md-select name="myModel" placeholder="Printer" ng-model="selectedprinter">
+                <md-option ng-repeat="printer in printers" value="{{printer.name}}">{{printer.name}}</md-option>
+                </md-select>
+                <div class="errors" ng-messages="myForm.myModel.$error" ng-if="myForm.$dirty">
+                  <div ng-message="required">Required</div>
+                </div>
+             </md-input-container>
+            </div>
+          </md-list-item>
+
+          
+        </md-list>
+
+        <md-card-actions layout="row" layout-align="end center" class="flex-100">
+          <md-button class="md-raised md-primary md-icon-button" aria-label="More">
+            <md-icon md-svg-icon="refresh" style="display:block;"></md-icon>
+          </md-button>  
+
+        </md-card-actions>
+
+      </md-card-content>
+
+    </md-card>
