@@ -5,6 +5,8 @@ What does CWH look like?
 -------------------------------------------------------------------------------  
 Old Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/images/cwh.png).  
 The New Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/images/cwhNew.png).
+Another GUI looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/images/cwhNew.png).
+And yet another GUI is in the works if you don't like the above three.
 
 Where are the instructions for installing on the Raspberry Pi?  
 -------------------------------------------------------------------------------  
