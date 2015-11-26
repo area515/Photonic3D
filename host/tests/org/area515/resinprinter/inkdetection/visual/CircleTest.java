@@ -36,8 +36,8 @@ public class CircleTest {
 			g.drawOval(circle.getX() - circle.getRadius(), circle.getY() - circle.getRadius(), circle.getRadius() * 2, circle.getRadius() * 2);
 		}//*/
 		
-		ImageIO.write(edges, "png", new File("outputcircle.png"));
-		ImageIO.write(houghDetection.generateHoughSpaceImage(true), "png", new File("houghspacecircle.png"));
+		ImageIO.write(edges, "png", new File("images/outputcircle.png"));
+		ImageIO.write(houghDetection.generateHoughSpaceImage(true), "png", new File("images/houghspacecircle.png"));
 		System.out.println("Complete");		
 	}
 }
