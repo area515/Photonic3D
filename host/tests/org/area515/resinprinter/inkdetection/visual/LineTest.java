@@ -35,8 +35,8 @@ public class LineTest {
 		for (Line line : centers) {
 			g.drawLine(line.getX1(), line.getY1(), line.getX2(), line.getY2());
 		}//*/
-		ImageIO.write(edges, "jpg", new File("outputline.png"));
-		ImageIO.write(houghDetection.generateHoughSpaceImage(true), "png", new File("houghspaceline.png"));
+		ImageIO.write(edges, "jpg", new File("images/outputline.png"));
+		ImageIO.write(houghDetection.generateHoughSpaceImage(true), "png", new File("images/houghspaceline.png"));
 		System.out.println("Complete");		
 	}
 }

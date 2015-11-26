@@ -3,8 +3,8 @@ Creation-Workshop-Host
 
 What does CWH look like?
 -------------------------------------------------------------------------------  
-Old Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwh.png).  
-The New Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwhNew.png).
+Old Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/images/cwh.png).  
+The New Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/images/cwhNew.png).
 
 Where are the instructions for installing on the Raspberry Pi?  
 -------------------------------------------------------------------------------  
