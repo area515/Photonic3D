@@ -14,8 +14,8 @@
             <div class="md-list-item flex">
              <md-input-container class="md-block">
                 <label>Printers</label>
-                <md-select name="myModel" placeholder="Printer" ng-model="selectedprinter">
-                <md-option ng-repeat="printer in printers" value="{{printer.name}}">{{printer.name}}</md-option>
+                <md-select name="myModel" placeholder="Printer" ng-model="printername">
+                <md-option ng-repeat="printer in printers" value="{{printer.configuration.name}}">{{printer.configuration.name}}</md-option>
                 </md-select>
                 <div class="errors" ng-messages="myForm.myModel.$error" ng-if="myForm.$dirty">
                   <div ng-message="required">Required</div>
