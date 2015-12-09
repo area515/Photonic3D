@@ -104,25 +104,6 @@ app.factory('SharedService', function() {
 //         });
 // }
 
-function refreshPrinters($scope, $http, SharedService, $location) {
-    var baseservice = "services";
-    var machineservice = "printers";
-    var method = "list";
-    var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method;
-    // alert(fullurl);
-    $http.get(fullurl).
-        success(function(data) {
-            // alert(JSON.stringify);
-            // alert(data);
-            // alert($location.path());
-            // alert($location.protocol()+ "://" + $location.host() +":"+ $location.port());  
-            $scope.printers = data;
-
-            // alert(data.length);
-        });
-}
-
-
 app.controller('PrinterCtrl', function($scope, $mdSidenav, $compile, SharedService, $http, $location) {
   console.log('inside printer controller');
   // alert('inside the printer controller')
@@ -130,7 +111,7 @@ app.controller('PrinterCtrl', function($scope, $mdSidenav, $compile, SharedServi
   //_.extend($scope, SharedService);
   refreshPrinters($scope, $http, SharedService, $location);
 
-  $scope.imagePath = SharedService.currentSlice;
+  $scope.imagePath = 'views/printer/testImage.PNG';
   $scope.altImagePath = 'views/printer/blank.png';
   $scope.progress = SharedService.progress;
   $scope.cost = '$2.23';
@@ -350,29 +331,145 @@ app.directive('jobprogress', function($rootScope) {
 
 });
 
-
 function refreshFiles($scope, $http, SharedService, $location) {
     var baseservice = "services";
     var machineservice = "files";
     var method = "list";
     var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method;
-    // alert(fullurl);
     $http.get(fullurl).
         success(function(data) {
-            // alert(JSON.stringify);
-            // alert(data);
-            // alert($location.path());
-            // alert($location.protocol()+ "://" + $location.host() +":"+ $location.port());  
             $scope.files = data;
+        });
+}
+
+function refreshJobStatus($scope, $http, SharedService, $location){
+
+    var baseservice = "services";
+    var machineservice = "files";
+    var method = "list";
+    var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method;
+
+    $http.get(fullurl).
+        success(function(data) {
+            $scope.files = data;
+      });
+}
+
+function getPrinterByName($scope, $http, SharedService, $location, printername) {
+    var baseservice = "services";
+    var machineservice = "printers";
+    var method = "get";
+
+    var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method +"/"+ encodeURIComponent(printername);
+    console.log(fullurl);
+    $http.get(fullurl).
+        success(function(data) {
+            $scope.printer = data;
+        });
+}
+
+function refreshPrinters($scope, $http, SharedService, $location) {
+    var baseservice = "services";
+    var machineservice = "printers";
+    var method = "list";
+    var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method;
+    $http.get(fullurl).
+        success(function(data) {
+            $scope.printers = data;
+            $scope.printername = data[0].configuration.name;
+            $scope.displays.push(printer.configuration.MonitorDriverConfig.OSMonitorID);
+            return "ok";
+        });
+
+}
+
+function refreshPrintersConfig($scope, $http, SharedService, $location) {
+    var baseservice = "services";
+    var machineservice = "printers";
+    var method = "list";
+    var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method;
+    $http.get(fullurl).
+        success(function(data) {
+            $scope.printers = data;
+            $scope.printername = data[0].configuration.name;
+            $scope.displays.push(printer.configuration.MonitorDriverConfig.OSMonitorID);
+            refreshDisplays($scope, $http, SharedService, $location);
+            refreshSerialPorts($scope, $http, SharedService, $location);
+        });
+
+}
+
+function refreshDisplays($scope, $http, SharedService, $location) {
+    var baseservice = "services";
+    var machineservice = "machine";
+    var method = "graphicsDisplays/list";
+    var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method;
+
+    $http({
+      method: 'GET',
+      url: fullurl
+        }).then(
+        function successCallback(response) {
+          // this callback will be called asynchronously
+          // when the response is available
+          // alert("refresh displays success");
+          $scope.displays = data;
+          $scope.displays.push(printer.configuration.MonitorDriverConfig.OSMonitorID);
+        }, 
+        function errorCallback(response) {
+          // called asynchronously if an error occurs
+          // or server returns response with an error status.
+          alert("refresh displays error");
+          $scope.displays = printer.configuration.MonitorDriverConfig.OSMonitorID;
+        });
+}
+
+function refreshSerialPorts($scope, $http, SharedService, $location) {
+    var baseservice = "services";
+    var machineservice = "machine";
+    var method = "serialPorts/list";
+    var fullurl = $location.protocol()+ "://" + $location.host() +":"+ $location.port() + "/" + baseservice + "/" + machineservice + "/" + method;
+
+    $http({
+      method: 'GET',
+      url: fullurl
+        }).then(
+        function successCallback(response) {
+          // this callback will be called asynchronously
+          // when the response is available
+          alert("refresh serialports success");
+          $scope.serialPorts = data;
+        }, 
+        function errorCallback(response) {
+          // called asynchronously if an error occurs
+          // or server returns response with an error status.
+          // alert("refresh serialports error");
+          $scope.serialPorts = [];
+          alert(JSON.stringify(printer));
+          $scope.serialPorts.push(printer.configuration.machineConfig.MotorsDriverConfig.ComPortSettings.PortName);
+          // $scope.serialPorts = printer.configuration.machineConfig.MotorsDriverConfig.ComPortSettings.PortName;
         });
 }
 
 app.controller('JobsCtrl', function($scope, $mdSidenav, $compile, Upload, $http, SharedService, $location) {
   console.log('inside jobs controller');
+
+$scope.printername = '';
+
+  $scope.$watch('printername', function(v){
+  // $scope.id = v;
+
+    if($scope.printername){
+
+      getPrinterByName($scope,$http,SharedService,$location,$scope.printername);
+    // alert('printername changed' + $scope.printername);
+    }
+  });
+
   // $mdSidenav('left').close()
   refreshFiles($scope, $http, SharedService, $location);
   refreshPrinters($scope, $http, SharedService, $location);
-   $scope.selectedprinter = null;
+   // $scope.selectedprinter = '';
   // upload on file select or drop
     $scope.upload = function (file) {
         Upload.upload({
@@ -387,6 +484,7 @@ app.controller('JobsCtrl', function($scope, $mdSidenav, $compile, Upload, $http,
             console.log('progress: ' + progressPercentage + '% ' + evt.config.data.file.name);
         });
     };
+
 
 
 
@@ -418,15 +516,62 @@ app.controller('ControlsCtrl', function($scope, $mdSidenav, $compile) {
   
   
 });
-app.controller('SettingsCtrl', function($scope, $mdSidenav, $compile) {
+app.controller('SettingsCtrl', function($scope, $mdSidenav, $compile, Upload, $http, SharedService, $location) {
   console.log('inside settings controller');
-  $scope.printers = [{
-    name: "Little SLA"
-  }, {
-    name: "LittleRP"
-  }, {
-    name: "Sedgwick"
-  }];
-  $scope.selectedprinter = "hello";
-  // $mdSidenav('left').close()
+
+  $scope.printername = '';
+  $scope.baudrates = [
+                      "2400",
+                      "4800",
+                      "9600",
+                      "14400",
+                      "19200",
+                      "28800",
+                      "38400",
+                      "56000",
+                      "57600",
+                      "115200"
+                              ];
+
+  $scope.$watch('printername', function(v){
+    if($scope.printername){
+      getPrinterByName($scope,$http,SharedService,$location,$scope.printername);
+    }
+  });
+
+  refreshPrintersConfig($scope, $http, SharedService, $location);
+
 });
+    // .then(function(){alert("hello1")})
+      // refreshDisplays($scope, $http, SharedService, $location)
+    // .then(function(){alert("hello2")}
+      // refreshSerialPorts($scope, $http, SharedService, $location)
+    // );
+   // alert('stop stop combat stop');
+   // refreshDisplays($scope, $http, SharedService, $location);
+   // refreshSerialPorts($scope, $http, SharedService, $location);
+
+   
+
+  // $mdSidenav('left').close()
+
+
+
+
+/*
+old stuff
+// $http.get(fullurl).
+    //     success(function(data) {
+    //         // alert(JSON.stringify);
+    //         // alert(data);
+    //         // alert($location.path());
+    //         // alert($location.protocol()+ "://" + $location.host() +":"+ $location.port());  
+    //         $scope.displays = data;
+    //         $scope.displays.push(printer.configuration.MonitorDriverConfig.OSMonitorID);
+    //         // alert($scope.displays);
+    //         // $scope.displayname = data[0].configuration.name;
+    //         // alert(data[0].configuration.name);
+
+    //         // alert(data.length);
+    //     });
+*/
