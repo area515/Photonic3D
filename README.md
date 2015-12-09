@@ -3,8 +3,10 @@ Creation-Workshop-Host
 
 What does CWH look like?
 -------------------------------------------------------------------------------  
-Old Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwh.png).  
-The New Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwhNew.png).
+Old Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/images/cwh.png).  
+The New Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/images/cwhNew.png).  
+Another GUI looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/images/anotherGui.png).  
+And yet another GUI is in the works if you don't like the above three.  
 
 Where are the instructions for installing on the Raspberry Pi?  
 -------------------------------------------------------------------------------  
@@ -78,18 +80,18 @@ sudo ./start.sh WesGilster
 Do you want to install under Windows?
 ------------------------------------------
 * Download the latest version from: 
-* https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwh-X.XX.zip
+* [https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwh-X.XX.zip](https://github.com/area515/Creation-Workshop-Host/blob/master/host/)  
  or
-* https://github.com/WesGilster/Creation-Workshop-Host/blob/master/host/cwh-X.XX.zip
+* [https://github.com/WesGilster/Creation-Workshop-Host/blob/master/host/cwh-X.XX.zip](https://github.com/area515/Creation-Workshop-Host/blob/master/host/)  
 * Unzip the zip file into the directory of your choice.
 * Double click on start.bat.
 
 Do you want to use your web browser to automatically navigate to the running printer host without knowing anything about how your network is setup?
 ----------------------------------------------------------------------
 * Download the latest version from:
-https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwhClient-X.XX.zip
+* [https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwhClient-X.XX.zip](https://github.com/area515/Creation-Workshop-Host/blob/master/host/)  
  or
-https://github.com/WesGilster/Creation-Workshop-Host/blob/master/host/cwhClient-X.XX.zip
+* [https://github.com/WesGilster/Creation-Workshop-Host/blob/master/host/cwhClient-X.XX.zip](https://github.com/area515/Creation-Workshop-Host/blob/master/host/)  
 * Unzip the zip file into the directory of your choice.
 * If you are in Linux run this:
 ````````
