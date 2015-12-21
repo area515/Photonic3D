@@ -1,0 +1,14 @@
+<div class="panel panel-default bootcards-media" ng-show="printJobsController.currentPrintJob">
+	<div class="panel-heading">
+		<i class="fa fa-2x fa-file-image-o pull-left"></i>
+		<h3 class="panel-title">Current Slice: {{printJobsController.currentPrintJob.jobName}}</h3>
+	</div>
+	<div class="panel-body">
+	   <span>Slice time (ms): {{printJobsController.currentPrintJob.currentSliceTime}}</span>
+	   <span class="pull-right">Slice cost: {{printJobsController.currentPrintJob.currentSliceCost}}</span>
+	</div>
+	<img ng-src="{{printJobsController.currentSliceImage}}" class="img-responsive"/>
+	<div class="panel-footer">
+		<span ng-include="'cardFooter.html'"></span>
+	</div>
+</div>

@@ -86,12 +86,27 @@ public class Printer {
 	@XmlTransient
 	@JsonProperty
 	public boolean isPrintInProgress() {
-		return status == JobStatus.Paused || status == JobStatus.Printing || this.status == JobStatus.PausedOutOfPrintMaterial;
+		return status != null && status.isPrintInProgress();
 	}
-	public void setPrintInProgress(boolean progress) {
-		//Ignore anyone trying to set this property, this is for json only!!
+	@JsonIgnore
+	public void setPrintInProgress(boolean printInProgress) {
 	}
 	
+	@XmlTransient
+	@JsonProperty
+	public boolean isPrintPaused() {
+		return status != null && getStatus().isPaused();
+	}
+	@JsonIgnore
+	public void setPrintPaused(boolean printInProgress) {
+	}
+	
+	@XmlTransient
+	@JsonIgnore
+	public boolean isPrintActive() {
+		return status != null && status.isPrintActive();
+	}
+
 	@XmlTransient
 	@JsonProperty
 	public boolean isStarted() {
@@ -101,14 +116,17 @@ public class Printer {
 		this.started = started;
 	}
 	
+	@XmlTransient
+	@JsonProperty
 	public JobStatus getStatus() {
 		return status;
 	}
 	
+	@JsonIgnore
 	public void setStatus(JobStatus status) {
 		statusLock.lock();
 		try {
-			if (this.status == JobStatus.Paused || this.status == JobStatus.PausedOutOfPrintMaterial) {
+			if (this.status != null && this.status.isPaused()) {
 				jobContinued.signalAll();
 			}
 			
@@ -122,16 +140,16 @@ public class Printer {
 		statusLock.lock();
 		try {
 			//Very important that this check is performed
-			if (this.status != JobStatus.Paused && this.status != JobStatus.PausedOutOfPrintMaterial) {
-				return isPrintInProgress();
+			if (this.status != null && !this.status.isPaused()) {
+				return isPrintActive();
 			}
 			System.out.println("Print has been paused.");
 			jobContinued.await();
 			System.out.println("Print has resumed.");
-			return isPrintInProgress();
+			return isPrintActive();
 		} catch (InterruptedException e) {
 			e.printStackTrace();//Normal if os is shutting us down
-			return isPrintInProgress();
+			return isPrintActive();
 		} finally {
 			statusLock.unlock();
 		}
@@ -140,7 +158,7 @@ public class Printer {
 	public JobStatus togglePause() {
 		statusLock.lock();
 		try {
-			if (this.status == JobStatus.Paused || this.status == JobStatus.PausedOutOfPrintMaterial) {
+			if (this.status != null && this.status.isPaused()) {
 				setStatus(JobStatus.Printing);
 				return this.status;
 			}

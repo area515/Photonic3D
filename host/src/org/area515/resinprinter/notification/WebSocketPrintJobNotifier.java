@@ -110,8 +110,9 @@ public class WebSocketPrintJobNotifier implements Notifier {
 		
 		for (Session currentSession : sessionsBySessionId.values()) {
 			try {
+				//This just mocks up a printJob it's not a real print job, it's just something we can notify our clients with.
 				PrintJob job = new PrintJob(fileUploaded);
-				job.setFutureJobStatus(new StaticJobStatusFuture(JobStatus.Ready));
+				job.initializePrintJob(new StaticJobStatusFuture(JobStatus.Ready));
 				currentSession.getAsyncRemote().sendObject(new PrintJobEvent(job, NotificationEvent.FileUploadComplete));
 			} catch (Exception e) {
 				e.printStackTrace();

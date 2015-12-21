@@ -3,15 +3,25 @@
 	cwhApp.controller("PrintersController", ['$scope', '$http', '$location', '$anchorScroll', function ($scope, $http, $location, $anchorScroll) {
 		controller = this;
 		
+		function refreshSelectedPrinter(printerList) {
+        	var foundPrinter = false;
+        	
+        	for (printer of printerList) {
+        		if (controller.currentPrinter != null && printer.name === controller.currentPrinter.name) {
+        			controller.currentPrinter = printer;
+        			foundPrinter = true;
+        		}
+        	}
+        	
+        	if (!foundPrinter) {
+        		controller.currentPrinter = null;
+        	}
+        }
 		function refreshPrinters() {
 	        $http.get('/services/printers/list').success(function(data) {
-            	$scope.printers = data;
-            	if (data != null && data.length > 0) {
-            		controller.currentPrinter = data[0];
-            	} else {
-            		controller.currentPrinter = null;
-            	}
-            });
+	        	$scope.printers = data;
+	        	refreshSelectedPrinter(data);
+	        });
 	    }
 		
 		this.executeActionAndRefreshPrinters = function executeActionAndRefreshPrinters(command, message, service, targetPrinter, postTargetPrinter) {

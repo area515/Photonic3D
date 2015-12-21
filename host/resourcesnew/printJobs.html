@@ -1,0 +1,75 @@
+		<div class="row">
+			<div class="col-sm-5 bootcards-list" id="list">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<i class="fa fa-2x fa-database pull-left"></i>
+						<h3 class="panel-title pull-left">Print Jobs</h3>
+						<div class="row">
+							<div class="btn-group pull-right" >
+								<a class="btn btn-danger" ng-show="printJobsController.currentPrintJob != null && !printJobsController.currentPrintJob.printInProgress" ng-click="printJobsController.deletePrintJob()">
+									<i class="fa fa-trash-o"></i> 
+									<span>Remove</span>
+								</a>
+								<a class="btn btn-warning" ng-show="printJobsController.currentPrintJob != null && printJobsController.currentPrintJob.printInProgress && !printJobsController.currentPrintJob.printPaused" ng-click="printJobsController.togglePausePrintJob()">
+									<i class="fa fa-pause"></i> 
+									<span>Pause</span>
+								</a>
+								<a class="btn btn-success" ng-show="printJobsController.currentPrintJob.printInProgress && printJobsController.currentPrintJob.printPaused" ng-click="printJobsController.togglePausePrintJob()">
+									<i class="fa fa-play"></i> 
+									<span>Continue</span>
+								</a>
+								<a class="btn btn-danger" ng-show="printJobsController.currentPrintJob.printInProgress" ng-click="printJobsController.stopPrintJob()">
+									<i class="fa fa-stop"></i> 
+									<span>Stop</span>
+								</a>
+						    </div>
+						</div>
+					</div>
+					<div class="list-group">
+						<a ng-class="{active:printJob.id == printJobsController.currentPrintJob.id}" ng-repeat="printJob in printJobsController.printJobs"
+							class="list-group-item"
+				 			ng-click="printJobsController.changeCurrentPrintJob(printJob)">
+					 			<span class="pull-left fa-stack fa-lg">
+									<i class="fa fa-stack-1x fa-lg" ng-class="printJobsController.getPrintJobIconClass(printJob)"></i>
+			  						<i class="fa fa-stack-1x fa-lg fa-play text-danger" ng-show="printJob.printInProgress && !printJob.printPaused"></i>
+									<i class="fa fa-stack-1x fa-lg fa-pause text-danger" ng-show="printJob.printPaused"></i>
+								</span>								
+								<h4 class="list-group-item-heading">{{printJob.jobName}}</h4>
+								<p class="list-group-item-text">
+									Started: {{printJob.startTime | date:'yyyy-MM-dd HH:mm:ss'}}  
+								</p>
+								<p class="list-group-item-text">
+									<span class="pull-left">Status: {{printJob.status}} {{printJob.errorDescription}}</span>
+									<span class="pull-right">{{printJob.printFileProcessor.friendlyName}}</span>
+								</p>
+						</a>
+					</div>
+					<div class="panel-footer">
+						<span ng-include="'cardFooter.html'"></span>
+					</div>
+				</div>
+			</div>
+		
+			<div class="col-sm-7 bootcards-cards">
+				<div id="printJobSliceCard">
+					<span ng-include="'printJobSlice.html'"></span>
+				</div>
+			</div>
+			<div class="col-sm-7 bootcards-cards">
+				<div id="printJobBuildPhotoCard">
+					<span ng-include="'printJobBuildPhoto.html'"></span>
+				</div>
+			</div>
+			<div class="col-sm-7 bootcards-cards">
+				<div id="printJobBuildPhotoCard">
+					<span ng-include="'printJobBuildVideo.html'"></span>
+				</div>
+			</div>
+		</div>
+	<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="editModal" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<span ng-include="'upload.html'"></span>
+			</div>
+		</div>
+	</div>

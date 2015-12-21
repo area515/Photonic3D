@@ -1,0 +1,59 @@
+		<div class="row">
+			<div class="col-sm-5 bootcards-list" id="list">
+				<div class="panel panel-default">
+						<div class="panel-heading">
+							<i class="fa fa-2x fa-files-o pull-left"></i>
+							<h3 class="panel-title pull-left">Printable Files</h3>
+							<div class="row">
+								<div class="btn-group pull-right" >
+									<a class="btn btn-success" ng-show="printablesController.currentPrintable != null" ng-click="printablesController.printPrintable()" >
+										<i class="fa fa-print"></i>
+										<span>Print</span>
+									</a>
+									<a class="btn btn-danger" ng-show="printablesController.currentPrintable != null" ng-click="printablesController.deletePrintable()">
+										<i class="fa fa-trash-o"></i> 
+										<span>Remove</span>
+									</a>
+									<a class="btn btn-primary" ng-click="printablesController.showUpload()">
+										<i class="fa fa-upload"></i> 
+										<span>Upload</span>
+									</a>
+							    </div>
+						</div>
+					</div>
+					<div class="list-group">
+						<a ng-class="{active:printable.name == printablesController.currentPrintable.name}" ng-repeat="printable in printablesController.printables"
+							class="list-group-item"
+				 			ng-click="printablesController.changeCurrentPrintable(printable)">
+								<i class="pull-left fa fa-2x" ng-class="printablesController.getPrintableIconClass(printable)"></i>
+								<h4 class="list-group-item-heading">{{printable.name}}</h4>
+								<p class="list-group-item-text">
+									Size: {{printable.size}}  
+								</p>
+								<p class="list-group-item-text">
+									<span class="pull-left">Date: {{printable.modifiedDate}}</span>
+									<span class="pull-right">{{printable.printFileProcessor.friendlyName}}</span>
+								</p>
+						</a>
+					</div>
+					<div class="panel-footer">
+						<span ng-include="'cardFooter.html'"></span>
+					</div>			
+				</div>
+			</div>
+		
+			<div class="col-sm-7 bootcards-cards">
+
+				<div id="printableCard">
+					<span ng-include="'printable.html'"></span>
+				</div>
+
+			</div>
+		</div>
+	<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="editModal" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<span ng-include="'upload.html'"></span>
+			</div>
+		</div>
+	</div>

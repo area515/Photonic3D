@@ -173,7 +173,7 @@ public class PrintFileProcessingAid {
 	}
 	
 	public JobStatus performFooter() throws InappropriateDeviceException {
-		if (!data.printer.isPrintInProgress()) {
+		if (!data.printer.isPrintActive()) {
 			return data.printer.getStatus();
 		}
 		

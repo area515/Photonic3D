@@ -4,7 +4,6 @@ import java.util.concurrent.Callable;
 
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.server.HostProperties;
 
 public class PrintJobProcessingThread implements Callable<JobStatus> {
@@ -30,9 +29,14 @@ public class PrintJobProcessingThread implements Callable<JobStatus> {
 	public JobStatus call() throws Exception {
 		System.out.println("Starting:" + printJob + " on Printer:" + printer + " executing on Thread:" + Thread.currentThread().getName());
 		printer.setStatus(JobStatus.Printing);
-		NotificationManager.jobChanged(printer, printJob);
-		
 		printJob.setStartTime(System.currentTimeMillis());
-		return processor.processFile(printJob);
+		NotificationManager.jobChanged(printer, printJob);
+		processor.prepareEnvironment(printJob.getJobFile(), printJob);
+		JobStatus status = processor.processFile(printJob);
+		if (status == JobStatus.Cancelling) {
+			status = JobStatus.Cancelled;
+		}
+		printer.setStatus(status);
+		return status;
 	}
 }

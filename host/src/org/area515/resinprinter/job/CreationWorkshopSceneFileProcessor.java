@@ -25,7 +25,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.server.HostProperties;
 
 public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
@@ -33,7 +32,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 	
 	@Override
 	public String[] getFileExtensions() {
-		return new String[]{"zip", "cws"};
+		return new String[]{"cws", "zip"};
 	}
 
 	@Override
@@ -54,13 +53,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 	
 	@Override
 	public JobStatus processFile(final PrintJob printJob) throws Exception {
-		File gCodeFile = null;
-		try {
-			gCodeFile = findGcodeFile(printJob.getJobFile());
-		} catch (JobManagerException e) {
-			e.printStackTrace();
-			return JobStatus.Failed;
-		}
+		File gCodeFile = findGcodeFile(printJob.getJobFile());
 		
 		Printer printer = printJob.getPrinter();
 		BufferedReader stream = null;
@@ -83,7 +76,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 			//data.printJob.setZLiftDistance(data.slicingProfile.getLiftFeedRate());
 			//data.printJob.setZLiftSpeed(data.slicingProfile.getLiftDistance());
 
-			while ((currentLine = stream.readLine()) != null && printer.isPrintInProgress()) {
+			while ((currentLine = stream.readLine()) != null && printer.isPrintActive()) {
 					Matcher matcher = slicePattern.matcher(currentLine);
 					if (matcher.matches()) {
 						if (sliceCount == null) {
@@ -196,7 +189,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 					System.out.println("Ignored line:" + currentLine);
 			}
 			
-			return printer.getStatus();
+			return printer.isPrintActive()?JobStatus.Completed:printer.getStatus();
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw e;
@@ -209,7 +202,10 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 			}
 			
 			if (currentlyDisplayedImage != null) {
-				currentlyDisplayedImage.get(printJob).flush();
+				BufferedImage image = currentlyDisplayedImage.get(printJob);
+				if (image != null) {
+					currentlyDisplayedImage.get(printJob).flush();
+				}
 			}
 		}
 	}
@@ -221,11 +217,11 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 	@Override
 	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException {
 		List<PrintJob> printJobs = PrintJobManager.Instance().getJobsByFilename(processingFile.getName());
-		
-		if (printJobs.size() > 1) {
-			throw new JobManagerException("It currently isn't possible to print more than 1 " + getFriendlyName() + " file at once.");
+		for (PrintJob currentJob : printJobs) {
+			if (!currentJob.getId().equals(printJob.getId())) {
+				throw new JobManagerException("It currently isn't possible to print more than 1 " + getFriendlyName() + " file at once.");
+			}
 		}
-		
 		File extractDirectory = buildExtractionDirectory(processingFile.getName());
 		
 		if (extractDirectory.exists()) {
@@ -321,7 +317,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 			}
 		}
 		
-		throw new FileNotFoundException(currentFile + "");
+		throw new FileNotFoundException("Couldn't find any files to determine image index pad.");
 	}
 
 	@Override

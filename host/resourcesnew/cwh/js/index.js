@@ -1,5 +1,5 @@
 (function() {
-		var cwhApp = angular.module('cwhApp', ['ngRoute']);
+		var cwhApp = angular.module('cwhApp', ['ngRoute', 'cwh.spinner', 'cwh.webSocket', 'ngFileUpload']);
 		cwhApp.config(['$routeProvider', '$locationProvider',
     	  function($routeProvider, $locationProvider) {
     	    $routeProvider.when('/dashboardPage', {
@@ -16,6 +16,16 @@
     	        templateUrl: '/printerControls.html',
     	        controller: 'PrinterControlsController',
     	        controllerAs: 'printerControlsController'
+    	    })
+    	    $routeProvider.when('/printablesPage', {
+    	        templateUrl: '/printables.html',
+    	        controller: 'PrintablesController',
+    	        controllerAs: 'printablesController'
+    	    })
+    	    $routeProvider.when('/printJobsPage', {
+    	        templateUrl: '/printJobs.html',
+    	        controller: 'PrintJobsController',
+    	        controllerAs: 'printJobsController'
     	    })
     	    $routeProvider.when('/settingsPage', {
     	        templateUrl: '/settings.html',
