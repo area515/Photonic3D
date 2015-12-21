@@ -1,0 +1,25 @@
+<div class="panel panel-default bootcards-media" ng-show="printJobsController.currentPrintJob.printInProgress">
+	<div class="panel-heading clearfix">
+			<i class="fa fa-2x fa-video-camera pull-left"></i>
+			<h3 class="panel-title pull-left">Build Video: {{printJobsController.currentPrintJob.jobName}}</h3>
+			<div class="btn-group pull-right" >
+				<a class="btn btn-success" ng-show="printJobsController.currentPrintJob.printInProgress" ng-click="printJobsController.videoRecord('start', 100, 100, 'camera1')">
+					<i class="fa fa-play"></i> 
+					<span>Start Recording</span>
+				</a>
+				<a class="btn btn-danger" ng-show="printJobsController.currentPrintJob.printInProgress" ng-click="printJobsController.videoRecord('stop', 'camera1')">
+					<i class="fa fa-stop"></i> 
+					<span>Stop Recording</span>
+				</a>
+			</div>
+	</div>
+	<div class="panel-body"><!--  width="275" height="206" -->
+		<video class="vcenter" class="img-responsive" controls>
+			<source src="video/camera.mp4" ng-src="{{printJobsController.currentBuildPhoto}}" class="img-responsive" type="video/mp4">
+			Your browser does not support the video tag.
+		</video>
+	</div>
+	<div class="panel-footer">
+		<span ng-include="'cardFooter.html'"></span>
+	</div>
+</div>

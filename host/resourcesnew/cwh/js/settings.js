@@ -1,81 +1,39 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("SettingsController", ['$scope', '$http', '$location', '$routeParams', '$interval', function ($scope, $http, $location, $routeParams, $interval) {
+	cwhApp.controller("SettingsController", ['$scope', '$http', '$location', '$routeParams', '$interval', 'cwhWebSocket', function ($scope, $http, $location, $routeParams, $interval, cwhWebSocket) {
 		controller = this;
 		var timeoutValue = 500;
 		var maxUnmatchedPings = 3;//Maximum number of pings before we assume that we lost our connection
 		var unmatchedPing = -1;    //Number of pings left until we lose our connection
 		var thankYouMessage = " Thank you for unplugging the network cable. This configuration process could take a few minutes to complete. You can close your browser now and use the CWH Client to find your printer.";
 		this.loadingNetworksMessage = "--- Loading wifi networks from server ---"
-			
-		//TODO: Websocket code needs to be an angular plugin to deal with(two way binding, socket destruction on scope loss and automatic content-type parsing)
-		function createWebSocketURL(relativeURL) {
-			  var loc = window.location;
-			  var schema;
-			  if (loc.protocol === "https:") {
-				  schema = "wss:";
-			  } else {
-				  schema = "ws:";
-			  }
-			  
-			  return schema + "//" + loc.host + "/services/" + relativeURL;
-		}
 		
 		function attachToHost() {
-		  	if ("WebSocket" in window) {
-				var ws = new WebSocket(createWebSocketURL("hostNotification"));
-				var lostScope = "Lost Scope";
-
-				//This needs to be closed when we leave the page
-			 	$scope.$on('$destroy', function() {
-			        ws.close(1000, lostScope);
-			    });
-			 	
-				//ws.onopen = function() {};//Do nothing on open...
-				var wsOnMessage = function(event) {
-					var hostEvent = JSON.parse(event.data);
-					
-					$scope.$apply(function () {
-						controller.restartMessage = " " + hostEvent.message;
-					});
-					
-					if (hostEvent.notificationEvent == "Ping") {
-						var unmatchedPingCheck = function() {
-							ws.send(event.data);
-							
-							if (unmatchedPing === 0) {
-								controller.restartMessage = thankYouMessage;
-								unmatchedPing = -1;//Start over from scratch if we get another ping!!!
-							} else {
-								unmatchedPing--;
-								$interval(unmatchedPingCheck, timeoutValue, 1);
-							}
-						}
+			controller.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(function(data) {
+				controller.restartMessage = " " + data.message;	
+				if (hostEvent.notificationEvent == "Ping") {
+					var unmatchedPingCheck = function() {
+						controller.hostSocket.sendMessage(data);
 						
-						if (unmatchedPing === -1) {
+						if (unmatchedPing === 0) {
+							controller.restartMessage = thankYouMessage;
+							unmatchedPing = -1;//Start over from scratch if we get another ping!!!
+						} else {
+							unmatchedPing--;
 							$interval(unmatchedPingCheck, timeoutValue, 1);
 						}
-						
-						unmatchedPing = maxUnmatchedPings;
 					}
-				};
-				
-				var wsOnClose = function(code) {
-					//There is only one good reason to close the websocket and that is through a scope change
-					//If there is any other reason for the close, we are going too reopen a new socket.
-					if (code.reason !== lostScope) {
-						ws = new WebSocket(createWebSocketURL("hostNotification"));
-						ws.onclose = wsOnClose;
-						ws.onmessage = wsOnMessage;
+					
+					if (unmatchedPing === -1) {
+						$interval(unmatchedPingCheck, timeoutValue, 1);
 					}
-					$scope.$apply(function () {
-						controller.restartMessage = thankYouMessage;
-					});
-				};
-				
-				ws.onclose = wsOnClose;
-				ws.onmessage = wsOnMessage;
-			} else {
+					
+					unmatchedPing = maxUnmatchedPings;
+				}
+			}).onClose(function() {
+				controller.restartMessage = thankYouMessage;
+			});
+			if (controller.hostSocket == null) {
 				$scope.$emit("MachineResponse",  {machineResponse: {command:"Browser Too Old", message:"You will need to use a modern browser to run this application."}});
 			}
 		}

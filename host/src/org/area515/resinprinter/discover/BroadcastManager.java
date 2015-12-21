@@ -21,7 +21,7 @@ public class BroadcastManager {
 			try {
 				advertiser = currentClass.newInstance();
 				advertiser.start(uri);
-			} catch (InstantiationException | IllegalAccessException e) {
+			} catch (Exception e) {
 				System.out.println("Couldn't start advertiser");
 				e.printStackTrace();
 			}

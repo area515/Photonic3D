@@ -66,6 +66,7 @@ public class HostProperties {
 	private String hostGUI;
 	private boolean fakeSerial = false;
 	private boolean fakedisplay = false;
+	private boolean removeJobOnCompletion = true;
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
 	private List<Class<Advertiser>> advertisementClasses = new ArrayList<Class<Advertiser>>();
 	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
@@ -214,6 +215,7 @@ public class HostProperties {
 		clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", "");
 		clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
 		forwardHeader = configurationProperties.getProperty("forwardHeader", null);
+		removeJobOnCompletion = new Boolean(configurationProperties.getProperty("removeJobOnCompletion", "true"));
 		
 		streamingCommand = getJSonStringArray(configurationProperties, "streamingCommand");
 		imagingCommand = getJSonStringArray(configurationProperties, "imagingCommand");
@@ -444,6 +446,10 @@ public class HostProperties {
 
 	public List<String> getVisibleCards() {
 		return visibleCards;
+	}
+	
+	public boolean isRemoveJobOnCompletion() {
+		return removeJobOnCompletion;
 	}
 	
 	public boolean isHostReady() {

@@ -243,7 +243,7 @@ public class IOUtilities {
 				return state;
 			}
 			
-			if (printer != null && !printer.isPrintInProgress()) {
+			if (printer != null && !printer.isPrintActive()) {
 				ParseState state = new ParseState();
 				state.currentLine = null;
 				state.parseLocation = parseLocation;
