@@ -9,11 +9,11 @@
 		this.loadingNetworksMessage = "--- Loading wifi networks from server ---"
 		
 		function attachToHost() {
-			controller.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(function(data) {
-				controller.restartMessage = " " + data.message;	
+			controller.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(function(hostEvent) {
+				controller.restartMessage = " " + hostEvent.message;	
 				if (hostEvent.notificationEvent == "Ping") {
 					var unmatchedPingCheck = function() {
-						controller.hostSocket.sendMessage(data);
+						controller.hostSocket.sendMessage(hostEvent);
 						
 						if (unmatchedPing === 0) {
 							controller.restartMessage = thankYouMessage;
