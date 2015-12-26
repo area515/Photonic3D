@@ -103,7 +103,7 @@
 			if (height != null) {
 				parameters += "/y/" + height;
 			}
-	        $http.get("/services/media/" + action + "videorecord/" + parameters).success(
+	        $http.get("/services/media/" + action + "recordvideo/" + parameters).success(
 	        		function (data) {
 	        			if (data.response) {
 		        			controller.refreshPrintJobs();
