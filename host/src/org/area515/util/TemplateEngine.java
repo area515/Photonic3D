@@ -1,21 +1,11 @@
 package org.area515.util;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
@@ -96,7 +86,8 @@ public class TemplateEngine {
 		root.put("ZDir", job.getPrinter().getConfiguration().getSlicingProfile().getDirection().getVector());
 		root.put("ZLiftRate", job.getZLiftSpeed());
 		root.put("ZLiftDist", job.getZLiftDistance());
-		root.put("buildAreaMM", job.getPrintFileProcessor().getBuildAreaMM(job));
+		Double buildArea = job.getPrintFileProcessor().getBuildAreaMM(job);
+		root.put("buildAreaMM", buildArea == null || buildArea < 0?null:buildArea);
 		root.put("LayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
 		root.put("FirstLayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
 		root.put("NumFirstLayers", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
@@ -111,22 +102,31 @@ public class TemplateEngine {
         	templateLoader.putTemplate(templateString, templateString);
         }
         Template template = config.getTemplate(templateString);
-
-        /* Merge data-model with template */
-        Writer out = new StringWriter();
-        template.process(root, out);
+        template.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         
-        return out.toString();
+        try {
+	        Writer out = new StringWriter();
+	        template.process(root, out);
+	        return out.toString();
+        } catch (TemplateException e) {
+        	//This means that buildAreaMM isn't supported for this printer
+        	if (e.getBlamedExpressionString().equals("buildAreaMM") && e.getMessage().contains("The following has evaluated to null or missing")) {
+        		return null;
+        	}
+
+        	throw e;
+        }
 	}
 	
-	public static Object runScript(PrintJob job, ScriptEngine engine, String script) throws ScriptException {
+	public static Object runScript(PrintJob job, ScriptEngine engine, String script, String scriptName) throws ScriptException {
 		engine.put("now", new Date());
 		engine.put("$CURSLICE", job.getCurrentSlice());
 		engine.put("$LayerThickness", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
 		engine.put("$ZDir", job.getPrinter().getConfiguration().getSlicingProfile().getDirection().getVector());
 		engine.put("$ZLiftRate", job.getZLiftSpeed());
 		engine.put("$ZLiftDist", job.getZLiftDistance());
-		engine.put("$buildAreaMM", job.getPrintFileProcessor().getBuildAreaMM(job));
+		Double buildArea = job.getPrintFileProcessor().getBuildAreaMM(job);
+		engine.put("$buildAreaMM", buildArea == null || buildArea < 0?Double.NaN:buildArea);
 		engine.put("$LayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
 		engine.put("$FirstLayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
 		engine.put("$NumFirstLayers", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
@@ -134,6 +134,8 @@ public class TemplateEngine {
 		engine.put("$buildPlatformYPixels", job.getPrinter().getConfiguration().getSlicingProfile().getyResolution());
 		engine.put("job", job);
 		engine.put("printer", job.getPrinter());
+		engine.put(ScriptEngine.FILENAME, scriptName);
+		
 		return engine.eval(script);
 	}
 }

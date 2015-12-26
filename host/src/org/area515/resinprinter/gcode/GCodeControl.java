@@ -143,12 +143,13 @@ public abstract class GCodeControl {
 			
 			for (String gcode : gcodes.split("[\r]?\n")) {
 				gcode = TemplateEngine.buildData(printJob, printer, gcode);
-				Matcher matcher = gCodePattern.matcher(gcode);
-				if (matcher.matches()) {
-					sendGcode(matcher.group(1));
+				if (gcode != null) {
+					Matcher matcher = gCodePattern.matcher(gcode);
+					if (matcher.matches()) {
+						sendGcode(matcher.group(1));
+					}
 				}
 			}
-			
 		} catch (IOException | TemplateException e) {
 			throw new InappropriateDeviceException(MachineConfig.NOT_CAPABLE, e);
 		}

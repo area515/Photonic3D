@@ -347,7 +347,9 @@ public class GenericHoughDetection<S> {
     	BufferedImage image = new BufferedImage(houghSpaceSize[0], houghSpaceSize[1], BufferedImage.TYPE_BYTE_GRAY);
     	WritableRaster d = image.getRaster();
     	double highestMax = 0;
-    	int sumarizedHoughValues[][] = new int[houghSpaceSize[1]][houghSpaceSize[0]];
+    	
+    	//Line based detection requires this to be: new int[houghSpaceSize[0]][houghSpaceSize[1]]
+    	int sumarizedHoughValues[][] = new int[houghSpaceSize[0]][houghSpaceSize[1]];
     	for (int y = 0; y < houghSpaceSize[1]; y++) {
     		for (int x = 0; x < houghSpaceSize[0]; x++) {
     			for (int scale = scaleMin; scale <= scaleMax; scale += scaleInc) {

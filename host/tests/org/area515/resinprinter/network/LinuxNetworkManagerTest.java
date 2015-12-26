@@ -18,12 +18,13 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 public class LinuxNetworkManagerTest {
-	public static String SCAN_WIFI_DATA = "wpa_cli v1.0\nCopyright (c) 2004-2012, Jouni Malinen <j@w1.fi> and contributors\n\nThis program is free software. You can distribute it and/or modify it\nunder the terms of the GNU General Public License version 2.\n\nAlternatively, this software may be distributed under the terms of the\nBSD license. See README and COPYING for more details.\n\n\n\n\nInteractive mode\n\n>OK\n>\r<3>CTRL-EVENT-SCAN-RESULTS \n>bssid / frequency / signal level / flags / ssid\n03:15:2a:0c:93:15       2437    69      [WEP][ESS]      SomeNetwork\n11:51:a6:71:51:55       2412    92      [WPA-PSK-TKIP+CCMP][WPA2-PSK-TKIP+CCMP][WPS][ESS]       CenturyLink9999\nac:95:17:92:60:20       2437    26      [WPA2-PSK-CCMP][WPS][ESS]       SomeHouse\n>";
+	public static String SCAN_WIFI_DATA = "wpa_cli v1.0\nCopyright (c) 2004-2012, Jouni Malinen <j@w1.fi> and contributors\n\nThis program is free software. You can distribute it and/or modify it\nunder the terms of the GNU General Public License version 2.\n\nAlternatively, this software may be distributed under the terms of the\nBSD license. See README and COPYING for more details.\n\n\n\n\nInteractive mode\n\n>OK\n>\r<3>CTRL-EVENT-SCAN-RESULTS \n>bssid / frequency / signal level / flags / ssid\n03:15:2a:0c:93:15       2437    69      [WEP][ESS]\tSomeNetwork\n11:51:a6:71:51:55       2412    92      [WPA-PSK-TKIP+CCMP][WPA2-PSK-TKIP+CCMP][WPS][ESS]\tCenturyLink9999\nac:95:17:92:60:20       2437    26      [WPA2-PSK-CCMP][WPS][ESS]\tSomeHouse\n>";
 
 	@Test
 	@PrepareForTest(IOUtilities.class)
 	public void getNetworks() throws IOException {
 		String lanName = "wlan0";
+		String pongResponse = "PONG";
 		
 		Runtime runtime = Mockito.mock(Runtime.class);
 		PowerMockito.mockStatic(Runtime.class);
@@ -31,22 +32,28 @@ public class LinuxNetworkManagerTest {
 		
 		final ByteArrayOutputStream output = new ByteArrayOutputStream();
 		final Process findNetworkInterfacesProcess = Mockito.mock(Process.class);
-		Mockito.when(findNetworkInterfacesProcess.getInputStream())
-			.thenReturn(new StringBufferInputStream(lanName));
-		Mockito.when(findNetworkInterfacesProcess.getOutputStream())
-			.thenReturn(output);
+		Mockito.when(findNetworkInterfacesProcess.getInputStream()).thenReturn(new StringBufferInputStream(lanName));
+		Mockito.when(findNetworkInterfacesProcess.getOutputStream()).thenReturn(output);
 
+		final Process performPingPong = Mockito.mock(Process.class);
+		Mockito.when(performPingPong.getInputStream()).thenReturn(new StringBufferInputStream(pongResponse));
+		Mockito.when(performPingPong.getOutputStream()).thenReturn(output);
+		
 		final Process scanForWifiProcess = Mockito.mock(Process.class);
-		Mockito.when(scanForWifiProcess.getInputStream())
-			.thenReturn(new StringBufferInputStream(SCAN_WIFI_DATA));
-		Mockito.when(scanForWifiProcess.getOutputStream())
-			.thenReturn(output);
+		Mockito.when(scanForWifiProcess.getInputStream()).thenReturn(new StringBufferInputStream(SCAN_WIFI_DATA));
+		Mockito.when(scanForWifiProcess.getOutputStream()).thenReturn(output);
 		
 		Mockito.when(runtime.exec(Mockito.any(String[].class)))
 			.then(new Answer<Process>() {
 				@Override
 				public Process answer(InvocationOnMock invocation) throws Throwable {
 					return findNetworkInterfacesProcess;
+				}
+			})
+			.then(new Answer<Process>() {
+				@Override
+				public Process answer(InvocationOnMock invocation) throws Throwable {
+					return performPingPong;
 				}
 			})
 			.then(new Answer<Process>() {

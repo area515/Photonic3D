@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.area515.resinprinter.job.PrintFileProcessingAid.DataAid;
 import org.area515.resinprinter.job.render.CurrentImageRenderer;
 import org.area515.resinprinter.job.render.RenderingFileData;
 import org.area515.resinprinter.printer.BuildDirection;
@@ -17,7 +16,7 @@ import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.ZSlicer;
 import org.area515.resinprinter.stl.Triangle3d;
 
-public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
+public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>> {
 	private Map<PrintJob, RenderingFileData> dataByPrintJob = new HashMap<PrintJob, RenderingFileData>();
 
 	@Override
@@ -31,13 +30,16 @@ public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 	}
 	
 	@Override
-	public double getBuildAreaMM(PrintJob printJob) {
+	public Double getBuildAreaMM(PrintJob printJob) {
 		RenderingFileData data = dataByPrintJob.get(printJob);
+		if (data == null) {
+			return null;
+		}
+		
 		SlicingProfile slicingProfile = printJob.getPrinter().getConfiguration().getSlicingProfile();
 		return data.getCurrentArea() / (slicingProfile.getDotsPermmX() * slicingProfile.getDotsPermmY());
 	}
 	
-	//TODO: Why does the image on the web show a scan line defect with the north side gray and the south side white?
 	@Override
 	public BufferedImage getCurrentImage(PrintJob printJob) {
 		RenderingFileData data = dataByPrintJob.get(printJob);
@@ -60,11 +62,10 @@ public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 
 	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
-		PrintFileProcessingAid aid = new PrintFileProcessingAid();
-		DataAid dataAid = aid.performHeader(printJob);
-		
-		RenderingFileData stlData = new RenderingFileData(aid, dataAid.scriptEngine);
+		DataAid dataAid = initializeDataAid(printJob);
+		RenderingFileData stlData = new RenderingFileData(this, dataAid.scriptEngine);
 		dataByPrintJob.put(printJob, stlData);
+		
 		stlData.slicer = new ZSlicer(printJob.getJobFile(), 1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, true);
 		stlData.slicer.loadFile(new Double(dataAid.xResolution), new Double(dataAid.yResolution));
 		printJob.setTotalSlices(stlData.slicer.getZMax() - stlData.slicer.getZMin());
@@ -74,12 +75,15 @@ public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 		Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
 		Future<BufferedImage> currentImage = Main.GLOBAL_EXECUTOR.submit(new CurrentImageRenderer(stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
 		
+		//Everything needs to be setup in the dataByPrintJob before we start the header
+		performHeader();
+
 		int startPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(stlData.slicer.getZMin() + 1): (stlData.slicer.getZMax() + 1);
 		int endPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(stlData.slicer.getZMax() + 1): (stlData.slicer.getZMin() + 1);
 		for (int z = startPoint; z <= endPoint && dataAid.printer.isPrintActive(); z += dataAid.slicingProfile.getDirection().getVector()) {
 			
 			//Performs all of the duties that are common to most print files
-			JobStatus status = aid.performPreSlice(stlData.slicer.getStlErrors());
+			JobStatus status = performPreSlice(stlData.slicer.getStlErrors());
 			if (status != null) {
 				return status;
 			}
@@ -103,13 +107,13 @@ public class STLFileProcessor implements PrintFileProcessor<Set<Triangle3d>> {
 			}
 			
 			//Performs all of the duties that are common to most print files
-			status = aid.performPostSlice(this);
+			status = performPostSlice();
 			if (status != null) {
 				return status;
 			}
 		}
 		
-		return aid.performFooter();
+		return performFooter();
 	}
 
 	@Override

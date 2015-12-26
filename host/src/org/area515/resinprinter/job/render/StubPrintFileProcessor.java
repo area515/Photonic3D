@@ -38,8 +38,8 @@ public class StubPrintFileProcessor<G> implements PrintFileProcessor<G> {
 	}
 
 	@Override
-	public double getBuildAreaMM(PrintJob printJob) {
-		return 0;
+	public Double getBuildAreaMM(PrintJob printJob) {
+		return null;
 	}
 
 	@Override
