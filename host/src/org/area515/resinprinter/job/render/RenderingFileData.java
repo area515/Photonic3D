@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.script.ScriptEngine;
 
-import org.area515.resinprinter.job.PrintFileProcessingAid;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.slice.ZSlicer;
 
 public class RenderingFileData {
@@ -29,10 +29,10 @@ public class RenderingFileData {
 	private ScriptEngine scriptEngine;
 	private Map<Object, RenderingFileData.ImageData> imageSync = new HashMap<>();
 	public ZSlicer slicer;
-	private PrintFileProcessingAid aid;
+	private AbstractPrintFileProcessor<?> aid;
 	private Boolean currentImagePointer;
 	
-	public RenderingFileData(PrintFileProcessingAid aid, ScriptEngine scriptEngine) {
+	public RenderingFileData(AbstractPrintFileProcessor<?> aid, ScriptEngine scriptEngine) {
 		this.scriptEngine = scriptEngine;
 		this.aid = aid;
 		this.currentImagePointer = Boolean.TRUE;
@@ -78,7 +78,7 @@ public class RenderingFileData {
 		currentImagePointer = (Boolean)pointer;
 	}
 
-	public PrintFileProcessingAid getPrintFileProcessingAid() {
+	public AbstractPrintFileProcessor<?> getPrintFileProcessingAid() {
 		return aid;
 	}
 }

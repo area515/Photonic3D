@@ -1,0 +1,54 @@
+
+<md-card flex ng-controller="PrinterCtrl">
+
+<md-list>
+<md-list-item class="md-3-line">
+	<div class="md-list-item flex">
+    	<md-input-container class="md-block">
+        	<label>Selected Printers</label>
+            <md-select name="myModel" placeholder="Select Printer" ng-model="selectedprinter">
+            <md-option ng-repeat="printer in printers" value="{{printer.configuration.name}}">{{printer.configuration.name}}</md-option>
+            </md-select>
+            <div class="errors" ng-messages="myForm.myModel.$error" ng-if="myForm.$dirty">
+            	<div ng-message="required">Required</div>
+            </div>
+        </md-input-container>
+         
+    </div>
+            
+	</md-list-item>
+</md-list>
+
+<div style="display:block;">
+  <img ng-src="{{imagePath}}" class="md-card-image" alt="{{altImagePath}}" style="width:100%;height:100%;display:inline-block;">
+</div>
+<md-card-content class="flex-100">
+<h2 class="md-title">Paracosm</h2>
+
+<md-progress-linear md-mode="indeterminate"></md-progress-linear>
+{{value}}
+<md-list>
+<md-list-item class="md-2-line">
+<div class="md-list-item-text">
+  <h3>Progress</h3>
+  <h4>{{progress}}</h4>
+</div>
+
+
+</md-list-item>
+
+<md-list-item class="md-2-line">
+<div class="md-list-item-text">
+  <h3>Cost</h3>
+  <h4>{{cost}}</h4>
+</div>
+
+
+</md-list-item>
+
+
+</md-list>
+
+</md-card-content>
+
+</md-card>

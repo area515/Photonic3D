@@ -218,7 +218,7 @@ public class PrinterService {
 		 		+ "}\n"
 			 	+ "value");
 		 configuration.getSlicingProfile().setProjectorGradientCalculator(			    
-		 		"function getFractions(count, start, end) {\n" + 
+		 		/*"function getFractions(count, start, end) {\n" + 
 				"	var incrementAmount = (end - start) / count;\n" +
 				"	var fractions = [];\n" + 
 				"	for (t = 0; t < count; t++) {\n" +
@@ -230,18 +230,19 @@ public class PrinterService {
 	 			"function getColors(fractions, start, stop) {\n" + 
 	 			"	var colors = [];\n" +
 	 			"	var colorRange = stop - start;\n" + 
-	 			"	var atanDivergencePoint = Math.PI / 2;\n" +
+	 			"	var atanDivergencePoint = Math.PI / 2;\n" + 
 	 			"	for (t = 0; t < fractions.length; t++) {\n" +
-	 			"		colors[t] = new Packages.java.awt.Color(0, 0, 0, (java.lang.Integer)(Math.atan(fractions[t] * atanDivergencePoint) * colorRange + start));\n" +
+	 			"		colors[t] = new Packages.java.awt.Color(0, 0, 0, (java.lang.Float)(Math.atan(fractions[t] * atanDivergencePoint) * colorRange + start));\n" + 
 				"	}\n" + 
-				"	//return new Packages.java.awt.Color[]{new Packages.java.awt.Color(0, 0, 0, (java.lang.Integer)(opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum())), new Packages.java.awt.Color(0, 0, 0, 0)};\n" +
+				"	//return new Packages.java.awt.Color[]{new Packages.java.awt.Color(0, 0, 0, (float)(opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum())), new Packages.java.awt.Color(0, 0, 0, 0)};\n" +
 				"	return colors;\n" + 
-	 			"}\n" +
+	 			"}\n" +*/
 	 			"var bulbCenter = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
 	 			"var bulbFocus = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
 	 			"var totalSizeOfGradient = $buildPlatformXPixels > $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;\n" +
-	 			"var fractions = getFractions(totalSizeOfGradient, 0, 1);\n" +
-	 			"var colors = getColors(fractions, 0.2, 0);//Let's start with 20% opaque in the center of the projector bulb\n" +
+	 			"var fractions = [0.0, 1.0];\n" +
+	 			"//Let's start with 20% opaque in the center of the projector bulb\n" + 
+	 			"var colors = [new Packages.java.awt.Color(0, 0, 0, 0.2), new Packages.java.awt.Color(0, 0, 0, 0)];\n" +
 	 			"new Packages.java.awt.RadialGradientPaint(\n" +
 	 			"	bulbCenter,\n" + 
 	 			"	totalSizeOfGradient,\n" +

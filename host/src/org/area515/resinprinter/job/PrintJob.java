@@ -256,12 +256,12 @@ public class PrintJob {
 		this.currentSliceCost = currentSliceCost;
 	}
 
-	public void addNewSlice(long sliceTime, double buildAreaInMM) {
+	public void addNewSlice(long sliceTime, Double buildAreaInMM) {
 		InkConfig inkConfig = getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig();
 		averageSliceTime = ((averageSliceTime * currentSlice) + sliceTime) / (currentSlice + 1);
 		currentSliceTime = sliceTime;
 		currentSlice++;
-		if (buildAreaInMM > 0) {
+		if (buildAreaInMM != null && buildAreaInMM > 0) {
 			double buildVolume = buildAreaInMM * inkConfig.getSliceHeight();
 			currentSliceCost = (buildVolume / 1000000) * inkConfig.getResinPriceL();
 		}
@@ -280,7 +280,7 @@ public class PrintJob {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((jobFile == null) ? 0 : jobFile.hashCode());
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		return result;
 	}
 
@@ -293,10 +293,10 @@ public class PrintJob {
 		if (getClass() != obj.getClass())
 			return false;
 		PrintJob other = (PrintJob) obj;
-		if (jobFile == null) {
-			if (other.jobFile != null)
+		if (id == null) {
+			if (other.id != null)
 				return false;
-		} else if (!jobFile.equals(other.jobFile))
+		} else if (!id.equals(other.id))
 			return false;
 		return true;
 	}
