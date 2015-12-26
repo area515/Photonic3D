@@ -242,7 +242,7 @@ public class PrinterService {
 	 			"var totalSizeOfGradient = $buildPlatformXPixels > $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;\n" +
 	 			"var fractions = [0.0, 1.0];\n" +
 	 			"//Let's start with 20% opaque in the center of the projector bulb\n" + 
-	 			"var colors = [new Packages.java.awt.Color(0, 0, 0, 0.2), new Packages.java.awt.Color(0, 0, 0, 0)];\n" +
+	 			"var colors = [new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.2), new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.0)];\n" +
 	 			"new Packages.java.awt.RadialGradientPaint(\n" +
 	 			"	bulbCenter,\n" + 
 	 			"	totalSizeOfGradient,\n" +
