@@ -108,7 +108,7 @@ public class MediaService {
 	}
 
 	@GET
-	@Path("stopvideorecord/{printerName}")
+	@Path("stoprecordvideo/{printerName}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MachineResponse stopVideo(@PathParam("printerName") String printerName) {
 		processLock.lock();
