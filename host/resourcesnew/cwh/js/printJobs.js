@@ -10,6 +10,7 @@
 		this.printJobs = null;
 		this.currentSliceImage = null;
 		this.currentBuildPhoto = null;
+		this.currentBuildVideo = null;
 		function refreshSelectedPrintJob(printJobList) {
         	var foundPrintJob = false;
         	
@@ -103,17 +104,15 @@
 			if (height != null) {
 				parameters += "/y/" + height;
 			}
-	        $http.get("/services/media/" + action + "recordvideo/" + parameters).success(
-	        		function (data) {
-	        			if (data.response) {
-		        			controller.refreshPrintJobs();
-	        			} else {
-		        			$scope.$emit("MachineResponse", {machineResponse: data, successFunction:null, afterErrorFunction:null});
-	        			}
-	        		}).error(
-    				function (data, status, headers, config, statusText) {
- 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
-	        		})
+	        $http.get("/services/media/" + action + "recordvideo/" + parameters).success(function (data) {
+        		$scope.$emit("MachineResponse", {machineResponse: data, successFunction:null, afterErrorFunction:null});
+        		if (action == 'stop') {
+        			controller.currentBuildVideo = "/video/" + parameters + Math.random() + '.mp4'
+					//Let's see if I need this...  $("video").load();
+        		}
+    		}).error(function (data, status, headers, config, statusText) {
+    			$scope.$emit("HTTPError", {status:status, statusText:data});
+    		})
 		}
 		
 		this.getPrintJobIconClass = function getPrintJobIconClass(printable) {
