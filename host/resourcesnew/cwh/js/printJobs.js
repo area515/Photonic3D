@@ -97,7 +97,7 @@
 	        		})
 		}
 		this.videoRecord = function videoRecord(action, width, height) {
-			var parameters = encodeURIComponent(controller.currentPrintJob.printer.name);
+			var parameters = encodeURIComponent(controller.currentPrintJob.printer.configuration.name);
 			if (width != null) {
 				parameters += "/x/" + width;
 			}
@@ -108,7 +108,7 @@
         		$scope.$emit("MachineResponse", {machineResponse: data, successFunction:null, afterErrorFunction:null});
         		if (action == 'stop') {
         			controller.currentBuildVideo = "/video/" + parameters + Math.random() + '.mp4'
-					//Let's see if I need this...  $("video").load();
+					$("video").load();
         		}
     		}).error(function (data, status, headers, config, statusText) {
     			$scope.$emit("HTTPError", {status:status, statusText:data});
