@@ -3,11 +3,11 @@
 			<i class="fa fa-2x fa-video-camera pull-left"></i>
 			<h3 class="panel-title pull-left">Build Video: {{printJobsController.currentPrintJob.jobName}}</h3>
 			<div class="btn-group pull-right" >
-				<a class="btn btn-success" ng-show="printJobsController.currentPrintJob.printInProgress" ng-click="printJobsController.videoRecord('start', 100, 100, 'camera1')">
+				<a class="btn btn-success" ng-show="printJobsController.currentPrintJob.printInProgress" ng-click="printJobsController.videoRecord('start', 100, 100)">
 					<i class="fa fa-play"></i> 
 					<span>Start Recording</span>
 				</a>
-				<a class="btn btn-danger" ng-show="printJobsController.currentPrintJob.printInProgress" ng-click="printJobsController.videoRecord('stop', 'camera1')">
+				<a class="btn btn-danger" ng-show="printJobsController.currentPrintJob.printInProgress" ng-click="printJobsController.videoRecord('stop')">
 					<i class="fa fa-stop"></i> 
 					<span>Stop Recording</span>
 				</a>
