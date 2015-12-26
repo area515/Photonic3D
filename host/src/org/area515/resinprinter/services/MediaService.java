@@ -47,6 +47,41 @@ public class MediaService {
 		return mp4StreamFile;
 	}
 	
+	public class StreamCopier implements Runnable {
+		private InputStream inputStream;
+		private OutputStream outputStream;
+		private String streamingCommandString;
+		
+		public StreamCopier(InputStream inputStream, OutputStream outputStream, String streamingCommandString) {
+			this.inputStream = inputStream;
+			this.outputStream = outputStream;
+			this.streamingCommandString = streamingCommandString;
+		}
+		
+		public void run() {
+			try {
+				IOUtils.copy(inputStream, outputStream);
+			} catch (IOException e) {
+				System.out.println("Copy complete: " + streamingCommandString + " Message:" + e.getMessage());
+			} finally {
+				System.out.println("Copy process is complete for:" + streamingCommandString);
+				if (inputStream != null) {
+					try {
+						inputStream.close();
+					} catch (IOException e) {
+					}
+				}
+				if (outputStream != null) {
+					try {
+						outputStream.close();
+					} catch (IOException e) {
+					}
+				}
+			}
+		}
+		
+	}
+	
 	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
 	@GET
 	@Path("startrecordvideo/{printerName}/x/{x}/y/{y}")
@@ -62,38 +97,24 @@ public class MediaService {
 			final String[] streamingCommand = HostProperties.Instance().getStreamingCommand();
 			try {
 				String[] replacedCommands = new String[streamingCommand.length];
+				StringBuffer buffer = new StringBuffer();
 				for (int t = 0; t < streamingCommand.length; t++) {
 					replacedCommands[t] = MessageFormat.format(streamingCommand[t], x, y);
+					buffer.append(replacedCommands[t]);
+					buffer.append(" ");
 				}				
 				
 				rawH264ProducerProcess = Runtime.getRuntime().exec(replacedCommands);
 				final BufferedInputStream inputStream = new BufferedInputStream(rawH264ProducerProcess.getInputStream());
 				final FileOutputStream outputStream = new FileOutputStream(rawh264StreamFile);
-
-				Thread thread = new Thread(new Runnable() {
-					public void run() {
-						try {
-							IOUtils.copy(inputStream, outputStream);
-						} catch (IOException e) {
-							System.out.println("Copy interrupted:" + streamingCommand + " (this is probably normal)");
-						} finally {
-							if (inputStream != null) {
-								try {
-									inputStream.close();
-								} catch (IOException e) {
-								}
-							}
-							if (outputStream != null) {
-								try {
-									outputStream.close();
-								} catch (IOException e) {
-								}
-							}
-						}
-					};
-				}, "OriginalVideoWritingThread");
-				thread.setDaemon(true);
-				thread.start();
+				final BufferedInputStream errorStream = new BufferedInputStream(rawH264ProducerProcess.getErrorStream());
+				
+				Thread writingThread = new Thread(new StreamCopier(inputStream, outputStream, buffer.toString()), "OriginalVideoWritingThread");
+				writingThread.setDaemon(true);
+				writingThread.start();
+				Thread errorThread = new Thread(new StreamCopier(errorStream, System.err, buffer.toString() + " LOG"), "VideoErrorLoggingThread");
+				errorThread.setDaemon(true);
+				errorThread.start();
 				return new MachineResponse("startrecord", true, "Printer:" + printerName + " started recording");
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -134,7 +155,7 @@ public class MediaService {
 						Container out = new FragmentedMp4Builder().build(m);
 						FileChannel fc = publishStream.getChannel();
 						out.writeContainer(fc);
-					} catch (IOException e) {
+					} catch (Exception e) {
 						e.printStackTrace();
 						System.out.println("Couldn't convert file from:" + rawh264StreamFile + " to:" + mp4StreamFile);
 					} finally {
@@ -160,8 +181,8 @@ public class MediaService {
 			thread.setDaemon(true);
 			thread.start();
 			
-			//TODO: Should we be waiting until we are done muxing?
 			try {
+				//You MUST wait for the MUXing process to complete before this method returns. The client depends on it...
 				thread.join();
 				return new MachineResponse("stopvideorecord", true, "MP4 Creation complete.");
 			} catch (InterruptedException e) {
