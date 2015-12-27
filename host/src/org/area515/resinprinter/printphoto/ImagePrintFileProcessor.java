@@ -14,16 +14,14 @@ import java.util.concurrent.Future;
 import javax.imageio.ImageIO;
 
 import org.area515.resinprinter.inkdetection.visual.CannyEdgeDetector8BitGray;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
-import org.area515.resinprinter.job.PrintFileProcessingAid;
-import org.area515.resinprinter.job.PrintFileProcessingAid.DataAid;
-import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.server.Main;
 
-public class ImagePrintFileProcessor implements PrintFileProcessor<Object> {
+public class ImagePrintFileProcessor extends AbstractPrintFileProcessor<Object> {
 	private Map<PrintJob, PrintImage> printImagesByPrintJob = new HashMap<PrintJob, PrintImage>();
 	
 	private class PrintImage {
@@ -50,16 +48,16 @@ public class ImagePrintFileProcessor implements PrintFileProcessor<Object> {
 	}
 	
 	@Override
-	public double getBuildAreaMM(PrintJob printJob) {
+	public Double getBuildAreaMM(PrintJob printJob) {
 		//TODO: haven't built any of this
-		return -1;
+		return null;
 	}
 	
 	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
 		int border = 50;
-		PrintFileProcessingAid aid = new PrintFileProcessingAid();
-		DataAid data = aid.performHeader(printJob);
+		DataAid data = initializeDataAid(printJob);
+		performHeader();
 	
 		PrintImage printImage = printImagesByPrintJob.get(printJob);
 		printJob.setTotalSlices(data.inkConfiguration.getNumberOfFirstLayers() * 5);
@@ -73,7 +71,7 @@ public class ImagePrintFileProcessor implements PrintFileProcessor<Object> {
 		BufferedImage image = printImage.futureImage.get();
 		while (firstSlices > 0 || imageSlices > 0) {
 			//Performs all of the duties that are common to most print files
-			JobStatus status = aid.performPreSlice(null);
+			JobStatus status = performPreSlice(null);
 			if (status != null) {
 				return status;
 			}
@@ -96,12 +94,12 @@ public class ImagePrintFileProcessor implements PrintFileProcessor<Object> {
 				graphics.drawImage(image, centerX - (actualWidth / 2), centerY - (actualHeight / 2), null);
 			}
 			
-			aid.applyBulbMask(graphics);
+			applyBulbMask(graphics, image.getWidth(), image.getHeight());
 			data.printer.showImage(screenImage);
 			printImage.currentImage = screenImage;
 			
 			//Performs all of the duties that are common to most print files
-			status = aid.performPostSlice(this);
+			status = performPostSlice();
 			if (status != null) {
 				return status;
 			}
@@ -113,7 +111,7 @@ public class ImagePrintFileProcessor implements PrintFileProcessor<Object> {
 			}
 		}
 		
-		return aid.performFooter();
+		return performFooter();
 	}
 	
 	@Override

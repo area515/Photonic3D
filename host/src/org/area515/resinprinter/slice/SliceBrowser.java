@@ -234,11 +234,12 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		float atanDivergencePoint = (float)Math.PI / 2;
 		for (int t = 0; t < fractions.length; t++) {
 			colors[t] = new Color(0, 0, 0, (float)(Math.atan(fractions[t] * atanDivergencePoint)) * colorRange + start);
+			System.out.println(fractions[t] + " = " + ((float)(Math.atan(fractions[t] * atanDivergencePoint)) * colorRange + start));
 		}
 		//return new Color[]{new Color(0, 0, 0, (float)opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum()), new Color(0, 0, 0, 0)};
 		return colors;
 	}
-	
+
 	private void applyProjectorMask(Graphics2D g2) {
 		g2.setPaintMode();
 		Rectangle r = this.getBounds();//g2.getDeviceConfiguration().getBounds();
@@ -490,7 +491,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	  
 	  public static void main(String[] args) throws Exception {
 		  SliceBrowser browser = new SliceBrowser();
-		  browser.setVisible(true);
+		  //browser.setVisible(true);
+		  browser.getColors(browser.getFractions(1600, .0f, 1f), .2f, .0f);
 	  }
 }
 

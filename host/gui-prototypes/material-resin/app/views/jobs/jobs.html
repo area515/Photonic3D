@@ -15,8 +15,13 @@
             <div class="md-list-item flex">
                 <md-input-container class="md-block">
                     <label>Selected Printers</label>
+<<<<<<< HEAD
                       <md-select name="myModel" placeholder="Select Printer" ng-model="printername" ng-change="id=printername">
                       <md-option ng-repeat="printer in printers" value="{{printer.configuration.name}}">{{printer.configuration.name}}</md-option>
+=======
+                      <md-select name="myModel" placeholder="Select Printer" ng-model="selectedprinter">
+                      <md-option ng-repeat="printer in printers" value="{{printer}}">{{printer.configuration.name}}</md-option>
+>>>>>>> 5902f9e6f7f8a658c77b1285c9d4c1d68288e38a
                       </md-select>
                       <div class="errors" ng-messages="myForm.myModel.$error" ng-if="myForm.$dirty">
                         <div ng-message="required">Required</div>
@@ -30,6 +35,7 @@
             <md-list-item class="md-3-line">
         
             <div class="md-list-item-text">
+<<<<<<< HEAD
             
               <h3>Name: {{printer.configuration.name == null ? 'Select a printer' : printer.configuration.name}}</h3>
               <h4>Started: {{printer.started == 'true' ? 'Started' : 'Not Started'}}</h4>
@@ -38,6 +44,16 @@
               </p>
             </div>
            <!--  <md-divider inset=""></md-divider> -->
+=======
+            {{selectedprinter.configuration.name}}
+              <h3>Name: {{selectedprinter.configuration.name}}</h3>
+              <h4>Started: {{selectedprinter.started == 'true' ? 'Started' : 'Not Started'}}</h4>
+              <p>
+                Status: {{selectedprinter.status === null ? 'Unknown' : selectedprinter.status}}
+              </p>
+            </div>
+            <md-divider inset=""></md-divider>
+>>>>>>> 5902f9e6f7f8a658c77b1285c9d4c1d68288e38a
           </md-list-item>
 
           </md-list>

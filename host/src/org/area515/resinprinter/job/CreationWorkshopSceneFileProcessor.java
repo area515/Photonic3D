@@ -1,5 +1,6 @@
 package org.area515.resinprinter.job;
 
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,15 +26,14 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.server.HostProperties;
 
-public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
+public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcessor<Object> {
 	private HashMap<PrintJob, BufferedImage> currentlyDisplayedImage = new HashMap<PrintJob, BufferedImage>();
 	
 	@Override
 	public String[] getFileExtensions() {
-		return new String[]{"zip", "cws"};
+		return new String[]{"cws", "zip"};
 	}
 
 	@Override
@@ -48,19 +48,14 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 	}
 
 	@Override
-	public double getBuildAreaMM(PrintJob processingFile) {
-		return -1;
+	public Double getBuildAreaMM(PrintJob processingFile) {
+		return null;
 	}
 	
 	@Override
 	public JobStatus processFile(final PrintJob printJob) throws Exception {
-		File gCodeFile = null;
-		try {
-			gCodeFile = findGcodeFile(printJob.getJobFile());
-		} catch (JobManagerException e) {
-			e.printStackTrace();
-			return JobStatus.Failed;
-		}
+		File gCodeFile = findGcodeFile(printJob.getJobFile());
+		initializeDataAid(printJob);
 		
 		Printer printer = printJob.getPrinter();
 		BufferedReader stream = null;
@@ -83,7 +78,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 			//data.printJob.setZLiftDistance(data.slicingProfile.getLiftFeedRate());
 			//data.printJob.setZLiftSpeed(data.slicingProfile.getLiftDistance());
 
-			while ((currentLine = stream.readLine()) != null && printer.isPrintInProgress()) {
+			while ((currentLine = stream.readLine()) != null && printer.isPrintActive()) {
 					Matcher matcher = slicePattern.matcher(currentLine);
 					if (matcher.matches()) {
 						if (sliceCount == null) {
@@ -99,7 +94,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 						} else {
 							if (startOfLastImageDisplay > -1) {
 					//printJob.setCurrentSliceTime(System.currentTimeMillis() - startOfLastImageDisplay);
-								printJob.addNewSlice(System.currentTimeMillis() - startOfLastImageDisplay, 0);
+								printJob.addNewSlice(System.currentTimeMillis() - startOfLastImageDisplay, null);
 							}
 							startOfLastImageDisplay = System.currentTimeMillis();
 							
@@ -112,13 +107,16 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 							String imageNumber = String.format("%0" + padLength + "d", incoming);
 							String imageFilename = FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png";
 							File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
-							currentlyDisplayedImage.put(printJob, ImageIO.read(imageFile));
+							BufferedImage newImage = ImageIO.read(imageFile);
+							applyBulbMask((Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
+							currentlyDisplayedImage.put(printJob, newImage);
 							System.out.println("Show picture: " + imageFilename);
 							
 							//Notify the client that the printJob has increased the currentSlice
 							NotificationManager.jobChanged(printer, printJob);
 
 							printer.showImage(currentlyDisplayedImage.get(printJob));
+							
 							if (oldImage != null) {
 								oldImage.flush();
 							}
@@ -196,7 +194,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 					System.out.println("Ignored line:" + currentLine);
 			}
 			
-			return printer.getStatus();
+			return printer.isPrintActive()?JobStatus.Completed:printer.getStatus();
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw e;
@@ -209,7 +207,10 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 			}
 			
 			if (currentlyDisplayedImage != null) {
-				currentlyDisplayedImage.get(printJob).flush();
+				BufferedImage image = currentlyDisplayedImage.get(printJob);
+				if (image != null) {
+					currentlyDisplayedImage.get(printJob).flush();
+				}
 			}
 		}
 	}
@@ -221,11 +222,11 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 	@Override
 	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException {
 		List<PrintJob> printJobs = PrintJobManager.Instance().getJobsByFilename(processingFile.getName());
-		
-		if (printJobs.size() > 1) {
-			throw new JobManagerException("It currently isn't possible to print more than 1 " + getFriendlyName() + " file at once.");
+		for (PrintJob currentJob : printJobs) {
+			if (!currentJob.getId().equals(printJob.getId())) {
+				throw new JobManagerException("It currently isn't possible to print more than 1 " + getFriendlyName() + " file at once.");
+			}
 		}
-		
 		File extractDirectory = buildExtractionDirectory(processingFile.getName());
 		
 		if (extractDirectory.exists()) {
@@ -321,7 +322,7 @@ public class CreationWorkshopSceneFileProcessor implements PrintFileProcessor {
 			}
 		}
 		
-		throw new FileNotFoundException(currentFile + "");
+		throw new FileNotFoundException("Couldn't find any files to determine image index pad.");
 	}
 
 	@Override

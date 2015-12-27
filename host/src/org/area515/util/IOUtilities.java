@@ -53,6 +53,10 @@ public class IOUtilities {
 			this.searchStyle = searchStyle;
 			this.parseReturnValue = parseReturnValue;
 		}
+		
+		public String toString() {
+			return "Execute:" + command[0] + " " + searchStyle + " for: " + waitForRegEx + " then parse return with:" + parseReturnValue;
+		}
 	}
 	
 	public static ZipEntry zipFile(File fileToZip, ZipOutputStream zipOutputStream) {
@@ -243,7 +247,7 @@ public class IOUtilities {
 				return state;
 			}
 			
-			if (printer != null && !printer.isPrintInProgress()) {
+			if (printer != null && !printer.isPrintActive()) {
 				ParseState state = new ParseState();
 				state.currentLine = null;
 				state.parseLocation = parseLocation;

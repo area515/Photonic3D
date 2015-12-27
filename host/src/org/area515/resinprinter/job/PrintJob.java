@@ -6,9 +6,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PrintJob {
 	private volatile int totalSlices = 0;
@@ -42,8 +47,13 @@ public class PrintJob {
 		return id;
 	}
 	
+	@JsonIgnore
 	public File getJobFile() {
 		return jobFile;
+	}
+	
+	public String getJobName() {
+		return jobFile.getName();
 	}
 	
 	public long getStartTime() {
@@ -81,9 +91,19 @@ public class PrintJob {
 		return printer;
 	}
 	
+	@XmlTransient
+	@JsonProperty
+	public boolean isPrintInProgress() {
+		return getStatus().isPrintInProgress();
+	}
 	
-	
-	public JobStatus getJobStatus() {
+	@XmlTransient
+	@JsonProperty
+	public boolean isPrintPaused() {
+		return getStatus().isPaused();
+	}
+
+	public JobStatus getStatus() {
 		//If the futureJobStatus is done, we will certainly have the last status that will never be changed.
 		if (futureJobStatus != null && (futureJobStatus.isDone() || futureJobStatus.isCancelled())) {
 			try {
@@ -93,7 +113,6 @@ public class PrintJob {
 		}
 
 		Printer localPrinter = printer;
-		
 		if (localPrinter != null) {
 			return localPrinter.getStatus();
 		}
@@ -101,11 +120,8 @@ public class PrintJob {
 		//TODO: Why are we doing this?
 		return JobStatus.Failed;
 	}
-	public void setJobStatus() {
-		//do nothing.  This is just for JSON
-	}
 	
-	public void setFutureJobStatus(Future<JobStatus> futureJobStatus) {
+	public void initializePrintJob(Future<JobStatus> futureJobStatus) {
 		this.futureJobStatus = futureJobStatus;
 		futureJobStatusAssigned.countDown();
 	}
@@ -120,7 +136,10 @@ public class PrintJob {
 		if (futureJobStatus.isDone() || futureJobStatus.isCancelled()) {
 			String errorDescription = null;
 			try {
-				return "Job Status:" + futureJobStatus.get();
+				JobStatus checkStatus = futureJobStatus.get();
+				if (checkStatus == JobStatus.Failed) {
+					return "Check server logs for exact problem.";
+				}
 			} catch (Throwable e) {
 				while (e.getCause() != null) {
 					e = e.getCause();
@@ -132,16 +151,10 @@ public class PrintJob {
 			if (!"".equals(errorDescription)) {
 				return errorDescription;
 			}
-			
-			return "Job Failed. Check server logs for exact problem";
 		}
 		
 		return null;
 	}
-	public void setErrorDescription(String errorDescription) {
-		//do nothing.  This is just for JSON
-	}
-
 	public PrintFileProcessor<?> getPrintFileProcessor() {
 		return printFileProcessor;
 	}
@@ -243,12 +256,12 @@ public class PrintJob {
 		this.currentSliceCost = currentSliceCost;
 	}
 
-	public void addNewSlice(long sliceTime, double buildAreaInMM) {
+	public void addNewSlice(long sliceTime, Double buildAreaInMM) {
 		InkConfig inkConfig = getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig();
 		averageSliceTime = ((averageSliceTime * currentSlice) + sliceTime) / (currentSlice + 1);
 		currentSliceTime = sliceTime;
 		currentSlice++;
-		if (buildAreaInMM > 0) {
+		if (buildAreaInMM != null && buildAreaInMM > 0) {
 			double buildVolume = buildAreaInMM * inkConfig.getSliceHeight();
 			currentSliceCost = (buildVolume / 1000000) * inkConfig.getResinPriceL();
 		}
@@ -267,7 +280,7 @@ public class PrintJob {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((jobFile == null) ? 0 : jobFile.hashCode());
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		return result;
 	}
 
@@ -280,10 +293,10 @@ public class PrintJob {
 		if (getClass() != obj.getClass())
 			return false;
 		PrintJob other = (PrintJob) obj;
-		if (jobFile == null) {
-			if (other.jobFile != null)
+		if (id == null) {
+			if (other.id != null)
 				return false;
-		} else if (!jobFile.equals(other.jobFile))
+		} else if (!id.equals(other.id))
 			return false;
 		return true;
 	}

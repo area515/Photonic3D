@@ -15,15 +15,13 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
-import org.area515.resinprinter.job.PrintFileProcessingAid;
-import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
-import org.area515.resinprinter.job.PrintFileProcessingAid.DataAid;
 import org.area515.resinprinter.server.Main;
 
-public class MinerCubePrintFileProcessor implements PrintFileProcessor<Object> {
+public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Object> {
 	private Map<PrintJob, PrintCube> minerCubesByPrintJob = new HashMap<PrintJob, PrintCube>();
 	
 	private class PrintCube {
@@ -48,16 +46,18 @@ public class MinerCubePrintFileProcessor implements PrintFileProcessor<Object> {
 	}
 
 	@Override
-	public double getBuildAreaMM(PrintJob printJob) {
+	public Double getBuildAreaMM(PrintJob printJob) {
 		//TODO: haven't built any of this
-		return -1;
+		return null;
 	}
 
 	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
-		PrintFileProcessingAid aid = new PrintFileProcessingAid();
-		DataAid data = aid.performHeader(printJob);
-	
+		DataAid data = initializeDataAid(printJob);
+		
+		//Everything needs to be setup in the dataByPrintJob before we start the header
+		performHeader();
+
 		PrintCube printCube = minerCubesByPrintJob.get(printJob);
 		MinerCube cube = printCube.cube.get();
 		cube.startPrint(data.xPixelsPerMM, data.yPixelsPerMM, data.sliceHeight);
@@ -70,7 +70,7 @@ public class MinerCubePrintFileProcessor implements PrintFileProcessor<Object> {
 		List<Rectangle> rects = cube.buildNextPrintSlice(centerX, centerY);
 		while (cube.hasPrintSlice()) {
 			//Performs all of the duties that are common to most print files
-			JobStatus status = aid.performPreSlice(null);
+			JobStatus status = performPreSlice(null);
 			if (status != null) {
 				return status;
 			}
@@ -85,12 +85,12 @@ public class MinerCubePrintFileProcessor implements PrintFileProcessor<Object> {
 				graphics.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
 			}
 			
-			aid.applyBulbMask(graphics);
+			applyBulbMask(graphics, data.xResolution, data.yResolution);
 			data.printer.showImage(image);
 			printCube.currentImage = image;
 			
 			//Performs all of the duties that are common to most print files
-			status = aid.performPostSlice(this);
+			status = performPostSlice();
 			if (status != null) {
 				return status;
 			}
@@ -102,7 +102,7 @@ public class MinerCubePrintFileProcessor implements PrintFileProcessor<Object> {
 			}
 		}
 		
-		return aid.performFooter();
+		return performFooter();
 	}
 	
 	@Override

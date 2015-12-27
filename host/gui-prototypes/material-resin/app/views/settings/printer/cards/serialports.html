@@ -14,8 +14,13 @@
             <div class="md-list-item flex">
              <md-input-container class="md-block">
                 <label>Serial Ports</label>
+<<<<<<< HEAD
                 <md-select name="myModel" placeholder="Serial Ports" ng-model="printer.configuration.machineConfig.MotorsDriverConfig.ComPortSettings.PortName">
                 <md-option ng-repeat="serialport in serialports" value="{{serialport}}">{{serialport}}</md-option>
+=======
+                <md-select name="myModel" placeholder="Printer" ng-model="selectedprinter">
+                <md-option ng-repeat="printer in printers" value="{{printer.name}}">{{printer.name}}</md-option>
+>>>>>>> 5902f9e6f7f8a658c77b1285c9d4c1d68288e38a
                 </md-select>
                 <div class="errors" ng-messages="myForm.myModel.$error" ng-if="myForm.$dirty">
                   <div ng-message="required">Required</div>
@@ -28,8 +33,13 @@
             <div class="md-list-item flex">
              <md-input-container class="md-block">
                 <label>Baud rate</label>
+<<<<<<< HEAD
                 <md-select name="myModel" placeholder="Baud rate" ng-model="printer.configuration.machineConfig.MotorsDriverConfig.ComPortSettings.Speed">
                 <md-option ng-repeat="baudrate in baudrates" value="{{baudrate}}">{{baudrate}}</md-option>
+=======
+                <md-select name="myModel" placeholder="Printer" ng-model="selectedprinter">
+                <md-option ng-repeat="printer in printers" value="{{printer.name}}">{{printer.name}}</md-option>
+>>>>>>> 5902f9e6f7f8a658c77b1285c9d4c1d68288e38a
                 </md-select>
                 <div class="errors" ng-messages="myForm.myModel.$error" ng-if="myForm.$dirty">
                   <div ng-message="required">Required</div>

@@ -59,12 +59,16 @@ public class WebSocketHostNotifier implements Notifier {
 
 	@Override
 	public void jobChanged(Printer printer, PrintJob job) {
-		//Not for the host
+		for (Session currentSession : sessionsBySessionId.values()) {
+			currentSession.getAsyncRemote().sendObject(new HostEvent(job.getId() + "", NotificationEvent.PrintJobChanged));
+		}
 	}
 
 	@Override
 	public void printerChanged(Printer printer) {
-		//Not for the host
+		for (Session currentSession : sessionsBySessionId.values()) {
+			currentSession.getAsyncRemote().sendObject(new HostEvent(printer.getName(), NotificationEvent.PrinterChanged));
+		}
 	}
 
 	@Override
@@ -80,7 +84,9 @@ public class WebSocketHostNotifier implements Notifier {
 
 	@Override
 	public void fileUploadComplete(File fileUploaded) {
-		//Not for the host
+		for (Session currentSession : sessionsBySessionId.values()) {
+			currentSession.getAsyncRemote().sendObject(new HostEvent(fileUploaded.getName(), NotificationEvent.FileUploadComplete));
+		}
 	}
 
 	@Override

@@ -61,7 +61,9 @@ public class ProgressiveDownloadServlet extends HttpServlet {
     		//lock.lock();
 
 			long fileSize = Files.size(path);
-	    	
+	    	if (fileSize == 0) {
+	    		System.out.println("Filesize for:" + path + " is 0. This usually means that your streaming an invalid file. You may want to checkout the process that created this file.");
+	    	}
 	    	Pattern rangePattern = Pattern.compile("bytes=(\\d*)-(\\d*)");
 	        response.setContentType(Files.probeContentType(path));
 	        response.setHeader("Accept-Ranges", "bytes");

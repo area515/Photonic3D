@@ -249,7 +249,7 @@ public class MachineService {
 	@Path("/stageOfflineInstall")
 	@Consumes("multipart/form-data")
 	public Response stageOfflineInstall(MultipartFormDataInput input) {
-		return FileService.uploadFile(input, HostProperties.Instance().getUpgradeDir());
+		return PrintableService.uploadFile(input, HostProperties.Instance().getUpgradeDir());
 	}
 
 	 @Deprecated
@@ -653,33 +653,10 @@ public class MachineService {
 
 	 @Deprecated
 	 @GET
-	 @Path("startjob/{jobname}/{printername}")
+	 @Path("startjob/{filename}/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse startJob(@PathParam("jobname") String jobname, @PathParam("printername") String printername) {
-		// Create job
-		File selectedFile = new File(HostProperties.Instance().getUploadDir(), jobname); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
-		
-		// Delete and Create handled in jobManager
-		PrintJob printJob = null;
-		try {
-			printJob = PrintJobManager.Instance().createJob(selectedFile);
-			Printer printer = PrinterManager.Instance().getPrinter(printername);
-			if (printer == null) {
-				throw new InappropriateDeviceException("Printer not started:" + printername);
-			}
-			
-			Future<JobStatus> status = PrintJobManager.Instance().startJob(printJob, printer);
-			return new MachineResponse("start", true, "Started:" + printJob.getId());
-		} catch (JobManagerException | AlreadyAssignedException e) {
-			PrintJobManager.Instance().removeJob(printJob);
-			PrinterManager.Instance().removeAssignment(printJob);
-			e.printStackTrace();
-			return new MachineResponse("start", false, e.getMessage());
-		} catch (InappropriateDeviceException e) {
-			PrintJobManager.Instance().removeJob(printJob);
-			e.printStackTrace();
-			return new MachineResponse("start", false, e.getMessage());
-		}
+	 public MachineResponse startJob(@PathParam("filename") String fileName, @PathParam("printername") String printername) {
+		return PrinterService.INSTANCE.print(fileName, printername);
  	}
 
 	 
@@ -750,7 +727,7 @@ public class MachineService {
 			return new MachineResponse("stop", false, "Job:" + jobname + " not active");
 		}
 		
-		job.getPrinter().setStatus(JobStatus.Cancelled);
+		job.getPrinter().setStatus(JobStatus.Cancelling);
 	 	return new MachineResponse("stop", true, "Stopped:" + jobname);
 	 }	 
 	 

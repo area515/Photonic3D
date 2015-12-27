@@ -11,14 +11,22 @@
          <md-content flex layout="row">
           <md-input-container class="flex-100">
             <label flex>Resolution X</label>
+<<<<<<< HEAD
             <input flex ng-model="printer.configuration.machineConfig.MonitorDriverConfig.DLP_X_Res">
+=======
+            <input flex ng-model="user.title">
+>>>>>>> 5902f9e6f7f8a658c77b1285c9d4c1d68288e38a
           </md-input-container>
         </md-content>
 
          <md-content flex layout="row">
           <md-input-container class="flex-100">
             <label flex>Resolution Y</label>
+<<<<<<< HEAD
             <input flex ng-model="printer.configuration.machineConfig.MonitorDriverConfig.DLP_Y_Res">
+=======
+            <input flex ng-model="user.title">
+>>>>>>> 5902f9e6f7f8a658c77b1285c9d4c1d68288e38a
           </md-input-container>
         </md-content>
 
@@ -28,8 +36,13 @@
             <div class="md-list-item flex">
              <md-input-container class="md-block">
                 <label>Displays</label>
+<<<<<<< HEAD
                 <md-select name="myModel" placeholder="Display" ng-model="printer.configuration.machineConfig.MonitorDriverConfig.OSMonitorID">
                 <md-option ng-repeat="display in displays" value="{{display}}">{{display}}</md-option>
+=======
+                <md-select name="myModel" placeholder="Printer" ng-model="selectedprinter">
+                <md-option ng-repeat="printer in printers" value="{{printer.name}}">{{printer.name}}</md-option>
+>>>>>>> 5902f9e6f7f8a658c77b1285c9d4c1d68288e38a
                 </md-select>
                 <div class="errors" ng-messages="myForm.myModel.$error" ng-if="myForm.$dirty">
                   <div ng-message="required">Required</div>
