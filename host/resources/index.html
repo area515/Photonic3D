@@ -74,7 +74,7 @@
 			//alert("here");
     		var formData = new FormData($('#uploadform')[0]);
     		$.ajax({
-        		url: '/services/files/uploadPrintableFile',  //Server script to process data
+        		url: '/services/printables/uploadPrintableFile',  //Server script to process data
         		type: 'POST',
         		xhr: function() {  // Custom XMLHttpRequest
             		var myXhr = $.ajaxSettings.xhr();
@@ -102,7 +102,7 @@
 			
 			if (uploadURL != '') {
 	    		$.ajax({
-	        		url: '/services/files/uploadviaurl/' + filename + '/' + uploadURL,
+	        		url: '/services/printables/uploadviaurl/' + filename + '/' + uploadURL,
 	        		type: 'POST',
 	    			dataType: "json",
 	        		error: errorHandler,
@@ -113,7 +113,7 @@
 							        var printJob = JSON.parse(evt.data).printJob;
 							        if (printJob.jobStatus == 'Ready') {
 				    					$("#statustext").attr("placeholder", "Upload complete:" + uploadURL + " -> " + filename);
-				    					refreshListbox('/services/files/list', "filesselect");
+				    					refreshListbox('/services/printables/listFiles', "filesselect");
 				    				}
 	    						})
 	    			}
@@ -140,7 +140,7 @@
 
 		$("#refreshprinterbutton").click(function( event ){
 			event.preventDefault();
-			refreshListbox('/services/files/list', "filesselect")
+			refreshListbox('/services/printables/listFiles', "filesselect")
 			refreshListbox('/services/machine/ports', "portSelect");
 			refreshListbox('/services/machine/displays', "displaySelect");
 			refreshListbox('/services/machine/printers', "printerSelect");
@@ -185,14 +185,14 @@
 		$("#deletejobbutton").click(function(event){
 			event.preventDefault();
 			deletefile();
-			refreshListbox('/services/files/list', "filesselect")
+			refreshListbox('/services/printables/listFiles', "filesselect")
 		});
 
 		refreshListbox('/services/machine/ports', "portSelect");
 		
 		refreshListbox('/services/machine/displays', "displaySelect");
 
-		refreshListbox('/services/files/list', "filesselect")
+		refreshListbox('/services/printables/listFiles', "filesselect")
 		
 		refreshListbox('/services/machine/printers', "printerSelect");
 		
@@ -209,7 +209,7 @@
     });
 
 	var uploadCompleteHandler = function(data){
-		refreshListbox('/services/files/list', "filesselect")
+		refreshListbox('/services/printables/listFiles', "filesselect")
 		//TODO: Can't refresh status because you might not have a file selected: refreshStatus();
 	}
 	
@@ -492,7 +492,7 @@
 	function deletefile() {
 		var jobName = getSelectedOptionFromListBoxOrThrowError('filesselect', "Please select a job first");
 		
-		var requestValue = '/files/delete/' + encodeURIComponent(jobName);
+		var requestValue = '/printables/delete/' + encodeURIComponent(jobName);
 
 		requestAndUpdateFiles(requestValue);
 	}
@@ -645,7 +645,7 @@
     		error: errorHandler,
 			success: function(data){
 				if (applyErrorIfNecessary(data, true, false)) {
-					refreshListbox('/services/files/list', "filesselect")
+					refreshListbox('/services/printables/listFiles', "filesselect")
 				}
 			}
 		});

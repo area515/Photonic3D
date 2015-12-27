@@ -1,7 +1,15 @@
 (function() {
-		var cwhApp = angular.module('cwhApp', ['ngRoute']);
-		cwhApp.config(['$routeProvider', '$locationProvider',
-    	  function($routeProvider, $locationProvider) {
+		var cwhApp = angular.module('cwhApp', ['ngRoute', 'cwh.spinner', 'cwh.webSocket', 'ngFileUpload']);
+		cwhApp.config(['$routeProvider', '$locationProvider', '$httpProvider', function($routeProvider, $locationProvider, $httpProvider) {
+		    if (!$httpProvider.defaults.headers.get) {
+		        $httpProvider.defaults.headers.get = {};    
+		    }    
+
+		    //disable IE ajax request caching
+		    $httpProvider.defaults.headers.get['If-Modified-Since'] = 'Mon, 26 Jul 1997 05:00:00 GMT';
+		    $httpProvider.defaults.headers.get['Cache-Control'] = 'no-cache';
+		    $httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
+
     	    $routeProvider.when('/dashboardPage', {
     	        templateUrl: '/dashboard.html',
     	        controller: 'Dashboard',
@@ -16,6 +24,16 @@
     	        templateUrl: '/printerControls.html',
     	        controller: 'PrinterControlsController',
     	        controllerAs: 'printerControlsController'
+    	    })
+    	    $routeProvider.when('/printablesPage', {
+    	        templateUrl: '/printables.html',
+    	        controller: 'PrintablesController',
+    	        controllerAs: 'printablesController'
+    	    })
+    	    $routeProvider.when('/printJobsPage', {
+    	        templateUrl: '/printJobs.html',
+    	        controller: 'PrintJobsController',
+    	        controllerAs: 'printJobsController'
     	    })
     	    $routeProvider.when('/settingsPage', {
     	        templateUrl: '/settings.html',

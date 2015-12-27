@@ -18,15 +18,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.ByteBuffer;
 // New from JDK 1.4 for endian related problems
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Set;
-import java.util.StringTokenizer;
+
+import org.area515.resinprinter.stl.Point3d;
 
 
 /**
@@ -71,7 +70,7 @@ public abstract class StlFile<T> {
 
   // Arrays with coordinates and normals
   // Needed for reading ASCII files because its size is unknown until the end
-  //private ArrayList<Point3f> coordList;		// Holds Point3f
+  private ArrayList<Point3d> coordList;		// Holds Point3f
   //private ArrayList<Vector3f> normList;		// Holds Vector3f
   protected Set<T> triangles;
   protected double zmin = Double.MAX_VALUE;
@@ -203,8 +202,8 @@ public abstract class StlFile<T> {
   
   private void read3d(StlFileParser parser, String parseKey)
   {
-	  throw new IllegalArgumentException("Ascii file not supported");
-	  /*
+	  //throw new IllegalArgumentException("Ascii file not supported");
+	  
 	  float x, y, z;
 
 	    if(!(parser.ttype==StlFileParser.TT_WORD && parser.sval.equals(parseKey)))
@@ -223,7 +222,7 @@ public abstract class StlFile<T> {
 			          {
 			        	  z=(float)parser.nval;
 			        	  // We add that vertex to the array of vertex
-			        	  coordList.add(new Point3f(x, y, z));
+			        	  coordList.add(new Point3d(x, y, z));
 			        	  readEOL(parser);
 			          }
 			          else System.err.println("Format Error: expecting coordinate on line " + parser.lineno());
@@ -231,7 +230,7 @@ public abstract class StlFile<T> {
 		        else System.err.println("Format Error: expecting coordinate on line " + parser.lineno());
 	      }
 	      else System.err.println("Format Error: expecting coordinate on line " + parser.lineno());
-	    }*/
+	    }
   }
   
   /**
@@ -528,7 +527,7 @@ public abstract class StlFile<T> {
     StlFileParser st = new StlFileParser(reader);
 
     // Initialize data
-    //coordList = new ArrayList<Point3f>();
+    coordList = new ArrayList<Point3d>();
     //normList = new ArrayList<Vector3f>();
     triangles = createSet();//
     //triangles = new LinkedHashSet<Triangle3d>();//new TreeSet<Triangle3d>(new XYComparator());

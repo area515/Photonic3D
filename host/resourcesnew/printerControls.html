@@ -4,8 +4,8 @@
 			<div class="panel-heading clearfix">
 				<span class="pull-left fa-stack fa-lg">
 					<i class="fa fa-stack-1x fa-2x fa-print"></i>
-					<i class="fa fa-stack-2x fa-2x fa-play text-danger" ng-show="printerControlsController.currentPrinter.printInProgress"></i>
-					<i class="fa fa-stack-3x fa-2x fa-ban text-danger" ng-hide="printerControlsController.currentPrinter.started"></i>
+					<i class="fa fa-stack-2x fa-2x fa-play text-danger cwh-text-opacity_50" ng-show="printerControlsController.currentPrinter.printInProgress"></i>
+					<i class="fa fa-stack-3x fa-2x fa-ban text-danger cwh-text-opacity_50" ng-hide="printerControlsController.currentPrinter.started"></i>
 				</span>
 				<h4 class="pull-left">Printer Controls: {{printerControlsController.currentPrinter.configuration.name}} </h4>
 			</div>
@@ -92,8 +92,8 @@
 			<div class="panel-heading clearfix">
 				<span class="pull-left fa-stack fa-lg">
 					<i class="fa fa-stack-1x fa-2x fa-print"></i>
-					<i class="fa fa-stack-2x fa-2x fa-play text-danger" ng-show="printerControlsController.currentPrinter.printInProgress"></i>
-					<i class="fa fa-stack-3x fa-2x fa-ban text-danger" ng-hide="printerControlsController.currentPrinter.started"></i>
+					<i class="fa fa-stack-2x fa-2x fa-play text-danger cwh-text-opacity_50" ng-show="printerControlsController.currentPrinter.printInProgress"></i>
+					<i class="fa fa-stack-3x fa-2x fa-ban text-danger cwh-text-opacity_50" ng-hide="printerControlsController.currentPrinter.started"></i>
 				</span>
 				<h4 class="pull-left">DLP Controls: {{printerControlsController.currentPrinter.configuration.name}} </h4>
 			</div>
@@ -102,11 +102,11 @@
 					<i class="fa fa-2x fa-tv pull-left"></i>
 					<h4>Projector</h4>
 					<span class="btn-group" >
-						<a class="btn btn-danger btn-sm" ng-click="printerControlsController.projector('start')">
+						<a class="btn btn-danger btn-sm" ng-click="printerControlsController.projector('stop')">
 							<b class="fa fa-toggle-off"></b> 
 							<b class="cwh-text-indent">Off</b>
 						</a>
-						<a class="btn btn-success btn-sm" ng-click="printerControlsController.projector('stop')">
+						<a class="btn btn-success btn-sm" ng-click="printerControlsController.projector('start')">
 							<b class="fa fa-toggle-on"></b> 
 							<b class="cwh-text-indent">On</b>
 						</a>
@@ -126,55 +126,60 @@
 						</a>
 					</span>
 				</div>
-				<div class="list-group-item">
+				<div class="list-group-item" ng-show="printerControlsController.currentPrinter.printInProgress">
 					<i class="fa fa-2x fa-step-backward fa-rotate-90 pull-left"></i>
-					<h4>Lift Speed (mm/m)</h4>
-					<div class="input-group">
-						<span class="input-group-btn">
-							<button class="btn btn-primary" type="button">Go</button>
-						</span>
-						<input type="text" class="form-control" placeholder="mm/m">
-						<span class="input-group-addon input-large btn btn-success">+</span>
-						<span class="input-group-addon input-large btn btn-danger">-</span>
-					</div>				
-				</div>
-				<div class="list-group-item">
-					<i class="fa fa-2x fa-sort-amount-asc fa-rotate-180 pull-left"></i>
-					<h4>Lift Distance (mm)</h4>
-					<div class="input-group">
-						<span class="input-group-btn">
-							<button class="btn btn-primary" type="button">Go</button>
-						</span>
-						<input type="text" class="form-control" placeholder="mm">
-						<span class="input-group-addon input-large btn btn-success">+</span>
-						<span class="input-group-addon input-large btn btn-danger">-</span>
-					</div>				
-				</div>
-				<div class="list-group-item">
-					<i class="fa fa-2x fa-fire pull-left"></i>
-					<h4>Exposure Time (mm)</h4>
-					<div class="input-group">
-						<span class="input-group-btn">
-							<button class="btn btn-primary" type="button">Go</button>
-						</span>
-						<input type="text" class="form-control" placeholder="mm">
-						<span class="input-group-addon input-large btn btn-success">+</span>
-						<span class="input-group-addon input-large btn btn-danger">-</span>
-					</div>				</div>
-				<div class="list-group-item">
-					<i class="fa fa-2x fa-th pull-left"></i>
-					<h4>Calibration Screen (pixels)</h4>
-					<div class="input-group">
-						<span class="input-group-btn">
-							<button class="btn btn-primary" type="button">Go</button>
-						</span>
-						<input type="text" class="form-control" placeholder="pixels">
-						<span class="input-group-addon input-large btn btn-success">+</span>
-						<span class="input-group-addon input-large btn btn-danger">-</span>
+					<h4>Override Lift Speed (mm/m)</h4>
+					<div class="input-group" 
+						cwh-spinner 
+						placedholder="mm/m"
+						min="1" 
+						max="100" 
+						inc="1" 
+						goClick="printerControlsController.overrideLiftSpeed()" 
+						ng-model="printerControlsController.currentPrintJob.zliftSpeed">
 					</div>
 				</div>
-				<div class="list-group-item">
-					<a class="btn btn-primary btn-sm" ng-click="">
+				<div class="list-group-item" ng-show="printerControlsController.currentPrinter.printInProgress">
+					<i class="fa fa-2x fa-sort-amount-asc fa-rotate-180 pull-left"></i>
+					<h4>Override Lift Distance (mm)</h4>
+					<div class="input-group" 
+						cwh-spinner 
+						placedholder="mm"
+						min=".005" 
+						max="10" 
+						inc=".05" 
+						goClick="printerControlsController.overrideLiftDistance()" 
+						ng-model="printerControlsController.currentPrintJob.zliftDistance">
+					</div>
+				</div>
+				<div class="list-group-item" ng-show="printerControlsController.currentPrinter.printInProgress">
+					<i class="fa fa-2x fa-fire pull-left"></i>
+					<h4>Override Exposure Time (ms)</h4>
+					<div class="input-group" 
+						cwh-spinner 
+						placedholder="ms"
+						min="1" 
+						max="20000" 
+						inc="100" 
+						goClick="printerControlsController.overrideExposureTime()" 
+						ng-model="printerControlsController.currentPrintJob.exposureTime">
+					</div>
+				</div>
+				<div class="list-group-item" ng-hide="printerControlsController.currentPrinter.printInProgress">
+					<i class="fa fa-2x fa-th pull-left"></i>
+					<h4>Calibration Screen (pixels)</h4>
+					<div class="input-group" 
+						cwh-spinner 
+						placedholder="pixels"
+						min="1" 
+						max="500" 
+						inc="1" 
+						goClick="printerControlsController.showCalibrationScreen()" 
+						ng-model="printerControlsController.squarePixelSize">
+					</div>
+				</div>
+				<div class="list-group-item" ng-hide="printerControlsController.currentPrinter.printInProgress">
+					<a class="btn btn-primary btn-sm" ng-click="printerControlsController.showBlankScreen()">
 						<b class="fa fa-square-o"></b>
 						<b class="cwh-text-indent">Show Blank Screen</b>
 					</a>

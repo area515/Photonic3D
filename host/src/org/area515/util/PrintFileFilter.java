@@ -18,4 +18,14 @@ public class PrintFileFilter implements FileFilter {
 		
 		return false;
     }
+    
+    public PrintFileProcessor<?> findAssociatedPrintProcessor(File pathname) {
+ 		for (PrintFileProcessor<?> currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
+ 			if (currentProcessor.acceptsFile(pathname)) {
+ 				return currentProcessor;
+ 			}
+ 		}
+ 		
+ 		return null;
+     }
 }

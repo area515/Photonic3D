@@ -1,23 +1,23 @@
 		<div class="row">
 			<div class="col-sm-5 bootcards-list" id="list">
 				<div class="panel panel-default">
-						<div class="panel-heading clearfix">
-							<h3 class="panel-title pull-left">All Printers</h3>
-							<div class="row">
-								<div class="btn-group pull-right" >
-									<a class="btn btn-primary" ng-show="printersController.currentPrinter != null" ng-click="printersController.editCurrentPrinter('Edit Basic Printer')" >
-										<i class="fa fa-pencil"></i>
-										<span>Edit</span>
-									</a>
-									<a class="btn btn-danger" ng-show="printersController.currentPrinter != null" ng-click="printersController.deleteCurrentPrinter()">
-										<i class="fa fa-trash-o"></i> 
-										<span>Remove</span>
-									</a>
-									<a class="btn btn-success" ng-click="printersController.createNewPrinter('Create Basic Printer')">
-										<i class="fa fa-plus"></i> 
-										<span>Create</span>
-									</a>
-							    </div>
+					<div class="panel-heading clearfix">
+						<h3 class="panel-title pull-left">All Printers</h3>
+						<div class="row">
+							<div class="btn-group pull-right" >
+								<a class="btn btn-primary" ng-show="printersController.currentPrinter != null" ng-click="printersController.editCurrentPrinter('Edit Basic Printer')" >
+									<i class="fa fa-pencil"></i>
+									<span>Edit</span>
+								</a>
+								<a class="btn btn-danger" ng-show="printersController.currentPrinter != null" ng-click="printersController.deleteCurrentPrinter()">
+									<i class="fa fa-trash-o"></i> 
+									<span>Remove</span>
+								</a>
+								<a class="btn btn-success" ng-click="printersController.createNewPrinter('Create Basic Printer')">
+									<i class="fa fa-plus"></i> 
+									<span>Create</span>
+								</a>
+						    </div>
 						</div>
 					</div>
 					<div class="list-group">
@@ -39,11 +39,9 @@
 					</div>			
 				</div>
 			</div>
-		
+			
 			<div class="col-sm-7 bootcards-cards">
-
 				<!-- contact details -->
-				
 				<div id="printerCard">
 					<span ng-include="'printer.html'"></span>
 				</div>

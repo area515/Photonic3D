@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 import org.area515.resinprinter.display.AlreadyAssignedException;
+import org.area515.resinprinter.job.render.StubPrintFileProcessor;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterManager;
@@ -20,6 +21,42 @@ public class PrintJobManager {
 	
 	private ConcurrentHashMap<UUID, PrintJob> printJobsByJobId = new ConcurrentHashMap<UUID, PrintJob>();
 	
+	public class JobCloser implements Runnable {
+		private Printer printer;
+		private Future<JobStatus> futureJobStatus;
+		private PrintJob newJob;
+		
+		public JobCloser(Printer printer, Future<JobStatus> futureJobStatus, PrintJob job) {
+			this.printer = printer;
+			this.futureJobStatus = futureJobStatus;
+			this.newJob = job;
+		}
+		
+		@Override
+		public void run() {
+			try {
+				//You can't change the state of the job after this point. Too many people are waiting for the future jobStatus for a final outcome of the job
+				printer.setStatus(futureJobStatus.get());
+				System.out.println("Job Success:" + Thread.currentThread().getName());
+				NotificationManager.jobChanged(printer, newJob);
+			} catch (Throwable e) {
+				System.out.println("Job Failed:" + Thread.currentThread().getName());
+				e.printStackTrace();
+				printer.setStatus(JobStatus.Failed);
+				NotificationManager.jobChanged(printer, newJob);
+			} finally {
+				//Don't need to close the printer or dissassociate the serial and display devices
+				printer.showBlankImage();
+				if (HostProperties.Instance().isRemoveJobOnCompletion()) {
+					PrintJobManager.Instance().removeJob(newJob);
+				}
+				PrinterManager.Instance().removeAssignment(newJob);
+				newJob.setPrintFileProcessor(new StubPrintFileProcessor<>(newJob.getPrintFileProcessor()));
+				System.out.println("Job Ended:" + Thread.currentThread().getName());
+			}
+		}
+	}
+	
 	public static PrintJobManager Instance() {
 		if (INSTANCE == null) {
 			INSTANCE = new PrintJobManager();
@@ -30,11 +67,15 @@ public class PrintJobManager {
 	private PrintJobManager() {
 	}
 	
-	public PrintJob createJob(File job) throws JobManagerException {
-		PrintJob newJob = new PrintJob(job);
+	public List<PrintJob> getPrintJobs() {
+		return new ArrayList<PrintJob>(printJobsByJobId.values());
+	}
+	
+	public PrintJob createJob(File job, final Printer printer) throws JobManagerException, AlreadyAssignedException  {
+		final PrintJob newJob = new PrintJob(job);
 		PrintJob otherJob = printJobsByJobId.putIfAbsent(newJob.getId(), newJob);
 		
-		//This can't happen...
+		//This could never happen.
 		if (otherJob != null) {
 			throw new JobManagerException("The selected job is already running");
 		}
@@ -48,53 +89,25 @@ public class PrintJobManager {
 			throw new JobManagerException("The selected job is not a file");
 		}
 		
+		//Why are these being set?
 		newJob.setCurrentSlice(0);
 		newJob.setTotalSlices(0);
 
+		Future<JobStatus> futureJobStatus = null;
 		try {
-			for (PrintFileProcessor currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
-				if (currentProcessor.acceptsFile(job)) {
-					currentProcessor.prepareEnvironment(job, newJob);
-				}
-			}
-		} catch (JobManagerException e) {
+			PrinterManager.Instance().assignPrinter(newJob, printer);
+			PrintJobProcessingThread worker = new PrintJobProcessingThread(newJob, printer);
+			futureJobStatus = Main.GLOBAL_EXECUTOR.submit(worker);
+			newJob.setPrintFileProcessor(worker.getPrintFileProcessor());
+			newJob.initializePrintJob(futureJobStatus);
+		} catch (AlreadyAssignedException e) {
 			printJobsByJobId.remove(newJob.getId());
 			throw e;
+		} finally {
+			//Trigger all job completion tasks after job is complete
+			Main.GLOBAL_EXECUTOR.submit(new JobCloser(printer, futureJobStatus, newJob));
 		}
 		return newJob;
-	}
-	
-	public Future<JobStatus> startJob(final PrintJob printJob, final Printer printer) throws AlreadyAssignedException {
-		PrinterManager.Instance().assignPrinter(printJob, printer);
-		PrintJobProcessingThread worker = new PrintJobProcessingThread(printJob, printer);
-		final Future<JobStatus> futureJobStatus = Main.GLOBAL_EXECUTOR.submit(worker);
-		printJob.setFutureJobStatus(futureJobStatus);
-		printJob.setPrintFileProcessor(worker.getPrintFileProcessor());
-
-		//Trigger all job completion tasks after job is complete
-		Main.GLOBAL_EXECUTOR.submit(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					printer.setStatus(futureJobStatus.get());
-					System.out.println("Job Success:" + Thread.currentThread().getName());
-					NotificationManager.jobChanged(printer, printJob);
-				} catch (Throwable e) {
-					System.out.println("Job Failed:" + Thread.currentThread().getName());
-					e.printStackTrace();
-					printer.setStatus(JobStatus.Failed);
-					NotificationManager.jobChanged(printer, printJob);
-				} finally {
-					//Don't need to close the printer or dissassociate the serial and display devices
-					printer.showBlankImage();
-					PrintJobManager.Instance().removeJob(printJob);
-					PrinterManager.Instance().removeAssignment(printJob);
-					System.out.println("Job Ended:" + Thread.currentThread().getName());
-				}
-			}
-		});
-		
-		return futureJobStatus;
 	}
 	
 	public PrintJob getJob(UUID jobId) {
@@ -122,10 +135,16 @@ public class PrintJobManager {
 		return jobs;
 	}
 	
-	public void removeJob(PrintJob job) {
+	public boolean removeJob(PrintJob job) {
 		if (job == null)
-			return;
+			return false;
 		
-		printJobsByJobId.remove(job.getId());
+		job = printJobsByJobId.get(job.getId());
+		Printer printer = job.getPrinter();
+		if (printer != null && printer.isPrintActive()) {
+			throw new IllegalArgumentException("Can't remove job while it's being printed.");
+		}
+		
+		return printJobsByJobId.remove(job.getId()) != null;
 	}
 }

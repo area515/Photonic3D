@@ -6,9 +6,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Future;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -20,7 +20,6 @@ import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobManagerException;
-import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.printer.BuildDirection;
@@ -84,6 +83,7 @@ public class PrinterService {
  
 	 @GET
 	 @POST
+	 @DELETE
 	 @Path("delete/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse deletePrinter(@PathParam("printername") String printerName) {
@@ -218,7 +218,7 @@ public class PrinterService {
 		 		+ "}\n"
 			 	+ "value");
 		 configuration.getSlicingProfile().setProjectorGradientCalculator(			    
-		 		"function getFractions(count, start, end) {\n" + 
+		 		/*"function getFractions(count, start, end) {\n" + 
 				"	var incrementAmount = (end - start) / count;\n" +
 				"	var fractions = [];\n" + 
 				"	for (t = 0; t < count; t++) {\n" +
@@ -230,18 +230,19 @@ public class PrinterService {
 	 			"function getColors(fractions, start, stop) {\n" + 
 	 			"	var colors = [];\n" +
 	 			"	var colorRange = stop - start;\n" + 
-	 			"	var atanDivergencePoint = Math.PI / 2;\n" +
+	 			"	var atanDivergencePoint = Math.PI / 2;\n" + 
 	 			"	for (t = 0; t < fractions.length; t++) {\n" +
-	 			"		colors[t] = new Packages.java.awt.Color(0, 0, 0, (java.lang.Integer)(Math.atan(fractions[t] * atanDivergencePoint) * colorRange + start));\n" +
+	 			"		colors[t] = new Packages.java.awt.Color(0, 0, 0, (java.lang.Float)(Math.atan(fractions[t] * atanDivergencePoint) * colorRange + start));\n" + 
 				"	}\n" + 
-				"	//return new Packages.java.awt.Color[]{new Packages.java.awt.Color(0, 0, 0, (java.lang.Integer)(opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum())), new Packages.java.awt.Color(0, 0, 0, 0)};\n" +
+				"	//return new Packages.java.awt.Color[]{new Packages.java.awt.Color(0, 0, 0, (float)(opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum())), new Packages.java.awt.Color(0, 0, 0, 0)};\n" +
 				"	return colors;\n" + 
-	 			"}\n" +
+	 			"}\n" +*/
 	 			"var bulbCenter = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
 	 			"var bulbFocus = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\n" +
 	 			"var totalSizeOfGradient = $buildPlatformXPixels > $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;\n" +
-	 			"var fractions = getFractions(totalSizeOfGradient, 0, 1);\n" +
-	 			"var colors = getColors(fractions, 0.2, 0);//Let's start with 20% opaque in the center of the projector bulb\n" +
+	 			"var fractions = [0.0, 1.0];\n" +
+	 			"//Let's start with 20% opaque in the center of the projector bulb\n" + 
+	 			"var colors = [new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.2), new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.0)];\n" +
 	 			"new Packages.java.awt.RadialGradientPaint(\n" +
 	 			"	bulbCenter,\n" + 
 	 			"	totalSizeOfGradient,\n" +
@@ -351,10 +352,10 @@ public class PrinterService {
 			}
 			
 			currentPrinter.showBlankImage();
-			return new MachineResponse("calibrationscreenshown", true, "Showed blank screen on:" + printerName);
+			return new MachineResponse("blankscreenshown", true, "Showed blank screen on:" + printerName);
 		} catch (InappropriateDeviceException e) {
 			e.printStackTrace();
-			return new MachineResponse("calibrationscreenshown", false, e.getMessage());
+			return new MachineResponse("blankscreenshown", false, e.getMessage());
 		}
 	 }
 
@@ -529,37 +530,30 @@ public class PrinterService {
 	 @GET
 	 @Path("startJob/{fileName}/{printername}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse startJob(@PathParam("fileName") String fileName, @PathParam("printername") String printername) {
+	 public MachineResponse print(@PathParam("fileName") String fileName, @PathParam("printername") String printername) {
+		Printer printer = PrinterManager.Instance().getPrinter(printername);
+		if (printer == null) {
+			return new MachineResponse("start", false, "Printer not started:" + printername);
+		}
+		
 		// Create job
 		File selectedFile = new File(HostProperties.Instance().getUploadDir(), fileName); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
 		
 		// Delete and Create handled in jobManager
 		PrintJob printJob = null;
 		try {
-			printJob = PrintJobManager.Instance().createJob(selectedFile);
-			Printer printer = PrinterManager.Instance().getPrinter(printername);
-			if (printer == null) {
-				throw new InappropriateDeviceException("Printer not started:" + printername);
-			}
-			
-			Future<JobStatus> status = PrintJobManager.Instance().startJob(printJob, printer);
-			return new MachineResponse("start", true, "Started:" + printJob.getId());
+			printJob = PrintJobManager.Instance().createJob(selectedFile, printer);
+			return new MachineResponse("start", true, printJob.getId() + "");
 		} catch (JobManagerException | AlreadyAssignedException e) {
-			PrintJobManager.Instance().removeJob(printJob);
-			PrinterManager.Instance().removeAssignment(printJob);
-			e.printStackTrace();
-			return new MachineResponse("start", false, e.getMessage());
-		} catch (InappropriateDeviceException e) {
-			PrintJobManager.Instance().removeJob(printJob);
 			e.printStackTrace();
 			return new MachineResponse("start", false, e.getMessage());
 		}
  	}
 
-	 /*@GET    //Not ready for this yet...
-	 @Path("remainingResin/{printername}")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse getRemainingResin(@PathParam("printername") String printername) {
+	/*@GET    //Not ready for this yet...
+	@Path("remainingResin/{printername}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MachineResponse getRemainingResin(@PathParam("printername") String printername) {
 		// Create job
 		File selectedFile = new File(HostProperties.Instance().getUploadDir(), jobId); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
 		
@@ -584,22 +578,5 @@ public class PrinterService {
 			e.printStackTrace();
 			return new MachineResponse("start", false, e.getMessage());
 		}
- 	}*/
-
-	 
-	 
-	 
-	 
-	 
-	 
-	 //This creates a template printer and saves it.
-	 /*public static void main(String[] args) {
-		 PrinterConfiguration configuration = new PrinterService().createTemplatePrinter().getConfiguration();
-		 try {
-				HostProperties.Instance().addOrUpdatePrinterConfiguration(configuration);
-			} catch (AlreadyAssignedException e) {
-				e.printStackTrace();
-			}
-
-	 }*/
+	}*/
 }
