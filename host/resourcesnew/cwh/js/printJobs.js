@@ -9,8 +9,9 @@
 		this.currentPrintJob = null;
 		this.printJobs = null;
 		this.currentSliceImage = null;
-		this.currentBuildPhoto = null;
-		this.currentBuildVideo = null;
+		this.currentBuildPhoto = {width: 500, height: 500, url: null};
+		this.currentBuildVideo = {width: 100, height: 100, url: null};
+		
 		function refreshSelectedPrintJob(printJobList) {
         	var foundPrintJob = false;
         	
@@ -62,15 +63,13 @@
 	    }
 		this.stopPrintJob = function stopPrintJob() {
 			var printJobId = encodeURIComponent(controller.currentPrintJob.id);
-	        $http.post("/services/printJobs/stopJob/" + printJobId).success(
-	        		function (data) {
+	        $http.post("/services/printJobs/stopJob/" + printJobId).success(function (data) {
 	        			if (data.response) {
 		        			controller.refreshPrintJobs();
 	        			} else {
 		        			$scope.$emit("MachineResponse", {machineResponse: data, successFunction:null, afterErrorFunction:null});
 	        			}
-	        		}).error(
-    				function (data, status, headers, config, statusText) {
+	        		}).error(function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		})
 	    }
@@ -78,8 +77,8 @@
 			controller.currentPrintJob = newPrintJob;
 		}
 		this.takeBuildPhoto = function takeBuildPhoto() {
-			if (controller.currentPrintJob.printer != null) {
-				controller.currentBuildPhoto = "/services/media/takesnapshot/" + controller.currentPrintJob.printer.configuration.name + "/x/100/y/100?_=" + Math.random();
+			if (controller.currentPrintJob.printInProgress) {
+				controller.currentBuildPhoto.url = "/services/media/takesnapshot/" + controller.currentPrintJob.printer.configuration.name + "/x/" + controller.currentBuildPhoto.width + "/y/" + controller.currentBuildPhoto.height + "?_=" + Math.random();
 			}
 		}
 		this.togglePausePrintJob = function togglePausePrintJob() {
@@ -107,7 +106,7 @@
 	        $http.get("/services/media/" + action + "recordvideo/" + parameters).success(function (data) {
         		$scope.$emit("MachineResponse", {machineResponse: data, successFunction:null, afterErrorFunction:null});
         		if (action == 'stop') {
-        			controller.currentBuildVideo = "/video/" + parameters + Math.random() + '.mp4'
+        			controller.currentBuildVideo.url = "/video/" + parameters + Math.random() + '.mp4'
 					$("video").load();
         		}
     		}).error(function (data, status, headers, config, statusText) {

@@ -6,7 +6,7 @@
 		function attachToPrinter(printerName) {
 			this.printerSocket = cwhWebSocket.connect("services/printerNotification/" + encodeURIComponent(printerName), $scope).onJsonContent(
 				function(printerEvent) {
-					controller.currentPrinter = printerEvent.printer;				
+					controller.currentPrinter = printerEvent.printer;
 				}
 			);
 			if (printerSocket == null) {
@@ -70,6 +70,9 @@
 		}
         this.overrideLiftSpeed = function overrideLiftSpeed() {
 			$http.get("services/printJobs/overrideZLiftSpeed/" + controller.currentPrintJob.id + "/" + controller.currentPrintJob.zliftSpeed).then(gCodeSuccess, errorFunction)
+		}
+        this.shutter = function shutter(shutterState) {
+			$http.get("services/printers/" + shutterState + "shutter/" + printerName).then(gCodeSuccess, errorFunction)
 		}
 
 		attachToPrinter(printerName);

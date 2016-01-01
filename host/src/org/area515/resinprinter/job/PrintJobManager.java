@@ -45,6 +45,8 @@ public class PrintJobManager {
 				printer.setStatus(JobStatus.Failed);
 				NotificationManager.jobChanged(printer, newJob);
 			} finally {
+				newJob.setElapsedTime(System.currentTimeMillis() - newJob.getStartTime());
+				
 				//Don't need to close the printer or dissassociate the serial and display devices
 				printer.showBlankImage();
 				if (HostProperties.Instance().isRemoveJobOnCompletion()) {
@@ -116,7 +118,7 @@ public class PrintJobManager {
 	
 	public PrintJob getPrintJobByPrinterName(String printerName) {
 		for (PrintJob job : printJobsByJobId.values()) {
-			if (printerName.equals(job.getPrinter().getName())) {
+			if (job.getPrinter() != null && printerName.equals(job.getPrinter().getName())) {
 				return job;
 			}
 		}

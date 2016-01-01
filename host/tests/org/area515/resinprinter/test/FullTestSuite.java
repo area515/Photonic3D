@@ -5,6 +5,7 @@ import org.area515.resinprinter.inkdetection.visual.LineTest;
 import org.area515.resinprinter.inkdetection.visual.TestVisualPrintMaterialDetector;
 import org.area515.resinprinter.job.AbstractPrintFileProcessorTest;
 import org.area515.resinprinter.network.LinuxNetworkManagerTest;
+import org.area515.resinprinter.services.TestScriptAndTemplating;
 import org.area515.util.IOUtilitiesTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -17,6 +18,7 @@ import org.junit.runners.Suite;
 	LineTest.class,
 	LinuxNetworkManagerTest.class,
 	AbstractPrintFileProcessorTest.class,
+	TestScriptAndTemplating.class,
 })
 
 public class FullTestSuite {

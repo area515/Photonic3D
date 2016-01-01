@@ -19,6 +19,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipOutputStream;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -78,6 +80,7 @@ public class HostProperties {
 	private String hexCodeBasedProjectorsJson;
 	private String forwardHeader;
 	private CountDownLatch hostReady = new CountDownLatch(1);
+	private String scriptEngineLanguage = null;
 	
 	//SSL settings:
 	private boolean useSSL;
@@ -138,7 +141,7 @@ public class HostProperties {
 		fakedisplay = new Boolean(configurationProperties.getProperty("fakedisplay", "false"));
 		hostGUI = configurationProperties.getProperty("hostGUI", "resources");
 		visibleCards = Arrays.asList(configurationProperties.getProperty("visibleCards", "printers,printJobs,printables,users,settings").split(","));
-
+				
 		//This loads advertisers
 		for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
 			String currentPropertyString = currentProperty.getKey() + "";
@@ -216,6 +219,7 @@ public class HostProperties {
 		clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
 		forwardHeader = configurationProperties.getProperty("forwardHeader", null);
 		removeJobOnCompletion = new Boolean(configurationProperties.getProperty("removeJobOnCompletion", "true"));
+		scriptEngineLanguage = configurationProperties.getProperty("scriptEngineLanguage", "js");
 		
 		streamingCommand = getJSonStringArray(configurationProperties, "streamingCommand");
 		imagingCommand = getJSonStringArray(configurationProperties, "imagingCommand");
@@ -338,6 +342,10 @@ public class HostProperties {
 		for (File currentFile : fileList) {
 			IOUtilities.zipFile(currentFile, zipOutputStream);
 		}
+	}
+	
+	public ScriptEngine buildScriptEngine() {
+		return new ScriptEngineManager().getEngineByExtension(scriptEngineLanguage);
 	}
 	
 	public String getClientUsername() {

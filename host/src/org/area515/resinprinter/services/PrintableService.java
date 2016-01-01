@@ -13,7 +13,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -124,10 +123,13 @@ public class PrintableService {
 	
 	@POST
 	@Path("/print/{filename}")
-	@Consumes("application/octet-stream")
 	public PrintJob print(@PathParam("filename")String fileName) {
+		boolean atLeastOnePrinterStarted = false;
 		List<Printer> printers = PrinterService.INSTANCE.getPrinters();
 		for (Printer printer : printers) {
+			if (printer.isStarted()) {
+				atLeastOnePrinterStarted = true;
+			}
 			if (printer.isStarted() && !printer.isPrintInProgress()) {
 				MachineResponse response = PrinterService.INSTANCE.print(fileName, printer.getName());
 				if (response.getResponse()) {
@@ -136,6 +138,9 @@ public class PrintableService {
 					throw new IllegalArgumentException(response.getMessage());
 				}
 			}
+		}
+		if (!atLeastOnePrinterStarted) {
+			throw new IllegalArgumentException("You need to have a printer started before you can print.");
 		}
 		
 		throw new IllegalArgumentException("There aren't any printers started that aren't already processing other jobs");

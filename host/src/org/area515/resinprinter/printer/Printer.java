@@ -37,7 +37,9 @@ public class Printer {
 	private int calibrationSquareSize;
 	private BufferedImage displayImage;
 	private boolean started;
+	private boolean shutterOpen;
 	private String displayDeviceID;
+	private long currentSlicePauseTime;
 	
 	//For Serial Ports
 	private SerialCommunicationsPort printerFirmwareSerialPort;
@@ -144,7 +146,9 @@ public class Printer {
 				return isPrintActive();
 			}
 			System.out.println("Print has been paused.");
+			long startPause = System.currentTimeMillis();
 			jobContinued.await();
+			currentSlicePauseTime += System.currentTimeMillis() - startPause;
 			System.out.println("Print has resumed.");
 			return isPrintActive();
 		} catch (InterruptedException e) {
@@ -277,6 +281,20 @@ public class Printer {
 		this.configuration = configuration;
 	}
 
+	public boolean isShutterOpen() {
+		return shutterOpen;
+	}
+	public void setShutterOpen(boolean shutterOpen) {
+		this.shutterOpen = shutterOpen;
+	}
+
+	public long getCurrentSlicePauseTime() {
+		return currentSlicePauseTime;
+	}
+	public void setCurrentSlicePauseTime(long currentSlicePauseTime) {
+		this.currentSlicePauseTime = currentSlicePauseTime;
+	}
+	
 	@JsonIgnore
 	public GCodeControl getGCodeControl() {
 		return gCodeControl;

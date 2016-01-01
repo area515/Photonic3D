@@ -4,16 +4,16 @@ angular.module('cwh.spinner', []).directive('cwhSpinner', function() {
         template: 	'<span class="input-group-btn">' +
 						'<a class="btn btn-primary" ng-click="goClick()">Go</a>' +
         			'</span>' +
-        			'<input type="text" class="form-control" ng-keyup="setModel()" placeholder="pixels">' +
+        			'<input type="text" class="form-control" ng-keyup="setModel()" placeholder="placeholder">' +
         			'<span class="input-group-addon input-large btn btn-success" ng-click="increment()">+</span>' + 
         			'<span class="input-group-addon input-large btn btn-danger" ng-click="decrement()">-</span>',
         scope: { },
         require: 'ngModel',
-        link: function(scope, iElement, iAttrs, ngModelController) {//TODO: should be using formatters and parsers for this.
+        link: function(scope, iElement, iAttrs, ngModelController, ngAnimate) {//TODO: should be using formatters and parsers for this.
         	var increment = iAttrs.inc == null?1:parseFloat(iAttrs.inc);
         	var min = iAttrs.min == null?0:parseFloat(iAttrs.min);
         	var max = iAttrs.max == null?100:parseFloat(iAttrs.max);
-        	iElement.find('input')[0].placeholder = iAttrs.placedholder == null?"":iAttrs.placedholder;
+        	iElement.find('input')[0].placeholder = iAttrs.placeholder == null?"":iAttrs.placeholder;
         	
             ngModelController.$render = function() {
                 iElement.find('input')[0].value = ngModelController.$viewValue;
