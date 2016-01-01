@@ -63,7 +63,7 @@ What features does CWH have?
 23. Experiment and override printing options after a print is already in progress.
 24. Take still pictures of the build at the click of a button.
 25. Print material detection framework implemented with a computer vision inspection portal.
-26. Supports Windows, OSX and Linux OSs.
+26. Supports Windows, OSX and Linux OSs. (Service support on Linux)
 
 Do you want to install the latest stable build?
 -------------------------------------------------------------------------------
