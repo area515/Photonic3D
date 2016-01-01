@@ -2,6 +2,7 @@ package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -67,9 +68,13 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		return data;
 	}
 	
-	public void performHeader() throws InappropriateDeviceException {
+	public void performHeader() throws InappropriateDeviceException, IOException {
 		if (data == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
+		}
+		
+		if (data.printer.isProjectorPowerControlSupported()) {
+			data.printer.setProjectorPowerStatus(true);
 		}
 		
 		//Set the default exposure time(this is only used if there isn't an exposure time calculator)
@@ -198,7 +203,7 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		return null;
 	}
 
-	public JobStatus performFooter() throws InappropriateDeviceException {
+	public JobStatus performFooter() throws IOException, InappropriateDeviceException {
 		if (data == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
@@ -211,6 +216,10 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 			data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getgCodeFooter());
 		}
 		
+		if (data.printer.isProjectorPowerControlSupported()) {
+			data.printer.setProjectorPowerStatus(false);
+		}
+
 		return JobStatus.Completed;
 	}
 	
