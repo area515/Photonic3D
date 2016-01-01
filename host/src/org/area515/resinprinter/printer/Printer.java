@@ -262,7 +262,7 @@ public class Printer {
 	@JsonIgnore
 	@XmlTransient
 	public boolean isProjectorPowerControlSupported() {
-		return projectorModel == null;
+		return projectorModel != null;
 	}
 	
 	@JsonIgnore
