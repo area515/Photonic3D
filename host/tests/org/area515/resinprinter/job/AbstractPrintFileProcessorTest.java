@@ -1,6 +1,7 @@
 package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import javax.script.ScriptException;
@@ -21,7 +22,7 @@ import org.mockito.stubbing.Answer;
 
 public class AbstractPrintFileProcessorTest {
 	@Test
-	public void EnsureMethodsThrowExceptionIfNotInitialized() throws InappropriateDeviceException, ScriptException, InterruptedException, ExecutionException {
+	public void EnsureMethodsThrowExceptionIfNotInitialized() throws IOException, InappropriateDeviceException, ScriptException, InterruptedException, ExecutionException {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		try {
 			processor.applyBulbMask(null, 0, 0);

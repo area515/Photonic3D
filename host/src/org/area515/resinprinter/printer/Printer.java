@@ -258,10 +258,19 @@ public class Printer {
 		displayImage = image;
 		refreshFrame.repaint();
 	}
-
+	
+	@JsonIgnore
+	@XmlTransient
+	public boolean isProjectorPowerControlSupported() {
+		return projectorModel == null;
+	}
+	
+	@JsonIgnore
+	@XmlTransient
 	public void setProjectorModel(ProjectorModel projectorModel) {
 		this.projectorModel = projectorModel;
 	}
+	
 	public void setProjectorPowerStatus(boolean powerOn) throws IOException {
 		if (projectorModel == null) {
 			throw new IOException("Projector model couldn't be detected");
@@ -271,7 +280,7 @@ public class Printer {
 			throw new IOException("Serial port not available for projector.");
 		}
 		
-		projectorModel.setProjectorState(powerOn, projectorSerialPort);
+		projectorModel.setPowerState(powerOn, projectorSerialPort);
 	}
 	
 	public PrinterConfiguration getConfiguration() {
