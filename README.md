@@ -38,7 +38,7 @@ Once the new GUI has all of the functionality of the current version, we'll use 
 
 What features does CWH have?
 -------------------------------------------------------------------------------  
-1. Print STL files.
+1. Print STL files without performing pre-slice stage.
 2. Load STL files directly from thingiverse or the internet.
 3. Uses common xml Creation Workshop configuration files.
 4. Custom printer mask overlays.
@@ -64,6 +64,7 @@ What features does CWH have?
 24. Take still pictures of the build at the click of a button.
 25. Print material detection framework implemented with a computer vision inspection portal.
 26. Supports Windows, OSX and Linux OSs. (Service support on Linux)
+27. Supports dynamic direct slice-on-the-fly 3d printing of (.mazecube, .stl, .jpg/.png/.gif, .cws/.zip) files.
 
 Do you want to install the latest stable build?
 -------------------------------------------------------------------------------
