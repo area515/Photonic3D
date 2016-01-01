@@ -24,7 +24,6 @@ import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.printer.PrinterManager;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -33,7 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Path("printJobs")
 public class PrintJobService {
 	public static PrintJobService INSTANCE = new PrintJobService();
-		
+	
 	private PrintJobService() {}
 		
 	@GET

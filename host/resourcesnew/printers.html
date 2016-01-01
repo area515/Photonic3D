@@ -5,18 +5,18 @@
 						<h3 class="panel-title pull-left">All Printers</h3>
 						<div class="row">
 							<div class="btn-group pull-right" >
-								<a class="btn btn-primary" ng-show="printersController.currentPrinter != null" ng-click="printersController.editCurrentPrinter('Edit Basic Printer')" >
+								<button class="btn btn-primary" ng-disabled="printersController.currentPrinter.started || printersController.currentPrinter == null" ng-click="printersController.editCurrentPrinter('Edit Basic Printer')" >
 									<i class="fa fa-pencil"></i>
 									<span>Edit</span>
-								</a>
-								<a class="btn btn-danger" ng-show="printersController.currentPrinter != null" ng-click="printersController.deleteCurrentPrinter()">
+								</button>
+								<button class="btn btn-danger" ng-disabled="printersController.currentPrinter == null" ng-click="printersController.deleteCurrentPrinter()">
 									<i class="fa fa-trash-o"></i> 
 									<span>Remove</span>
-								</a>
-								<a class="btn btn-success" ng-click="printersController.createNewPrinter('Create Basic Printer')">
+								</button>
+								<button class="btn btn-success" ng-click="printersController.createNewPrinter('Create Basic Printer')">
 									<i class="fa fa-plus"></i> 
 									<span>Create</span>
-								</a>
+								</button>
 						    </div>
 						</div>
 					</div>
@@ -57,3 +57,11 @@
 			</div>
 		</div>
 	</div>
+	<div class="modal fade" id="graphScript" tabindex="-1" role="dialog" aria-labelledby="editModal" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<span ng-include="'graphScript.html'"></span>
+			</div>
+		</div>
+	</div>
+	

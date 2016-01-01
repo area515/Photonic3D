@@ -11,10 +11,13 @@ import org.area515.resinprinter.job.PrintJob;
 public class StubPrintFileProcessor<G> implements PrintFileProcessor<G> {
 	private String[] fileExtensions;
 	private String friendlyName;
-	
+
 	public StubPrintFileProcessor(PrintFileProcessor<G> processor) {
 		this.fileExtensions = processor.getFileExtensions();
 		this.friendlyName = processor.getFriendlyName();
+	}
+	
+	public StubPrintFileProcessor() {
 	}
 	
 	@Override

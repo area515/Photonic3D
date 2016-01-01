@@ -11,6 +11,7 @@ import org.area515.resinprinter.job.InkDetector;
 import org.area515.util.TemplateEngine;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @XmlRootElement(name="SliceBuildConfig")
 public class SlicingProfile {
@@ -169,6 +170,7 @@ public class SlicingProfile {
 	private String gCodeLift;
 	private String zLiftSpeedGCode;
 	private String zLiftDistanceGCode;
+	private String gCodeShutter;
 	@XmlElement(name="ZLiftDistanceCalculator")
 	private String zLiftDistanceCalculator;
 	@XmlElement(name="ZLiftSpeedCalculator")
@@ -294,6 +296,13 @@ public class SlicingProfile {
 		this.gCodeLift = TemplateEngine.convertToFreeMarkerTemplate(gCodeLift);
 	}
 	
+	public String getgCodeShutter() {
+		return gCodeShutter;
+	}
+	public void setgCodeShutter(String gCodeShutter) {
+		this.gCodeShutter = TemplateEngine.convertToFreeMarkerTemplate(gCodeShutter);
+	}
+	
 	@XmlTransient
 	public List<InkConfig> getInkConfigs() {
 		return inkConfig;
@@ -308,6 +317,21 @@ public class SlicingProfile {
 	}
 	public void setSelectedInkConfigName(String selectedInk) {
 		this.selectedInk = selectedInk;
+	}
+	
+	@XmlTransient
+	@JsonProperty
+	public Integer getSelectedInkConfigIndex() {
+		for (int t = 0; t < inkConfig.size(); t++) {
+			InkConfig config = inkConfig.get(t);
+			if (config.getName().equals(selectedInk)) {
+				return t;
+			}
+		}
+		
+		return null;
+	}
+	private void setSelectedInkConfigIndex(Integer selectedIndex) {
 	}
 	
 	@JsonIgnore
