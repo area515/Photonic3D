@@ -39,7 +39,7 @@
 					if (controller.currentPrintJob == null) {
 						controller.currentSliceImage = "/services/printJobs/currentSliceImage/unknown";
 					} else {
-						controller.currentSliceImage = "/services/printJobs/currentSliceImage/" + encodeURIComponent(controller.currentPrintJob.id) + "?_=" + Math.random();
+						controller.currentSliceImage = "/services/printJobs/currentSliceImage/" + encodeURIComponent(controller.currentPrintJob.id) + "?_=" + controller.currentPrintJob.currentSlice;
 					}
 				}
 			}

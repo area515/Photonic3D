@@ -3,10 +3,12 @@ package org.area515.resinprinter.printer;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -40,6 +42,9 @@ public class Printer {
 	private boolean shutterOpen;
 	private String displayDeviceID;
 	private long currentSlicePauseTime;
+	private int sliceNumber;
+	private Font defaultFont;
+	private Insets frameInsets;
 	
 	//For Serial Ports
 	private SerialCommunicationsPort printerFirmwareSerialPort;
@@ -133,6 +138,9 @@ public class Printer {
 			}
 			
 			this.status = status;
+			if (!status.isPrintInProgress()) {
+				sliceNumber = 0;
+			}
 		} finally {
 			statusLock.unlock();
 		}
@@ -177,7 +185,7 @@ public class Printer {
 		}
 	}
 	
-	public void setGraphicsData(GraphicsDevice device) {
+	public void setGraphicsData(final GraphicsDevice device) {
 		refreshFrame = new JFrame() {
 			private static final long serialVersionUID = 5024551291098098753L;
 
@@ -206,6 +214,11 @@ public class Printer {
 					return;
 				case CurrentSlice :
 					g2.drawImage(displayImage, null, screenSize.width / 2 - displayImage.getWidth() / 2, screenSize.height / 2 - displayImage.getHeight() / 2);
+					if (device.getIDstring().equalsIgnoreCase(DisplayManager.SIMULATED_DISPLAY)) {
+						g2.setColor(Color.RED);
+						g2.setFont(defaultFont);
+						g2.drawString("Slice:" + sliceNumber, frameInsets.left, frameInsets.top + g2.getFontMetrics().getHeight());
+					}
 					return;
 				}
 			}
@@ -213,10 +226,11 @@ public class Printer {
 
 		if (device.getIDstring().equalsIgnoreCase(DisplayManager.SIMULATED_DISPLAY)) {
 			refreshFrame.setTitle("Printer Simulation");
+			defaultFont = refreshFrame.getFont();
 			refreshFrame.setVisible(true);
 			refreshFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 			refreshFrame.setMinimumSize(new Dimension(500, 500));
-			
+			frameInsets = refreshFrame.getInsets();
 		} else {
 			refreshFrame.setUndecorated(true);
 			device.setFullScreenWindow(refreshFrame);
@@ -254,6 +268,7 @@ public class Printer {
 	}
 	
 	public void showImage(BufferedImage image) {
+		sliceNumber++;
 		displayState = DisplayState.CurrentSlice;		
 		displayImage = image;
 		refreshFrame.repaint();

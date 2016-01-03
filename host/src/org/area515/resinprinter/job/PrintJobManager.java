@@ -52,6 +52,10 @@ public class PrintJobManager {
 				if (HostProperties.Instance().isRemoveJobOnCompletion()) {
 					PrintJobManager.Instance().removeJob(newJob);
 				}
+				
+				//If we don't do this, the next print will carry the last pause along with it and make falsify the slicing time.
+				printer.setCurrentSlicePauseTime(0);
+				
 				PrinterManager.Instance().removeAssignment(newJob);
 				newJob.setPrintFileProcessor(new StubPrintFileProcessor<>(newJob.getPrintFileProcessor()));
 				System.out.println("Job Ended:" + Thread.currentThread().getName());

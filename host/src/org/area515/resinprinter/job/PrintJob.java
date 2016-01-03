@@ -277,6 +277,7 @@ public class PrintJob {
 		
 		currentSliceTime = sliceTime;
 		currentSlice++;
+		
 		if (buildAreaInMM != null && buildAreaInMM > 0) {
 			double buildVolume = buildAreaInMM * inkConfig.getSliceHeight();
 			currentSliceCost = (buildVolume / 1000000) * inkConfig.getResinPriceL();
