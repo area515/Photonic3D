@@ -222,7 +222,7 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 
 		return JobStatus.Completed;
 	}
-	
+
 	private Number calculate(String calculator, String calculationName) throws ScriptException {
 		try {
 			Number num = (Number)TemplateEngine.runScript(data.printJob, data.printer, data.scriptEngine, calculator, calculationName, null);
