@@ -35,7 +35,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	public String[] getFileExtensions() {
 		return new String[]{"cws", "zip"};
 	}
-
+	
 	@Override
 	public boolean acceptsFile(File processingFile) {
 		//TODO: we shouldn't except all zip files only those that have embedded gif/jpg/png information.
@@ -223,7 +223,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException {
 		List<PrintJob> printJobs = PrintJobManager.Instance().getJobsByFilename(processingFile.getName());
 		for (PrintJob currentJob : printJobs) {
-			if (!currentJob.getId().equals(printJob.getId())) {
+			if (!currentJob.getId().equals(printJob.getId()) && currentJob.isPrintInProgress()) {
 				throw new JobManagerException("It currently isn't possible to print more than 1 " + getFriendlyName() + " file at once.");
 			}
 		}

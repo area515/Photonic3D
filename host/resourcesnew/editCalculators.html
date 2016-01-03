@@ -1,0 +1,62 @@
+		<div class="panel panel-default">
+			<div class="panel-heading clearfix">
+				<i class="fa pull-left fa-2x fa-calculator"></i>
+				<h4 class="pull-left">Slicing Calculators: {{printersController.currentPrinter.configuration.name}} </h4>
+				<div class="btn-group pull-right" >
+					<button class="btn btn-primary" ng-disabled="printersController.currentPrinter.started" ng-click="printersController.savePrinter(printersController.currentPrinter)" >
+						<i class="fa fa-pencil"></i>
+						<span>Save</span>
+					</button>
+				</div>
+			</div>
+			<div class="list-group">
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-sort-amount-asc fa-rotate-180 pull-left"></i>
+					<h4>Z Lift Distance (mm)</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="please return a double value from this script"
+						helpURL="http://www.w3schools.com/js/"
+						testClick="printersController.testScript('Z Lift Distance Calculator' , 'java.lang.Double[$CURSLICE({{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers}},{{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers+2}},1)$buildAreaMM(0.0,2000.0,75)]', printersController.currentPrinter.configuration.slicingProfile.ZLiftDistanceCalculator)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.ZLiftDistanceCalculator">
+					</div>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-step-backward fa-rotate-90 pull-left"></i>
+					<h4>Lift Speed (mm/m)</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="please return a double value from this script"
+						helpURL="http://www.w3schools.com/js/"
+						testClick="printersController.testScript('Z Lift Speed Calculator' , 'java.lang.Double[$CURSLICE({{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers}},{{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers+2}},1)$buildAreaMM(0.0,2000.0,75)]', printersController.currentPrinter.configuration.slicingProfile.ZLiftSpeedCalculator)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.ZLiftSpeedCalculator">
+					</div>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-fire pull-left"></i>
+					<h4>Exposure Time (ms)</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="please return an integer value from this script"
+						helpURL="http://www.w3schools.com/js/"
+						testClick="printersController.testScript('Exposure Time Calculator' , 'java.lang.Integer[$CURSLICE({{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers}},{{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers+2}},1)$buildAreaMM(0.0,2000.0,75)]', printersController.currentPrinter.configuration.slicingProfile.ExposureTimeCalculator)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.ExposureTimeCalculator">
+					</div>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-certificate pull-left"></i>
+					<h4>Projector Gradient (Paint)</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="please return an instance of java.awt.Paint from this script"
+						helpURL="http://www.w3schools.com/js/"
+						testClick="printersController.testScript('Projector Gradient Calculator' , 'java.awt.Paint', printersController.currentPrinter.configuration.slicingProfile.ProjectorGradientCalculator)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.ProjectorGradientCalculator">
+					</div>
+				</div>
+			</div>
+			
+			<div class="panel-footer">
+				<span ng-include="'cardFooter.html'"></span>
+			</div>
+		</div>

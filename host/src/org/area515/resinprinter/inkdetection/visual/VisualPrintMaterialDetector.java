@@ -17,7 +17,7 @@ import org.area515.resinprinter.services.MediaService;
 
 public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 	//TODO: There are a ton of ways to make this lighting fast on a raspberry pi 2 and much faster on a Raspberry pi.
-	//		Consider optimizations from both from a multi-processor standpoint, image tiling standpoint and one or two general algorithmic optimizations
+	//		Consider optimizations from both from a multi-processor standpoint, image tiling(ROI) standpoint and one or two general algorithmic optimizations
 	//      This method is pretty much just conceptual for now, just to show something that works
 	@Override
 	public Float getPercentageOfPrintMaterialRemaining(Printer printer) {

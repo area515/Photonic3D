@@ -66,6 +66,9 @@
 			
 			controller.editPrinter = JSON.parse(JSON.stringify(controller.currentPrinter));
 			controller.editPrinter.configuration.name = controller.editPrinter.configuration.name + " (Copy)";
+			//These must be set before we save a printer, otherwise the xml files aren't saved properly
+			controller.editPrinter.configuration.MachineConfigurationName = controller.editPrinter.configuration.name;
+			controller.editPrinter.configuration.SlicingProfileName = controller.editPrinter.configuration.name;
         	$('#editModal').modal();
 		}
 		
@@ -76,11 +79,8 @@
         	$('#editModal').modal();
 		}
 
-		this.savePrinter = function savePrinter() {
-			//These must be set before we save the printer, but this is probably going to overwrite the names on existing printers. Maybe this should only be done on new printers...
-			controller.editPrinter.configuration.MachineConfigurationName = controller.editPrinter.configuration.name;
-			controller.editPrinter.configuration.SlicingProfileName = controller.editPrinter.configuration.name;
-			this.executeActionAndRefreshPrinters("Save Printer", "No printer selected to save.", '/services/printers/save', controller.editPrinter, true);
+		this.savePrinter = function savePrinter(printer) {
+			this.executeActionAndRefreshPrinters("Save Printer", "No printer selected to save.", '/services/printers/save', printer, true);
 	        controller.editPrinter = null;
 		}
 		
@@ -99,10 +99,44 @@
 		
 		this.changeCurrentPrinter = function changeCurrentPrinter(newPrinter) {
 			controller.currentPrinter = newPrinter;
+		}
+		
+        this.gotoPrinterControls = function gotoPrinterControls() {
+        	$location.path('/printerControlsPage').search({printerName: controller.currentPrinter.configuration.name})
+        };
+        
+		this.testScript = function testScript(scriptName, returnType, script) {
+			var printerNameEn = encodeURIComponent(controller.currentPrinter.configuration.name);
+			var scriptNameEn = encodeURIComponent(scriptName);
+			var returnTypeEn = encodeURIComponent(returnType);
 			
-			//TODO: Fix for Mobile!
-		    //$location.hash('printer');
-		    //$anchorScroll();
+			$http.post('/services/printers/testScript/' + printerNameEn + "/" + scriptNameEn + "/" + returnTypeEn, script).success(function (data) {
+				controller.graph = data.result;
+				if (data.error) {
+	     			$scope.$emit("MachineResponse", {machineResponse: {command:scriptName, message:data.errorDescription}, successFunction:null, afterErrorFunction:null});
+	     		} else if (returnType.indexOf("[") > -1){
+					$('#graphScript').modal();
+				} else {
+	     			$scope.$emit("MachineResponse", {machineResponse: {command:scriptName, message:"Successful execution. Script returned:" + JSON.stringify(data.result), response:true}, successFunction:null, afterErrorFunction:null});
+				}
+			}).error(function (data, status, headers, config, statusText) {
+     			$scope.$emit("HTTPError", {status:status, statusText:data});
+    		})
+		}
+		
+		this.testTemplate = function testTemplate(scriptName, script) {
+			var printerNameEn = encodeURIComponent(controller.currentPrinter.configuration.name);
+			var scriptNameEn = encodeURIComponent(scriptName);
+			
+			$http.post('/services/printers/testTemplate/' + printerNameEn + "/" + scriptNameEn, script).success(function (data) {
+				if (data.error) {
+	     			$scope.$emit("MachineResponse", {machineResponse: {command:scriptName, message:data.errorDescription}, successFunction:null, afterErrorFunction:null});
+				} else {
+	     			$scope.$emit("MachineResponse", {machineResponse: {command:scriptName, message:"Successful execution. Template returned:" + data.result, response:true}, successFunction:null, afterErrorFunction:null});
+				}
+			}).error(function (data, status, headers, config, statusText) {
+     			$scope.$emit("HTTPError", {status:status, statusText:data});
+    		})
 		}
 		
 		$http.get('/services/machine/serialPorts/list').success(
@@ -114,6 +148,8 @@
 				function (data) {
 					controller.graphicsDisplays = data;
 				});
+		
+		controller.inkDetectors = [{name:"Visual Ink Detector", className:"org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector"}];
 		
 		refreshPrinters();
 	}])

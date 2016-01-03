@@ -77,7 +77,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>
 		
 		//Everything needs to be setup in the dataByPrintJob before we start the header
 		performHeader();
-
+		
 		int startPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(stlData.slicer.getZMin() + 1): (stlData.slicer.getZMax() + 1);
 		int endPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(stlData.slicer.getZMax() + 1): (stlData.slicer.getZMin() + 1);
 		for (int z = startPoint; z <= endPoint && dataAid.printer.isPrintActive(); z += dataAid.slicingProfile.getDirection().getVector()) {
@@ -96,7 +96,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>
 			
 			//Cure the current image
 			dataAid.printer.showImage(image);
-
+			
 			//Get the next pointer in line to start rendering the image into
 			nextRenderingPointer = stlData.getNextRenderingPointer();
 			

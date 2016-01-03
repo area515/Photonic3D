@@ -1,2 +1,4 @@
 .cwh-text-indent { margin-left:5px; }
 .cwh-text-opacity_50 { opacity: .50 }
+.cwh-text-large-area { margin: 0px !important; height: 200px!important; width:600px !important;}
+.cwh-input-smallbox { padding: 3px 3px; width: 15%}

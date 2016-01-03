@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.script.ScriptEngine;
@@ -38,6 +39,7 @@ public class TemplateEngine {
 		String[] replacements = new String[] {
 				"CURSLICE", 
 				"LayerThickness", 
+				"shutterOpen", 
 				"ZDir", 
 				"ZLiftRate", 
 				"ZLiftDist", 
@@ -68,7 +70,7 @@ public class TemplateEngine {
         /*
         	$ZDir
         	$CURSLICE
-        	$LayerThickness// the thickenss of the layer in mm
+        	$LayerThickness// the thickness of the layer in mm
         	$ZLiftDist// how far we're lifting
         	$ZLiftRate// the rate at which we're lifting
         $ZBottomLiftRate// the rate at which we're lifting for the bottom layers
@@ -81,18 +83,19 @@ public class TemplateEngine {
         */
 
 		root.put("now", new Date());
+		root.put("shutterOpen", printer.isShutterOpen());
 		root.put("CURSLICE", job.getCurrentSlice());
-		root.put("LayerThickness", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
-		root.put("ZDir", job.getPrinter().getConfiguration().getSlicingProfile().getDirection().getVector());
+		root.put("LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
+		root.put("ZDir", printer.getConfiguration().getSlicingProfile().getDirection().getVector());
 		root.put("ZLiftRate", job.getZLiftSpeed());
 		root.put("ZLiftDist", job.getZLiftDistance());
 		Double buildArea = job.getPrintFileProcessor().getBuildAreaMM(job);
 		root.put("buildAreaMM", buildArea == null || buildArea < 0?null:buildArea);
-		root.put("LayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
-		root.put("FirstLayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
-		root.put("NumFirstLayers", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
-		root.put("buildPlatformXPixels", job.getPrinter().getConfiguration().getSlicingProfile().getxResolution());
-		root.put("buildPlatformYPixels", job.getPrinter().getConfiguration().getSlicingProfile().getyResolution());
+		root.put("LayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
+		root.put("FirstLayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
+		root.put("NumFirstLayers", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
+		root.put("buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
+		root.put("buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
 		root.put("job", job);
 		root.put("printer", printer);
 		
@@ -118,24 +121,32 @@ public class TemplateEngine {
         }
 	}
 	
-	public static Object runScript(PrintJob job, ScriptEngine engine, String script, String scriptName) throws ScriptException {
+	public static Object runScript(PrintJob job, Printer printer, ScriptEngine engine, String script, String scriptName, Map<String, Object> overrides) throws ScriptException {
 		engine.put("now", new Date());
+		engine.put("$shutterOpen", printer.isShutterOpen());
 		engine.put("$CURSLICE", job.getCurrentSlice());
-		engine.put("$LayerThickness", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
-		engine.put("$ZDir", job.getPrinter().getConfiguration().getSlicingProfile().getDirection().getVector());
+		engine.put("$LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
+		engine.put("$ZDir", printer.getConfiguration().getSlicingProfile().getDirection().getVector());
 		engine.put("$ZLiftRate", job.getZLiftSpeed());
 		engine.put("$ZLiftDist", job.getZLiftDistance());
 		Double buildArea = job.getPrintFileProcessor().getBuildAreaMM(job);
 		engine.put("$buildAreaMM", buildArea == null || buildArea < 0?Double.NaN:buildArea);
-		engine.put("$LayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
-		engine.put("$FirstLayerTime", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
-		engine.put("$NumFirstLayers", job.getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
-		engine.put("$buildPlatformXPixels", job.getPrinter().getConfiguration().getSlicingProfile().getxResolution());
-		engine.put("$buildPlatformYPixels", job.getPrinter().getConfiguration().getSlicingProfile().getyResolution());
+		engine.put("$LayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
+		engine.put("$FirstLayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
+		engine.put("$NumFirstLayers", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
+		engine.put("$buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
+		engine.put("$buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
 		engine.put("job", job);
-		engine.put("printer", job.getPrinter());
+		engine.put("printer", printer);
 		engine.put(ScriptEngine.FILENAME, scriptName);
 		
+		if (overrides != null) {
+			Iterator<Map.Entry<String, Object>> entries = overrides.entrySet().iterator();
+			while (entries.hasNext()) {
+				Map.Entry<String, Object> entry = entries.next();
+				engine.put(entry.getKey(), entry.getValue());
+			}
+		}
 		return engine.eval(script);
 	}
 }

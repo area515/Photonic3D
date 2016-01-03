@@ -26,30 +26,47 @@
 						</div>
 					</div>
 					<div class="list-group">
-						<a ng-class="{active:printJob.id == printJobsController.currentPrintJob.id}" ng-repeat="printJob in printJobsController.printJobs"
+						<div ng-class="{active:printJob.id == printJobsController.currentPrintJob.id}" ng-repeat="printJob in printJobsController.printJobs"
 							class="list-group-item"
 				 			ng-click="printJobsController.changeCurrentPrintJob(printJob)">
 					 			<span class="pull-left fa-stack fa-lg">
 									<i class="fa fa-stack-1x fa-lg" ng-class="printJobsController.getPrintJobIconClass(printJob)"></i>
 			  						<i class="fa fa-stack-1x fa-lg fa-play text-danger" ng-show="printJob.printInProgress && !printJob.printPaused"></i>
 									<i class="fa fa-stack-1x fa-lg fa-pause text-danger" ng-show="printJob.printPaused"></i>
-								</span>								
+								</span>
 								<h4 class="list-group-item-heading">{{printJob.jobName}}</h4>
-								<p class="list-group-item-text">
-									Started: {{printJob.startTime | date:'yyyy-MM-dd HH:mm:ss'}}  
-								</p>
-								<p class="list-group-item-text">
+								<div class="list-group-item-text">
+									Started: {{printJob.startTime | date:'yyyy-MM-dd HH:mm:ss'}}
+								</div>
+								<div class="list-group-item-text" ng-hide="printJob.printInProgress">
+									<span class="pull-left">Complete: {{printJob.startTime + printJob.elapsedTime | date:'yyyy-MM-dd HH:mm:ss'}}</span>
+									<span class="pull-right">Time: {{printJob.elapsedTime | secondsToDateTime | date:'HH:mm:ss'}}</span>
+								</div>
+								<div class="list-group-item-text" ng-show="printJob.printInProgress && printJob.totalSlices > printJob.currentSlice">
+									Progress: {{printJob.currentSlice}} of {{printJob.totalSlices}} ({{printJob.currentSlice/printJob.totalSlices * 100 | number : 1}}%)
+								</div>
+								<div class="list-group-item-text" ng-show="printJob.printInProgress && printJob.totalSlices < printJob.currentSlice">
+									Slice #{{printJob.currentSlice}}
+								</div>
+								<div class="list-group-item-text" ng-show="printJob.printInProgress && printJob.totalSlices > printJob.currentSlice">
+									<span class="pull-left">Time To Completion: {{printJob.averageSliceTime * (printJob.totalSlices - printJob.currentSlice) | secondsToDateTime | date:'HH:mm:ss'}}</span>
+									<span class="pull-right">Elapsed Time: {{printJob.elapsedTime | secondsToDateTime | date:'HH:mm:ss'}}</span>
+								</div>
+								<div class="list-group-item-text">
+									<span class="pull-left">Average Slice Time: {{printJob.averageSliceTime | number}}ms</span>
+									<span class="pull-right">Total Cost: {{printJob.totalCost | currency}}</span>
+								</div>
+								<div class="list-group-item-text">
 									<span class="pull-left">Status: {{printJob.status}} {{printJob.errorDescription}}</span>
 									<span class="pull-right">{{printJob.printFileProcessor.friendlyName}}</span>
-								</p>
-						</a>
+								</div>
+						</div>
 					</div>
 					<div class="panel-footer">
 						<span ng-include="'cardFooter.html'"></span>
 					</div>
 				</div>
 			</div>
-		
 			<div class="col-sm-7 bootcards-cards">
 				<div id="printJobSliceCard">
 					<span ng-include="'printJobSlice.html'"></span>

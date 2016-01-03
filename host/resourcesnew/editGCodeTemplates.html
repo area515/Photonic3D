@@ -1,0 +1,95 @@
+		<div class="panel panel-default">
+			<div class="panel-heading clearfix">
+				<i class="fa pull-left fa-2x fa-code"></i>
+				<h4 class="pull-left">non-CWS GCode Templates: {{printersController.currentPrinter.configuration.name}} </h4>
+				<div class="btn-group pull-right" >
+					<button class="btn btn-primary" ng-disabled="printersController.currentPrinter.started" ng-click="printersController.savePrinter(printersController.currentPrinter)" >
+						<i class="fa fa-pencil"></i>
+						<span>Save</span>
+					</button>
+				</div>
+			</div>
+			<div class="list-group">
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-mail-forward pull-left"></i>
+					<h4>Header (Printer may require)</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="use a freemarker template here"
+						helpURL="http://freemarker.incubator.apache.org/docs/dgui.html"
+						testClick="printersController.testTemplate('GCode Header Template' , printersController.currentPrinter.configuration.slicingProfile.gCodeHeader)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.gCodeHeader">
+					</div>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-scissors pull-left"></i>
+					<h4>Pre-slice (Printer may require)</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="use a freemarker template here"
+						helpURL="http://freemarker.incubator.apache.org/docs/dgui.html"
+						testClick="printersController.testTemplate('GCode Header Template' , printersController.currentPrinter.configuration.slicingProfile.gCodePreslice)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.gCodePreslice">
+					</div>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-mail-forward fa-rotate-270 pull-left"></i>
+					<h4>Z Lift sequence (Required)</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="use a freemarker template here"
+						helpURL="http://freemarker.incubator.apache.org/docs/dgui.html"
+						testClick="printersController.testTemplate('GCode Header Template' , printersController.currentPrinter.configuration.slicingProfile.gCodeLift)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.gCodeLift">
+					</div>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-mail-forward fa-flip-vertical pull-left"></i>
+					<h4>Footer (Printer may require)</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="use a freemarker template here"
+						helpURL="http://freemarker.incubator.apache.org/docs/dgui.html"
+						testClick="printersController.testTemplate('GCode Header Template' , printersController.currentPrinter.configuration.slicingProfile.gCodeFooter)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.gCodeFooter">
+					</div>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-adjust pull-left"></i>
+					<h4>Shutter (Optional)</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="use a freemarker template here"
+						helpURL="http://freemarker.incubator.apache.org/docs/dgui.html"
+						testClick="printersController.testTemplate('GCode Shutter Template' , printersController.currentPrinter.configuration.slicingProfile.gCodeShutter)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.gCodeShutter">
+					</div>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-step-backward fa-rotate-90 pull-left"></i>
+					<h4>Set Z Lift Speed (Optional)</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="use a freemarker template here"
+						helpURL="http://freemarker.incubator.apache.org/docs/dgui.html"
+						testClick="printersController.testTemplate('GCode Header Template' , printersController.currentPrinter.configuration.slicingProfile.zliftSpeedGCode)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.zliftSpeedGCode">
+					</div>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-sort-amount-asc fa-rotate-180 pull-left"></i>
+					<h4>Set Z Lift Distance (Optional)</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="use a freemarker template here"
+						helpURL="http://freemarker.incubator.apache.org/docs/dgui.html"
+						testClick="printersController.testTemplate('GCode Header Template' , printersController.currentPrinter.configuration.slicingProfile.zliftDistanceGCode)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.zliftDistanceGCode">
+					</div>
+				</div>
+			</div>
+			
+			<div class="panel-footer">
+				<span ng-include="'cardFooter.html'"></span>
+			</div>
+		</div>

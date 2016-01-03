@@ -42,7 +42,6 @@
 			controller.shutdownInProgress = true;
 			$http.put("services/machine/wirelessConnect", controller.selectedNetworkInterface).then(
 		    		function (data) {
-		    			//$location.path("/printersPage");
 		    			controller.restartMessage = " Waiting for host to start monitoring process.";
 		    			$('#editModal').modal();
 		    			

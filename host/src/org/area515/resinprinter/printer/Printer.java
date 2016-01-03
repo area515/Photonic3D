@@ -3,10 +3,12 @@ package org.area515.resinprinter.printer;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -37,7 +39,12 @@ public class Printer {
 	private int calibrationSquareSize;
 	private BufferedImage displayImage;
 	private boolean started;
+	private boolean shutterOpen;
 	private String displayDeviceID;
+	private long currentSlicePauseTime;
+	private int sliceNumber;
+	private Font defaultFont;
+	private Insets frameInsets;
 	
 	//For Serial Ports
 	private SerialCommunicationsPort printerFirmwareSerialPort;
@@ -131,6 +138,9 @@ public class Printer {
 			}
 			
 			this.status = status;
+			if (!status.isPrintInProgress()) {
+				sliceNumber = 0;
+			}
 		} finally {
 			statusLock.unlock();
 		}
@@ -144,7 +154,9 @@ public class Printer {
 				return isPrintActive();
 			}
 			System.out.println("Print has been paused.");
+			long startPause = System.currentTimeMillis();
 			jobContinued.await();
+			currentSlicePauseTime += System.currentTimeMillis() - startPause;
 			System.out.println("Print has resumed.");
 			return isPrintActive();
 		} catch (InterruptedException e) {
@@ -173,7 +185,7 @@ public class Printer {
 		}
 	}
 	
-	public void setGraphicsData(GraphicsDevice device) {
+	public void setGraphicsData(final GraphicsDevice device) {
 		refreshFrame = new JFrame() {
 			private static final long serialVersionUID = 5024551291098098753L;
 
@@ -202,6 +214,11 @@ public class Printer {
 					return;
 				case CurrentSlice :
 					g2.drawImage(displayImage, null, screenSize.width / 2 - displayImage.getWidth() / 2, screenSize.height / 2 - displayImage.getHeight() / 2);
+					if (device.getIDstring().equalsIgnoreCase(DisplayManager.SIMULATED_DISPLAY)) {
+						g2.setColor(Color.RED);
+						g2.setFont(defaultFont);
+						g2.drawString("Slice:" + sliceNumber, frameInsets.left, frameInsets.top + g2.getFontMetrics().getHeight());
+					}
 					return;
 				}
 			}
@@ -209,10 +226,11 @@ public class Printer {
 
 		if (device.getIDstring().equalsIgnoreCase(DisplayManager.SIMULATED_DISPLAY)) {
 			refreshFrame.setTitle("Printer Simulation");
+			defaultFont = refreshFrame.getFont();
 			refreshFrame.setVisible(true);
 			refreshFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 			refreshFrame.setMinimumSize(new Dimension(500, 500));
-			
+			frameInsets = refreshFrame.getInsets();
 		} else {
 			refreshFrame.setUndecorated(true);
 			device.setFullScreenWindow(refreshFrame);
@@ -250,14 +268,24 @@ public class Printer {
 	}
 	
 	public void showImage(BufferedImage image) {
+		sliceNumber++;
 		displayState = DisplayState.CurrentSlice;		
 		displayImage = image;
 		refreshFrame.repaint();
 	}
-
+	
+	@JsonIgnore
+	@XmlTransient
+	public boolean isProjectorPowerControlSupported() {
+		return projectorModel != null;
+	}
+	
+	@JsonIgnore
+	@XmlTransient
 	public void setProjectorModel(ProjectorModel projectorModel) {
 		this.projectorModel = projectorModel;
 	}
+	
 	public void setProjectorPowerStatus(boolean powerOn) throws IOException {
 		if (projectorModel == null) {
 			throw new IOException("Projector model couldn't be detected");
@@ -267,7 +295,7 @@ public class Printer {
 			throw new IOException("Serial port not available for projector.");
 		}
 		
-		projectorModel.setProjectorState(powerOn, projectorSerialPort);
+		projectorModel.setPowerState(powerOn, projectorSerialPort);
 	}
 	
 	public PrinterConfiguration getConfiguration() {
@@ -277,6 +305,20 @@ public class Printer {
 		this.configuration = configuration;
 	}
 
+	public boolean isShutterOpen() {
+		return shutterOpen;
+	}
+	public void setShutterOpen(boolean shutterOpen) {
+		this.shutterOpen = shutterOpen;
+	}
+
+	public long getCurrentSlicePauseTime() {
+		return currentSlicePauseTime;
+	}
+	public void setCurrentSlicePauseTime(long currentSlicePauseTime) {
+		this.currentSlicePauseTime = currentSlicePauseTime;
+	}
+	
 	@JsonIgnore
 	public GCodeControl getGCodeControl() {
 		return gCodeControl;
