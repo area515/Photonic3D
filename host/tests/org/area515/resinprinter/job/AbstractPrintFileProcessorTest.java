@@ -1,6 +1,7 @@
 package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import javax.script.ScriptException;
@@ -21,7 +22,7 @@ import org.mockito.stubbing.Answer;
 
 public class AbstractPrintFileProcessorTest {
 	@Test
-	public void EnsureMethodsThrowExceptionIfNotInitialized() throws InappropriateDeviceException, ScriptException, InterruptedException, ExecutionException {
+	public void EnsureMethodsThrowExceptionIfNotInitialized() throws IOException, InappropriateDeviceException, ScriptException, InterruptedException, ExecutionException {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		try {
 			processor.applyBulbMask(null, 0, 0);
@@ -50,7 +51,7 @@ public class AbstractPrintFileProcessorTest {
 		}
 	}
 	
-	private PrintJob createTestPrintJob(PrintFileProcessor processor) throws InappropriateDeviceException {
+	public static PrintJob createTestPrintJob(PrintFileProcessor processor) throws InappropriateDeviceException {
 		PrintJob printJob = Mockito.mock(PrintJob.class);
 		Printer printer = Mockito.mock(Printer.class);
 		PrinterConfiguration printerConfiguration = Mockito.mock(PrinterConfiguration.class);
@@ -100,6 +101,20 @@ public class AbstractPrintFileProcessorTest {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn("var mm = $buildAreaMM * 2;java.awt.Color.ORANGE");
+		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
+		processor.initializeDataAid(printJob);
+		try {
+			processor.performPostSlice();
+		} catch (IllegalArgumentException e) {
+			Assert.assertEquals("The result of your lift distance script needs to evaluate to an instance of java.lang.Number", e.getMessage());
+		}
+	}
+	
+	@Test
+	public void noNullPointerWhenWeReturnNull() throws InappropriateDeviceException, ExecutionException, InterruptedException, ScriptException {
+		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
+		PrintJob printJob = createTestPrintJob(processor);
+		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn(";");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
 		processor.initializeDataAid(printJob);
 		try {

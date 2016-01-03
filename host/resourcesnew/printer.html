@@ -2,18 +2,18 @@
 	<div class="panel-heading clearfix">
 		<h3 class="panel-title pull-left">Basic Printer Setup</h3>
 	    <div class="btn-group pull-right">
-			<a class="btn btn-success" ng-hide="printersController.currentPrinter.started" ng-click="printersController.startCurrentPrinter()">
+			<button class="btn btn-success" ng-disabled="printersController.currentPrinter.started" ng-click="printersController.startCurrentPrinter()">
 				<i class="fa fa-play"></i> 
 				<span>Start</span>
-			</a>
-			<a class="btn btn-danger" ng-show="printersController.currentPrinter.started" ng-click="printersController.stopCurrentPrinter()">
+			</button>
+			<button class="btn btn-danger" ng-disabled="!printersController.currentPrinter.started" ng-click="printersController.stopCurrentPrinter()">
 				<i class="fa fa-stop"></i> 
 				<span>Stop</span>
-			</a>
-			<a class="btn btn-primary" ng-show="printersController.currentPrinter.started" href="./printerControlsPage?printerName={{printersController.currentPrinter.configuration.name}}" >
+			</button>
+			<button class="btn btn-primary" ng-disabled="!printersController.currentPrinter.started" ng-click="printersController.gotoPrinterControls()" >
 				<i class="fa fa-wrench"></i> 
 				<span>Controls</span>
-			</a>
+			</button>
 	    </div>
 	</div>
 	<div class="list-group">
@@ -45,9 +45,19 @@
 			<label>Slicing Profile</label>
 			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.SlicingProfileName}}</h4>
 		</div>
+		<div class="list-group-item">
+			<label>Ink Configuration</label>
+			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.slicingProfile.SelectedInk}}</h4>
+		</div>
 	</div>
-	
+			
 	<div class="panel-footer">
 		<span ng-include="'cardFooter.html'"></span>
 	</div>
 </div>
+
+<span ng-include="'editCalculators.html'" ng-show="printersController.currentPrinter"></span>
+
+<span ng-include="'editGCodeTemplates.html'" ng-show="printersController.currentPrinter"></span>
+
+<span ng-include="'editInkConfig.html'" ng-show="printersController.currentPrinter"></span>

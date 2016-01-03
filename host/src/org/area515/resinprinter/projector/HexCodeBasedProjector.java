@@ -95,7 +95,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	}
 
 	@Override
-	public void setProjectorState(boolean state, SerialCommunicationsPort port) throws IOException {
+	public void setPowerState(boolean state, SerialCommunicationsPort port) throws IOException {
 		if (state) {
 			port.write(onHex);
 		} else {
@@ -104,7 +104,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	}
 
 	@Override
-	public boolean getProjectorState(SerialCommunicationsPort port) throws IOException {
+	public boolean getPowerState(SerialCommunicationsPort port) throws IOException {
 		throw new IOException("This feature isn't implemented yet");
 	}
 

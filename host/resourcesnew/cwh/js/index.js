@@ -1,5 +1,12 @@
+
+
 (function() {
-		var cwhApp = angular.module('cwhApp', ['ngRoute', 'cwh.spinner', 'cwh.webSocket', 'ngFileUpload']);
+		var cwhApp = angular.module('cwhApp', ['ngRoute', 'cwh.spinner', 'cwh.webSocket', 'cwh.testscript', 'ngFileUpload', 'ngAnimate', 'chart.js']);
+		cwhApp.filter('secondsToDateTime', [function() {
+		    return function(milliseconds) {
+		        return new Date(1970, 0, 1).setMilliseconds(milliseconds);
+		    };
+		}]);
 		cwhApp.config(['$routeProvider', '$locationProvider', '$httpProvider', function($routeProvider, $locationProvider, $httpProvider) {
 		    if (!$httpProvider.defaults.headers.get) {
 		        $httpProvider.defaults.headers.get = {};    

@@ -119,8 +119,10 @@ public class MediaService {
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.out.println("Couldn't start command line process:" + streamingCommand);
-				rawH264ProducerProcess.destroy();
-				rawH264ProducerProcess = null;
+				if (rawH264ProducerProcess != null) {
+					rawH264ProducerProcess.destroy();
+					rawH264ProducerProcess = null;
+				}
 				return new MachineResponse("startrecord", false, "Printer:" + printerName + " couldn't record");
 			}
 		} finally {
@@ -205,7 +207,7 @@ public class MediaService {
 				String[] replacedCommands = new String[streamingCommand.length];
 				for (int t = 0; t < streamingCommand.length; t++) {
 					replacedCommands[t] = MessageFormat.format(streamingCommand[t], x, y);
-				}				
+				}
 				
 				InputStream inputStream = null;
 				processLock.lock();

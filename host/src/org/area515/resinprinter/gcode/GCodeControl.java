@@ -1,6 +1,7 @@
 package org.area515.resinprinter.gcode;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -134,22 +135,25 @@ public abstract class GCodeControl {
         return sendGcode("G28\r\n");
     }
     
-    public void executeGCodeWithTemplating(PrintJob printJob, String gcodes) throws InappropriateDeviceException {
+    public String executeGCodeWithTemplating(PrintJob printJob, String gcodes) throws InappropriateDeviceException {
 		Pattern gCodePattern = Pattern.compile("\\s*([^;]+)\\s*;?.*", Pattern.CASE_INSENSITIVE);
 		try {
 			if (gcodes == null || gcodes.trim().isEmpty()) {
 				throw new InappropriateDeviceException(MachineConfig.NOT_CAPABLE);
 			}
 			
+			StringBuilder buffer = new StringBuilder();
+			gcodes = TemplateEngine.buildData(printJob, printer, gcodes);
 			for (String gcode : gcodes.split("[\r]?\n")) {
-				gcode = TemplateEngine.buildData(printJob, printer, gcode);
 				if (gcode != null) {
 					Matcher matcher = gCodePattern.matcher(gcode);
 					if (matcher.matches()) {
-						sendGcode(matcher.group(1));
+						buffer.append(sendGcode(matcher.group(1)));
 					}
 				}
 			}
+			
+			return buffer.toString();
 		} catch (IOException | TemplateException e) {
 			throw new InappropriateDeviceException(MachineConfig.NOT_CAPABLE, e);
 		}

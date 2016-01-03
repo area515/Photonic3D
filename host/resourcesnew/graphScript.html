@@ -1,0 +1,18 @@
+<form class="form-horizontal" >
+	<div class="modal-header">
+			<div class="btn-group pull-left">
+				<button class="btn btn-danger" data-dismiss="modal">
+					Done
+				</button>
+			</div>
+		
+			<h4 class="modal-title">{{printersController.graph.name}}</h4>
+	</div>
+	<div class="modal-body">
+		<canvas id="line" class="chart chart-line" chart-data="printersController.graph.data" chart-labels="printersController.graph.labels" chart-legend="true" chart-series="printersController.graph.series" chart-click="onClick" ></canvas> 
+	</div>
+</form>
+
+<div class="modal-footer">
+	<span ng-include="'cardFooter.html'"></span>
+</div>	

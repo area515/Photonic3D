@@ -2,12 +2,12 @@ package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -16,6 +16,7 @@ import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
+import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.TemplateEngine;
@@ -41,7 +42,7 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		
 		public DataAid(PrintJob printJob) throws InappropriateDeviceException {
 			this.printJob = printJob;
-			scriptEngine = new ScriptEngineManager().getEngineByExtension("js");
+			scriptEngine = HostProperties.Instance().buildScriptEngine();
 			printer = printJob.getPrinter();
 			printJob.setStartTime(System.currentTimeMillis());
 		    configuration = printer.getConfiguration();
@@ -67,9 +68,13 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		return data;
 	}
 	
-	public void performHeader() throws InappropriateDeviceException {
+	public void performHeader() throws InappropriateDeviceException, IOException {
 		if (data == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
+		}
+		
+		if (data.printer.isProjectorPowerControlSupported()) {
+			data.printer.setProjectorPowerStatus(true);
 		}
 		
 		//Set the default exposure time(this is only used if there isn't an exposure time calculator)
@@ -139,12 +144,18 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 			}
 		}
 		
-		//TODO: Open shutter here:
+		if (data.slicingProfile.getgCodeShutter() != null && data.slicingProfile.getgCodeShutter().trim().length() > 0) {
+			data.printer.setShutterOpen(true);
+			data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getgCodeShutter());
+		}
 		
 		//Sleep for the amount of time that we are exposing the resin.
 		Thread.sleep(data.printJob.getExposureTime());
 		
-		//TODO: close shutter here:
+		if (data.slicingProfile.getgCodeShutter() != null && data.slicingProfile.getgCodeShutter().trim().length() > 0) {
+			data.printer.setShutterOpen(false);
+			data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getgCodeShutter());
+		}
 		
 		//Blank the screen in the case that our printer doesn't have a shutter
 		data.printer.showBlankImage();
@@ -192,7 +203,7 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		return null;
 	}
 
-	public JobStatus performFooter() throws InappropriateDeviceException {
+	public JobStatus performFooter() throws IOException, InappropriateDeviceException {
 		if (data == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
@@ -205,12 +216,16 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 			data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getgCodeFooter());
 		}
 		
+		if (data.printer.isProjectorPowerControlSupported()) {
+			data.printer.setProjectorPowerStatus(false);
+		}
+
 		return JobStatus.Completed;
 	}
-	
+
 	private Number calculate(String calculator, String calculationName) throws ScriptException {
 		try {
-			Number num = (Number)TemplateEngine.runScript(data.printJob, data.scriptEngine, calculator, calculationName);
+			Number num = (Number)TemplateEngine.runScript(data.printJob, data.printer, data.scriptEngine, calculator, calculationName, null);
 			if (num == null || Double.isNaN(num.doubleValue())) {
 				return null;
 			}
@@ -228,7 +243,7 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		if (data.slicingProfile.getProjectorGradientCalculator() != null && data.slicingProfile.getProjectorGradientCalculator().length() > 0) {
 			Paint maskPaint;
 			try {
-				maskPaint = (Paint)TemplateEngine.runScript(data.printJob, data.scriptEngine, data.slicingProfile.getProjectorGradientCalculator(), "projector gradient script");
+				maskPaint = (Paint)TemplateEngine.runScript(data.printJob, data.printer, data.scriptEngine, data.slicingProfile.getProjectorGradientCalculator(), "projector gradient script", null);
 				g2.setPaint(maskPaint);
 				g2.fillRect(0, 0, width, height);
 			} catch (ClassCastException e) {

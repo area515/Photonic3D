@@ -45,11 +45,17 @@ public class PrintJobManager {
 				printer.setStatus(JobStatus.Failed);
 				NotificationManager.jobChanged(printer, newJob);
 			} finally {
+				newJob.setElapsedTime(System.currentTimeMillis() - newJob.getStartTime());
+				
 				//Don't need to close the printer or dissassociate the serial and display devices
 				printer.showBlankImage();
 				if (HostProperties.Instance().isRemoveJobOnCompletion()) {
 					PrintJobManager.Instance().removeJob(newJob);
 				}
+				
+				//If we don't do this, the next print will carry the last pause along with it and make falsify the slicing time.
+				printer.setCurrentSlicePauseTime(0);
+				
 				PrinterManager.Instance().removeAssignment(newJob);
 				newJob.setPrintFileProcessor(new StubPrintFileProcessor<>(newJob.getPrintFileProcessor()));
 				System.out.println("Job Ended:" + Thread.currentThread().getName());
@@ -116,7 +122,7 @@ public class PrintJobManager {
 	
 	public PrintJob getPrintJobByPrinterName(String printerName) {
 		for (PrintJob job : printJobsByJobId.values()) {
-			if (printerName.equals(job.getPrinter().getName())) {
+			if (job.getPrinter() != null && printerName.equals(job.getPrinter().getName())) {
 				return job;
 			}
 		}

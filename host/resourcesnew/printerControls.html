@@ -116,11 +116,11 @@
 					<i class="fa fa-2x fa-adjust pull-left"></i>
 					<h4>Shutter</h4>
 					<span class="btn-group" >
-						<a class="btn btn-danger btn-sm" ng-click="">
+						<a class="btn btn-danger btn-sm" ng-click="printerControlsController.shutter('close')">
 							<b class="fa fa-toggle-off"></b>
-							<b class="cwh-text-indent">Closed</b>
+							<b class="cwh-text-indent">Close</b>
 						</a>
-						<a class="btn btn-success btn-sm" ng-click="">
+						<a class="btn btn-success btn-sm" ng-click="printerControlsController.shutter('open')">
 							<b class="fa fa-toggle-on"></b>
 							<b class="cwh-text-indent">Open</b>
 						</a>
@@ -131,7 +131,7 @@
 					<h4>Override Lift Speed (mm/m)</h4>
 					<div class="input-group" 
 						cwh-spinner 
-						placedholder="mm/m"
+						placeholder="mm/m"
 						min="1" 
 						max="100" 
 						inc="1" 
@@ -144,7 +144,7 @@
 					<h4>Override Lift Distance (mm)</h4>
 					<div class="input-group" 
 						cwh-spinner 
-						placedholder="mm"
+						placeholder="mm"
 						min=".005" 
 						max="10" 
 						inc=".05" 
@@ -157,7 +157,7 @@
 					<h4>Override Exposure Time (ms)</h4>
 					<div class="input-group" 
 						cwh-spinner 
-						placedholder="ms"
+						placeholder="ms"
 						min="1" 
 						max="20000" 
 						inc="100" 
@@ -170,7 +170,7 @@
 					<h4>Calibration Screen (pixels)</h4>
 					<div class="input-group" 
 						cwh-spinner 
-						placedholder="pixels"
+						placeholder="pixels"
 						min="1" 
 						max="500" 
 						inc="1" 

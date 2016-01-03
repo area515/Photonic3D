@@ -21,6 +21,7 @@ public class PrintJob {
 	private volatile long currentSliceTime = 0;
 	private volatile long averageSliceTime = 0;
 	private volatile long startTime = 0;
+	private volatile long elapsedTime = 0;
 	private volatile double totalCost = 0;
 	private volatile double currentSliceCost = 0;
 	private volatile PrintFileProcessor<?> printFileProcessor;
@@ -53,7 +54,18 @@ public class PrintJob {
 	}
 	
 	public String getJobName() {
+		if (jobFile == null) {
+			return null;
+		}
+		
 		return jobFile.getName();
+	}
+	
+	public long getElapsedTime() {
+		return elapsedTime;
+	}
+	public void setElapsedTime(long elapsedTime) {
+		this.elapsedTime = elapsedTime;
 	}
 	
 	public long getStartTime() {
@@ -168,7 +180,7 @@ public class PrintJob {
 	}
 	public void overrideZLiftDistance(double zLiftDistance) throws InappropriateDeviceException {
 		if (printer == null) {
-			throw new InappropriateDeviceException("This print job:" + jobFile.getName() + " doesn't have a printer assigned.");
+			throw new InappropriateDeviceException("This print job:" + getJobName() + " doesn't have a printer assigned.");
 		}
 		
 		try {
@@ -195,7 +207,7 @@ public class PrintJob {
 	}
 	public void overrideZLiftSpeed(double zLiftSpeed) throws InappropriateDeviceException {
 		if (printer == null) {
-			throw new InappropriateDeviceException("This print job:" + jobFile.getName() + " doesn't have a printer assigned.");
+			throw new InappropriateDeviceException("This print job:" + getJobName() + " doesn't have a printer assigned.");
 		}
 		
 		try {
@@ -255,12 +267,17 @@ public class PrintJob {
 	public void setCurrentSliceCost(double currentSliceCost) {
 		this.currentSliceCost = currentSliceCost;
 	}
-
+	
 	public void addNewSlice(long sliceTime, Double buildAreaInMM) {
+		sliceTime -= getPrinter().getCurrentSlicePauseTime();
+		getPrinter().setCurrentSlicePauseTime(0);
 		InkConfig inkConfig = getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig();
 		averageSliceTime = ((averageSliceTime * currentSlice) + sliceTime) / (currentSlice + 1);
+		elapsedTime = System.currentTimeMillis() - startTime;
+		
 		currentSliceTime = sliceTime;
 		currentSlice++;
+		
 		if (buildAreaInMM != null && buildAreaInMM > 0) {
 			double buildVolume = buildAreaInMM * inkConfig.getSliceHeight();
 			currentSliceCost = (buildVolume / 1000000) * inkConfig.getResinPriceL();
@@ -271,9 +288,9 @@ public class PrintJob {
 	
 	public String toString() {
 		if (printer == null) {
-			return jobFile.getName() + " (No Printer)";
+			return getJobName() + " (No Printer)";
 		}
-		return jobFile.getName() + " assigned to printer:" + printer;
+		return getJobName() + " assigned to printer:" + printer;
 	}
 
 	@Override
