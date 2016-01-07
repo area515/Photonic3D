@@ -23,7 +23,6 @@ import org.area515.util.TemplateEngine;
 
 public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcessor<G>{
 	private long currentSliceTime;
-	private Future<Boolean> outOfInk;
 	private InkDetector inkDetector;
 	private DataAid data;
 	
@@ -89,11 +88,6 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 			inkDetector = data.inkConfiguration.getInkDetector(data.printer);
 		}
 		
-		//Only start ink detection if we have an ink detector
-		if (inkDetector != null) {
-			outOfInk = Main.GLOBAL_EXECUTOR.submit(inkDetector);
-		}
-		
 		//Set the initial values for all variables.
 		data.printJob.setExposureTime(data.inkConfiguration.getExposureTime());
 		data.printJob.setZLiftDistance(data.slicingProfile.getLiftFeedRate());
@@ -133,7 +127,7 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 
 		//Start but don't wait for a potentially heavy weight operation to determine if we are out of ink.
 		if (inkDetector != null) {
-			outOfInk = Main.GLOBAL_EXECUTOR.submit(inkDetector);
+			inkDetector.startMeasurement();
 		}
 		
 		//Determine the dynamic amount of time we should expose our resin
@@ -159,11 +153,6 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		
 		//Blank the screen in the case that our printer doesn't have a shutter
 		data.printer.showBlankImage();
-		
-		//Is the printer out of ink?
-		if (outOfInk != null && outOfInk.get()) {
-			data.printer.setStatus(JobStatus.PausedOutOfPrintMaterial);
-		}
 		
 		//Perform two actions at once here:
 		// 1. Pause if the user asked us to pause

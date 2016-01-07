@@ -22,7 +22,7 @@ public class Line {
 	
 	public double getDistanceFromLineMidPointToPoint(int x, int y) {
 		int[] midPoint = getMidPoint();
-		return Math.sqrt(Math.pow(midPoint[0] - x, 2) + Math.pow(midPoint[1] - y, 2));
+		return Math.sqrt(Math.pow(midPoint[0] - x, 2) + Math.pow(midPoint[1] - y, 2)) * Math.signum(y - midPoint[1]);
 	}
 	
 	public int getX1() {

@@ -12,7 +12,12 @@
 			<div class="list-group">
 				<div class="list-group-item">
 					<i class="fa fa-2x fa-eye pull-left"></i>
-					<h4>Print Material Detector</h4>
+					<div>
+						<h4 class="pull-left">Print Material Detector</h4>
+						<button class="btn btn-primary pull-right" ng-disabled="!printersController.currentPrinter.started" ng-click="printersController.testRemainingPrintMaterial(printersController.currentPrinter)" >
+						Test
+						</button>
+					</div>
 					<select name="type" class="form-control"
 						ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].PrintMaterialDetector" 
 						ng-options="inkDetector.className as inkDetector.name for inkDetector in printersController.inkDetectors">
@@ -21,7 +26,7 @@
 				</div>
 				<div class="list-group-item">
 					<i class="fa fa-2x fa-adjust fa-rotate-90 pull-left"></i>
-					<h4>Pause on Print Material Left (%)</h4>
+					<h4>Pause on Print Material Remaining (%)</h4>
 					<input type="text" class="form-control" placeholder="%" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].PercentageOfPrintMaterialConsideredEmpty">
 				</div>
 				<div class="list-group-item">

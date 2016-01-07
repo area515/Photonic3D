@@ -139,6 +139,20 @@
     		})
 		}
 		
+		this.testRemainingPrintMaterial = function testRemainingPrintMaterial(printer) {
+			var printerNameEn = encodeURIComponent(printer.configuration.name);
+			
+			$http.get('/services/printers/remainingPrintMaterial/' + printerNameEn).success(function (data) {
+				//if (data.error) {
+	     			$scope.$emit("MachineResponse", {machineResponse: data, successFunction:null, afterErrorFunction:null});
+				/*} else {
+	     			$scope.$emit("MachineResponse", {machineResponse: {command:scriptName, message:"Successful execution. Template returned:" + data.result, response:true}, successFunction:null, afterErrorFunction:null});
+				}*/
+			}).error(function (data, status, headers, config, statusText) {
+     			$scope.$emit("HTTPError", {status:status, statusText:data});
+    		})
+		}
+		
 		$http.get('/services/machine/serialPorts/list').success(
 				function (data) {
 					controller.serialPorts = data;

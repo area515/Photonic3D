@@ -23,6 +23,7 @@ import java.util.concurrent.Future;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
+import javax.mail.AuthenticationFailedException;
 import javax.mail.MessagingException;
 import javax.mail.Transport;
 import javax.servlet.http.HttpServletRequest;
@@ -68,6 +69,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.mail.smtp.SMTPSendFailedException;
 
 @Path("machine")
 public class MachineService {
@@ -234,9 +236,22 @@ public class MachineService {
 					"Attached diagnostic information",
 					transport,
 					zippedFile);
+		} catch (SMTPSendFailedException e) {
+			e.printStackTrace();
+			if (e.getMessage().contains("STARTTLS")) {
+				throw new IllegalArgumentException("Failure emailing log bundle: It looks like this server requires TLS to be enabled. " + e.getMessage());
+			}
+			throw new IllegalArgumentException("Failure emailing log bundle: " + e.getMessage());
+		} catch (AuthenticationFailedException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException("Failure emailing log bundle: Username or password incorrect");
 		} catch (MessagingException | IOException e) {
 			e.printStackTrace();
-			throw new IllegalArgumentException("Failure emailing log bundle.");
+			if (e.getMessage() == null) {
+				throw new IllegalArgumentException("Failure emailing log bundle:" + e.getClass());
+			} else {
+				throw new IllegalArgumentException("Failure emailing log bundle:" + e.getMessage());
+			}
 		} finally {
 			zippedFile.delete();
 			if (transport != null) {

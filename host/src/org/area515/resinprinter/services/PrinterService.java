@@ -26,6 +26,8 @@ import javax.ws.rs.core.MediaType;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
+import org.area515.resinprinter.job.InkDetector;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
@@ -701,7 +703,7 @@ public class PrinterService {
 	public TestingResult testTemplate(@PathParam("printername")String printerName, @PathParam("templatename")String templateName, String template) throws InappropriateDeviceException {
 		Printer printer = getPrinter(printerName);
 		PrintJob job = buildStubJob(printer);
-
+		
 		try {
 			String returnValue = TemplateEngine.buildData(job, printer, template);
 			return new TestingResult(returnValue);
@@ -713,34 +715,27 @@ public class PrinterService {
 			return result;
 		}
 	}
-	 
-	/*@GET    //Not ready for this yet...
-	@Path("remainingResin/{printername}")
+	
+	@GET
+	@Path("remainingPrintMaterial/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MachineResponse getRemainingResin(@PathParam("printername") String printername) {
-		// Create job
-		File selectedFile = new File(HostProperties.Instance().getUploadDir(), jobId); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
-		
-		// Delete and Create handled in jobManager
-		PrintJob printJob = null;
-		try {
-			printJob = JobManager.Instance().createJob(selectedFile);
-			Printer printer = PrinterManager.Instance().getPrinter(printername);
-			if (printer == null) {
-				throw new InappropriateDeviceException("Printer not started:" + printername);
-			}
-			
-			Future<JobStatus> status = JobManager.Instance().startJob(printJob, printer);
-			return new MachineResponse("start", true, "Started:" + printJob.getId());
-		} catch (JobManagerException | AlreadyAssignedException e) {
-			JobManager.Instance().removeJob(printJob);
-			PrinterManager.Instance().removeAssignment(printJob);
-			e.printStackTrace();
-			return new MachineResponse("start", false, e.getMessage());
-		} catch (InappropriateDeviceException e) {
-			JobManager.Instance().removeJob(printJob);
-			e.printStackTrace();
-			return new MachineResponse("start", false, e.getMessage());
+	public MachineResponse getRemainingResin(@PathParam("printername") String printerName) throws InappropriateDeviceException {
+		Printer printer = getPrinter(printerName);
+		if (printer == null) {
+			return new MachineResponse("remainingPrintMaterial", false, "Printer not started:" + printerName);
 		}
-	}*/
+		
+		InkDetector detector = printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getInkDetector(printer);
+		if (detector == null) {
+			return new MachineResponse("remainingPrintMaterial", false, "This printer doesn't have a PrintMaterialDetector configured. Save and restart the printer.");
+		}
+		float materialLeft;
+		try {
+			materialLeft = detector.performMeasurement();
+			return new MachineResponse("remainingPrintMaterial", true, materialLeft + "");
+		} catch (IOException e) {
+			e.printStackTrace();
+			return new MachineResponse("remainingPrintMaterial", false, e.getMessage());
+		}
+	}
 }
