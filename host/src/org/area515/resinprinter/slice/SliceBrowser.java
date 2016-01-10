@@ -491,7 +491,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	  
 	  public static void main(String[] args) throws Exception {
 		  SliceBrowser browser = new SliceBrowser();
-		  //browser.setVisible(true);
+		  browser.setVisible(true);
 		  browser.getColors(browser.getFractions(1600, .0f, 1f), .2f, .0f);
 	  }
 }
