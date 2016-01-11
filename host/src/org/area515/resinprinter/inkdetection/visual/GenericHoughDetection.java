@@ -22,6 +22,7 @@ package org.area515.resinprinter.inkdetection.visual;
 //package sigus.templateMatching;
 //import sigus.*;
 
+import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
@@ -30,7 +31,9 @@ import java.awt.image.WritableRaster;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
 *   This class is the Hough Transform Space and search for
@@ -46,11 +49,11 @@ public class GenericHoughDetection<S> {
     private int houghValues[][][]; // Hough Space Values
     private int width; // Hough Space width (depends on image width)
     private int height;  // Hough Space height (depends on image height)
-    private int offset; // Image Width
     private int offx;   // ROI x offset
     private int offy;   // ROI y offset
     private List<S> centerPoint; // Center Points of the Circles Found.
     private FixedSizePriorityQueue<HoughReference> mostLikelyShape;
+    private Map<HoughReference, WatchShape> watchedReferences;
     private ShapeDetector<S> detector;
     private boolean useThreshold = false;
     private int maxShapes;
@@ -61,15 +64,34 @@ public class GenericHoughDetection<S> {
     private int scaleInc;
     private int[] houghSpaceSize;
     
-    public  class HoughReference {
-    	public int[] reference;
+    public class WatchShape {
+    	private Color paint;
+    	private List<HoughReference> references = new ArrayList<>();
     	
-    	public HoughReference(int[] reference) {
+    	public WatchShape(Color paint) {
+    		this.paint = paint;
+    	}
+    	
+    	public Color getColor() {
+    		return paint;
+    	}
+    	
+    	public void addReference(HoughReference ref) {
+    		references.add(ref);
+    	}
+    }
+    
+    public static class HoughReference {
+    	public int[] reference;
+    	public int[] originalImageReference;
+    	
+    	public HoughReference(int[] reference, int[] originalImageReference) {
     		this.reference = reference;
+    		this.originalImageReference = originalImageReference;
     	}
 
     	public String toString() {
-    		return "X:" + reference[0] + " Y:" + reference[1] + " R:" + (reference[2] * scaleInc + scaleMin) + " V:" + houghValues[reference[0]][reference[1]][reference[2]];
+    		return "X:" + reference[0] + " Y:" + reference[1];
     	}
     	
 		@Override
@@ -125,15 +147,9 @@ public class GenericHoughDetection<S> {
      * @param maxShapes
      * @param usePriorityQueue
      */
-    public GenericHoughDetection(BufferedImage bufferedImage, Rectangle roi, ShapeDetector<S> detector, float samplesHitPercentage, int maxShapes, boolean usePriorityQueue) {
-    	DataBuffer buffer = bufferedImage.getRaster().getDataBuffer();
-    	if (!(buffer instanceof DataBufferByte)) {
-    		throw new IllegalArgumentException("The color depth of the bufferedImage must be 8bit gray");
-    	}
-    	
-        imageValues =  ((DataBufferByte)buffer).getData();
+    public GenericHoughDetection(Rectangle roi, ShapeDetector<S> detector, float samplesHitPercentage, int maxShapes, boolean usePriorityQueue) {
         if (roi == null) {
-        	roi = new Rectangle(bufferedImage.getWidth(), bufferedImage.getHeight());
+        	throw new IllegalArgumentException("The region of interest parameter cannot be null.");
         }
 
         offx = roi.x;
@@ -141,7 +157,6 @@ public class GenericHoughDetection<S> {
         width = roi.width;
         height = roi.height;
         houghSpaceSize = detector.getHoughSpaceSizeAndGenerateLUT(width, height);
-        offset = bufferedImage.getWidth();
         this.detector = detector;
         scaleCount = detector.getScaleCount();
         scaleMin = detector.getMinimumScaleIndex();
@@ -163,22 +178,52 @@ public class GenericHoughDetection<S> {
         mostLikelyShape = usePriorityQueue?new FixedSizePriorityQueue<>(maxShapes, new HoughPrioritizer()):null;
     }
     
-    public void houghTransform() {
+    public void addWatch(HoughReference reference, Color color) {
+    	if (watchedReferences == null) {
+    		watchedReferences = new HashMap<>();
+    	}
+    	
+    	watchedReferences.put(reference, new WatchShape(color));
+    }
+    
+    public void removeWatch(HoughReference reference) {
+    	watchedReferences.remove(reference);
+    	if (watchedReferences.size() == 0) {
+    		watchedReferences = null;
+    	}
+    }
+    
+    public void houghTransform(BufferedImage bufferedImage) {
+    	DataBuffer buffer = bufferedImage.getRaster().getDataBuffer();
+    	if (!(buffer instanceof DataBufferByte)) {
+    		throw new IllegalArgumentException("The color depth of the bufferedImage must be 8bit gray");
+    	}
+        int offset = bufferedImage.getWidth();
+        imageValues =  ((DataBufferByte)buffer).getData();
         houghValues = new int[houghSpaceSize[0]][houghSpaceSize[1]][scaleCount];
         
-        for(int y = 1; y < height; y++) {
-            for(int x = 1; x < width; x++) {
+        for(int y = 0; y < height; y++) {
+            for(int x = 0; x < width; x++) {
                 for(int scale = scaleMin;scale <= scaleMax;scale = scale+scaleInc) {
                     if( imageValues[(x+offx)+(y+offy)*offset] != 0 )  {// Edge pixel found
                         int scaleIndex=(scale-scaleMin)/scaleInc;
                         int samples = detector.getSamplesPerScaleIndex(scaleIndex);
                         for(int sample = 0; sample < samples; sample++) {
-                        	int[] xyScale = detector.getSignificantPointOfShape(x, y, sample, scaleIndex);
+                        	int[] xyScale = detector.getSignificantPointOfShape(offx + x, offy + y, sample, scaleIndex);
                         	
                             if(xyScale != null && ((xyScale[1] >= 0) & (xyScale[1] < houghSpaceSize[1]) & (xyScale[0] >= 0) & (xyScale[0] < houghSpaceSize[0]))) {
                                 houghValues[xyScale[0]][xyScale[1]][xyScale[2]] += 1;
-                                if (mostLikelyShape != null) {
-                                	mostLikelyShape.add(new HoughReference(new int[]{xyScale[0], xyScale[1], xyScale[2]}));
+                                if (mostLikelyShape != null || watchedReferences != null) {
+                                	HoughReference reference = new HoughReference(new int[]{xyScale[0], xyScale[1], xyScale[2]}, new int[]{offx + x, offy + y, sample, scaleIndex});
+	                                if (mostLikelyShape != null) {
+	                                	mostLikelyShape.add(reference);
+	                                }
+	                                if (watchedReferences != null) {
+	                                	WatchShape shape = watchedReferences.get(reference);
+	                                	if (shape != null) {
+	                                		shape.addReference(reference);
+	                                	}
+	                                }
                                 }
                             }
                         }
@@ -230,7 +275,6 @@ public class GenericHoughDetection<S> {
         }
     }
 
-    
     private void buildCenterPointsByPriority(FixedSizePriorityQueue<HoughReference> mostLikelyCircles) {
         centerPoint = new ArrayList<S>();
         
@@ -252,10 +296,10 @@ public class GenericHoughDetection<S> {
 
         for(int scale = scaleMin;scale <= scaleMax;scale = scale+scaleInc) {
             int scaleIndex = (scale-scaleMin)/scaleInc;
-            int samples = detector.getSamplesPerScaleIndex(scaleIndex);
+            int maxVotes = detector.getMaximumVotesPerScale(scaleIndex);
             for(int y = 0; y < houghSpaceSize[1]; y++) {
                 for(int x = 0; x < houghSpaceSize[0]; x++) {
-                    if(houghValues[x][y][scaleIndex] > (samplesHitPercentage * samples)) {
+                    if(houghValues[x][y][scaleIndex] > (samplesHitPercentage * maxVotes)) {
                         centerPoint.add(detector.buildShape(x, y, scaleIndex, houghValues[x][y][scaleIndex]));
                         clearNeighbours(xMax,yMax,scale);
                     }
@@ -377,7 +421,42 @@ public class GenericHoughDetection<S> {
     	return image;
     }
     
-    public BufferedImage generateHoughSpaceImageForScale(int scaleIndex) {
+    public BufferedImage generateWatchOverlayInImageSpace(int width, int height, Integer scaleIndex) {
+    	BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+    	if (watchedReferences != null) {
+	    	WritableRaster d = image.getRaster();
+	    	for (Map.Entry<HoughReference, WatchShape> watch : watchedReferences.entrySet()) {
+	    		WatchShape shape = watch.getValue();
+				for (HoughReference reference : shape.references) {
+					if (scaleIndex == null || reference.reference[2] == scaleIndex) {
+						Color color = shape.getColor();
+						d.setPixel(reference.originalImageReference[0], reference.originalImageReference[1], new int[]{color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()});
+					}
+				}
+	    	}
+    	}
+    	return image;
+    }
+    
+    public BufferedImage generateWatchOverlayInHoughSpace(Integer scaleIndex) {
+    	BufferedImage image = new BufferedImage(houghSpaceSize[0], houghSpaceSize[1], BufferedImage.TYPE_INT_ARGB);
+    	if (watchedReferences != null) {
+	    	WritableRaster d = image.getRaster();
+	    	for (Map.Entry<HoughReference, WatchShape> watch : watchedReferences.entrySet()) {
+	    		WatchShape shape = watch.getValue();
+				for (HoughReference reference : shape.references) {
+					if (scaleIndex == null || reference.reference[2] == scaleIndex) {
+						Color color = shape.getColor();
+						d.setPixel(reference.reference[0], reference.reference[1], new int[]{color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()});
+					}
+				}
+	    	}
+    	}
+    	
+    	return image;
+    }
+
+    public BufferedImage generateHoughSpaceImage(int scaleIndex) {
     	BufferedImage image = new BufferedImage(houghSpaceSize[0], houghSpaceSize[1], BufferedImage.TYPE_BYTE_GRAY);
     	WritableRaster d = image.getRaster();
     	for (int y = 0; y < houghSpaceSize[1]; y++) {

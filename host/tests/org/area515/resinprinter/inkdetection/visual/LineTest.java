@@ -12,31 +12,41 @@ import javax.imageio.ImageIO;
 import org.junit.Test;
 
 public class LineTest {
-	@Test
-	public void generateHoughSpace() throws IOException {
-		BufferedImage image = ImageIO.read(CircleTest.class.getResource("ToughSituation.png"));
-		//BufferedImage image = ImageIO.read(new File("test64circle.jpg"));
-		CannyEdgeDetector8BitGray detector = new CannyEdgeDetector8BitGray();
-		detector.setGaussianKernelRadius(1.5f);
-		detector.setLowThreshold(1.0f);
-		detector.setHighThreshold(1.1f);
-		detector.setSourceImage(image);
-		detector.process();//*/
+	private void produceImagesFromEdgeImage(BufferedImage input) throws IOException {
+		VisualPrintMaterialDetector printMaterialDetector = new VisualPrintMaterialDetector();
+		BufferedImage output = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_INT_ARGB);
 		
-		BufferedImage edges = detector.getEdgesImage();
-		LineDetector shapeDetector = new LineDetector(.005d);
-		//TODO: I think that my threshold is off by a power of ten. I'll probably need to look at that someday...
-		GenericHoughDetection<Line> houghDetection = new GenericHoughDetection<Line>(edges, null, shapeDetector, .06f, 0, false);
-		houghDetection.houghTransform();
+		GenericHoughDetection<Line> houghDetection = printMaterialDetector.buildLineDetection(input.getWidth(), input.getHeight());
+		//houghDetection.addWatch(new HoughReference(new int[]{460,  6, 0}, null), Color.BLUE);
+		houghDetection.houghTransform(input);
 		List<Line> centers = houghDetection.getShapes();
 		System.out.println(centers);
-		Graphics g = edges.getGraphics();
-		g.setColor(Color.WHITE);
+		Graphics g = output.getGraphics();
+		g.drawImage(input, 0, 0, null);
+		g.setColor(Color.RED);
 		for (Line line : centers) {
 			g.drawLine(line.getX1(), line.getY1(), line.getX2(), line.getY2());
-		}//*/
-		ImageIO.write(edges, "jpg", new File("images/outputline.png"));
+		}
+		//BufferedImage mask = houghDetection.generateWatchOverlayInImageSpace(input.getWidth(), input.getHeight(), 0);
+		//g.drawImage(mask, 0, 0, null);
+		ImageIO.write(output, "png", new File("images/outputline.png"));
 		ImageIO.write(houghDetection.generateHoughSpaceImage(true), "png", new File("images/houghspaceline.png"));
-		System.out.println("Complete");		
+		System.out.println("Complete");	
+	}
+	
+	@Test
+	public void generateHoughSpace() throws IOException {
+		VisualPrintMaterialDetector printMaterialDetector = new VisualPrintMaterialDetector();
+		BufferedImage input = ImageIO.read(CircleTest.class.getResource("ToughSituation.png"));
+		CannyEdgeDetector8BitGray detector = printMaterialDetector.buildEdgeDetector(input);
+		detector.process();
+		
+		produceImagesFromEdgeImage(detector.getEdgesImage());
+	}
+	
+	@Test
+	public void testLines() throws IOException {
+		BufferedImage input = ImageIO.read(CircleTest.class.getResource("CircleLine10-14.png"));
+		produceImagesFromEdgeImage(input);
 	}
 }
