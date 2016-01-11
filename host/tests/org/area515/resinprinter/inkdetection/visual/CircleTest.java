@@ -14,19 +14,15 @@ import org.junit.Test;
 public class CircleTest {
 	@Test
 	public void generateHoughSpace() throws IOException {
+		VisualPrintMaterialDetector printMaterialDetector = new VisualPrintMaterialDetector();
+		
 		BufferedImage image = ImageIO.read(CircleTest.class.getResource("ToughSituation.png"));
-		//BufferedImage image = ImageIO.read(new File("test64circle.jpg"));
-		CannyEdgeDetector8BitGray detector = new CannyEdgeDetector8BitGray();
-		detector.setGaussianKernelRadius(1.5f);
-		detector.setLowThreshold(1.0f);
-		detector.setHighThreshold(1.1f);
-		detector.setSourceImage(image);
-		detector.process();//*/
+		CannyEdgeDetector8BitGray detector = printMaterialDetector.buildEdgeDetector(image);
+		detector.process();
 		
 		BufferedImage edges = detector.getEdgesImage();
-		CircleDetector shapeDetector = new CircleDetector(8, 10, 50, 1);
-		GenericHoughDetection<Circle> houghDetection = new GenericHoughDetection<Circle>(edges, null, shapeDetector, 0.50f, 0, false);
-		houghDetection.houghTransform();
+		GenericHoughDetection<Circle> houghDetection = printMaterialDetector.buildCircleDetection(edges.getWidth(), edges.getHeight());
+		houghDetection.houghTransform(edges);
 		List<Circle> centers = houghDetection.getShapes();
 		//detection.printHoughSpace();
 		System.out.println(centers);

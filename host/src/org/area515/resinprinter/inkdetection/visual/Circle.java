@@ -1,15 +1,20 @@
 package org.area515.resinprinter.inkdetection.visual;
 
-public class Circle {
+import org.area515.resinprinter.inkdetection.visual.GenericHoughDetection.HoughReference;
+
+public class Circle implements HoughShape {
 	private int x;
 	private int y;
 	private int radius;
 	private int votes;
+	private HoughReference reference;
 	
-	public Circle(int x, int y, int radius, int votes) {
+	public Circle(int x, int y, int radius, int votes, HoughReference houghReference) {
 		this.x = x;
 		this.y = y;
 		this.radius = radius;
+		this.votes = votes;
+		this.reference = houghReference;
 	}
 
 	public int getX() {
@@ -83,7 +88,7 @@ public class Circle {
         }
 
         // Line segment intersection circle in two places			
-        return new Line((int)intersectionX1, (int)intersectionY1, (int)intersectionX2, (int)intersectionY2, 0);
+        return new Line((int)intersectionX1, (int)intersectionY1, (int)intersectionX2, (int)intersectionY2, 0, null);
     }
 	
     private final boolean isBetween(float bound1,float bound2, float check){
@@ -93,6 +98,11 @@ public class Circle {
     }
     
 	public String toString() {
-		return "X:" + x + " Y:" + y + " R:" + radius;
+		return "[X:" + x + " Y:" + y + " R:" + radius + " votes:" + votes + "]";
+	}
+
+	@Override
+	public HoughReference getHoughReference() {
+		return reference;
 	}
 }
