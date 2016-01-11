@@ -1,19 +1,27 @@
 package org.area515.resinprinter.inkdetection.visual;
 
-public class Line {
+import org.area515.resinprinter.inkdetection.visual.GenericHoughDetection.HoughReference;
+
+public class Line implements HoughShape {
 	private int x1;
 	private int x2;
 	private int y1;
 	private int y2;
 	private float theta;
 	private int votes;
+	private HoughReference houghReference;
 	
-	public Line(int x1, int y1, int x2, int y2, int votes) {
+	public Line(int x1, int y1, int x2, int y2, int votes, HoughReference houghReference) {
 		this.x1 = x1;
 		this.x2 = x2;
 		this.y1 = y1;
 		this.y2 = y2;
 		this.votes = votes;
+		this.houghReference = houghReference;
+	}
+
+	public HoughReference getHoughReference() {
+		return houghReference;
 	}
 
 	public int[] getMidPoint() {
