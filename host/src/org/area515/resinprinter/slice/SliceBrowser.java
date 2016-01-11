@@ -41,13 +41,12 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.DefaultTreeSelectionModel;
 import javax.swing.tree.TreePath;
 
+import org.area515.resinprinter.inkdetection.visual.ImageDetectionPanel;
 import org.area515.resinprinter.stl.Face3d;
 import org.area515.resinprinter.stl.Line3d;
 import org.area515.resinprinter.stl.Shape3d;
-import org.eclipse.jetty.io.SelectorManager.SelectableEndPoint;
 
 public class SliceBrowser extends JFrame {
 	private int firstSlice = 54;
@@ -93,6 +92,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	private JPanel showcasePanel;
 	private DefaultBoundedRangeModel opacityLevelModel;
 	private DefaultBoundedRangeModel bulbSizeModel;
+	private ImageDetectionPanel imageDetectionPanel;
 	
 	//TODO: maybe we should do this instead: private class SliceBrowserSelectionModel extends DefaultTreeSelectionModel {
 	private class SliceBrowserSelectionListener implements TreeSelectionListener {
@@ -477,10 +477,19 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			return masterPanel;
 	  }
 	  
+	  public JComponent getImageDetector() throws Exception {
+		  if (imageDetectionPanel == null) {
+			  imageDetectionPanel = new ImageDetectionPanel();
+		  }
+		  
+		  return imageDetectionPanel;
+	  }
+	  
 	  public SliceBrowser() throws Exception {
 		  JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP);
 		  tabs.addTab("Slice Browser", getMainSplitter());
 		  tabs.addTab("Projector Mask Creator", getProjectorMaskCreator());
+		  tabs.addTab("Image Detector", getImageDetector());
 		  add(tabs);
 		  
 		  setTitle("Printer Simulation");

@@ -1,13 +1,12 @@
 package org.area515.resinprinter.inkdetection.visual;
 
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -21,11 +20,47 @@ import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.services.MediaService;
 
 public class VisualPrintMaterialDetector implements PrintMaterialDetector {
-	private static final HashMap<Printer, StreamingOutput> buildPictures = new HashMap<>();
+	private static final HashMap<Printer, ShapeDetectionCache> buildPictures = new HashMap<>();
+	private static int WIDTH = 100;
+	private static int HEIGHT = 100;
+	
+	public static class ShapeDetectionCache {
+		private StreamingOutput output;
+		private GenericHoughDetection<Circle> circleDetection;
+		private GenericHoughDetection<Line> lineDetection;
+		
+		public void setStreamingOutput(StreamingOutput output) {
+			this.output = output;
+		}
+		public StreamingOutput getStreamingOutput() {
+			return output;
+		}
+		
+		public GenericHoughDetection<Circle> getCircleDetection() {
+			return circleDetection;
+		}
+		public void setCircleDetection(GenericHoughDetection<Circle> circleDetection) {
+			this.circleDetection = circleDetection;
+		}
+		
+		public GenericHoughDetection<Line> getLineDetection() {
+			return lineDetection;
+		}
+		public void setLineDetection(GenericHoughDetection<Line> lineDetection) {
+			this.lineDetection = lineDetection;
+		}
+	}
 	
 	@Override
 	public void startMeasurement(Printer printer) {
-		buildPictures.put(printer, MediaService.INSTANCE.takePicture(printer.getName(), 100, 100));
+		ShapeDetectionCache cache = buildPictures.get(printer);
+		if (cache == null) {
+			cache = new ShapeDetectionCache();
+			buildPictures.put(printer, cache);
+		}
+		
+		//Make sure to use takePicture() method to keep everything synchronized...
+		cache.setStreamingOutput(MediaService.INSTANCE.takePicture(printer.getName(), WIDTH, HEIGHT));
 	}
 
 	//TODO: There are a ton of ways to make this lighting fast on a raspberry pi 2 and much faster on a Raspberry pi.
@@ -33,34 +68,52 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 	//      This method is pretty much just conceptual for now, just to show something that works
 	@Override
 	public float getPercentageOfPrintMaterialRemaining(Printer printer) throws IOException {
-		//Make sure to use takePicture() method to keep everything synchronized...
-		final StreamingOutput output = buildPictures.get(printer);
+		final ShapeDetectionCache cache = buildPictures.get(printer);
 		PipedInputStream inputStream = new PipedInputStream();
 		final PipedOutputStream pipedOutputStream = new PipedOutputStream(inputStream);
 		Main.GLOBAL_EXECUTOR.submit(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					output.write(pipedOutputStream);
+					cache.getStreamingOutput().write(pipedOutputStream);
 				} catch (WebApplicationException | IOException e) {
 					e.printStackTrace();
 				}
 			}
 		});
+
+		if (cache.getCircleDetection() == null) {
+			cache.setCircleDetection(buildCircleDetection(WIDTH, HEIGHT));
+		}
 		
-		return getPrintMaterialRemaining(inputStream);
+		if (cache.getLineDetection() == null) {
+			cache.setLineDetection(buildLineDetection(WIDTH, HEIGHT));
+		}
+		
+		return getPrintMaterialRemainingFromPhoto(inputStream, cache.getCircleDetection(), cache.getLineDetection());
 	}
 	
-	public float getPrintMaterialRemaining(BufferedImage edgesImage) throws IOException {
+	GenericHoughDetection<Circle> buildCircleDetection(int width, int height) {
 		CircleDetector circleDector = new CircleDetector(8, 5, 50, 1);//TODO: these need to be based off of the image size
-		GenericHoughDetection<Circle> houghCircleDetection = new GenericHoughDetection<Circle>(edgesImage, null, circleDector, 0.50f, 0, false);
-		houghCircleDetection.houghTransform();
+		GenericHoughDetection<Circle> houghCircleDetection = new GenericHoughDetection<Circle>(new Rectangle(0,  0, width, height), circleDector, 0.6f, 0, false);
+		return houghCircleDetection;
+	}
+	
+	GenericHoughDetection<Line> buildLineDetection(int width, int height) {
+		LineDetector lineDetector = new LineDetector(.001d);
+		GenericHoughDetection<Line> houghLineDetection = new GenericHoughDetection<Line>(new Rectangle(0,  0, width, height), lineDetector, 0.3f, 0, false);
+		return houghLineDetection;
+	}
+	
+	float getPrintMaterialRemainingFromEdgeImage(
+			BufferedImage edgesImage, 
+			GenericHoughDetection<Circle> houghCircleDetection, 
+			GenericHoughDetection<Line> houghLineDetection) throws IOException {
+		houghCircleDetection.houghTransform(edgesImage);
 		List<Circle> circles = houghCircleDetection.getShapes();
 		//System.out.println(circles);
 		
-		LineDetector lineDetector = new LineDetector(.005d);
-		GenericHoughDetection<Line> houghLineDetection = new GenericHoughDetection<Line>(edgesImage, null, lineDetector, 0.01f, 0, false);
-		houghLineDetection.houghTransform();
+		houghLineDetection.houghTransform(edgesImage);
 		List<Line> lines = houghLineDetection.getShapes();
 		//System.out.println(lines);
 		
@@ -84,16 +137,25 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 		return total / percentages.size();
 	}
 	
-	public float getPrintMaterialRemaining(InputStream inputStream) throws IOException {
-		BufferedImage image = ImageIO.read(inputStream);
+	CannyEdgeDetector8BitGray buildEdgeDetector(BufferedImage image) {
 		CannyEdgeDetector8BitGray detector = new CannyEdgeDetector8BitGray();
 		detector.setGaussianKernelRadius(1.5f);
 		detector.setLowThreshold(1.0f);
 		detector.setHighThreshold(1.1f);
 		detector.setSourceImage(image);
+		return detector;
+	}
+	
+	float getPrintMaterialRemainingFromPhoto(
+			InputStream inputStream,
+			GenericHoughDetection<Circle> houghCircleDetection, 
+			GenericHoughDetection<Line> houghLineDetection) throws IOException {
+
+		BufferedImage image = ImageIO.read(inputStream);
+		CannyEdgeDetector8BitGray detector = buildEdgeDetector(image);
 		detector.process();
 		
 		BufferedImage edgesImage = detector.getEdgesImage();
-		return getPrintMaterialRemaining(edgesImage);
+		return getPrintMaterialRemainingFromEdgeImage(edgesImage, houghCircleDetection, houghLineDetection);
 	}
 }

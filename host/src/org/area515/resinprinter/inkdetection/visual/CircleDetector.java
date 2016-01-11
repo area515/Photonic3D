@@ -1,5 +1,7 @@
 package org.area515.resinprinter.inkdetection.visual;
 
+import org.area515.resinprinter.inkdetection.visual.GenericHoughDetection.HoughReference;
+
 public class CircleDetector implements ShapeDetector<Circle> {
     private int lut[][][]; // LookUp Table for rsin e rcos values
     private int lutAngleCount[];
@@ -79,8 +81,13 @@ public class CircleDetector implements ShapeDetector<Circle> {
 	}
 
 	@Override
-	public int getSamplesPerScaleIndex(int index) {
-		return lutAngleCount[index];
+	public int getSamplesPerScaleIndex(int scaleIndex) {
+		return lutAngleCount[scaleIndex];
+	}
+
+	@Override
+	public int getMaximumVotesPerScale(int scaleIndex) {
+		return lutAngleCount[scaleIndex];
 	}
 
 	@Override
@@ -92,6 +99,6 @@ public class CircleDetector implements ShapeDetector<Circle> {
 
 	@Override
 	public Circle buildShape(int x, int y, int scaleIndex, int votes) {
-		return new Circle(x, y, scaleIndex * radiusInc + radiusMin, votes);
+		return new Circle(x, y, scaleIndex * radiusInc + radiusMin, votes, new HoughReference(new int[]{x, y, scaleIndex}, null));
 	}
 }

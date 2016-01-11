@@ -18,14 +18,18 @@ public class TestVisualPrintMaterialDetector {
 		
 		long start = System.currentTimeMillis();
 		VisualPrintMaterialDetector detector = new VisualPrintMaterialDetector();
-		float liquidRemaining = detector.getPrintMaterialRemaining(TestVisualPrintMaterialDetector.class.getResourceAsStream("ToughSituation.png")) * 100;
+		BufferedImage image = ImageIO.read(TestVisualPrintMaterialDetector.class.getResourceAsStream("ToughSituation.png"));
+		float liquidRemaining = detector.getPrintMaterialRemainingFromPhoto(
+				TestVisualPrintMaterialDetector.class.getResourceAsStream("ToughSituation.png"),
+				detector.buildCircleDetection(image.getWidth(), image.getHeight()),
+				detector.buildLineDetection(image.getWidth(), image.getHeight())) * 100;
 		long timeTaken = System.currentTimeMillis() - start;
 		
 		System.out.println(String.format("Time taken to perform visual inspection of remaining print resin: %1dms", timeTaken));
 		System.out.println(String.format("Remaining print resin: %1$.2f%%", liquidRemaining));
 	}
 	
-	//@Test
+	@Test
 	public void testAgainstKnownPercentages() throws IOException {
 		float tolerance = .09f;
 		VisualPrintMaterialDetector detector = new VisualPrintMaterialDetector();
@@ -36,18 +40,28 @@ public class TestVisualPrintMaterialDetector {
 		knownFiles.put("CircleLine7-14.png", 7f/14f);
 		knownFiles.put("CircleLine4-14.png", 4f/14f);
 		knownFiles.put("CircleLine2-14.png", 2f/14f);
-		knownFiles.put("CircleLineNull.png", -1f);
+		knownFiles.put("CircleLineNull.png", Float.NaN);
 		
+		GenericHoughDetection<Circle> circleDetector = null;
+		GenericHoughDetection<Line> lineDetector = null;
 		Iterator<Map.Entry<String, Float>> pictures = knownFiles.entrySet().iterator();
 		while (pictures.hasNext()) {
-			
 			Map.Entry<String, Float> entry = pictures.next();
 			BufferedImage image = ImageIO.read(TestVisualPrintMaterialDetector.class.getResourceAsStream(entry.getKey()));
-			float percentage = detector.getPrintMaterialRemaining(image);
+			int width = image.getWidth();
+			int height = image.getHeight();
 			
-			if (percentage - tolerance > entry.getValue() ||
-				percentage + tolerance < entry.getValue()) {
-				//Assert.fail("Algorithm outcome:" + percentage + " for image:" + entry.getKey() + " not within tolerance:" + tolerance + " of predicted value:" + entry.getValue());
+			if (circleDetector == null) {
+				circleDetector = detector.buildCircleDetection(width, height);
+			}
+			if (lineDetector == null) {
+				lineDetector = detector.buildLineDetection(width, height);
+			}
+			
+			float percentage = detector.getPrintMaterialRemainingFromEdgeImage(image,circleDetector,lineDetector);
+			if ((Float.isNaN(entry.getValue()) && !Float.isNaN(percentage))||(percentage - tolerance > entry.getValue() ||
+				percentage + tolerance < entry.getValue())) {
+				Assert.fail("Algorithm outcome:" + percentage + " for image:" + entry.getKey() + " not within tolerance:" + tolerance + " of predicted value:" + entry.getValue());
 			} 
 		}
 	}
