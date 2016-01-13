@@ -26,7 +26,6 @@ import javax.ws.rs.core.MediaType;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
 import org.area515.resinprinter.job.InkDetector;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;

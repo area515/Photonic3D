@@ -18,6 +18,22 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 	public void open(String controllingDevice, int timeout,
 			ComPortSettings settings) throws AlreadyAssignedException,
 			InappropriateDeviceException {
+		if (settings == null) {
+			throw new InappropriateDeviceException("Port settings haven't been configured for this device.");
+		}
+		if (settings.getPortName() == null) {
+			throw new InappropriateDeviceException("Port name hasn't been configured for this device.");
+		}
+		if (settings.getParity() == null) {
+			throw new InappropriateDeviceException("Parity hasn't been configured for this device(" + settings.getPortName() + ").");
+		}
+		if (settings.getStopbits() == null) {
+			throw new InappropriateDeviceException("Stopbits havn't been configured for this device(" + settings.getPortName() + ").");
+		}
+		if (settings.getSpeed() == 0) {
+			throw new InappropriateDeviceException("Speed hasn't been configured for this device(" + settings.getPortName() + ").");
+		}
+		
 		port = new SerialPort(settings.getPortName());
 		int parity = 0;
 		if (settings.getParity().equalsIgnoreCase("EVEN")) {
