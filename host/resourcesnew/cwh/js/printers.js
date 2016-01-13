@@ -163,8 +163,12 @@
 					controller.graphicsDisplays = data;
 				});
 		
+		//TODO: All of these things should come from the MachineService
+		controller.comPortSpeeds = [1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200];
+		controller.parities = ["Even", "Mark", "None", "Odd", "Space"];
+		controller.stopBits = ["None", "One", "1.5", "Two"];
+		controller.dataBits = [5, 6, 7, 8, 9];
 		controller.inkDetectors = [{name:"Visual Ink Detector", className:"org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector"}];
-		
 		refreshPrinters();
 	}])
 

@@ -1,7 +1,5 @@
-
-
 (function() {
-		var cwhApp = angular.module('cwhApp', ['ngRoute', 'cwh.spinner', 'cwh.webSocket', 'cwh.testscript', 'ngFileUpload', 'ngAnimate', 'chart.js']);
+		var cwhApp = angular.module('cwhApp', ['ngRoute', 'cwh.comport', 'cwh.spinner', 'cwh.webSocket', 'cwh.testscript', 'ngFileUpload', 'ngAnimate', 'chart.js']);
 		cwhApp.filter('secondsToDateTime', [function() {
 		    return function(milliseconds) {
 		        return new Date(1970, 0, 1).setMilliseconds(milliseconds);
