@@ -20,4 +20,6 @@ import org.junit.runners.Suite;
 })
 
 public class HardwareCompatibilityTestSuite {
+	public static long[] COMMON_SPEEDS = new long[]{9600, 115200};
+
 }
