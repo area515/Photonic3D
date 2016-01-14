@@ -19,23 +19,25 @@ public class ProjectorOutput {
 	public static void main(String[] args) throws Exception {
 		BufferedReader inputStream = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("Projector Output Test.");
-		int currentModel = 0;
+		int index = 0;
 		List<ProjectorModel> models = HostProperties.Instance().getAutodetectProjectors();
 		for (ProjectorModel model : models) {
-			System.out.println(currentModel + ". " + model.getName());
+			System.out.println(index++ + ". " + model.getName());
 		}
 		System.out.println("Type the number of the projector that you would like to test (then press enter):");
 		HexCodeBasedProjector projector = (HexCodeBasedProjector)models.get(Integer.parseInt(inputStream.readLine()));
 		
+		index = 0;
 		List<CommPortIdentifier> ports = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
 		for (CommPortIdentifier port : ports) {
-			System.out.println(currentModel + ". " + port.getName());
+			System.out.println(index++ + ". " + port.getName());
 		}
 		System.out.println("Type the number of the Serial Port that you would like to test (then press enter):");
 		CommPortIdentifier serialPort = (CommPortIdentifier)ports.get(Integer.parseInt(inputStream.readLine()));
 
+		index = 0;
 		for (long speed : HardwareCompatibilityTestSuite.COMMON_SPEEDS) {
-			System.out.println(currentModel + ". " + speed);
+			System.out.println(index++ + ". " + speed);
 		}
 		System.out.println("Type the number of the speed that you would like to test (then press enter):");
 		long speed = HardwareCompatibilityTestSuite.COMMON_SPEEDS[Integer.parseInt(inputStream.readLine())];
