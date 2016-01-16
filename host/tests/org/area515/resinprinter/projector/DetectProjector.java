@@ -41,7 +41,7 @@ public class DetectProjector {
 				System.out.println("Port:" + currentIdentifier.getName() + " Baud:" + speed);
 				
 				SerialCommunicationsPort port = new JSSCCommPort();
-				ProjectorModel model = SerialManager.Instance().getProjectorModel(port, newComPortSettings, false);
+				ProjectorModel model = SerialManager.Instance().getProjectorModel(port, newComPortSettings);
 				if (model != null) {
 					hasFound = true;
 				}

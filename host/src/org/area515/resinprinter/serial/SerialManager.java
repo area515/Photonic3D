@@ -44,7 +44,7 @@ public class SerialManager {
 	private SerialManager() {
 	}
 	
-	public ProjectorModel getProjectorModel(SerialCommunicationsPort currentIdentifier, ComPortSettings newComPortSettings, boolean leavePortOpen) {
+	public ProjectorModel getProjectorModel(SerialCommunicationsPort currentIdentifier, ComPortSettings newComPortSettings) {
 		try {
 			currentIdentifier.open(AUTO_DETECT_PROJECTOR, TIME_OUT, newComPortSettings);
 			ProjectorModel currentModel = null;
@@ -55,9 +55,7 @@ public class SerialManager {
 				}
 			}
 			
-			if (!leavePortOpen) {
-				currentIdentifier.close();
-			}
+			currentIdentifier.close();
 			return currentModel;
 		} catch (AlreadyAssignedException | InappropriateDeviceException e) {
 			return null;
@@ -116,7 +114,7 @@ public class SerialManager {
 					}
 					
 					if (identifierName.equals(AUTO_DETECT_PROJECTOR)) {
-						ProjectorModel model = getProjectorModel(check, newComPortSettings, false);
+						ProjectorModel model = getProjectorModel(check, newComPortSettings);
 						if (model != null) {
 							identifier = check;
 							resources.model = model;
@@ -155,15 +153,13 @@ public class SerialManager {
 			printersBySerialPort.remove(resources.comPort);
 			throw new AlreadyAssignedException("Printer projector serial port already assigned:" + otherPort, otherPort);
 		}
-		
+
 		if (resources.model == null) {
-			resources.model = getProjectorModel(resources.comPort, newComPortSettings, true);
-			
-			if (resources.model == null) {
-				printersBySerialPort.remove(resources.comPort);
-				throw new InappropriateDeviceException("Couldn't determine model of projector on port:" + identifier);
-			}
+			printersBySerialPort.remove(resources.comPort);
+			throw new InappropriateDeviceException("Couldn't determine model of projector on port:" + identifier);
 		}
+		
+		identifier.open(printer.getName(), TIME_OUT, settings);
 		printer.setProjectorSerialPort(identifier);
 		printer.setProjectorModel(resources.model);
 	}
