@@ -71,25 +71,27 @@ public class HexCodeBasedProjector implements ProjectorModel {
 
 	@Override
 	public boolean autodetect(SerialCommunicationsPort port) {
+		StringBuilder builder = new StringBuilder();
 		try {
 			port.write(detectionHex);
 			long start = System.currentTimeMillis();
-			StringBuilder builder = new StringBuilder();
 			while (true) {
 				byte[] response = port.read();
 				if (response != null) {
 					builder.append(new String(response));
-					
 					if (detectionResponsePattern.matcher(builder.toString()).matches()) {
 						return true;
 					}
 				}
 				
 				if (System.currentTimeMillis() - start >= PROJECTOR_TIMEOUT) {
+					System.out.println("Timeout after bytes read \"" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + "\"");
 					return false;
 				}
 			}
 		} catch (IOException e) {
+			System.out.println("Error after bytes read \"" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + "\"");
+			e.printStackTrace();
 			return false;
 		}
 	}
