@@ -119,7 +119,7 @@ public class PrinterManager {
 			SerialManager.Instance().assignSerialPortToFirmware(printer, firmwarePort);
 			
 			ComPortSettings settings = printer.getConfiguration().getMachineConfig().getMonitorDriverConfig().getComPortSettings();
-			if (settings != null) {
+			if (settings != null && settings.getPortName() != null) {
 				String projectorComportId = settings.getPortName();
 				SerialCommunicationsPort projectorPort = SerialManager.Instance().getSerialDevice(projectorComportId);
 				if (projectorPort != null) {
