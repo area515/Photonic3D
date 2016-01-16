@@ -11,6 +11,7 @@ import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 
@@ -117,10 +118,13 @@ public class PrinterManager {
 			}
 			SerialManager.Instance().assignSerialPortToFirmware(printer, firmwarePort);
 			
-			String projectorComportId = printer.getConfiguration().getMachineConfig().getMonitorDriverConfig().getComPortSettings().getPortName();
-			SerialCommunicationsPort projectorPort = SerialManager.Instance().getSerialDevice(projectorComportId);
-			if (projectorPort != null) {
-				SerialManager.Instance().assignSerialPortToProjector(printer, projectorPort);
+			ComPortSettings settings = printer.getConfiguration().getMachineConfig().getMonitorDriverConfig().getComPortSettings();
+			if (settings != null) {
+				String projectorComportId = settings.getPortName();
+				SerialCommunicationsPort projectorPort = SerialManager.Instance().getSerialDevice(projectorComportId);
+				if (projectorPort != null) {
+					SerialManager.Instance().assignSerialPortToProjector(printer, projectorPort);
+				}
 			}
 			
 			printersByName.put(printer.getName(), printer);

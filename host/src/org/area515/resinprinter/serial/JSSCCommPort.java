@@ -58,6 +58,9 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 		try {
 			port.openPort();
 			port.setParams((int)settings.getSpeed(), settings.getDatabits(), stopBits, parity);
+			if (!port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXCLEAR)) {
+				throw new InappropriateDeviceException("Comm port couldn't be purged:" + settings.getPortName());
+			}
 		} catch (SerialPortException e) {
 			if (e.getExceptionType().equals(SerialPortException.TYPE_PORT_BUSY) ||
 				e.getExceptionType().equals(SerialPortException.TYPE_PORT_ALREADY_OPENED)) {
@@ -75,9 +78,15 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 	@Override
 	public void close() {
 		try {
-			port.closePort();
+			port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXCLEAR);
 		} catch (SerialPortException e) {
-			e.printStackTrace();
+			e.printStackTrace(); 
+		} finally {
+			try {
+				port.closePort();
+			} catch (SerialPortException e) {
+				//We don't really care if the comm port is closed...
+			}
 		}
 	}
 

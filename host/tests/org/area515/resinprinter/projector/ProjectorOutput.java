@@ -20,14 +20,6 @@ public class ProjectorOutput {
 		BufferedReader inputStream = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("Projector Output Test.");
 		int index = 0;
-		List<ProjectorModel> models = HostProperties.Instance().getAutodetectProjectors();
-		for (ProjectorModel model : models) {
-			System.out.println(index++ + ". " + model.getName());
-		}
-		System.out.println("Type the number of the projector that you would like to test (then press enter):");
-		HexCodeBasedProjector projector = (HexCodeBasedProjector)models.get(Integer.parseInt(inputStream.readLine()));
-		
-		index = 0;
 		List<CommPortIdentifier> ports = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
 		for (CommPortIdentifier port : ports) {
 			System.out.println(index++ + ". " + port.getName());
@@ -42,12 +34,6 @@ public class ProjectorOutput {
 		System.out.println("Type the number of the speed that you would like to test (then press enter):");
 		long speed = HardwareCompatibilityTestSuite.COMMON_SPEEDS[Integer.parseInt(inputStream.readLine())];
 
-		System.out.println("0. On Hex");
-		System.out.println("1. Off Hex");
-		System.out.println("2. Detection Hex");
-		System.out.println("Type the number of the hexcode that you would like to test (then press enter):");
-		int hex = Integer.parseInt(inputStream.readLine());
-
 		ComPortSettings newComPortSettings = new ComPortSettings();
 		newComPortSettings.setSpeed(speed);
 		newComPortSettings.setDatabits(8);
@@ -57,17 +43,34 @@ public class ProjectorOutput {
 
 		SerialCommunicationsPort port = new JSSCCommPort();
 		port.open("ProjectorOutputTest", SerialManager.TIME_OUT, newComPortSettings);
-		switch (hex) {
-		case 0:
-			System.out.println(projector.testCodeAgainstPattern(port, projector.getOnHex()));
-			break;
-		case 1:
-			System.out.println(projector.testCodeAgainstPattern(port, projector.getOffHex()));
-			break;
-		case 2:
-			System.out.println(projector.testCodeAgainstPattern(port, projector.getDetectionHex()));
-			break;
+
+		while (true) {
+			index = 0;
+			List<ProjectorModel> models = HostProperties.Instance().getAutodetectProjectors();
+			for (ProjectorModel model : models) {
+				System.out.println(index++ + ". " + model.getName());
+			}
+			System.out.println("Type the number of the projector that you would like to test (then press enter):");
+			HexCodeBasedProjector projector = (HexCodeBasedProjector)models.get(Integer.parseInt(inputStream.readLine()));
+			
+			System.out.println("0. On Hex");
+			System.out.println("1. Off Hex");
+			System.out.println("2. Detection Hex");
+			
+			System.out.println("Type the number of the hexcode that you would like to test (then press enter):");
+			int hex = Integer.parseInt(inputStream.readLine());
+	
+			switch (hex) {
+			case 0:
+				System.out.println(projector.testCodeAgainstPattern(port, projector.getOnHex()));
+				break;
+			case 1:
+				System.out.println(projector.testCodeAgainstPattern(port, projector.getOffHex()));
+				break;
+			case 2:
+				System.out.println(projector.testCodeAgainstPattern(port, projector.getDetectionHex()));
+				break;
+			}
 		}
-		port.close();
 	}
 }
