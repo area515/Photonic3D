@@ -45,21 +45,22 @@ public class SerialManager {
 	}
 	
 	public ProjectorModel getProjectorModel(SerialCommunicationsPort currentIdentifier, ComPortSettings newComPortSettings) {
-		try {
-			currentIdentifier.open(AUTO_DETECT_PROJECTOR, TIME_OUT, newComPortSettings);
-			ProjectorModel currentModel = null;
-			for (ProjectorModel model : HostProperties.Instance().getAutodetectProjectors()) {
+		ProjectorModel currentModel = null;
+		for (ProjectorModel model : HostProperties.Instance().getAutodetectProjectors()) {
+			try {
+				currentIdentifier.open(AUTO_DETECT_PROJECTOR, TIME_OUT, newComPortSettings);
 				if (model.autodetect(currentIdentifier)) {
 					currentModel = model;
 					break;
 				}
+			} catch (AlreadyAssignedException | InappropriateDeviceException e) {
+				return null;
+			} finally {
+				currentIdentifier.close();
 			}
-			
-			currentIdentifier.close();
-			return currentModel;
-		} catch (AlreadyAssignedException | InappropriateDeviceException e) {
-			return null;
 		}
+		
+		return currentModel;
 	}
 	
 	public boolean is3dFirmware(SerialCommunicationsPort currentIdentifier, ComPortSettings newComPortSettings) {
@@ -159,7 +160,7 @@ public class SerialManager {
 			throw new InappropriateDeviceException("Couldn't determine model of projector on port:" + identifier);
 		}
 		
-		identifier.open(printer.getName(), TIME_OUT, settings);
+		identifier.open(printer.getName(), TIME_OUT, newComPortSettings);
 		printer.setProjectorSerialPort(identifier);
 		printer.setProjectorModel(resources.model);
 	}
