@@ -260,7 +260,7 @@ public class PrinterService {
 				+ "	value = $LayerTime\n"
 				+ "}\n"
 		 	+ "value");
-		configuration.getSlicingProfile().setProjectorGradientCalculator(			    
+		configuration.getSlicingProfile().setProjectorGradientCalculator(
 				/*"function getFractions(count, start, end) {\n" + 
 			"	var incrementAmount = (end - start) / count;\n" +
 			"	var fractions = [];\n" + 
@@ -304,16 +304,25 @@ public class PrinterService {
 
 	PrinterConfiguration createTemplatePrinter(String printername, String displayId, String comport, double physicalProjectionMMX, double physicalProjectionMMY, double buildHeightMMZ) {
 		PrinterConfiguration currentConfiguration = new PrinterConfiguration(printername, printername, false);
-		ComPortSettings settings = new ComPortSettings();
-		settings.setPortName(comport);
-		settings.setDatabits(8);
-		settings.setHandshake("None");
-		settings.setStopbits("One");
-		settings.setParity("None");
-		settings.setSpeed(115200);
+		ComPortSettings firmwareComSettings = new ComPortSettings();
+		firmwareComSettings.setPortName(comport);
+		firmwareComSettings.setDatabits(8);
+		firmwareComSettings.setHandshake("None");
+		firmwareComSettings.setStopbits("One");
+		firmwareComSettings.setParity("None");
+		firmwareComSettings.setSpeed(115200);
+		
 		MotorsDriverConfig motors = new MotorsDriverConfig();
-		motors.setComPortSettings(settings);
+		motors.setComPortSettings(firmwareComSettings);
 		MonitorDriverConfig monitor = new MonitorDriverConfig();
+		ComPortSettings projectorComSettings = new ComPortSettings();
+		projectorComSettings.setPortName(null);//We aren't going to be using a projector on our template
+		projectorComSettings.setDatabits(8);
+		projectorComSettings.setHandshake("None");
+		projectorComSettings.setStopbits("One");
+		projectorComSettings.setParity("None");
+		projectorComSettings.setSpeed(9600);
+		monitor.setComPortSettings(projectorComSettings);
 		
 		MachineConfig machineConfig = new MachineConfig();
 		machineConfig.setMotorsDriverConfig(motors);
