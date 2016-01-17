@@ -289,10 +289,10 @@ public class PrinterService {
 				"new Packages.java.awt.RadialGradientPaint(\n" +
 				"	bulbCenter,\n" + 
 				"	totalSizeOfGradient,\n" +
-			"	bulbFocus,\n" +
-			"	fractions,\n" +
-			"	colors,\n" +
-			"	java.awt.MultipleGradientPaint.CycleMethod.NO_CYCLE)");
+				"	bulbFocus,\n" +
+				"	fractions,\n" +
+				"	colors,\n" +
+				"	java.awt.MultipleGradientPaint.CycleMethod.NO_CYCLE)");
 		try {
 			return new Printer(configuration);
 		} catch (InappropriateDeviceException e) {
