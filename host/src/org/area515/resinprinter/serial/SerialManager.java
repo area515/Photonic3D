@@ -24,7 +24,11 @@ public class SerialManager {
 	public static final String AUTO_DETECT_PROJECTOR = "Autodetect projector";
 	
 	private ConcurrentHashMap<SerialCommunicationsPort, Printer> printersBySerialPort = new ConcurrentHashMap<SerialCommunicationsPort, Printer>();
-
+	private enum ComPortReservation {
+		Projector,
+		PrinterFirmware
+	}
+	
 	/** Milliseconds to block while waiting for port open */
 	public static final int TIME_OUT = 2000;
 	public static final int CPU_LIMITING_DELAY = 200;
@@ -44,24 +48,23 @@ public class SerialManager {
 	private SerialManager() {
 	}
 	
-	public ProjectorModel getProjectorModel(SerialCommunicationsPort currentIdentifier, ComPortSettings newComPortSettings, boolean leavePortOpen) {
-		try {
-			currentIdentifier.open(AUTO_DETECT_PROJECTOR, TIME_OUT, newComPortSettings);
-			ProjectorModel currentModel = null;
-			for (ProjectorModel model : HostProperties.Instance().getAutodetectProjectors()) {
+	public ProjectorModel getProjectorModel(SerialCommunicationsPort currentIdentifier, ComPortSettings newComPortSettings) {
+		ProjectorModel currentModel = null;
+		for (ProjectorModel model : HostProperties.Instance().getAutodetectProjectors()) {
+			try {
+				currentIdentifier.open(AUTO_DETECT_PROJECTOR, TIME_OUT, newComPortSettings);
 				if (model.autodetect(currentIdentifier)) {
 					currentModel = model;
 					break;
 				}
-			}
-			
-			if (!leavePortOpen) {
+			} catch (AlreadyAssignedException | InappropriateDeviceException e) {
+				return null;
+			} finally {
 				currentIdentifier.close();
 			}
-			return currentModel;
-		} catch (AlreadyAssignedException | InappropriateDeviceException e) {
-			return null;
 		}
+		
+		return currentModel;
 	}
 	
 	public boolean is3dFirmware(SerialCommunicationsPort currentIdentifier, ComPortSettings newComPortSettings) {
@@ -92,11 +95,17 @@ public class SerialManager {
 		}
 	}
 	
-	private DetectedResources detectResourcesAndAssignPort(Printer printer, SerialCommunicationsPort identifier, ComPortSettings newComPortSettings) throws AlreadyAssignedException, InappropriateDeviceException {
+	private DetectedResources detectResourcesAndAssignPort(Printer printer, SerialCommunicationsPort identifier, ComPortSettings newComPortSettings, ComPortReservation reservationStyle) throws AlreadyAssignedException, InappropriateDeviceException {
 		DetectedResources resources = new DetectedResources();
 		String identifierName = identifier.getName();
+		if (identifierName.equals(AUTO_DETECT_3D_FIRMWARE) && reservationStyle != ComPortReservation.PrinterFirmware) {
+			throw new InappropriateDeviceException("It doesn't make sense to use:" + AUTO_DETECT_3D_FIRMWARE + " with:" + reservationStyle);
+		}
+		if (identifierName.equals(AUTO_DETECT_PROJECTOR) && reservationStyle != ComPortReservation.Projector) {
+			throw new InappropriateDeviceException("It doesn't make sense to use:" + AUTO_DETECT_PROJECTOR + " with:" + reservationStyle);
+		}
 		if (identifierName.equals(FIRST_AVAILABLE_PORT) || 
-			identifierName.equals(AUTO_DETECT_3D_FIRMWARE) ||
+			identifierName.equals(AUTO_DETECT_3D_FIRMWARE) || 
 			identifierName.equals(AUTO_DETECT_PROJECTOR)) {
 			identifier = null;
 			ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
@@ -116,7 +125,7 @@ public class SerialManager {
 					}
 					
 					if (identifierName.equals(AUTO_DETECT_PROJECTOR)) {
-						ProjectorModel model = getProjectorModel(check, newComPortSettings, false);
+						ProjectorModel model = getProjectorModel(check, newComPortSettings);
 						if (model != null) {
 							identifier = check;
 							resources.model = model;
@@ -130,6 +139,11 @@ public class SerialManager {
 				newComPortSettings.setPortName(identifierName);
 				throw new InappropriateDeviceException("No serial ports found for:" + identifierName);
 			}
+		} 
+		
+		//This is a bit confusing, but if we are a projector and they chose their port directly, or chose FIRST_AVAILABLE_PORT, we haven't yet detected their projector model
+		if (reservationStyle == ComPortReservation.Projector && !identifierName.equals(AUTO_DETECT_PROJECTOR)) {
+			resources.model = getProjectorModel(identifier, newComPortSettings);
 		}
 
 		Printer otherPrintJob = printersBySerialPort.putIfAbsent(identifier, printer);
@@ -147,7 +161,7 @@ public class SerialManager {
 		}
 		
 		ComPortSettings newComPortSettings = new ComPortSettings(settings);
-		DetectedResources resources = detectResourcesAndAssignPort(printer, identifier, newComPortSettings);
+		DetectedResources resources = detectResourcesAndAssignPort(printer, identifier, newComPortSettings, ComPortReservation.Projector);
 		identifier = resources.comPort;
 		
 		SerialCommunicationsPort otherPort = printer.getProjectorSerialPort();
@@ -155,15 +169,13 @@ public class SerialManager {
 			printersBySerialPort.remove(resources.comPort);
 			throw new AlreadyAssignedException("Printer projector serial port already assigned:" + otherPort, otherPort);
 		}
-		
+
 		if (resources.model == null) {
-			resources.model = getProjectorModel(resources.comPort, newComPortSettings, true);
-			
-			if (resources.model == null) {
-				printersBySerialPort.remove(resources.comPort);
-				throw new InappropriateDeviceException("Couldn't determine model of projector on port:" + identifier);
-			}
+			printersBySerialPort.remove(resources.comPort);
+			throw new InappropriateDeviceException("Couldn't determine model of projector on port:" + identifier);
 		}
+		
+		identifier.open(printer.getName(), TIME_OUT, newComPortSettings);
 		printer.setProjectorSerialPort(identifier);
 		printer.setProjectorModel(resources.model);
 	}
@@ -171,7 +183,7 @@ public class SerialManager {
 	public void assignSerialPortToFirmware(Printer printer, SerialCommunicationsPort identifier) throws AlreadyAssignedException, InappropriateDeviceException {
 		ComPortSettings newComPortSettings = new ComPortSettings(printer.getConfiguration().getMachineConfig().getMotorsDriverConfig().getComPortSettings());
 		
-		DetectedResources resources = detectResourcesAndAssignPort(printer, identifier, newComPortSettings);
+		DetectedResources resources = detectResourcesAndAssignPort(printer, identifier, newComPortSettings, ComPortReservation.PrinterFirmware);
 		identifier = resources.comPort;
 		
 		SerialCommunicationsPort otherPort = printer.getPrinterFirmwareSerialPort();

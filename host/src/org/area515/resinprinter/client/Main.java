@@ -70,6 +70,13 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		/*SubnetScanner scanner = new SubnetScanner();
+		try {
+			scanner.startSubnetScan();
+		} catch (SocketException e) {
+			e.getStackTrace();//No network available?
+		}//*/
+		
 		JDialog searchPane = null;
 		final JOptionPane searchOptionPane = new JOptionPane("Searching for all 3d printers on network...", JOptionPane.INFORMATION_MESSAGE, JOptionPane.CANCEL_OPTION, null, new String[]{"Cancel"}, "Cancel");
 

@@ -219,27 +219,28 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	}
 	
 	private float[] getFractions(int count, float start, float end) {
-		float incrementAmount = (end - start) / (float)count;
+		/*float incrementAmount = (end - start) / (float)count;
 		float fractions[] = new float[count];
 		for (int t = 0; t < count; t++) {
 			fractions[t] = start + incrementAmount * t;
 		}
-		//return new float[]{0, 1};
 		return fractions;
+		*/
+		return new float[]{0, 1};
 	}
 	
 	private Color[] getColors(float[] fractions, float start, float stop) {
-		Color colors[] = new Color[fractions.length];
+		/*Color colors[] = new Color[fractions.length];
 		float colorRange = stop - start;
 		float atanDivergencePoint = (float)Math.PI / 2;
 		for (int t = 0; t < fractions.length; t++) {
 			colors[t] = new Color(0, 0, 0, (float)(Math.atan(fractions[t] * atanDivergencePoint)) * colorRange + start);
 			System.out.println(fractions[t] + " = " + ((float)(Math.atan(fractions[t] * atanDivergencePoint)) * colorRange + start));
 		}
-		//return new Color[]{new Color(0, 0, 0, (float)opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum()), new Color(0, 0, 0, 0)};
-		return colors;
+		return colors;*/
+		return new Color[]{new Color(0, 0, 0, (float)opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum()), new Color(0, 0, 0, 0)};
 	}
-
+	
 	private void applyProjectorMask(Graphics2D g2) {
 		g2.setPaintMode();
 		Rectangle r = this.getBounds();//g2.getDeviceConfiguration().getBounds();
@@ -257,6 +258,17 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				CycleMethod.NO_CYCLE);
 		g2.setPaint(paint);
 		g2.fillRect(r.x, r.y, r.width, r.height);
+		
+		System.out.println("Bulb Mask Properties");
+		System.out.println("====================");
+		System.out.println("var bulbCenter = new Packages.java.awt.geom.Point2D.Double(${buildPlatformXPixels} * " + ((float)centerX / (float)r.width) + ", ${buildPlatformYPixels} * " + ((float)centerY / (float)r.height) + ")");
+		System.out.println("var bulbFocus = new Packages.java.awt.geom.Point2D.Double(${buildPlatformXPixels} * " + (bulbFocus.getX() / r.width) + ", ${buildPlatformYPixels} * " + (bulbFocus.getY() / r.height) + ")");
+		System.out.println("var colors = [new Packages.java.awt.Color(0.0, 0.0, 0.0, " + ((float)opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum()) + "), new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.0)];");
+		System.out.println("var fractions = [0.0, 1.0];");
+		System.out.println("var totalSizeOfGradient = $buildPlatformXPixels > $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;");
+		int totalSizeOfGradient = r.width > r.height? r.width: r.height;
+		System.out.println("new Packages.java.awt.RadialGradientPaint(bulbCenter, totalSizeOfGradient * " + ((float)bulbSizeModel.getValue()/(float)totalSizeOfGradient) + ", bulbFocus, fractions, colors, java.awt.MultipleGradientPaint.CycleMethod.NO_CYCLE);");
+		System.out.println("====================");
 	}
 	
 	private class ShowcaseUpdaterModel extends DefaultBoundedRangeModel {
@@ -501,7 +513,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	  public static void main(String[] args) throws Exception {
 		  SliceBrowser browser = new SliceBrowser();
 		  browser.setVisible(true);
-		  browser.getColors(browser.getFractions(1600, .0f, 1f), .2f, .0f);
+		  //browser.getColors(browser.getFractions(1600, .0f, 1f), .2f, .0f);
 	  }
 }
 

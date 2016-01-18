@@ -11,6 +11,7 @@ import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 
@@ -110,14 +111,21 @@ public class PrinterManager {
 			}
 			DisplayManager.Instance().assignDisplay(printer, graphicsDevice);
 			
-			String comportId = printer.getConfiguration().getMachineConfig().getMotorsDriverConfig().getComPortSettings().getPortName();
-			SerialCommunicationsPort port = SerialManager.Instance().getSerialDevice(comportId);
-			if (port == null) {
-				throw new JobManagerException("Couldn't find communications device called:" + comportId);
+			String firmwareComportId = printer.getConfiguration().getMachineConfig().getMotorsDriverConfig().getComPortSettings().getPortName();
+			SerialCommunicationsPort firmwarePort = SerialManager.Instance().getSerialDevice(firmwareComportId);
+			if (firmwarePort == null) {
+				throw new JobManagerException("Couldn't find communications device called:" + firmwareComportId);
 			}
+			SerialManager.Instance().assignSerialPortToFirmware(printer, firmwarePort);
 			
-			SerialManager.Instance().assignSerialPortToFirmware(printer, port);
-			SerialManager.Instance().assignSerialPortToProjector(printer, port);
+			ComPortSettings settings = printer.getConfiguration().getMachineConfig().getMonitorDriverConfig().getComPortSettings();
+			if (settings != null && settings.getPortName() != null) {
+				String projectorComportId = settings.getPortName();
+				SerialCommunicationsPort projectorPort = SerialManager.Instance().getSerialDevice(projectorComportId);
+				if (projectorPort != null) {
+					SerialManager.Instance().assignSerialPortToProjector(printer, projectorPort);
+				}
+			}
 			
 			printersByName.put(printer.getName(), printer);
 			printer.setStarted(true);
