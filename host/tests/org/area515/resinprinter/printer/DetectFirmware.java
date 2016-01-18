@@ -9,18 +9,20 @@ import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
 import org.area515.resinprinter.serial.JSSCCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
+import org.area515.resinprinter.test.HardwareCompatibilityTestSuite;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class DetectFirmware {
+	
+	
 	@Test
 	public void noErrorsDetectingFirmware() {
 		System.out.println("Firmware detection test.");
 
 		ComPortSettings newComPortSettings = new ComPortSettings();
-		long[] commonSpeeds = new long[]{9600, 115200};
 		boolean hasFound = false;
-		for (long speed : commonSpeeds) {
+		for (long speed : HardwareCompatibilityTestSuite.COMMON_SPEEDS) {
 			newComPortSettings.setSpeed(speed);
 			newComPortSettings.setDatabits(8);
 			newComPortSettings.setParity("NONE");

@@ -18,6 +18,22 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 	public void open(String controllingDevice, int timeout,
 			ComPortSettings settings) throws AlreadyAssignedException,
 			InappropriateDeviceException {
+		if (settings == null) {
+			throw new InappropriateDeviceException("Port settings haven't been configured for this device.");
+		}
+		if (settings.getPortName() == null) {
+			throw new InappropriateDeviceException("Port name hasn't been configured for this device.");
+		}
+		if (settings.getParity() == null) {
+			throw new InappropriateDeviceException("Parity hasn't been configured for this device(" + settings.getPortName() + ").");
+		}
+		if (settings.getStopbits() == null) {
+			throw new InappropriateDeviceException("Stopbits havn't been configured for this device(" + settings.getPortName() + ").");
+		}
+		if (settings.getSpeed() == 0) {
+			throw new InappropriateDeviceException("Speed hasn't been configured for this device(" + settings.getPortName() + ").");
+		}
+		
 		port = new SerialPort(settings.getPortName());
 		int parity = 0;
 		if (settings.getParity().equalsIgnoreCase("EVEN")) {
@@ -42,6 +58,9 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 		try {
 			port.openPort();
 			port.setParams((int)settings.getSpeed(), settings.getDatabits(), stopBits, parity);
+			if (!port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXCLEAR)) {
+				throw new InappropriateDeviceException("Comm port couldn't be purged:" + settings.getPortName());
+			}
 		} catch (SerialPortException e) {
 			if (e.getExceptionType().equals(SerialPortException.TYPE_PORT_BUSY) ||
 				e.getExceptionType().equals(SerialPortException.TYPE_PORT_ALREADY_OPENED)) {
@@ -59,9 +78,15 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 	@Override
 	public void close() {
 		try {
-			port.closePort();
+			port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXCLEAR);
 		} catch (SerialPortException e) {
-			e.printStackTrace();
+			e.printStackTrace(); 
+		} finally {
+			try {
+				port.closePort();
+			} catch (SerialPortException e) {
+				//We don't really care if the comm port is closed...
+			}
 		}
 	}
 
