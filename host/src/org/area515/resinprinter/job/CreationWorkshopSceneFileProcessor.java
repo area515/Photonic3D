@@ -305,7 +305,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 			}
 			String basename = FilenameUtils.removeExtension(jobFile.getName());
 			System.out.println("BaseName: " + FilenameUtils.removeExtension(basename));
-			findGcodeFile(jobFile);
+			//findGcodeFile(jobFile);
 		} catch (IOException ioe) {
 			throw ioe;
 		} finally {
