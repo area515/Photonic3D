@@ -130,6 +130,9 @@
 			if (printable.printFileProcessor.friendlyName === 'Creation Workshop Scene') {
 				return "fa-diamond";
 			}
+			if (printable.printFileProcessor.friendlyName === 'Zip of Slice Images') {
+				return "stack-overflow";
+			}
 			return "fa-question-circle";
 		}
 		
