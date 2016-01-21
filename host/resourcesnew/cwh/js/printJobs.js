@@ -131,7 +131,7 @@
 				return "fa-diamond";
 			}
 			if (printable.printFileProcessor.friendlyName === 'Zip of Slice Images') {
-				return "stack-overflow";
+				return "fa-stack-overflow";
 			}
 			return "fa-question-circle";
 		}
