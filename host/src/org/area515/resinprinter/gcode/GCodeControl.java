@@ -60,6 +60,7 @@ public abstract class GCodeControl {
         		cmd += "\n";
         	}
         	
+        	System.out.print("Write: "+cmd);
         	getSerialPort().write(cmd.getBytes());
         	return readUntilOkOrStoppedPrinting(printer);
         } finally {
@@ -74,6 +75,7 @@ public abstract class GCodeControl {
         		cmd += "\n";
         	}
         	
+        	System.out.print("Write: "+cmd);
         	getSerialPort().write(cmd.getBytes());
         	return readUntilOkOrStoppedPrinting(null);
         } catch (IOException ex) {
