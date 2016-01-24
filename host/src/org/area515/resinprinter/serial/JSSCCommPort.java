@@ -5,12 +5,15 @@ import java.io.IOException;
 import jssc.SerialPort;
 import jssc.SerialPortException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
 import org.area515.resinprinter.printer.Printer;
 
 public class JSSCCommPort implements SerialCommunicationsPort {
+    private static final Logger logger = LogManager.getLogger();
 	private SerialPort port;
 	private String cwhName;
 	
@@ -80,7 +83,7 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 		try {
 			port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXCLEAR);
 		} catch (SerialPortException e) {
-			e.printStackTrace(); 
+			logger.error("Error closing:" + port.getPortName(), e);
 		} finally {
 			try {
 				port.closePort();

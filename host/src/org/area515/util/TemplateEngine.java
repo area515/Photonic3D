@@ -11,6 +11,8 @@ import java.util.Map;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
 
@@ -22,13 +24,14 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
 public class TemplateEngine {
+    private static final Logger logger = LogManager.getLogger();
 	private static StringTemplateLoader templateLoader = new StringTemplateLoader();
 	private static Configuration config = null;
 	
 	
 	public static final TemplateExceptionHandler INFO_IGNORE_HANDLER = new TemplateExceptionHandler() {
 		public void handleTemplateException(TemplateException te, Environment env, Writer out) throws TemplateException {
-			System.out.println("TemplateExceptionHandler:" + te);
+			logger.error("Logged error in template", te);
 		}
 	};
 

@@ -8,6 +8,8 @@ import javax.mail.MessagingException;
 import javax.mail.Transport;
 import javax.websocket.server.ServerContainer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
@@ -19,6 +21,7 @@ import org.area515.resinprinter.slice.StlError;
 import org.area515.util.MailUtilities;
 
 public class EmailOnCompletionNotifier implements Notifier {
+    private static final Logger logger = LogManager.getLogger();
 	
 	@Override
 	public void register(ServerContainer container) throws InappropriateDeviceException {
@@ -41,7 +44,7 @@ public class EmailOnCompletionNotifier implements Notifier {
 						transport,
 						(File[])null);
 			} catch (MessagingException | IOException e) {
-				e.printStackTrace();
+				logger.error("Error occurred while sending job change event", e);
 			} finally {
 				if (transport != null) {
 					try {transport.close();} catch (MessagingException e) {}

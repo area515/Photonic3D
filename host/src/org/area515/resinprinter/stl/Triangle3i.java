@@ -6,8 +6,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Triangle3i implements Shape3i {
-	private Point3i[] verticies;
+    private static final Logger logger = LogManager.getLogger();
+
+    private Point3i[] verticies;
 	private Point3i normal;
 	private int[] min = new int[3];
 	private int[] max = new int[3];
@@ -81,7 +86,7 @@ public class Triangle3i implements Shape3i {
 		for (int t = 0; t < 3; t++) {
 			if (Double.isInfinite(xSlopes[t]) || Double.isNaN(xSlopes[t])) {
 				if (z != verticies[t].z) {
-					System.out.println("Could this siutation happen and be a proper intersection?");
+					logger.warn("Could this siutation happen and be a proper intersection?");
 				} else {
 					line[currentPoint++] = new Point3i(verticies[t].x, verticies[t].y, verticies[t].z);
 				}

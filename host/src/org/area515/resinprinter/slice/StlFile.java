@@ -25,6 +25,8 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.stl.Point3d;
 
 
@@ -57,6 +59,7 @@ import org.area515.resinprinter.stl.Point3d;
  */
 
 public abstract class StlFile<T> {
+  private static final Logger logger = LogManager.getLogger();
   // Maximum length (in chars) of basePath
   private static final int MAX_PATH_LENGTH = 1024;
 
@@ -112,11 +115,11 @@ public abstract class StlFile<T> {
     }
     catch (IOException e)
     {
-      e.printStackTrace();
+      logger.error("Error getting next token:" + parser, e);
     }
     if(parser.ttype != StlFileParser.TT_EOL)
     {
-      System.err.println("Format Error:expecting End Of Line on line " + parser.lineno());
+      logger.error("Format Error:expecting End Of Line on line " + parser.lineno());
     }
   }
 
@@ -133,28 +136,21 @@ public abstract class StlFile<T> {
   {
     if(parser.sval == null || !parser.sval.equals("solid"))
     {
-      //System.out.println("Expecting solid on line " + parser.lineno());
+      logger.warn("Expecting solid on line:{}", parser.lineno());
       // If the first word is not "solid" then we consider the file is binary
       // Can give us problems if the comment of the binary file begins by "solid"
       this.setAscii(false);
     }
-    else  // It's an ASCII file
-    {
-      try
-      {
+    else { // It's an ASCII file
+      try {
           	parser.nextToken();
+      } catch (IOException e) {
+	  	logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
       }
-      catch (IOException e)
-      {
-	  	System.err.println("IO Error on line " + parser.lineno() + ": " + e.getMessage());
-      }
-      if( parser.ttype != StlFileParser.TT_WORD)
-      {
+      if( parser.ttype != StlFileParser.TT_WORD) {
 	  	// Is the object name always provided???
-	  	System.err.println("Format Error:expecting the object name on line " + parser.lineno());
-      }
-      else
-      { 
+    	  logger.error("Format Error:expecting the object name on line " + parser.lineno());
+      } else { 
 	  	// Store the object Name
         this.setObjectName(new String(parser.sval));
         this.readEOL(parser);
@@ -175,7 +171,7 @@ public abstract class StlFile<T> {
   {
 		if (parser.ttype != StlFileParser.TT_WORD || !parser.sval.equals(parseKey))
 	    {
-			System.err.println("Format Error:expecting " + parseKey + " on line " + parser.lineno());
+			logger.error("Format Error:expecting " + parseKey + " on line " + parser.lineno());
 	    }
 	    else 
 	    {
@@ -184,8 +180,7 @@ public abstract class StlFile<T> {
 	    		try {
 					parser.nextToken();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error("Expected next token after outer", e);
 				}
 	    	}
 	    	readEOL(parser);
@@ -208,7 +203,7 @@ public abstract class StlFile<T> {
 
 	    if(!(parser.ttype==StlFileParser.TT_WORD && parser.sval.equals(parseKey)))
 	    {
-	      System.err.println("Format Error:expecting '"+ parseKey +"' on line " + parser.lineno());
+	    	logger.error("Format Error:expecting '"+ parseKey +"' on line " + parser.lineno());
 	    }
 	    else
 	    {
@@ -225,11 +220,11 @@ public abstract class StlFile<T> {
 			        	  coordList.add(new Point3d(x, y, z));
 			        	  readEOL(parser);
 			          }
-			          else System.err.println("Format Error: expecting coordinate on line " + parser.lineno());
+			          else logger.error("Format Error: expecting coordinate on line " + parser.lineno());
 		        }
-		        else System.err.println("Format Error: expecting coordinate on line " + parser.lineno());
+		        else logger.error("Format Error: expecting coordinate on line " + parser.lineno());
 	      }
-	      else System.err.println("Format Error: expecting coordinate on line " + parser.lineno());
+	      else logger.error("Format Error: expecting coordinate on line " + parser.lineno());
 	    }
   }
   
@@ -243,7 +238,7 @@ public abstract class StlFile<T> {
   {
 	    if(parser.ttype != StlFileParser.TT_WORD || !parser.sval.equals("facet"))
 	    {
-	      System.err.println("Format Error:expecting 'facet' on line " + parser.lineno());
+	      logger.error("Format Error:expecting 'facet' on line " + parser.lineno());
 	    }
 	    else
 	    {
@@ -269,7 +264,7 @@ public abstract class StlFile<T> {
 		      }
 		      catch (IOException e)
 		      {
-		        System.err.println("IO Error on line " + parser.lineno() + ": " + e.getMessage());
+		        logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
 		      }
 	    }
   }// End of readFacet
@@ -316,7 +311,7 @@ public abstract class StlFile<T> {
     if(fromUrl)
     {
       // FileInputStream can only read local files!?
-      System.out.println("This version doesn't support reading binary files from internet");
+      logger.error("This version doesn't support reading binary files from internet");
     }
     else
     { // It's a local file
@@ -325,7 +320,7 @@ public abstract class StlFile<T> {
       // First 80 bytes aren't important
       if(80 != data.read(Info))
       { // File is incorrect
-        //System.out.println("Format Error: 80 bytes expected");
+    	logger.error("Format Error: 80 bytes expected");
         throw new IOException("STL Format Error: 80 bytes expected");
       }
       else
@@ -366,7 +361,7 @@ public abstract class StlFile<T> {
           catch (IOException e)
           {
             // Quitar
-            System.out.println("Format Error: iteration number " + i);
+            logger.error("Format Error: iteration number " + i, e);
             throw new IOException("Format Error: iteration number " + i, e);
           }
         }//End for
@@ -393,8 +388,8 @@ public abstract class StlFile<T> {
         }
     catch (IOException e)
     {
-      System.err.println("IO Error on line " + parser.lineno() + ": " + e.getMessage());
-      System.err.println("File seems to be empty");
+      logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
+      logger.error("File seems to be empty");
       return;         // ????? Throw ?????
     }
 
@@ -409,7 +404,7 @@ public abstract class StlFile<T> {
       }
       catch (IOException e)
       {
-       System.err.println("IO Error on line " + parser.lineno() + ": " + e.getMessage());
+       logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
       }
 
       // Read all the facets of the object
@@ -422,13 +417,13 @@ public abstract class StlFile<T> {
         }
         catch (IOException e)
         {
-          System.err.println("IO Error on line " + parser.lineno() + ": " + e.getMessage());
+          logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
         }
       }// End while
 
       // Why are we out of the while?: EOF or endsolid
       if(parser.ttype == StlFileParser.TT_EOF)
-       System.err.println("Format Error:expecting 'endsolid', line " + parser.lineno());
+       logger.error("Format Error:expecting 'endsolid', line " + parser.lineno());
     }//End of Ascii reading
 
     else
@@ -438,7 +433,7 @@ public abstract class StlFile<T> {
       }
       catch(IOException e)
       {
-        System.err.println("Format Error: reading the binary file");
+        logger.error("Format Error: reading the binary file");
       }
     }// End of binary file
   }//End of readFile
@@ -494,8 +489,7 @@ public abstract class StlFile<T> {
 	} 
     catch (IOException e) 
 	{
-		// TODO Auto-generated catch block
-		e.printStackTrace();
+		logger.error("Error loading url:" + url + " from network", e);
 	}
     
     fromUrl = true;
@@ -625,7 +619,7 @@ public abstract class StlFile<T> {
       baseUrl = new URL(sb.toString());
     }
     catch (MalformedURLException e) {
-      System.err.println("Error setting base URL: " + e.getMessage());
+      logger.error("Error setting base URL: " + e.getMessage());
     }
   } // End of setBaseUrlFromUrl*/
 

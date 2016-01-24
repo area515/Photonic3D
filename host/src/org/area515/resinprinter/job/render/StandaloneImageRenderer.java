@@ -10,10 +10,14 @@ import java.util.concurrent.Callable;
 import javax.imageio.ImageIO;
 import javax.script.ScriptException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobManagerException;
 
 public class StandaloneImageRenderer implements Callable<StandaloneImageData> {
+	private static final Logger logger = LogManager.getLogger();
+
 	private File imageFile;
 	private AbstractPrintFileProcessor<?> processor;
 	
@@ -27,8 +31,7 @@ public class StandaloneImageRenderer implements Callable<StandaloneImageData> {
 		BufferedImage image = ImageIO.read(imageFile);
 		long pixelArea = computePixelArea(image);
 		processor.applyBulbMask((Graphics2D)image.getGraphics(), image.getWidth(), image.getHeight());
-		System.out.println("Loaded "+imageFile.getName()+" with "+pixelArea
-				+" non-black pixels in "+(System.currentTimeMillis()-startTime)+"ms");
+		logger.info("Loaded {}  with {} non-black pixels in {}ms", imageFile.getName(), pixelArea, System.currentTimeMillis()-startTime);
 		return new StandaloneImageData(image, pixelArea);
 	}
 	

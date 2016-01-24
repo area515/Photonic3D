@@ -1,11 +1,14 @@
 package org.area515.resinprinter.serial;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
 
 public class ConsoleCommPort implements SerialCommunicationsPort {
-	public static final String CONSOLE_COMM_PORT = "Console Testing";
+    private static final Logger logger = LogManager.getLogger();
+	public static final String GCODE_RESPONSE_SIMULATION = "GCode response simulation";
 	
-	private String name = CONSOLE_COMM_PORT;
+	private String name = GCODE_RESPONSE_SIMULATION;
 	private int readCount;
 	private int timeout;
 	
@@ -13,12 +16,12 @@ public class ConsoleCommPort implements SerialCommunicationsPort {
 	public void open(String printerName, int timeout, ComPortSettings settings) {
 		readCount = 0;
 		this.timeout = timeout;
-		System.out.println("Printer opened");
+		logger.info("Printer opened");
 	}
 
 	@Override
 	public void close() {
-		System.out.println("Printer closed");
+		logger.info("Printer closed");
 	}
 
 	@Override
@@ -33,7 +36,7 @@ public class ConsoleCommPort implements SerialCommunicationsPort {
 
 	@Override
 	public void write(byte[] gcode) {
-		System.out.println("Printer received:" + new String(gcode));
+		logger.info("Printer received:{}", new String(gcode));
 	}
 
 	@Override

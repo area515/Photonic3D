@@ -14,12 +14,15 @@ import javax.imageio.ImageIO;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.services.MediaService;
 
 public class VisualPrintMaterialDetector implements PrintMaterialDetector {
+	private static final Logger logger = LogManager.getLogger();
 	private static final HashMap<Printer, ShapeDetectionCache> buildPictures = new HashMap<>();
 	private static int WIDTH = 100;
 	private static int HEIGHT = 100;
@@ -77,7 +80,7 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 				try {
 					cache.getStreamingOutput().write(pipedOutputStream);
 				} catch (WebApplicationException | IOException e) {
-					e.printStackTrace();
+					logger.error("Couldn't log stream", e);
 				}
 			}
 		});
@@ -111,11 +114,11 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 			GenericHoughDetection<Line> houghLineDetection) throws IOException {
 		houghCircleDetection.houghTransform(edgesImage);
 		List<Circle> circles = houghCircleDetection.getShapes();
-		//System.out.println(circles);
+		//logger.info(circles);
 		
 		houghLineDetection.houghTransform(edgesImage);
 		List<Line> lines = houghLineDetection.getShapes();
-		//System.out.println(lines);
+		//logger.info(lines);
 		
 		//This assumes the camera is oriented such that +y = direction that gravity pulls objects
 		List<Float> percentages = new ArrayList<Float>();

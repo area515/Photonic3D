@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.websocket.server.ServerContainer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.discover.BroadcastManager;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.PrinterConfiguration;
@@ -38,6 +40,7 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
  */
 
 public class Main {
+    private static final Logger logger = LogManager.getLogger();
 	public static ExecutorService GLOBAL_EXECUTOR = new ScheduledThreadPoolExecutor(3, new ThreadFactory() {
 		private AtomicInteger threads = new AtomicInteger();
 		@Override
@@ -49,6 +52,12 @@ public class Main {
 	});
 	
 	public static void main(String[] args) throws Exception {
+		logger.info("=================================================================");
+		logger.info("=================================================================");
+		logger.info("CWH started");
+		logger.info("=================================================================");
+		logger.info("=================================================================");
+
 		int port = HostProperties.Instance().getPrinterHostPort();
 		/*
 		 * Sequence
@@ -136,7 +145,7 @@ public class Main {
 		try {
 			server.start();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Error starting CWH http server", e);
 		}
 		
 		//Start broadcasting server
@@ -147,20 +156,20 @@ public class Main {
 				try {
 					BroadcastManager.shutdown();
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.error("Error shutting down BroadcastManager", e);
 				}
 				try {
 					NotificationManager.shutdown();
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.error("Error shutting down NotificationManager", e);
 				}
 				try {
 					server.stop();
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.error("Error stopping CWH http server", e);
 				} finally {
 					server.destroy();
-					System.out.println("Shutdown Complete");
+					logger.info("Shutdown Complete");
 				}
 			}
 		});
@@ -180,7 +189,7 @@ public class Main {
 		try {
 			server.join();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Error waiting for the OS to shut us down", e);
 		}
 	}
 }
