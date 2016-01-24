@@ -48,5 +48,7 @@
 	<classpathentry kind="lib" path="libs/commons-io/commons-io-2.4.jar"/>
 	<classpathentry kind="lib" path="libs/commons-logging/commons-logging-1.2.jar"/>
 	<classpathentry kind="lib" path="libs/jsch/jsch-0.1.50.jar"/>
+	<classpathentry kind="lib" path="libs/log4j/log4j-api-2.5.jar"/>
+	<classpathentry kind="lib" path="libs/log4j/log4j-core-2.5.jar"/>
 	<classpathentry kind="output" path="srcbin"/>
 </classpath>

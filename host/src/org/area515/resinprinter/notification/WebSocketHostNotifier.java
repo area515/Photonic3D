@@ -16,6 +16,8 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerContainer;
 import javax.websocket.server.ServerEndpoint;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
@@ -24,6 +26,7 @@ import org.area515.util.JacksonEncoder;
 
 @ServerEndpoint(value="/hostNotification", encoders={JacksonEncoder.class})
 public class WebSocketHostNotifier implements Notifier {
+    private static final Logger logger = LogManager.getLogger();
 	private static ConcurrentHashMap<String, Session> sessionsBySessionId = new ConcurrentHashMap<String, Session>();
 	
 	private Long lastClientPing;
@@ -77,7 +80,7 @@ public class WebSocketHostNotifier implements Notifier {
 			try {
 				currentSession.close(new CloseReason(CloseCodes.NORMAL_CLOSURE, "The printer host has been asked to shut down now!"));
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error("Error closing websocket:" + currentSession.getId(), e);
 			}
 		}
 	}

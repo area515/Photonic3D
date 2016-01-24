@@ -6,6 +6,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
 import org.area515.resinprinter.job.InkDetector;
 import org.area515.util.TemplateEngine;
@@ -15,7 +17,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @XmlRootElement(name="SliceBuildConfig")
 public class SlicingProfile {
-	public static class InkConfig {
+    private static final Logger logger = LogManager.getLogger();
+
+    public static class InkConfig {
 		@XmlElement(name="PrintMaterialDetector")
 		private String printMaterialDetector;
 		@XmlElement(name="PercentageOfPrintMaterialConsideredEmpty")
@@ -112,7 +116,7 @@ public class SlicingProfile {
 				this.detector = new InkDetector(printer, ((Class<PrintMaterialDetector>)Class.forName(detectorClass)).newInstance(), percentageConsideredEmpty);
 				return this.detector;
 			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-				System.out.println("Failed to load PrintMaterialDetector:" + detector);
+				logger.info("Failed to load PrintMaterialDetector:{}", detector);
 				return null;
 			}
 		}

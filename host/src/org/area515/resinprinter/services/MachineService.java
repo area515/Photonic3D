@@ -41,6 +41,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -73,6 +75,7 @@ import com.sun.mail.smtp.SMTPSendFailedException;
 
 @Path("machine")
 public class MachineService {
+    private static final Logger logger = LogManager.getLogger();
 	public static MachineService INSTANCE = new MachineService();
 	
 	private Future<Boolean> restartProcess;
@@ -107,7 +110,7 @@ public class MachineService {
 				restartProcess = null;
 				return; //This is the normal expected outcome
 			} catch (InterruptedException | ExecutionException e) {
-				e.printStackTrace();
+				logger.error("Problem occurred while waiting for the network reconfiguraiton process to terminate.", e);
 				throw new IllegalArgumentException("Problem occurred while waiting for the network reconfiguraiton process to terminate.");
 			}
 		}
@@ -166,7 +169,7 @@ public class MachineService {
 					boolean iFaceUp = true;
 					while (iFaceUp = iFace.isUp() && timeoutMilliseconds > 0 && System.currentTimeMillis() - startTime < timeoutMilliseconds) {
 						NotificationManager.sendPingMessage("Please unplug your network cable to finish this setup process.");
-						//System.out.println("  InterfaceUp:"+ iFace.isUp());
+						logger.debug("  Interface:{} isUp:{}", iFace, iFace.isUp());
 						
 						try {
 							Thread.sleep(millisecondsBetweenPings);
@@ -186,7 +189,7 @@ public class MachineService {
 			
 			return true;
 		} catch (SocketException | UnknownHostException e) {
-			e.printStackTrace();
+			logger.error("Error restarting host after network cable unplugged", e);
 			return false;
 		}
 	}
@@ -202,7 +205,7 @@ public class MachineService {
 		ZipOutputStream zipOutputStream = null;
 		try {
 			zipOutputStream = new ZipOutputStream(new FileOutputStream(zippedFile));
-			String logFiles[] = new String[]{"log.scrout", "log.screrr", "log.out", "log.err"};
+			String logFiles[] = new String[]{"log.scrout", "log.screrr", "log.out", "log.err", "cwh.log", "log4j2.properties", "debuglog4j2.properties", "testlog4j2.properties"};
 			for (String logFile : logFiles) {
 				File file = new File(logFile);
 				if (file.exists()) {
@@ -218,7 +221,7 @@ public class MachineService {
 			
 			zipOutputStream.finish();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Error executing diagnostic", e);
 			throw new IllegalArgumentException("Failure creating log bundle.", e);
 		} finally {
 			IOUtils.closeQuietly(zipOutputStream);
@@ -237,16 +240,16 @@ public class MachineService {
 					transport,
 					zippedFile);
 		} catch (SMTPSendFailedException e) {
-			e.printStackTrace();
+			logger.error("Error sending email", e);
 			if (e.getMessage().contains("STARTTLS")) {
 				throw new IllegalArgumentException("Failure emailing log bundle: It looks like this server requires TLS to be enabled. " + e.getMessage());
 			}
 			throw new IllegalArgumentException("Failure emailing log bundle: " + e.getMessage());
 		} catch (AuthenticationFailedException e) {
-			e.printStackTrace();
+			logger.error("Authentication error sending email", e);
 			throw new IllegalArgumentException("Failure emailing log bundle: Username or password incorrect");
 		} catch (MessagingException | IOException e) {
-			e.printStackTrace();
+			logger.error("Error sending email", e);
 			if (e.getMessage() == null) {
 				throw new IllegalArgumentException("Failure emailing log bundle:" + e.getClass());
 			} else {
@@ -315,7 +318,7 @@ public class MachineService {
 			
 			return wInterfaces;
 		} catch (InstantiationException | IllegalAccessException e) {
-			e.printStackTrace();
+			logger.error("Error retrieving wireless networks", e);
 			return null;
 		}
 	 }
@@ -329,7 +332,7 @@ public class MachineService {
 			NetworkManager networkManager = managerClass.newInstance();
 			networkManager.connectToWirelessNetwork(network);
 		} catch (InstantiationException | IllegalAccessException e) {
-			e.printStackTrace();
+			logger.error("Error connecting to WifiSSID:" + network.getSsid(), e);
 		}
 	 }
 	 
@@ -391,7 +394,7 @@ public class MachineService {
 		//========================================================
 		PrinterConfiguration currentConfiguration = PrinterService.INSTANCE.createTemplatePrinter(printername, displayId, comport, 134, 75, 185);
 		if (displayId.equals(DisplayManager.SIMULATED_DISPLAY) &&
-			comport.equals(ConsoleCommPort.CONSOLE_COMM_PORT)) {
+			comport.equals(ConsoleCommPort.GCODE_RESPONSE_SIMULATION)) {
 			currentConfiguration.getSlicingProfile().setgCodeLift("Lift Z; Lift the platform");
 			currentConfiguration.getSlicingProfile().getSelectedInkConfig().setNumberOfFirstLayers(3);
 			currentConfiguration.getSlicingProfile().getSelectedInkConfig().setFirstLayerExposureTime(10000);
@@ -402,7 +405,7 @@ public class MachineService {
 			HostProperties.Instance().addOrUpdatePrinterConfiguration(currentConfiguration);
 			return new MachineResponse("create", true, "Created:" + currentConfiguration.getName() + "");
 		} catch (AlreadyAssignedException e) {
-			e.printStackTrace();
+			logger.error("Couldn't create printer: " + printername, e);
 			return new MachineResponse("create", false, e.getMessage());
 		}
 	 }
@@ -426,7 +429,7 @@ public class MachineService {
 				HostProperties.Instance().removePrinterConfiguration(currentConfiguration);
 				return new MachineResponse("delete", true, "Deleted:" + printerName);
 			} catch (InappropriateDeviceException e) {
-				e.printStackTrace();
+				logger.error("Couldn't delete printer: " + printerName, e);
 				return new MachineResponse("delete", false, e.getMessage());
 			}
 	 }
@@ -446,7 +449,7 @@ public class MachineService {
 			printer = PrinterManager.Instance().startPrinter(currentConfiguration);
 			return new MachineResponse("start", true, "Started:" + printer.getName() + "");
 		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
-			e.printStackTrace();
+			logger.error("Couldn't start printer: " + printerName, e);
 			return new MachineResponse("start", false, e.getMessage());
 		}
 	 }	 
@@ -469,7 +472,7 @@ public class MachineService {
 			SerialManager.Instance().removeAssignments(printer);
 			return new MachineResponse("stop", true, "Stopped:" + printerName);
 		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
+			logger.error("Couldn't stop printer: " + printerName, e);
 			return new MachineResponse("stop", false, e.getMessage());
 		}
 	 }
@@ -501,7 +504,7 @@ public class MachineService {
 			currentPrinter.showCalibrationImage(pixels);
 			return new MachineResponse("calibrationscreenshown", true, "Showed calibration screen on:" + printerName);
 		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
+			logger.error("Couldn't show calibration screen: " + printerName, e);
 			return new MachineResponse("calibrationscreenshown", false, e.getMessage());
 		}
 	 }
@@ -723,8 +726,7 @@ public class MachineService {
 		 		try {
 		 			ImageIO.write(image, "png", output);
 		 		} catch (IOException e) {
-		 			//TODO: For some reason we are getting an org.eclipse.jetty.io.EofException
-		 			e.printStackTrace();
+					logger.error("It's common to get EofExceptions when the browser cancels image queries", e);
 		 		}
 			}  
 	    };
@@ -903,7 +905,7 @@ public class MachineService {
 			try {
 				printJob.overrideZLiftSpeed(speed);
 			} catch (InappropriateDeviceException e) {
-				e.printStackTrace();
+				logger.error("Error setting lift speed for job:" + jobName + " speed:" + speed, e);
 				return new MachineResponse("zliftspeed", false, e.getMessage());
 			}
 			return new MachineResponse("zliftspeed", true, "Set lift speed to:" + speed);
@@ -958,10 +960,10 @@ public class MachineService {
 				String json = mapper.writeValueAsString(data);
 				return new MachineResponse("geometry", true, json);
 			} catch (JobManagerException e) {
-				e.printStackTrace();
+				logger.error("Error getting geometry for job:" + jobName, e);
 				return new MachineResponse("geometry", false, e.getMessage());
 			} catch (JsonProcessingException e) {
-				e.printStackTrace();
+				logger.error("Error getting geometry for job:" + jobName, e);
 				return new MachineResponse("geometry", false, "Couldn't convert geometry to JSON");
 			}
 	 }

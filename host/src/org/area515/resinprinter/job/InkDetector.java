@@ -2,14 +2,16 @@ package org.area515.resinprinter.job;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.Main;
 
 public class InkDetector {
+    private static final Logger logger = LogManager.getLogger();
 	private Printer printer;
 	private PrintMaterialDetector detector;
 	private float printMaterialRemainingForEmpty;
@@ -27,7 +29,7 @@ public class InkDetector {
 				
 				return false;
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error("Error occurred while performing visual detection", e);
 				if (hasAlreadyPausedWithError) {
 					return false;
 				}

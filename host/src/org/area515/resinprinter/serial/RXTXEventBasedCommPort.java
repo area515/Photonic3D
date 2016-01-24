@@ -9,7 +9,11 @@ import java.util.TooManyListenersException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class RXTXEventBasedCommPort extends RXTXCommPort implements SerialPortEventListener {
+    private static final Logger logger = LogManager.getLogger();
 	private Lock asynchReadLock = new ReentrantLock();
 	private byte[] buffer;
 	private IOException exceptionThrown;
@@ -53,7 +57,7 @@ public class RXTXEventBasedCommPort extends RXTXCommPort implements SerialPortEv
 	@Override
 	public void serialEvent(SerialPortEvent event) {
 		if (event.getEventType() != SerialPortEvent.DATA_AVAILABLE) {
-			System.out.println("Type:" + event.getEventType() + " from:" + event.getOldValue() + " to:" + event.getNewValue());
+			logger.info("Type:{} from:{} to:{}", event.getEventType(), event.getOldValue(), event.getNewValue());
 			return;
 		}
 		

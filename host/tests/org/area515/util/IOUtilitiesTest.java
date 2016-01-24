@@ -7,6 +7,8 @@ import java.io.StringBufferInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.network.LinuxNetworkManagerTest;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
@@ -25,7 +27,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 public class IOUtilitiesTest {
-	private class InputStreamReadDelayedAnswer implements Answer<Integer>{
+    private static final Logger logger = LogManager.getLogger();
+
+    private class InputStreamReadDelayedAnswer implements Answer<Integer>{
 		private int delay;
 		private byte[] byteData;
 		
@@ -140,7 +144,7 @@ public class IOUtilitiesTest {
 		testSingleLine("ok\n", builder, stream);
 		testSingleLine("\n", builder, stream);
 		
-		System.out.println(builder);
+		logger.info(builder);
 	}
 
 	@Test

@@ -32,9 +32,12 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.inkdetection.visual.GenericHoughDetection.HoughReference;
 
 public class ImageDetectionPanel extends JSplitPane {
+    private static final Logger logger = LogManager.getLogger();
 	private static final long serialVersionUID = -7186056420774499676L;
 	private ImagePanel imagePanel;
 	private JTree shapeTree;
@@ -345,7 +348,7 @@ public class ImageDetectionPanel extends JSplitPane {
 				try {
 					loadImage(new File(loadImageText.getText()), performEdgeDetection.isSelected());
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					logger.error("Couldn't load image:" + loadImageText.getText(), e1);
 				}
 			}
 		});

@@ -1,8 +1,7 @@
 package org.area515.resinprinter.discover;
 
-import java.util.List;
-import java.util.concurrent.Future;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fourthline.cling.model.meta.LocalService;
 import org.fourthline.cling.support.contentdirectory.AbstractContentDirectoryService;
 import org.fourthline.cling.support.contentdirectory.ContentDirectoryErrorCode;
@@ -11,14 +10,11 @@ import org.fourthline.cling.support.contentdirectory.DIDLParser;
 import org.fourthline.cling.support.model.BrowseFlag;
 import org.fourthline.cling.support.model.BrowseResult;
 import org.fourthline.cling.support.model.DIDLContent;
-import org.fourthline.cling.support.model.DIDLObject;
 import org.fourthline.cling.support.model.SortCriterion;
-import org.fourthline.cling.support.model.container.Container;
-import org.fourthline.cling.support.model.container.PlaylistContainer;
-import org.fourthline.cling.support.model.item.Item;
 import org.fourthline.cling.support.model.item.TextItem;
 
 public class PrinterDirectoryService extends AbstractContentDirectoryService {
+    private static final Logger logger = LogManager.getLogger();
 	private TextItem ROOT = null;
 	private final PrinterHostSettingsServiceManager<PrinterDirectoryService> manager;
 	
@@ -47,7 +43,7 @@ public class PrinterDirectoryService extends AbstractContentDirectoryService {
             browseResult = new BrowseResult(new DIDLParser().generate(didl), 1, 1);
             return browseResult;
         } catch (Exception ex) {
-        	ex.printStackTrace();
+        	logger.error("Failure browsing:{} with:{} first:{} max:{}", objectID, browseFlag, firstResult, maxResults);
             throw new ContentDirectoryException(ContentDirectoryErrorCode.CANNOT_PROCESS, ex.toString());
         }
 	}

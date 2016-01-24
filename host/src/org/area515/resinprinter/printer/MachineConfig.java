@@ -93,6 +93,10 @@ public class MachineConfig {
 		public void setHandshake(String handshake) {
 			this.handshake = handshake;
 		}
+		
+		public String toString() {
+			return "{Port:" + portName + " speed:" + speed + " databits:" + databits + " parity:" + parity + " stopbits:" + stopbits + " handshake:" + handshake + "}";
+		}
 	}
 	
 	public static class MotorsDriverConfig {
