@@ -7,6 +7,8 @@
 		this.filenameToUpload = null;
 		this.fileToUpload = null;
 		this.currentPrintable = null;
+		this.supportedFileTypes = null;
+		
 		this.refreshPrintables = function refreshPrintables() {
 			$http.get("/services/printables/list").success(
         		function (data) {
@@ -115,7 +117,17 @@
 			}
 			return "fa-question-circle";
 		}
+		this.loadSupportedFileTypes = function loadSupportedFileTypes() {
+			$http.get("/services/machine/supportedFileTypes").success(
+	        		function (data) {
+	        			controller.supportedFileTypes = data.map(function (element) {
+	        				return "." + element;
+	        			}).join();
+	        		}
+		        );
+		}
 		
+		this.loadSupportedFileTypes();
 		this.refreshPrintables();
 	}])
 

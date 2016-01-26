@@ -14,8 +14,11 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -48,6 +51,7 @@ import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
+import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.network.NetInterface;
@@ -192,6 +196,17 @@ public class MachineService {
 			logger.error("Error restarting host after network cable unplugged", e);
 			return false;
 		}
+	}
+	
+	@GET
+	@Path("supportedFileTypes")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Set<String> getSupportedFileTypes() {
+		Set<String> fileTypes = new HashSet<String>();
+		for (PrintFileProcessor processor : HostProperties.Instance().getPrintFileProcessors()) {
+			fileTypes.addAll(Arrays.asList(processor.getFileExtensions()));
+		}
+		return fileTypes;
 	}
 	
 	@GET

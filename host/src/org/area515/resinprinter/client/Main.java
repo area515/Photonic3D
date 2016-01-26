@@ -103,6 +103,30 @@ public class Main {
 		}
 	}
 	
+	public static boolean extendDiskPartition(SSHClient client) {
+		String[] rootPartition = client.send("readlink /dev/root");
+		if (!rootPartition[0].startsWith("mmcblk0p")) {
+			System.out.println("/dev/root either doesn't exist or isn't an SD card.");
+			return false;
+		}
+		rootPartition[0] = rootPartition[0].substring(8);
+		if (!rootPartition[0].equals("2")) {
+			System.out.println("/dev/root either doesn't exist or isn't an SD card.");
+			return false;
+		}
+		String[] lastPartition = client.send("parted /dev/mmcblk0 -ms unit s p | tail -n 1 | cut -f 1 -d:");
+		if (!lastPartition[0].equals(rootPartition[0])) {
+			System.out.println("/dev/root must be the last partition in order to expand it.");
+			return false;
+		}
+		
+		String[] startOfPartition = client.send("parted /dev/mmcblk0 -ms unit s p | grep \"^" + lastPartition[0] + "\" | cut -f 2 -d:");
+		String[] fdiskReturn = client.send("fdisk /dev/mmcblk0\np\nd\n" + rootPartition[0] + "\nn\np\n" + rootPartition[0] + "\n" + startOfPartition[0] + "\n\np\nw");
+//reboot here...
+		client.send("resize2fs /dev/root");
+		return true;
+	}
+	
 	public static boolean performInstall(Box box) throws IOException, JSchException  {
 		System.out.println("User chose install on:" + box);
 		
@@ -124,6 +148,11 @@ public class Main {
 			client.connect("pi", "raspberry", box.getName(), 22);
 			System.out.println("sudo required:" + client.sudoIfNotRoot());
 			client.send("rm start.sh");
+						
+			//A couple of specialty items if it's a Raspberry Pi
+			/*if (box.isRaspberryPi()) {
+				extendDiskPartition(client);
+			}*/
 			
 			installOptionPane.setMessage("Downloading installation scripts...");
 			String[] output = client.send("wget https://github.com/area515/Creation-Workshop-Host/raw/master/host/bin/start.sh");
@@ -240,8 +269,12 @@ public class Main {
 						        boxes.iterator().next());
 						if (box != null) {
 							try {
-								if (!performInstall(box)) {
-									System.exit(-1);
+								if (box.isRaspberryPi()) {
+									if (!performInstall(box)) {
+										System.exit(-1);
+									}
+								} else {
+									JOptionPane.showConfirmDialog(null, "Installation on this device is not yet supported");
 								}
 							} catch (JSchException | IOException e) {
 								e.printStackTrace();

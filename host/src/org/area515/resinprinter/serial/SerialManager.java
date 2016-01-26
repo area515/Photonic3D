@@ -133,6 +133,8 @@ public class SerialManager {
 			identifier = null;
 			ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
 			for (CommPortIdentifier currentIdentifier : identifiers) {
+				logger.debug("Autodetection testing serial device:{}", currentIdentifier.getName());
+				
 				SerialCommunicationsPort check = getSerialDevice(currentIdentifier.getName());
 				newComPortSettings.setPortName(check.getName());
 				
