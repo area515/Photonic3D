@@ -31,6 +31,10 @@ public class SubnetScanner {
 			return name;
 		}
 
+		public boolean isRaspberryPi() {
+			return isRaspberryPi;
+		}
+		
 		public String toString() {
 			return name + (isRaspberryPi?" (Remote install available)":" (Not yet supported)");
 		}

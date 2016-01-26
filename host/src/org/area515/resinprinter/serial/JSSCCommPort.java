@@ -124,4 +124,33 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 			throw new IOException("Couldn't read bytes from serial port.", e);
 		}
 	}
+	
+	public String toString() {
+		return cwhName;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((cwhName == null) ? 0 : cwhName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		JSSCCommPort other = (JSSCCommPort) obj;
+		if (cwhName == null) {
+			if (other.cwhName != null)
+				return false;
+		} else if (!cwhName.equals(other.cwhName))
+			return false;
+		return true;
+	}
 }
