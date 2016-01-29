@@ -10,14 +10,18 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
 
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.commons.io.FileUtils;
+
 import org.area515.resinprinter.job.render.StandaloneImageData;
 import org.area515.resinprinter.job.render.StandaloneImageRenderer;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.server.Main;
 
 public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
+	private static final Logger logger = LogManager.getLogger();
+
 	private Map<PrintJob, StandaloneImageData> currentImageByJob = new HashMap<>();
 
 	@Override
@@ -27,7 +31,14 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 
 	@Override
 	public boolean acceptsFile(File processingFile) {
-		return processingFile.getName().toLowerCase().endsWith(".imgzip");
+		if (processingFile.getName().toLowerCase().endsWith(".imgzip") || processingFile.getName().toLowerCase().endsWith(".zip")) {
+			if (zipHasGCode(processingFile) == false) {
+				// if the zip does not have GCode, treat it as a zip of pngs
+				logger.info("Accepting new printable {} as a {}", processingFile.getName(), this.getFriendlyName());
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	@Override
