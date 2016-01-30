@@ -42,7 +42,14 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	@Override
 	public boolean acceptsFile(File processingFile) {
 		//TODO: we shouldn't except all zip files only those that have embedded gif/jpg/png information.
-		return processingFile.getName().toLowerCase().endsWith(".zip") || processingFile.getName().toLowerCase().endsWith(".cws");
+		if (processingFile.getName().toLowerCase().endsWith(".zip") || processingFile.getName().toLowerCase().endsWith(".cws")) {
+			if (zipHasGCode(processingFile)) {
+				// if the zip has gcode, treat it as a CW scene
+				logger.info("Accepting new printable {} as a {}", processingFile.getName(), this.getFriendlyName());
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	@Override
@@ -258,6 +265,28 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 				throw new JobManagerException("Couldn't clean up extract directory");
 			}
 		}
+	}
+	
+	protected boolean zipHasGCode(File zipFile) {
+		ZipFile zip = null;
+		
+		try {
+			zip = new ZipFile(zipFile);
+			return zip.stream().anyMatch(z -> z.getName().toLowerCase().endsWith("gcode"));
+		} catch (IOException e) {
+			logger.error("Unable to open uploaded zip file", e);
+		} finally {
+			if (zip != null) {
+				try {
+					zip.close();
+				} catch (IOException e) {
+					logger.warn("Unable to close uploaded zip file", e);
+				}
+			}
+		}
+		
+		return false;
+		
 	}
 	
 	
