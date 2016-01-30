@@ -147,7 +147,7 @@ public class Main {
 		} catch (Exception e) {
 			logger.error("Error starting CWH http server", e);
 		}
-		
+		   
 		//Start broadcasting server
 		BroadcastManager.start(new URI("http" + (HostProperties.Instance().isUseSSL()?"s://":"://") + externallyAccessableIP + ":" + port));
 		Runtime.getRuntime().addShutdownHook(new Thread() {

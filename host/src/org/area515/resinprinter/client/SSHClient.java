@@ -224,6 +224,10 @@ public class SSHClient {
 		return true;
 	}
 	
+	public String getHost() {
+		return host;
+	}
+
 	public JavaVersion getJavaVersion() {
 		String javaVersion = send("java -version")[0];
 		StringTokenizer tokenizer = new StringTokenizer(javaVersion, "\n");
