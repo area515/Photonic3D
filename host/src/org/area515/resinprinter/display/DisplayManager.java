@@ -107,7 +107,7 @@ public class DisplayManager {
 		
 		try {
 			ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		} catch (HeadlessException | AWTError error) {
+		} catch (NoClassDefFoundError | HeadlessException | AWTError error) {
 			throw new InappropriateDeviceException("It doesn't look like your graphics environment is properly setup", error);
 		}
 

@@ -113,6 +113,11 @@ public class Main {
 		client.send("sed /boot/config.txt -i -e \"s/^fixup_file/#fixup_file/\"");
 		client.send("echo \"\nstart_x=1\ngpu_mem=128\n\" >> /boot/config.txt");
 
+		progress.setMessage("Setting up user...");
+		client.send("rm -f /etc/profile.d/raspi-config.sh");
+		client.send("sed /boot/config.txt -i -e \"s/^#\\(.*\\)#\\s*RPICFG_TO_ENABLE\\s*/\\1/\"");
+		client.send("sed /boot/config.txt -i -e \"/#\\s*RPICFG_TO_DISABLE/d\"");
+		
 		progress.setMessage("Extending disk partition...");
 		String[] rootPartition = client.send("readlink /dev/root");
 		if (!rootPartition[0].startsWith("mmcblk0p")) {
@@ -229,9 +234,10 @@ public class Main {
 			}
 			output = client.send("chmod 777 *.sh");
 			
-			installOptionPane.setMessage("Executing installation scripts...");
+			installOptionPane.setMessage("Performing installation...");
 			output = client.send("./start.sh");
 			if (!findSuccessLine(output, "Starting printer host server")) {
+				writeOutput(output);
 				throw new IOException("There was a problem installing CWH. Please refer to logs.");
 			}
 			
