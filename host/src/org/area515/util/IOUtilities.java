@@ -16,12 +16,15 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 
 import com.google.common.io.ByteStreams;
 
 public class IOUtilities {
+    private static final Logger logger = LogManager.getLogger();
 	public static int CPU_LIMITING_DELAY = 300;
 	public static int NATIVE_COMMAND_TIMEOUT = 10000;
 	
@@ -69,7 +72,7 @@ public class IOUtilities {
 			inStream.close();
 			return entry;
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Problem ziping file:" + fileToZip, e);
 			return null;
 		} finally {
 			IOUtils.closeQuietly(inStream);
@@ -84,7 +87,7 @@ public class IOUtilities {
 			inStream.close();
 			return entry;
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Problem ziping file:" + name, e);
 			return null;
 		} finally {
 			IOUtils.closeQuietly(inStream);
@@ -157,9 +160,9 @@ public class IOUtilities {
 						returnList.add(groups);
 					}
 					
-					/*if (!matcher.matches() && parseAction.searchStyle == SearchStyle.RepeatUntilFound) {
-						System.out.println("UNMATCHED OUTPUT:" + state.currentLine);
-					}*/
+					if (!matcher.matches() && parseAction.searchStyle == SearchStyle.RepeatUntilMatch) {
+						logger.debug("UNMATCHED OUTPUT:" + state.currentLine);
+					}
 				} while ((parseAction.searchStyle == SearchStyle.RepeatUntilMatch && !matcher.matches()) ||
 						  (parseAction.searchStyle == SearchStyle.RepeatWhileMatching && matcher.matches()) ||
 						  (parseAction.searchStyle == SearchStyle.RepeatUntilMatchWithNullGroup && (matcherGroupHasValue || !matcher.matches())));
@@ -168,7 +171,7 @@ public class IOUtilities {
 			return returnList;
 		} catch (IOException e) {
 			if (friendlyErrorMessage == null) {
-				e.printStackTrace();
+				logger.error("Error masked due to the friendly error message not being set", e);
 				return null;
 			}
 			
@@ -333,7 +336,7 @@ public class IOUtilities {
 			return new String(output.toString()).split("\r?\n");
 		} catch (IOException e) {
 			if (friendlyErrorMessage == null) {
-				e.printStackTrace();
+				logger.error("Error masked due to the friendly error message not being set", e);
 				return new String[]{};
 			}
 			

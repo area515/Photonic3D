@@ -1,8 +1,6 @@
 package org.area515.resinprinter.minercube;
 import java.awt.Dimension;
 import java.awt.Rectangle;
-import java.beans.XMLEncoder;
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -12,15 +10,15 @@ import java.util.List;
 import java.util.Random;
 import java.util.Stack;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.area515.resinprinter.printer.PrinterConfiguration;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @XmlRootElement
 public class MinerCube {
+	private static final Logger logger = LogManager.getLogger();
 	//These parameters don't affect the solution only the size of the cube;
 	@XmlElement(name="cubeWallThicknessMillis")
 	double cubeWallThicknessMillis = .1;
@@ -96,11 +94,11 @@ public class MinerCube {
 				Direction lastDirection = null;
 				if (solution.size() > 1) {
 					lastDirection = solution.get(solution.size() - 2).direction;
-	//System.out.println(solution.size() + ". Can't use this direction: " + solution.get(solution.size() - 2));
+					logger.debug("{}. Can't use this direction: {}",solution.size(), solution.get(solution.size() - 2));
 				}
 				directionDistancesAvailable = solution.peek().getStartingCube().getAvailableDirectionsGivenTravelDistances(minimumTravelDistanceInCubes, maximumTravelDistanceInCubes, lastDirection, allowTunnelsToCollide);
 		
-	//System.out.println(solution.size() + ". getAvailableDirectionsGivenTravelDistances:" + directionDistancesAvailable);
+				logger.debug("{}. getAvailableDirectionsGivenTravelDistances:{}", solution.size(), directionDistancesAvailable);
 		
 				solution.peek().registerSolutions(directionDistancesAvailable);
 			}
@@ -112,7 +110,7 @@ public class MinerCube {
 				boolean noSolutions = !solution.peek().areAnySolutionsLeft();
 				SolutionEntry wrongEntry = solution.pop();
 				popOffRate++;
-	//System.out.println(solution.size() + ". Popped " + wrongEntry + " for these reasons DeadEnd:" + deadEnd + ", ReachedMaxTurns:" + reachedMax + ", AllPoorSolutions:" + noSolutions );
+				logger.debug("{}. Popped {} for these reasons DeadEnd:{}, ReachedMaxTurns:{}, AllPoorSolutions:{}", solution.size(), wrongEntry, deadEnd, reachedMax, noSolutions);
 				if (solution.isEmpty()) {
 					throw new IllegalArgumentException("Couldn't find a solution to the cube with the parameters that you gave.");
 				}
@@ -123,12 +121,12 @@ public class MinerCube {
 			}
 			int random = solutionChoiceRandom.nextInt(solution.peek().possibleSolutions.size());
 			SolutionEntry solutionFound = solution.peek().possibleSolutions.get(random);
-	//System.out.println(solution.size() + ". Current choices are:" +  solution.peek().possibleSolutions);
+			logger.debug("{}. Current choices are:{}", solution.size(), solution.peek().possibleSolutions);
 			Cube endingCube = solution.peek().tunnelToEndingCubeSkippingStartingCube(solutionFound.direction, solutionFound.travelDistance);
-	//System.out.println(solution.size() + ". We randomly chose:" +  solution.peek());
+			logger.debug("{}. We randomly chose:{}",solution.size(), solution.peek());
 			SolutionEntry entry = new SolutionEntry(endingCube);
 			solution.push(entry);
-			//System.out.println("Trying:" + entry);
+			logger.debug("Trying:{}", entry);
 		}
 
 		List<Direction> directionsAvailable = solution.peek().travelToEndingCube().getAcceptableExitDirections(startingFace, exitPreference);
@@ -197,21 +195,21 @@ public class MinerCube {
 		}
 		
 		if (!deadEnds.isEmpty()) {
-			System.out.println("Dead Ends");
-			System.out.println("=========");
+			logger.info("Dead Ends");
+			logger.info("=========");
 			for (SolutionEntry currentEntry : deadEnds) {
-				System.out.println(currentEntry);// + " arriving at " + currentEntry.travelToEndingCube());
+				logger.info(currentEntry);// + " arriving at " + currentEntry.travelToEndingCube());
 			}
 		}
 		
 		//Fill in closed tunnel faces
-		System.out.println("Solution");
-		System.out.println("========");
-		System.out.println("Starting on the " + startingFace + " face");
+		logger.info("Solution");
+		logger.info("========");
+		logger.info("Starting on the {} face", startingFace);
 		solution.firstElement().getStartingCube().carveStartingTunnelFace(startingFace);
 		for (SolutionEntry entry : solution) {
 			entry.carveTunnelFaces();
-			System.out.println(entry);// + " arriving at " + currentEntry.travelToEndingCube());
+			logger.info(entry);// + " arriving at " + currentEntry.travelToEndingCube());
 		}
 		
 		//Fill in dead ends
@@ -219,19 +217,19 @@ public class MinerCube {
 			entry.carveTunnelFaces();
 		}
 		
-		System.out.println("Popoff rate:" + popOffRate);
-		System.out.println("Cube generation time:" + (System.currentTimeMillis() - startTime));
-		System.out.println("Random Seed:" + randomSeed);
-		System.out.println("Minimum number of turns:" + minimumTurns);
-		System.out.println("Maximum number of turns:" + maximumTurns);
-		System.out.println("Moves to complete solution:" + solution.size());
-		System.out.println("Cubes used for solution:" + cubesTunneled);
-		System.out.println(String.format("Cubes used for solution %1.1f", ((double)cubesTunneled / (double)(totalCubes)) * 100) + "%");
-		System.out.println("Cubes used in dead ends:" + cubesActuallyUsedInDeadEnds);
-		System.out.println(String.format("Cubes used in dead ends %1.1f", ((double)cubesActuallyUsedInDeadEnds / (double)(totalCubes)) * 100) + "%");
-		System.out.println("Cubes left untouched:" + (totalCubes - cubesTunneled));
-		System.out.println(String.format("Cubes left untouched: %1.1f", ((double)(totalCubes - cubesTunneled) / (double)(totalCubes)) * 100) + "%");
-		System.out.println("Total cubes:" + totalCubes);
+		logger.info("Popoff rate:{}", popOffRate);
+		logger.info("Cube generation time:{}", System.currentTimeMillis() - startTime);
+		logger.info("Random Seed:{}", randomSeed);
+		logger.info("Minimum number of turns:{}", minimumTurns);
+		logger.info("Maximum number of turns:{}", maximumTurns);
+		logger.info("Moves to complete solution:{}", solution.size());
+		logger.info("Cubes used for solution:{}", cubesTunneled);
+		logger.info("Cubes used for solution %1.1f%%", ((double)cubesTunneled / (double)(totalCubes)) * 100);
+		logger.info("Cubes used in dead ends:{}", cubesActuallyUsedInDeadEnds);
+		logger.info("Cubes used in dead ends %1.1f%%", ((double)cubesActuallyUsedInDeadEnds / (double)(totalCubes)) * 100);
+		logger.info("Cubes left untouched:{}", (totalCubes - cubesTunneled));
+		logger.info("Cubes left untouched: %1.1f%%", ((double)(totalCubes - cubesTunneled) / (double)(totalCubes)) * 100);
+		logger.info("Total cubes:{}", totalCubes);
 
 
 	}
@@ -273,23 +271,23 @@ public class MinerCube {
 			for (int y = 0; y < cube[x].length; y++) {
 				for (int z = 0; z < cube[x][y].length; z++) {
 					if (cube[x][y][z].adjacentCubes.size() < 4) {
-						//System.out.println("This must be a corner cube:" + cube[x][y][z]);
+						logger.debug("This must be a corner cube:{}", cube[x][y][z]);
 						corners++;
 					}
 					if (cube[x][y][z].adjacentCubes.size() < 5) {
-						//System.out.println("This must be a corner cube:" + cube[x][y][z]);
+						logger.debug("This must be a corner cube:{}", cube[x][y][z]);
 						edges++;
 					}
 					if (cube[x][y][z].adjacentCubes.size() < 6) {
-						//System.out.println("This must be a corner cube:" + cube[x][y][z]);
+						logger.debug("This must be a corner cube:{}", cube[x][y][z]);
 						faces++;
 					}
 					if (cube[x][y][z].tunnelCount < 0) {
-						System.out.println("Bad tunnel count:" + cube[x][y][z] + " of:" + cube[x][y][z].tunnelCount);
+						logger.info("Bad tunnel count:{} of:{}", cube[x][y][z], cube[x][y][z].tunnelCount);
 						errors = true;
 					}
 					if (cube[x][y][z].tunnelCount > 1 && !allowCollisions) {
-						System.out.println("Bad tunnel count:" + cube[x][y][z] + " of:" + cube[x][y][z].tunnelCount);
+						logger.info("Bad tunnel count:{} of:{}", cube[x][y][z], cube[x][y][z].tunnelCount);
 						errors = true;
 					}
 					if (cube[x][y][z].tunnelCount > 0) {
@@ -302,65 +300,59 @@ public class MinerCube {
 						int adjacentZ = z+currentDirection.getZ();
 						if (adjacentCube != null && !adjacentCube.name.equals("x:" + adjacentX + ",y:" + adjacentY + ",z:" + adjacentZ)) {
 							errors = true;
-							System.out.println(cube[x][y][z] + " going direction:" + currentDirection + " is cube:" + adjacentCube + " instead of x:" + adjacentX + ",y:" +adjacentY + ",z:" + adjacentZ);
+							logger.info("{} going direction:{} is cube:{} instead of x:{},y:{},z:{}", cube[x][y][z], currentDirection, adjacentCube, adjacentX, adjacentY, adjacentZ);
 						}
 					}
 				}
 			}
 		}
 		if (knownTouchedCubes != null && knownTouchedCubes != actualTouched) {
-			System.out.println("knownTouchedCubes:" + knownTouchedCubes + " != actualTouched:" + actualTouched);
+			logger.info("knownTouchedCubes:{} != actualTouched:{}", knownTouchedCubes, actualTouched);
 			errors = true;
 		}
 		if (corners != 8) {
-			System.out.println("corners:" + corners);
+			logger.info("corners:{}", corners);
 			errors = true;
 		}
-		//if (edges != ) {
-		//  System.out.println("edges:" + edges);
-		//	errors = true;
-		//}
-		//if (faces != 8) {
-		//  System.out.println("faces:" + faces);
-		//	errors = true;
-		//}
 		return errors;
 	}
 	
 	public static void findCube(List<SolutionEntry> solution, List<Cube> findCubes) {
 		for (SolutionEntry entry : solution) {
 			if (findCubes.contains(entry.getStartingCube())) {
-				System.out.println("Found starting cube:" + entry);
+				logger.info("Found starting cube:{}", entry);
 			}
 			for (Cube currentCube : findCubes) {
 				if (entry.searchForCubeInTunnel(currentCube)) {
-					System.out.println("Found cube in tunnel:" + entry);
+					logger.info("Found cube in tunnel:{}", entry);
 				}
 			}
 		}
 	}
 	
 	public static void printTextCube(Direction startingDirection, Cube startingCube, Cube currentCube, Cube[][][] cubes, List<SolutionEntry> solution) {
-		System.out.println("startingCube:" + startingCube);
-		System.out.println("startingDirection:" + startingDirection);
+		logger.info("startingCube:{}", startingCube);
+		logger.info("startingDirection:{}", startingDirection);
 		
+		StringBuilder builder = new StringBuilder();
 		for (int z = 0; z < cubes[0][0].length; z++) {
-			System.out.println("z:" + z);
-			System.out.println("x: 0123456789");
+			logger.info("z:{}", z);
+			logger.info("x: 0123456789");
 			for (int y = 0; y < cubes[0].length; y++) {
-				System.out.print("y:" + y);
+				builder.append("y:");
+				builder.append(y);
 				for (int x = 0; x < cubes.length; x++) {
 					if (cubes[x][y][z] == currentCube) {
-						System.out.print("C");
+						builder.append("C");
 					} else if (cubes[x][y][z].tunnelCount > 0) {
-						System.out.print(cubes[x][y][z].solutionDirection.directionLabel);
+						builder.append(cubes[x][y][z].solutionDirection.directionLabel);
 					} else {
-						System.out.print(" ");
+						builder.append(" ");
 					}
 				}
-				System.out.println();
+				logger.info(builder);
+				builder.delete(0, builder.length());
 			}
-			System.out.println();
 		}
 	}
 	

@@ -20,6 +20,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.JFrame;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.gcode.GCodeControl;
@@ -31,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Printer {
+    private static final Logger logger = LogManager.getLogger();
 	private PrinterConfiguration configuration;
 	
 	//For Display
@@ -153,14 +156,14 @@ public class Printer {
 			if (this.status != null && !this.status.isPaused()) {
 				return isPrintActive();
 			}
-			System.out.println("Print has been paused.");
+			logger.info("Print has been paused.");
 			long startPause = System.currentTimeMillis();
 			jobContinued.await();
 			currentSlicePauseTime += System.currentTimeMillis() - startPause;
-			System.out.println("Print has resumed.");
+			logger.info("Print has resumed.");
 			return isPrintActive();
 		} catch (InterruptedException e) {
-			e.printStackTrace();//Normal if os is shutting us down
+			logger.error("Normal if os is shutting us down", e);
 			return isPrintActive();
 		} finally {
 			statusLock.unlock();
@@ -326,13 +329,14 @@ public class Printer {
 	
 	public void setPrinterFirmwareSerialPort(SerialCommunicationsPort printerFirmwareSerialPort) {
 		this.printerFirmwareSerialPort = printerFirmwareSerialPort;
+		logger.info("Firmware serial port set to:" + printerFirmwareSerialPort);
 		
 		//Read the welcome mat if it's not null
 		if (printerFirmwareSerialPort != null) {
 			try {
-				System.out.println("Firmware Welcome chitchat:" + getGCodeControl().readWelcomeChitChat());
+				logger.info("Firmware Welcome chitchat:" + getGCodeControl().readWelcomeChitChat());
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error("Error while reading welcome chitchat", e);
 			}
 		}
 	}
@@ -350,7 +354,7 @@ public class Printer {
 	}
 
 	public String toString() {
-		return getName() + "(SerialPort:" + printerFirmwareSerialPort + ", Display:" + displayDeviceID + ")";
+		return getName() + "(printerFirmwareSerialPort:" + printerFirmwareSerialPort + ", projectorSerialPort:" + projectorSerialPort + " Display:" + displayDeviceID + ")";
 	}
 	
 	public void close() {

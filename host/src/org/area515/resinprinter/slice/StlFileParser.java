@@ -1,7 +1,10 @@
 package org.area515.resinprinter.slice;
-import java.io.StreamTokenizer;
-import java.io.Reader;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StreamTokenizer;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Title:        STL Loader
@@ -36,8 +39,9 @@ import java.io.IOException;
  *  we must then extend that class and define another getNumber
  */
 
-public class StlFileParser extends StreamTokenizer
-{
+public class StlFileParser extends StreamTokenizer {
+    private static final Logger logger = LogManager.getLogger();
+
   /**
    * Constructor: object creation and setup
    *
@@ -75,23 +79,19 @@ public class StlFileParser extends StreamTokenizer
    *
    * @return boolean.
    */
-  boolean getNumber()
-  {
-    int t;
-
+  boolean getNumber() {
     try {
         nextToken();
-	if (ttype != TT_WORD)
-	  throw new IOException("Expected number on line " + lineno());
-	nval =  (Double.valueOf(sval)).doubleValue();
-    }
-    catch (IOException e) {
-      System.err.println(e.getMessage());
+        if (ttype != TT_WORD) {
+        	throw new IOException("Expected number on line " + lineno());
+        }
+        nval =  (Double.valueOf(sval)).doubleValue();
+    } catch (IOException e) {
+      logger.error("Expected number on line " + lineno(), e);
       return false;
-    }
-    catch (NumberFormatException e) {
-      System.err.println(e.getMessage());
-      return false;
+    } catch (NumberFormatException e) {
+    	logger.error("Couldn't convert:" + sval, e);
+    	return false;
     }
     return true;
   } // end of getNumber

@@ -1,31 +1,24 @@
 package org.area515.resinprinter.display;
 
 import java.awt.AWTError;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.HeadlessException;
-import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.swing.JFrame;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
 
 public class DisplayManager {
-	private static DisplayManager INSTANCE = null;
+    private static final Logger logger = LogManager.getLogger();
+
+    private static DisplayManager INSTANCE = null;
 	public static final String LAST_AVAILABLE_DISPLAY = "Last available display";
 	public static final String SIMULATED_DISPLAY = "Simulated display";
 	
@@ -73,6 +66,7 @@ public class DisplayManager {
 
 		newPrinter.setGraphicsData(device);
 		newPrinter.showBlankImage();
+		logger.info("Display:{} assigned to Printer:{}", device, newPrinter);
 	}
 	
 	public List<GraphicsDevice> getDisplayDevices() {
@@ -80,7 +74,7 @@ public class DisplayManager {
 		try {
 			devices.addAll(Arrays.asList(getGraphicsEnvironment().getScreenDevices()));
 		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
+			logger.error("Continuing after error...", e);
 		}
 		
 		devices.add(new CustomNamedDisplayDevice(LAST_AVAILABLE_DISPLAY));
@@ -113,7 +107,7 @@ public class DisplayManager {
 		
 		try {
 			ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		} catch (HeadlessException | AWTError error) {
+		} catch (NoClassDefFoundError | HeadlessException | AWTError error) {
 			throw new InappropriateDeviceException("It doesn't look like your graphics environment is properly setup", error);
 		}
 

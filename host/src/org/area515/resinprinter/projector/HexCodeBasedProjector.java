@@ -4,15 +4,16 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
-import javax.xml.bind.annotation.XmlElement;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class HexCodeBasedProjector implements ProjectorModel {
+    private static final Logger logger = LogManager.getLogger();
 	private static final int PROJECTOR_TIMEOUT = 5000;
 	
 	@JsonIgnore
@@ -85,19 +86,18 @@ public class HexCodeBasedProjector implements ProjectorModel {
 				}
 				
 				if (System.currentTimeMillis() - start >= PROJECTOR_TIMEOUT) {
-					System.out.println("Timeout after bytes read \"" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + "\"");
+					logger.debug("Timeout after bytes read \"{}\"", DatatypeConverter.printHexBinary(builder.toString().getBytes()));
 					return false;
 				}
 			}
 		} catch (IOException e) {
-			System.out.println("Error after bytes read \"" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + "\"");
-			e.printStackTrace();
+			logger.error("Error after bytes read \"" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + "\"", e);
 			return false;
 		}
 	}
 	
 	public String testCodeAgainstPattern(SerialCommunicationsPort port, String hexCode) throws IOException {
-		System.out.println("Writing:" + hexCode);
+		logger.info("Writing:{}", hexCode);
 		port.write(DatatypeConverter.parseHexBinary(hexCode));
 		long start = System.currentTimeMillis();
 		StringBuilder builder = new StringBuilder();

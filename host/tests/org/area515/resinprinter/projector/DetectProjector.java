@@ -4,8 +4,9 @@ import gnu.io.CommPortIdentifier;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
 import org.area515.resinprinter.serial.JSSCCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
@@ -16,15 +17,17 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class DetectProjector {
-	@Test
+    private static final Logger logger = LogManager.getLogger();
+
+    @Test
 	public void noErrorsInAutodetectProjectors() {
-		System.out.println("Projector json parse test.");
+		logger.info("Projector json parse test.");
 		HostProperties.Instance().getAutodetectProjectors();
 	}
 	
 	@Test
 	public void noErrorsDetectingProjector() {
-		System.out.println("Projector detection test.");
+		logger.info("Projector detection test.");
 
 		boolean hasFound = false;
 		for (long speed : HardwareCompatibilityTestSuite.COMMON_SPEEDS ) {
@@ -38,20 +41,20 @@ public class DetectProjector {
 			for (CommPortIdentifier currentIdentifier : identifiers) {
 				newComPortSettings.setPortName(currentIdentifier.getName());
 				
-				System.out.println("Port:" + currentIdentifier.getName() + " Baud:" + speed);
+				logger.info("Port:{} Baud:{}", currentIdentifier.getName(), speed);
 				
 				SerialCommunicationsPort port = new JSSCCommPort();
 				ProjectorModel model = SerialManager.Instance().getProjectorModel(port, newComPortSettings);
 				if (model != null) {
 					hasFound = true;
 				}
-				System.out.println("  JSSCCommPort projector detection:" + model);
+				logger.info("  JSSCCommPort projector detection:{}", model);
 				
 				/*port = new RXTXEventBasedCommPort();
-				System.out.println("  RXTXEventBasedCommPort projector detection:" + SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
+				logger.info("  RXTXEventBasedCommPort projector detection:{}", SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
 				
 				port = new RXTXSynchronousReadBasedCommPort();
-				System.out.println("  RXTXSynchronousReadBasedCommPort projector detection:" + SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));*/
+				logger.info("  RXTXSynchronousReadBasedCommPort projector detection:{}", SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));*/
 			}
 		}
 		Assert.assertTrue(hasFound);

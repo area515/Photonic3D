@@ -16,15 +16,17 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerContainer;
 import javax.websocket.server.ServerEndpoint;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.JacksonEncoder;
-import org.area515.util.PrintJobJacksonDecoder;
 
 @ServerEndpoint(value="/printerNotification/{printerName}", encoders={JacksonEncoder.class})
 public class WebSocketPrinterNotifier implements Notifier {
+    private static final Logger logger = LogManager.getLogger();
 	private static ConcurrentHashMap<String, ConcurrentHashMap<String, Session>> sessionsByPrinterName = new ConcurrentHashMap<String, ConcurrentHashMap<String, Session>>();
 	
 	@OnOpen
@@ -79,7 +81,7 @@ public class WebSocketPrinterNotifier implements Notifier {
 			try {
 				currentSession.getAsyncRemote().sendObject(new PrinterEvent(printer, NotificationEvent.PrinterChanged));
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error sending event to websocket:" + currentSession.getId(), e);
 			}
 		}
 	}
@@ -91,7 +93,7 @@ public class WebSocketPrinterNotifier implements Notifier {
 				try {
 					currentSession.close(new CloseReason(CloseCodes.NORMAL_CLOSURE, "The printer host has been asked to shut down now!"));
 				} catch (IOException e) {
-					e.printStackTrace();
+					logger.error("Error send event to websocket:" + currentSession.getId(), e);
 				}
 			}
 		}
@@ -118,7 +120,7 @@ public class WebSocketPrinterNotifier implements Notifier {
 			try {
 				currentSession.getAsyncRemote().sendObject(new PrinterEvent(printer, NotificationEvent.PrinterChanged));
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error sending event to websocket:" + currentSession.getId(), e);
 			}
 		}
 	}

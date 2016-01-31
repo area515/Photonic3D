@@ -2,12 +2,13 @@ package org.area515.resinprinter.notification;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 
 import javax.websocket.server.ServerContainer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
@@ -16,6 +17,7 @@ import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.StlError;
 
 public class NotificationManager {
+    private static final Logger logger = LogManager.getLogger();
 	private static List<Notifier> notifiers = null;
 	
 	public static void start(ServerContainer container) {
@@ -32,8 +34,7 @@ public class NotificationManager {
 				notifier.register(container);
 				notifiers.add(notifier);
 			} catch (InstantiationException | IllegalAccessException | InappropriateDeviceException e) {
-				System.out.println("Couldn't start Notifier");
-				e.printStackTrace();
+				logger.error("Couldn't start Notifier", e);
 			}
 		}
 	}

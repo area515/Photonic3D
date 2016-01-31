@@ -1,11 +1,12 @@
 package org.area515.resinprinter.gcode;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.MachineConfig;
@@ -19,6 +20,7 @@ import org.area515.util.TemplateEngine;
 import freemarker.template.TemplateException;
 
 public abstract class GCodeControl {
+	public static Logger logger = LogManager.getLogger();
 	public int SUGGESTED_TIMEOUT_FOR_ONE_GCODE = 1000 * 60 * 2;//2 minutes
 	
     private Printer printer;
@@ -47,7 +49,7 @@ public abstract class GCodeControl {
 				responseBuilder.append(state.currentLine);
 			}
 			
-			System.out.println("lineRead:" + state.currentLine);
+			logger.info("lineRead: {}", state.currentLine);
 		} while (state.currentLine != null && !state.currentLine.matches("(?is:ok.*)"));
 		
 		return responseBuilder.toString();
@@ -60,6 +62,7 @@ public abstract class GCodeControl {
         		cmd += "\n";
         	}
         	
+        	logger.info("Write: {}", cmd);
         	getSerialPort().write(cmd.getBytes());
         	return readUntilOkOrStoppedPrinting(printer);
         } finally {
@@ -74,10 +77,11 @@ public abstract class GCodeControl {
         		cmd += "\n";
         	}
         	
+        	logger.info("Write: {}", cmd);
         	getSerialPort().write(cmd.getBytes());
         	return readUntilOkOrStoppedPrinting(null);
         } catch (IOException ex) {
-        	ex.printStackTrace();
+        	logger.error("Couldn't send:" + cmd, ex);
         	return "IO Problem!";
         } finally {
         	gCodeLock.unlock();

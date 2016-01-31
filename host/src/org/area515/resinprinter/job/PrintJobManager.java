@@ -8,6 +8,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.job.render.StubPrintFileProcessor;
 import org.area515.resinprinter.notification.NotificationManager;
@@ -17,6 +19,7 @@ import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 
 public class PrintJobManager {
+	private static final Logger logger = LogManager.getLogger();
 	private static PrintJobManager INSTANCE;
 	
 	private ConcurrentHashMap<UUID, PrintJob> printJobsByJobId = new ConcurrentHashMap<UUID, PrintJob>();
@@ -37,11 +40,10 @@ public class PrintJobManager {
 			try {
 				//You can't change the state of the job after this point. Too many people are waiting for the future jobStatus for a final outcome of the job
 				printer.setStatus(futureJobStatus.get());
-				System.out.println("Job Success:" + Thread.currentThread().getName());
+				logger.info("Job Success:{}", Thread.currentThread().getName());
 				NotificationManager.jobChanged(printer, newJob);
 			} catch (Throwable e) {
-				System.out.println("Job Failed:" + Thread.currentThread().getName());
-				e.printStackTrace();
+				logger.error("Job Failed:" + Thread.currentThread().getName(), e);
 				printer.setStatus(JobStatus.Failed);
 				NotificationManager.jobChanged(printer, newJob);
 			} finally {
@@ -58,7 +60,7 @@ public class PrintJobManager {
 				
 				PrinterManager.Instance().removeAssignment(newJob);
 				newJob.setPrintFileProcessor(new StubPrintFileProcessor<>(newJob.getPrintFileProcessor()));
-				System.out.println("Job Ended:" + Thread.currentThread().getName());
+				logger.info("Job Ended:{}", Thread.currentThread().getName());
 			}
 		}
 	}

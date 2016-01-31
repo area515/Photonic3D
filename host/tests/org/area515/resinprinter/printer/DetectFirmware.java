@@ -5,6 +5,8 @@ import gnu.io.CommPortIdentifier;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
 import org.area515.resinprinter.serial.JSSCCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
@@ -14,11 +16,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class DetectFirmware {
-	
+    private static final Logger logger = LogManager.getLogger();
 	
 	@Test
 	public void noErrorsDetectingFirmware() {
-		System.out.println("Firmware detection test.");
+		logger.info("Firmware detection test.");
 
 		ComPortSettings newComPortSettings = new ComPortSettings();
 		boolean hasFound = false;
@@ -32,13 +34,13 @@ public class DetectFirmware {
 			for (CommPortIdentifier currentIdentifier : identifiers) {
 				newComPortSettings.setPortName(currentIdentifier.getName());
 				
-				System.out.println("Port:" + currentIdentifier.getName() + " Baud:" + speed);
+				logger.info("Port:{} Baud:{}", currentIdentifier.getName(), speed);
 				
 				SerialCommunicationsPort port = new JSSCCommPort();
 				Boolean lastValue = null;
 				for (int t = 0; t < 10; t++) {
 					boolean found = SerialManager.Instance().is3dFirmware(port, newComPortSettings);
-					System.out.println("  " + t + ". JSSCCommPort firmware detection:" + found);
+					logger.info("  {}. JSSCCommPort firmware detection:{}", t, found);
 					if (lastValue == null) {
 						lastValue = found;
 					} else {
@@ -52,12 +54,12 @@ public class DetectFirmware {
 				}
 				/*port = new RXTXEventBasedCommPort();
 				for (int t = 0; t < 10; t++) {
-					System.out.println("  " + t + ". RXTXEventBasedCommPort firmware detection:" + SerialManager.Instance().is3dFirmware(port, newComPortSettings));
+					logger.info("  {}. RXTXEventBasedCommPort firmware detection:{}", t, SerialManager.Instance().is3dFirmware(port, newComPortSettings));
 				}
 				
 				port = new RXTXSynchronousReadBasedCommPort();
 				for (int t = 0; t < 10; t++) {
-					System.out.println("  " + t + ". RXTXSynchronousReadBasedCommPort firmware detection:" + SerialManager.Instance().is3dFirmware(port, newComPortSettings));
+					logger.info("  {}. RXTXSynchronousReadBasedCommPort firmware detection:{}", t, SerialManager.Instance().is3dFirmware(port, newComPortSettings));
 				}*/
 			}
 		}

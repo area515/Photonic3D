@@ -32,6 +32,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.LaxRedirectStrategy;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
@@ -47,7 +49,8 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 @Path("printables")
 public class PrintableService {
-	public static PrintableService INSTANCE = new PrintableService();
+    private static final Logger logger = LogManager.getLogger();
+    public static PrintableService INSTANCE = new PrintableService();
 	public static final String UNKNOWN_FILE = "I don't know how do deal with a file of this type:";
 	public static final String NO_FILE = "You didn't attempt to upload a file, or the filename was Blank.";
 	
@@ -61,8 +64,8 @@ public class PrintableService {
 				return Response.status(Status.BAD_REQUEST).entity(UNKNOWN_FILE + fileName).build();
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
 			String output = "Error while uploading file: " + newUploadFile;
+			logger.error(output, e);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(output).build();
 		}
 
@@ -76,7 +79,7 @@ public class PrintableService {
 	
 		List<InputPart> inPart = formParts.get("file");
 		if (inPart == null) {
-			System.out.println("No file specified in multipart mime!");
+			logger.info("No file specified in multipart mime!");
 			return Response.status(500).build();
 		}
 		
@@ -104,8 +107,8 @@ public class PrintableService {
 				}
 
 			} catch (IOException e) {
-				e.printStackTrace();
 				String output = "Error while uploading file: " + newUploadFile;
+				logger.error(output, e);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(output).build();
 			}
 		}
@@ -278,7 +281,7 @@ public class PrintableService {
 		try {
 			uri = new URI(uriString);
 		} catch (URISyntaxException e) {
-			e.printStackTrace();
+			logger.error("Invalid URL:" + uriString + " with filename:" + filename, e);
 			return new MachineResponse("uploadviaurl", false, "That was not a valid URI");
 		}
 		
@@ -307,7 +310,7 @@ public class PrintableService {
 							try {
 								saveFile(stream, newUploadFile);
 							} catch (IOException e) {
-								e.printStackTrace();
+								logger.error("Problem saving file:" + uriString + " with filename:" + filename + " to:" + newUploadFile, e);
 							}
 						}
 					});

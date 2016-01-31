@@ -16,6 +16,8 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerContainer;
 import javax.websocket.server.ServerEndpoint;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
@@ -27,6 +29,7 @@ import org.area515.util.PrintJobJacksonDecoder;
 
 @ServerEndpoint(value="/printJobNotification/{printJobName}", encoders={JacksonEncoder.class}, decoders={PrintJobJacksonDecoder.class})
 public class WebSocketPrintJobNotifier implements Notifier {
+    private static final Logger logger = LogManager.getLogger();
 	private static ConcurrentHashMap<String, ConcurrentHashMap<String, Session>> sessionsByPrintJobName = new ConcurrentHashMap<String, ConcurrentHashMap<String, Session>>();
 	
 	public WebSocketPrintJobNotifier() {
@@ -78,7 +81,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 			try {
 				currentSession.getAsyncRemote().sendObject(new PrintJobEvent(job, NotificationEvent.PrintJobChanged));
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error sending event to websocket:" + currentSession.getId(), e);
 			}
 		}
 	}
@@ -95,7 +98,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 				try {
 					currentSession.close(new CloseReason(CloseCodes.NORMAL_CLOSURE, "The printer host has been asked to shut down now!"));
 				} catch (IOException e) {
-					e.printStackTrace();
+					logger.error("Error sending event to websocket:" + currentSession.getId(), e);
 				}
 			}
 		}
@@ -115,7 +118,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 				job.initializePrintJob(new StaticJobStatusFuture(JobStatus.Ready));
 				currentSession.getAsyncRemote().sendObject(new PrintJobEvent(job, NotificationEvent.FileUploadComplete));
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error sending event to websocket:" + currentSession.getId(), e);
 			}
 		}
 	}
@@ -131,7 +134,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 			try {
 				currentSession.getAsyncRemote().sendObject(new PrintJobEvent(job, NotificationEvent.GeometryError, errors));
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error sending event to websocket:" + currentSession.getId(), e);
 			}
 		}
 	}
@@ -147,7 +150,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 			try {
 				currentSession.getAsyncRemote().sendObject(new PrintJobEvent(job, NotificationEvent.OutOfInk));
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error sending event to websocket:" + currentSession.getId(), e);
 			}
 		}
 	}

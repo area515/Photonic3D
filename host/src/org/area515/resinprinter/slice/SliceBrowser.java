@@ -55,6 +55,7 @@ public class SliceBrowser extends JFrame {
 	//781;//"C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"; good
 	
 	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureBottom.stl";
+//	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureBottom.stl";
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";//78 & 54
 	/*
 C:\Users\wgilster\Documents\Olaf_set3_whole.stl
@@ -235,7 +236,6 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		float atanDivergencePoint = (float)Math.PI / 2;
 		for (int t = 0; t < fractions.length; t++) {
 			colors[t] = new Color(0, 0, 0, (float)(Math.atan(fractions[t] * atanDivergencePoint)) * colorRange + start);
-			System.out.println(fractions[t] + " = " + ((float)(Math.atan(fractions[t] * atanDivergencePoint)) * colorRange + start));
 		}
 		return colors;*/
 		return new Color[]{new Color(0, 0, 0, (float)opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum()), new Color(0, 0, 0, 0)};

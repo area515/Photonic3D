@@ -35,6 +35,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
 *   This class is the Hough Transform Space and search for
 *   generic objects in a binary image. The image must have been passed through
@@ -45,6 +48,8 @@ import java.util.Map;
 *   arbitrary shapes.
 */
 public class GenericHoughDetection<S> {
+	private static final Logger logger = LogManager.getLogger();
+	
     private byte imageValues[]; // Raw image (returned by ip.getPixels())
     private int houghValues[][][]; // Hough Space Values
     private int width; // Hough Space width (depends on image width)
@@ -364,7 +369,7 @@ public class GenericHoughDetection<S> {
     public void printHoughSpace() {
         for(int currentScale = scaleMin;currentScale <= scaleMax;currentScale = currentScale+scaleInc) {
         	int scaleIndex=(currentScale-scaleMin)/scaleInc;
-        	System.out.println(printHoughSpaceForScale(scaleIndex));
+        	logger.info(printHoughSpaceForScale(scaleIndex));
         }
     }
     

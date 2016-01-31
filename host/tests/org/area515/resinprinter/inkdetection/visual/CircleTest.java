@@ -9,10 +9,14 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 public class CircleTest {
-	@Test
+    private static final Logger logger = LogManager.getLogger();
+
+    @Test
 	public void generateHoughSpace() throws IOException {
 		VisualPrintMaterialDetector printMaterialDetector = new VisualPrintMaterialDetector();
 		
@@ -25,7 +29,7 @@ public class CircleTest {
 		houghDetection.houghTransform(edges);
 		List<Circle> centers = houghDetection.getShapes();
 		//detection.printHoughSpace();
-		System.out.println(centers);
+		logger.info(centers);
 		Graphics g = edges.getGraphics();
 		g.setColor(Color.WHITE);
 		for (Circle circle : centers) {
@@ -34,6 +38,6 @@ public class CircleTest {
 		
 		ImageIO.write(edges, "png", new File("images/outputcircle.png"));
 		ImageIO.write(houghDetection.generateHoughSpaceImage(true), "png", new File("images/houghspacecircle.png"));
-		System.out.println("Complete");		
+		logger.info("Complete");		
 	}
 }

@@ -41,7 +41,7 @@
 			<label class="col-xs-4 control-label"></label>
 			<div class="col-md-8">
 				<!-- <input id="choosefilebutton" onchange="angular.element(this).scope().fileChanged(this)" type="file" /> -->
-				<input ngf-select ng-model="printablesController.fileToUpload" name="file" type="file" accept="image/*">
+				<input ngf-select ng-model="printablesController.fileToUpload" name="file" type="file" accept="{{printablesController.supportedFileTypes}}">
   			</div>
 		</div>
 </div>
