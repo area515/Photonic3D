@@ -8,13 +8,17 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class TestVisualPrintMaterialDetector {
-	@Test
+    private static final Logger logger = LogManager.getLogger();
+
+    @Test
 	public void determineLiquidLevelInAToughSituation() throws IOException {
-		System.out.println("Determining liquid level in: ToughSituation.png.");
+		logger.info("Determining liquid level in: ToughSituation.png.");
 		
 		long start = System.currentTimeMillis();
 		VisualPrintMaterialDetector detector = new VisualPrintMaterialDetector();
@@ -25,8 +29,8 @@ public class TestVisualPrintMaterialDetector {
 				detector.buildLineDetection(image.getWidth(), image.getHeight())) * 100;
 		long timeTaken = System.currentTimeMillis() - start;
 		
-		System.out.println(String.format("Time taken to perform visual inspection of remaining print resin: %1dms", timeTaken));
-		System.out.println(String.format("Remaining print resin: %1$.2f%%", liquidRemaining));
+		logger.info(String.format("Time taken to perform visual inspection of remaining print resin: %1dms", timeTaken));
+		logger.info(String.format("Remaining print resin: %1$.2f%%", liquidRemaining));
 	}
 	
 	@Test

@@ -5,12 +5,15 @@ import java.io.IOException;
 import jssc.SerialPort;
 import jssc.SerialPortException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
 import org.area515.resinprinter.printer.Printer;
 
 public class JSSCCommPort implements SerialCommunicationsPort {
+    private static final Logger logger = LogManager.getLogger();
 	private SerialPort port;
 	private String cwhName;
 	
@@ -80,7 +83,7 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 		try {
 			port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXCLEAR);
 		} catch (SerialPortException e) {
-			e.printStackTrace(); 
+			logger.error("Error closing:" + port.getPortName(), e);
 		} finally {
 			try {
 				port.closePort();
@@ -120,5 +123,34 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 		} catch (SerialPortException e) {
 			throw new IOException("Couldn't read bytes from serial port.", e);
 		}
+	}
+	
+	public String toString() {
+		return cwhName;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((cwhName == null) ? 0 : cwhName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		JSSCCommPort other = (JSSCCommPort) obj;
+		if (cwhName == null) {
+			if (other.cwhName != null)
+				return false;
+		} else if (!cwhName.equals(other.cwhName))
+			return false;
+		return true;
 	}
 }

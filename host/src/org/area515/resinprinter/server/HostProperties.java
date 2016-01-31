@@ -28,6 +28,9 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.area515.resinprinter.discover.Advertiser;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
@@ -53,6 +56,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class HostProperties {
+    private static final Logger logger = LogManager.getLogger();
 	public static String FULL_RIGHTS = "adminRole";
 
 	private static String PROFILES_EXTENSION = ".slicing";
@@ -124,12 +128,12 @@ public class HostProperties {
 		String uploadDirString = null;
 		
 		if (!PROFILES_DIR.exists() && !PROFILES_DIR.mkdirs()) {
-			System.out.println("Couldn't make profiles directory. No write access or disk full?" );
+			logger.info("Couldn't make profiles directory. No write access or disk full?" );
 			throw new IllegalArgumentException("Couldn't make profiles directory. No write access or disk full?");
 		}
 		
 		if (!MACHINE_DIR.exists() && !MACHINE_DIR.mkdirs()) {
-			System.out.println("Couldn't make machine directory. No write access or disk full?" );
+			logger.info("Couldn't make machine directory. No write access or disk full?" );
 			throw new IllegalArgumentException("Couldn't make machine directory. No write access or disk full?");
 		}
 
@@ -151,7 +155,7 @@ public class HostProperties {
 					try {
 						advertisementClasses.add((Class<Advertiser>)Class.forName(currentPropertyString));
 					} catch (ClassNotFoundException e) {
-						System.out.println("Failed to load advertiser:" + currentPropertyString);
+						logger.error("Failed to load advertiser:{}", currentPropertyString);
 					}
 				}
 			}
@@ -166,7 +170,7 @@ public class HostProperties {
 					try {
 						notificationClasses.add((Class<Notifier>)Class.forName(currentPropertyString));
 					} catch (ClassNotFoundException e) {
-						System.out.println("Failed to load notifier:" + currentPropertyString);
+						logger.error("Failed to load notifier:{}", currentPropertyString);
 					}
 				}
 			}
@@ -182,7 +186,7 @@ public class HostProperties {
 						PrintFileProcessor processor = ((Class<PrintFileProcessor>)Class.forName(currentPropertyString)).newInstance();
 						printFileProcessors.add(processor);
 					} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-						System.out.println("Failed to load PrintFileProcessor:" + currentPropertyString);
+						logger.error("Failed to load PrintFileProcessor:{}", currentPropertyString);
 					}
 				}
 			}
@@ -193,7 +197,7 @@ public class HostProperties {
 			serialCommString = configurationProperties.getProperty("SerialCommunicationsImplementation", RXTXSynchronousReadBasedCommPort.class.getName());
 			serialPortClass = (Class<SerialCommunicationsPort>)Class.forName(serialCommString);
 		} catch (ClassNotFoundException e) {
-			System.out.println("Failed to load SerialCommunicationsImplementation:" + serialCommString);
+			logger.error("Failed to load SerialCommunicationsImplementation:{}", serialCommString);
 		}
 		
 		String networkManagerName = null;
@@ -201,7 +205,7 @@ public class HostProperties {
 			networkManagerName = configurationProperties.getProperty("NetworkManagerImplementation", LinuxNetworkManager.class.getName());
 			networkManagerClass = (Class<NetworkManager>)Class.forName(networkManagerName);
 		} catch (ClassNotFoundException e) {
-			System.out.println("Failed to load NetworkManagerImplementation:" + networkManagerName);
+			logger.error("Failed to load NetworkManagerImplementation:{}", networkManagerName);
 		}
 
 		//Here are all of the server configuration settings
@@ -246,7 +250,7 @@ public class HostProperties {
 				newProperties.load(new FileInputStream(versionFile));
 				versionNumber = Integer.valueOf((String)newProperties.get("build.number")) - 1;
 			} catch (IOException e) {
-				System.out.println("Version file is missing:" + versionFile);
+				logger.error("Version file is missing:{}", versionFile);
 			}
 		}
 		
@@ -468,7 +472,7 @@ public class HostProperties {
 		try {
 			return hostReady.await(timeout, unit);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			logger.error("Interrupted while waiting for startup process to complete");
 			return isHostReady();
 		}
 	}
@@ -542,7 +546,7 @@ public class HostProperties {
 			projectors = mapper.readValue(hexCodeBasedProjectorsJson, new TypeReference<List<HexCodeBasedProjector>>(){});
 			return projectors;
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Problem loading hexcode projector json.", e);
 			return new ArrayList<ProjectorModel>();
 		}
 	}
@@ -588,9 +592,9 @@ public class HostProperties {
 				//We do not want to start the printer here
 				configurations.put(configuration.getName(), configuration);
 				
-				System.out.println("Created printer configuration for:" + configuration);
+				logger.info("Created printer configuration for:{}", configuration);
 			} catch (JAXBException e) {
-				e.printStackTrace();
+				logger.error("Problem marshalling printer configurations from:" + currentFile, e);
 			}
 		}
 		
@@ -626,7 +630,7 @@ public class HostProperties {
 						currentConfiguration.getSlicingProfileName(), 
 						currentConfiguration.isAutoStart()), printerFile);
 			} catch (JAXBException e) {
-				e.printStackTrace();
+				logger.error("Problem saving printer configuration for:" + currentConfiguration, e);
 			}
 		}
 		
@@ -642,7 +646,7 @@ public class HostProperties {
 				stream = new FileInputStream(configPropertiesInPrintersDirectory);
 				overridenConfigurationProperties.load(stream);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error("Problem loading configuration properties from:" + configPropertiesInPrintersDirectory, e);
 			} finally {
 				IOUtils.closeQuietly(stream);
 			}
@@ -669,7 +673,7 @@ public class HostProperties {
 			stream = new FileOutputStream(configPropertiesInPrintersDirectory);
 			currentProperties.store(stream, "File created by CWH");
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Problem saving configuration properties from:" + configPropertiesInPrintersDirectory, e);
 			throw new IllegalArgumentException("Couldn't create:" + configPropertiesInPrintersDirectory, e);
 		} finally {
 			IOUtils.closeQuietly(stream);

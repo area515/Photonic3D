@@ -8,13 +8,17 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class MediaUsage {
+    private static final Logger logger = LogManager.getLogger();
+
 	@Test
 	public void tookValidPicture() throws IOException {
-		System.out.println("Testing imaging capabilities.");
+		logger.info("Testing imaging capabilities.");
 		
 		StreamingOutput output = MediaService.INSTANCE.takePicture("Unknown", 100, 100);
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

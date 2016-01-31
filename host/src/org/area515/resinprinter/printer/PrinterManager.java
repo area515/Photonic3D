@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -16,6 +18,7 @@ import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 
 public class PrinterManager {
+    private static final Logger logger = LogManager.getLogger();
 	private static PrinterManager INSTANCE;
 
 	private ConcurrentHashMap<Printer, PrintJob> printJobsByPrinter = new ConcurrentHashMap<Printer, PrintJob>();
@@ -54,21 +57,21 @@ public class PrinterManager {
 				if (printer != null) {
 					printer.close();
 				}
-				e.printStackTrace();
+				logger.error("Error loading configuration:" + currentConfiguration, e);
 			} catch (AlreadyAssignedException e) {
 				DisplayManager.Instance().removeAssignment(printer);
 				SerialManager.Instance().removeAssignment(printer);
 				if (printer != null) {
 					printer.close();
 				}
-				e.printStackTrace();
+				logger.error("Error loading configuration:" + currentConfiguration, e);
 			} catch (InappropriateDeviceException e) {
 				DisplayManager.Instance().removeAssignment(printer);
 				SerialManager.Instance().removeAssignment(printer);
 				if (printer != null) {
 					printer.close();
 				}
-				e.printStackTrace();
+				logger.error("Error loading configuration:" + currentConfiguration, e);
 			}
 		}*/
 	}
@@ -78,15 +81,21 @@ public class PrinterManager {
 	}
 	
 	public void stopPrinter(Printer printer) throws InappropriateDeviceException {
+		logger.debug("Attempting to stop printer:{}", printer);
+		
 		if (printer.isPrintInProgress()) {
 			throw new InappropriateDeviceException("Can't stop printer while printer:" + printer + " is in status:" + printer.getStatus());
 		}
 
 		printersByName.remove(printer.getName());
 		printer.close();
+		
+		logger.debug("Stopped printer:{}", printer);
 	}
 	
 	public Printer startPrinter(PrinterConfiguration currentConfiguration) throws JobManagerException, AlreadyAssignedException, InappropriateDeviceException {
+		logger.debug("Attempting to start printer:{}", currentConfiguration);
+		
 		Printer printer = null;
 		if (printersByName.containsKey(currentConfiguration.getName())) {
 			throw new AlreadyAssignedException("Printer already started:" + currentConfiguration.getName(), (Printer)null);
@@ -110,6 +119,7 @@ public class PrinterManager {
 				}
 			}
 			DisplayManager.Instance().assignDisplay(printer, graphicsDevice);
+			logger.debug("Assigned display:{} to:{}", graphicsDevice, printer);
 			
 			String firmwareComportId = printer.getConfiguration().getMachineConfig().getMotorsDriverConfig().getComPortSettings().getPortName();
 			SerialCommunicationsPort firmwarePort = SerialManager.Instance().getSerialDevice(firmwareComportId);
@@ -117,6 +127,7 @@ public class PrinterManager {
 				throw new JobManagerException("Couldn't find communications device called:" + firmwareComportId);
 			}
 			SerialManager.Instance().assignSerialPortToFirmware(printer, firmwarePort);
+			logger.debug("Assigned 3dprinter firmware:{} to:{}", firmwarePort, printer);
 			
 			ComPortSettings settings = printer.getConfiguration().getMachineConfig().getMonitorDriverConfig().getComPortSettings();
 			if (settings != null && settings.getPortName() != null) {
@@ -124,13 +135,16 @@ public class PrinterManager {
 				SerialCommunicationsPort projectorPort = SerialManager.Instance().getSerialDevice(projectorComportId);
 				if (projectorPort != null) {
 					SerialManager.Instance().assignSerialPortToProjector(printer, projectorPort);
+					logger.debug("Assigned projector:{} to:{}", projectorPort, printer);
 				}
 			}
 			
 			printersByName.put(printer.getName(), printer);
 			printer.setStarted(true);
+			logger.info("Printer started:{}", printer);
 			return printer;
 		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
+			logger.error("Error starting printer:" + currentConfiguration, e);
 			DisplayManager.Instance().removeAssignment(printer);
 			SerialManager.Instance().removeAssignments(printer);
 			if (printer != null) {
@@ -138,7 +152,7 @@ public class PrinterManager {
 			}
 			throw e;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Error starting printer:" + currentConfiguration, e);
 			DisplayManager.Instance().removeAssignment(printer);
 			SerialManager.Instance().removeAssignments(printer);
 			if (printer != null) {
@@ -149,6 +163,8 @@ public class PrinterManager {
 	}
 	
 	public void assignPrinter(PrintJob newJob, Printer printer) throws AlreadyAssignedException {
+		logger.debug("Attempting to assign job:{} to printer:{}", newJob, printer);
+		
 		Printer otherPrinter = printersByJob.putIfAbsent(newJob, printer);
 		if (otherPrinter != null) {
 			throw new AlreadyAssignedException("Job already assigned to:" + otherPrinter.getName(), otherPrinter);
@@ -161,9 +177,12 @@ public class PrinterManager {
 		}
 		
 		newJob.setPrinter(printer);
+		logger.info("Assigned job:{} to printer:{}", newJob, printer);
 	}
 
 	public void removeAssignment(PrintJob job) {
+		logger.debug("Attempting to dissassociate job:{} from printer", job);
+		
 		if (job == null) {
 			return;
 		}
@@ -174,6 +193,7 @@ public class PrinterManager {
 			printJobsByPrinter.remove(printer);
 			job.setPrinter(null);
 		}
+		logger.info("Disassociated job:{} from printer:{}", job, printer);
 	}
 	
 	public List<Printer> getPrinters() {

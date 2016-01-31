@@ -8,6 +8,7 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Enumeration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,9 +17,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.services.MediaService;
 
 public class ProgressiveDownloadServlet extends HttpServlet {
+    private static final Logger logger = LogManager.getLogger();
 	private static final long serialVersionUID = 5110548757293069069L;
 	
 	public ProgressiveDownloadServlet() {
@@ -26,13 +30,13 @@ public class ProgressiveDownloadServlet extends HttpServlet {
 	
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		System.out.println("HTTPGet:" + request.getRequestURI());
+		logger.info("HTTPGet:{}", request.getRequestURI());
 		doAll(request, response);
 	}
 
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		System.out.println("HTTPPost:" + request.getRequestURI());
+		logger.info("HTTPPost:{}", request.getRequestURI());
 		doAll(request, response);
 	}
 	
@@ -42,15 +46,14 @@ public class ProgressiveDownloadServlet extends HttpServlet {
 
 		if (servedFile == null || path == null || !path.toFile().exists()) {
 			if (servedFile == null) {
-				System.out.println("Couldn't find resource:" + request.getRequestURI());
+				logger.warn("Couldn't find resource:{}", request.getRequestURI());
 			} else {
-				System.out.println("File doesn't exist:" + path + " for resource:" + request.getRequestURL());
+				logger.warn("File doesn't exist:{} for resource:{}", path, request.getRequestURL());
 			}
 			try {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
 			} catch (IOException e) {
-				e.printStackTrace();
-				System.out.println("Couldn't send error back to client for path:" + request.getPathInfo());
+				logger.error("Couldn't send error back to client for path:" + request.getPathInfo(), e);
 			}
 			return;
 		}
@@ -62,7 +65,7 @@ public class ProgressiveDownloadServlet extends HttpServlet {
 
 			long fileSize = Files.size(path);
 	    	if (fileSize == 0) {
-	    		System.out.println("Filesize for:" + path + " is 0. This usually means that you're streaming an invalid file. You may want to checkout the process that created this file.");
+	    		logger.warn("Filesize for:{} is 0. This usually means that you're streaming an invalid file. You may want to checkout the process that created this file.", path);
 	    	}
 	    	Pattern rangePattern = Pattern.compile("bytes=(\\d*)-(\\d*)");
 	        response.setContentType(Files.probeContentType(path));
@@ -70,12 +73,14 @@ public class ProgressiveDownloadServlet extends HttpServlet {
 	        response.setHeader("TransferMode.DLNA.ORG", "Streaming");
 	        response.setHeader("File-Size", fileSize + "");
 	        
-	    	/*Enumeration<String> headerNames = request.getHeaderNames();
-	    	while (headerNames.hasMoreElements()) {
-	    		String name = headerNames.nextElement();
-	    		System.out.println(name + ":" + request.getHeader(name));
-	    	}*/
-	
+	        if (logger.isDebugEnabled()) {
+		        Enumeration<String> headerNames = request.getHeaderNames();
+		    	while (headerNames.hasMoreElements()) {
+		    		String name = headerNames.nextElement();
+		    		logger.debug("{}:{}", name, request.getHeader(name));
+		    	}
+	        }
+	        
 	        OutputStream outStream = response.getOutputStream();
 	        String rangeValue = request.getHeader("Range");
 	        long start = 0;
@@ -111,8 +116,7 @@ public class ProgressiveDownloadServlet extends HttpServlet {
 	        
             outStream.flush();
         } catch (IOException e) {
-        	e.printStackTrace();
-        	System.out.println("Error handling file:" + path);
+        	logger.error("Error handling file:" + path, e);
         } finally {
 			if (input != null)
 				try {input.close();} catch (IOException e) {}

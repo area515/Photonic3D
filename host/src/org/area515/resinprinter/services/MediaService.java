@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -20,6 +21,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.server.HostProperties;
 
 import com.coremedia.iso.boxes.Container;
@@ -31,6 +34,7 @@ import com.googlecode.mp4parser.authoring.tracks.H264TrackImpl;
 
 @Path("media")
 public class MediaService {
+    private static final Logger logger = LogManager.getLogger();
 	public static MediaService INSTANCE = new MediaService();
 
 	//All static for now, just to get this done...
@@ -62,9 +66,9 @@ public class MediaService {
 			try {
 				IOUtils.copy(inputStream, outputStream);
 			} catch (IOException e) {
-				System.out.println("Copy complete: " + streamingCommandString + " Message:" + e.getMessage());
+				logger.error("Copy complete:{} Message:{}", streamingCommandString, e.getMessage());
 			} finally {
-				System.out.println("Copy process is complete for:" + streamingCommandString);
+				logger.info("Copy process is complete for:{}", streamingCommandString);
 				if (inputStream != null) {
 					try {
 						inputStream.close();
@@ -93,7 +97,7 @@ public class MediaService {
 				return new MachineResponse("startrecord", true, "Printer:" + printerName + " already started recording");
 			}
 
-			System.out.println("Attempting to start video");
+			logger.info("Attempting to start video");
 			final String[] streamingCommand = HostProperties.Instance().getStreamingCommand();
 			try {
 				String[] replacedCommands = new String[streamingCommand.length];
@@ -117,8 +121,7 @@ public class MediaService {
 				errorThread.start();
 				return new MachineResponse("startrecord", true, "Printer:" + printerName + " started recording");
 			} catch (IOException e) {
-				e.printStackTrace();
-				System.out.println("Couldn't start command line process:" + streamingCommand);
+				logger.error("Couldn't start command line process:" + Arrays.toString(streamingCommand), e);
 				if (rawH264ProducerProcess != null) {
 					rawH264ProducerProcess.destroy();
 					rawH264ProducerProcess = null;
@@ -140,7 +143,7 @@ public class MediaService {
 				return new MachineResponse("stopvideorecord", false, "A recording hasn't been started yet for this printer: " + printerName);
 			}
 
-			System.out.println("Attempting to end video");
+			logger.info("Attempting to end video");
 			rawH264ProducerProcess.destroy();
 			Thread thread = new Thread(new Runnable() {
 				public void run() {
@@ -158,8 +161,7 @@ public class MediaService {
 						FileChannel fc = publishStream.getChannel();
 						out.writeContainer(fc);
 					} catch (Exception e) {
-						e.printStackTrace();
-						System.out.println("Couldn't convert file from:" + rawh264StreamFile + " to:" + mp4StreamFile);
+						logger.error("Couldn't convert file from:" + rawh264StreamFile + " to:" + mp4StreamFile, e);
 					} finally {
 						if (publishStream != null) {
 							try {
@@ -173,7 +175,7 @@ public class MediaService {
 							} catch (IOException e) {
 							}
 							if (!rawh264StreamFile.delete()) {
-								System.out.println("Couldn't delete old file:" + rawh264StreamFile);
+								logger.warn("Couldn't delete old file:{}", rawh264StreamFile);
 							}
 						}
 						rawH264ProducerProcess = null;

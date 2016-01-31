@@ -4,8 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Triangle3d implements Shape3d, Face3d {
-	private Point3d[] verticies;
+    private static final Logger logger = LogManager.getLogger();
+
+    private Point3d[] verticies;
 	private Point3d normal;
 	private double[] min = new double[3];
 	private double[] max = new double[3];
@@ -95,7 +100,7 @@ public class Triangle3d implements Shape3d, Face3d {
 		for (int t = 0; t < 3; t++) {
 			if (Double.isInfinite(xSlopes[t]) || Double.isNaN(xSlopes[t])) {
 				if (z != verticies[t].z) {
-					//System.out.println("Could this situation happen and be a proper intersection?");
+					logger.warn("Could this situation happen and be a proper intersection?");
 				} else {
 					line[currentPoint++] = new Point3d(verticies[t].x, verticies[t].y, verticies[t].z);
 				}

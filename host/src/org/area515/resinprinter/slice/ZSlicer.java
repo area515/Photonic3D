@@ -21,6 +21,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.slice.StlError.ErrorType;
 import org.area515.resinprinter.stl.BrokenFace3d;
 import org.area515.resinprinter.stl.Face3d;
@@ -31,7 +33,9 @@ import org.area515.resinprinter.stl.Triangle3d;
 import org.area515.resinprinter.stl.XYComparatord;
 
 public class ZSlicer {
-	 //We need to scale the whole stl large enough to have enough precision in front of the decimal point
+    private static final Logger logger = LogManager.getLogger();
+
+    //We need to scale the whole stl large enough to have enough precision in front of the decimal point
 	 //Too little and you get points that won't match, too much and you end up beating a double's precision
 	 //This number is a balancing act.
 	 private double precisionScaler = 100000;
@@ -157,7 +161,7 @@ public class ZSlicer {
 				 if (triangle instanceof Triangle3d) {
 					 leastXIndex = t;
 				 } else {
-					 System.out.println("We should never have an instanceof of a broken face here!!!");
+					 logger.debug("We should never have an instanceof of a broken face here!!!");
 				 }
 			 }
 		 }
@@ -196,7 +200,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (currentLine.getPointOne().ceilingEquals(lastInCurrentWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  //System.out.println("Completed Link: 1 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  logger.debug("Completed Link: 1 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -206,7 +210,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(currentLine.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  //System.out.println("Completed Link: 2 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  logger.debug("Completed Link: 2 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -216,7 +220,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(currentLine.getPointOne())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  //System.out.println("Completed Link: 3 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  logger.debug("Completed Link: 3 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -227,7 +231,7 @@ public class ZSlicer {
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointTwo().ceilingEquals(currentLine.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  //System.out.println("Completed Link: 4 with [" + (currentWorkingLoop.size() + 1) + "] links (Link line)");
+				  logger.debug("Completed Link: 4 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -246,33 +250,33 @@ public class ZSlicer {
 		  Line3d firstInOtherWorkingLoop = otherWorkingLoop.get(0);
 		  Line3d lastInOtherWorkingLoop = otherWorkingLoop.get(otherWorkingLoop.size() - 1);
 		  if (lastInOtherWorkingLoop.getPointTwo().ceilingEquals(firstInCurrentWorkingLoop.getPointOne())) {
-			  //System.out.println("Found Link: 1 with [" + currentWorkingLoop.size() + "," + otherWorkingLoop.size() + "] links (Link Loop)");
+			  logger.debug("Found Link: 1 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
 			  if (firstInOtherWorkingLoop.getPointOne().ceilingEquals(lastInCurrentWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  //System.out.println("Completed Link: 1 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  logger.debug("Completed Link: 1 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
 			  
 			  currentWorkingLoop.addAll(0, otherWorkingLoop);
 		  } else if (lastInCurrentWorkingLoop.getPointTwo().ceilingEquals(firstInOtherWorkingLoop.getPointOne())) {
-			  //System.out.println("Found Link: 2 with [" + currentWorkingLoop.size() + "," + otherWorkingLoop.size() + "] links (Link Loop)");
+			  logger.debug("Found Link: 2 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(lastInOtherWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  //System.out.println("Completed Link: 2 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  logger.debug("Completed Link: 2 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
 			  
 			  currentWorkingLoop.addAll(otherWorkingLoop);
 		  } else if (lastInCurrentWorkingLoop.getPointTwo().ceilingEquals(lastInOtherWorkingLoop.getPointTwo())) {
-			  //System.out.println("Found Link: 3 with [" + currentWorkingLoop.size() + "," + otherWorkingLoop.size() + "] links (Link Loop)");
+			  logger.debug("Found Link: 3 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(firstInOtherWorkingLoop.getPointOne())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  //System.out.println("Completed Link: 3 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  logger.debug("Completed Link: 3 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -283,11 +287,11 @@ public class ZSlicer {
 			  Collections.reverse(otherWorkingLoop);
 			  currentWorkingLoop.addAll(otherWorkingLoop);					  
 		  } else if (firstInOtherWorkingLoop.getPointOne().ceilingEquals(firstInCurrentWorkingLoop.getPointOne())) {
-			  //System.out.println("Found Link: 4 with [" + currentWorkingLoop.size() + "," + otherWorkingLoop.size() + "] links (Link Loop)");
+			  logger.debug("Found Link: 4 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
 			  if (firstInCurrentWorkingLoop.getPointTwo().ceilingEquals(lastInOtherWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
-				  //System.out.println("Completed Link: 4 with [" + (currentWorkingLoop.size() + otherWorkingLoop.size()) + "] links (Link Loop)");
+				  logger.debug("Completed Link: 4 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
 				  completedLinkage = LinkageDiscovery.FoundLink;
 			  }
@@ -309,7 +313,7 @@ public class ZSlicer {
 			  int[] xpointsCheck = new int[lines.size()];
 			  int[] ypoints = new int[lines.size()];
 			  int[] ypointsCheck = new int[lines.size()];
-			  //System.out.println("Checking out[" + count++ + "] element Count:" + lines.size());
+			  logger.debug("Checking out[{}] element Count:{}", lines, lines.size());
 			  for (int t = 0; t < lines.size(); t++) {
 				  xpoints[t] = (int)(lines.get(t).getPointOne().x);
 				  ypoints[t] = (int)(lines.get(t).getPointOne().y);
@@ -321,10 +325,10 @@ public class ZSlicer {
 				  //These are a double check for situations that should never happen other than if a single line(from a broken loop) was placed into the completedFillInLoops
 				  if (lines.size() > 1) {
 					  if (!lines.get(t).getPointTwo().ceilingEquals(lines.get(nextPoint).getPointOne())) {
-						  System.out.println("Compare second point[" + t + "]:" + lines.get(t) + " to first point[" + nextPoint + "]:" + lines.get(nextPoint));
+						  logger.warn("Compare second point[{}]:{} to first point[{}]:{}", t, lines.get(t), nextPoint, lines.get(nextPoint));
 					  }
 					  if (!lines.get(t).getPointOne().ceilingEquals(lines.get(prevPoint).getPointTwo())) {
-						  System.out.println("Compare first point[" + t + "]:" + lines.get(t) + " to second point[" + prevPoint + "]:" + lines.get(prevPoint));
+						  logger.warn("Compare first point[{}]:{} to second point[{}]:{}", t, lines.get(t), prevPoint, lines.get(prevPoint));
 					  }
 				  }
 			  }
@@ -342,7 +346,7 @@ public class ZSlicer {
 	 
 	 public List<Shape3d> getTrianglesAt(int x, int y) {
 		 List<Shape3d> intersections = new ArrayList<Shape3d>();
-		 //System.out.println("x:" + x + " y:" + y);
+		 logger.debug("x:{} y:{}",x, y);
 		  for (Shape3d shape : getPolygonsOnSlice()) {
 			  if (shape instanceof Triangle3d) {
 				  
@@ -434,7 +438,7 @@ public class ZSlicer {
 							  (int)(point.x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
 							  (int)(point.y / (precisionScaler) * pixelsPerMMY + imageOffsetX));
 				  } else {
-					  //System.out.println("No intersection. WRONG!!!");
+					  logger.debug("No intersection. WRONG!!!");
 				  }
 		  }
 		  
@@ -561,7 +565,7 @@ public class ZSlicer {
 				  if (shape instanceof Triangle3d) {
 					  placeIntoCompletedLoopList(triangle.getLines(), completedFillInLoops);
 					  trianglesAndBrokenFacesForMazeTraversal.add((Triangle3d)shape);
-					  //System.out.println("Triangle:" + shape);
+					  logger.debug("Triangle:{}", shape);
 				  } else if (shape instanceof Line3d) {
 					  zIntersectionsBySortedX.add((Line3d)shape);
 				  }
@@ -569,10 +573,10 @@ public class ZSlicer {
 			  }
 		  }
 		  
-		  /*System.out.println("===================");
-		  System.out.println("zIntersectionsBySortedX:" + zIntersectionsBySortedX.size());
-		  System.out.println("completedFillInLoops:" + completedFillInLoops.size());
-		  System.out.println("===================");//*/
+		  logger.debug("===================");
+		  logger.debug("zIntersectionsBySortedX:{}", zIntersectionsBySortedX.size());
+		  logger.debug("completedFillInLoops:{}", completedFillInLoops.size());
+		  logger.debug("===================");
 		  
 		  //Even though this algorithm is structured to be n^2 it executes in (n * constant) time because of the comparator
 		  //We join a set of loose lines into working loops of lines
@@ -600,21 +604,23 @@ public class ZSlicer {
 			  workingLoops.add(newLoop);
 		  }
 		  
-		  /*System.out.println("===================");
-		  System.out.println("zIntersectionsBySortedX:" + zIntersectionsBySortedX.size());
-		  System.out.println("completedFillInLoops count:" + completedFillInLoops.size());
-		  int value = 0;
-		  for (List<Line3d> loop : completedFillInLoops) {
-			  value += loop.size();
+		  if (logger.isDebugEnabled()) {
+			  logger.debug("===================");
+			  logger.debug("zIntersectionsBySortedX:{}", zIntersectionsBySortedX.size());
+			  logger.debug("completedFillInLoops count:{}", completedFillInLoops.size());
+			  int value = 0;
+			  for (List<Line3d> loop : completedFillInLoops) {
+				  value += loop.size();
+			  }
+			  logger.debug("completedFillInLoops lines:{}", value);
+			  logger.debug("workingLoops count:{}", + workingLoops.size());
+			  value = 0;
+			  for (List<Line3d> loop : workingLoops) {
+				  value += loop.size();
+			  }
+			  logger.debug("workingLoops lines:{}", value);
+			  logger.debug("===================");//*/
 		  }
-		  System.out.println("completedFillInLoops lines:" + value);
-		  System.out.println("workingLoops count:" + workingLoops.size());
-		  value = 0;
-		  for (List<Line3d> loop : workingLoops) {
-			  value += loop.size();
-		  }
-		  System.out.println("workingLoops lines:" + value);
-		  System.out.println("===================");//*/
 		  
 		  //Empirically I've found that about half of all loops need to be joined with this method
 		  //Now combine workingLoops into completedLoops. This algorithm is a bit more inefficient
@@ -637,32 +643,34 @@ public class ZSlicer {
 				  }
 			  }
 			  
-			  //System.out.println("Broken loop discovered[" + currentWorkingLoop.size() + "]:" + currentWorkingLoop);
+			  logger.debug("Broken loop discovered[{}]:{}", currentWorkingLoop.size(), currentWorkingLoop);
 			  brokenLoops.add(currentWorkingLoop);
 			  workingLoops.remove(0);
 		  }
 		  
-		  /*System.out.println("===================");
-		  System.out.println("zIntersectionsBySortedX:" + zIntersectionsBySortedX.size());
-		  System.out.println("completedFillInLoops count:" + completedFillInLoops.size());
-		  value = 0;
-		  for (List<Line3d> loop : completedFillInLoops) {
-			  value += loop.size();
+		  if (logger.isDebugEnabled()) {
+			  logger.debug("===================");
+			  logger.debug("zIntersectionsBySortedX:{}", zIntersectionsBySortedX.size());
+			  logger.debug("completedFillInLoops count:{}", completedFillInLoops.size());
+			  int value = 0;
+			  for (List<Line3d> loop : completedFillInLoops) {
+				  value += loop.size();
+			  }
+			  logger.debug("completedFillInLoops lines:{}", value);
+			  logger.debug("workingLoops count:{}", workingLoops.size());
+			  value = 0;
+			  for (List<Line3d> loop : workingLoops) {
+				  value += loop.size();
+			  }
+			  logger.debug("workingLoops lines:{}", value);
+			  logger.debug("brokenLoops count:{}", brokenLoops.size());
+			  value = 0;
+			  for (List<Line3d> loop : brokenLoops) {
+				  value += loop.size();
+			  }
+			  logger.debug("brokenLoops lines:{}", value);
+			  logger.debug("===================");
 		  }
-		  System.out.println("completedFillInLoops lines:" + value);
-		  System.out.println("workingLoops count:" + workingLoops.size());
-		  value = 0;
-		  for (List<Line3d> loop : workingLoops) {
-			  value += loop.size();
-		  }
-		  System.out.println("workingLoops lines:" + value);
-		  System.out.println("brokenLoops count:" + brokenLoops.size());
-		  value = 0;
-		  for (List<Line3d> loop : brokenLoops) {
-			  value += loop.size();
-		  }
-		  System.out.println("brokenLoops lines:" + value);
-		  System.out.println("===================");//*/
 		  
 		  //empirically I've found that this block of code will only execute 1 in 100 times.
 		  //So here is where things get complicated.
@@ -702,7 +710,7 @@ public class ZSlicer {
 				  assembledFaces.add(currentElementIndex);
 				  path = findPathThroughTrianglesAndBrokenLoops(currentBrokenLoop.get(0).getPointOne(), currentBrokenLoop.get(currentBrokenLoop.size() - 1).getPointTwo(), path, trianglesAndBrokenFacesForMazeTraversal, assembledFaces, 0);
 				  if (path != null) {
-					  System.out.println("Found path through maze");
+					  logger.info("Found path through maze");
 					  //We skip the first element on the path because it's we already know it's currentBrokenLoop
 					  for (int t = 1; t < assembledFaces.size(); t++) {
 						  Face3d usedFace = trianglesAndBrokenFacesForMazeTraversal.get(assembledFaces.get(t));
@@ -711,14 +719,14 @@ public class ZSlicer {
 							  if (discovery == LinkageDiscovery.FoundCompletion) {
 								  placeIntoCompletedLoopList(currentBrokenLoop, completedFillInLoops);
 							  } else {
-								  System.out.println("Maze traversal problem on face:" + ((BrokenFace3d)usedFace).getLines() + " discovery:" + discovery);
+								  logger.info("Maze traversal problem on face:{} discovery:{}", ((BrokenFace3d)usedFace).getLines(), discovery);
 							  }
 						  } else {
 							  LinkageDiscovery discovery = findLinkage(currentBrokenLoop, path.get(0));
 							  if (discovery == LinkageDiscovery.FoundCompletion) {
 								  placeIntoCompletedLoopList(currentBrokenLoop, completedFillInLoops);
 							  } else {
-								  System.out.println("Maze traversal problem on triangle:" + path.get(0) + " discovery:" + discovery);
+								  logger.info("Maze traversal problem on triangle:{} discovery:{}", path.get(0), discovery);
 							  }
 						  }
 					  }
@@ -743,7 +751,7 @@ public class ZSlicer {
 		  
 		  
 		  if (keepTrackOfErrors && brokenLoops.size() > 0) {
-			  //System.out.println("Broken Loops(" + brokenLoops.size() + "):" + brokenLoops);
+			  logger.debug("Broken Loops({}):{}",brokenLoops.size(), brokenLoops);
 			  for (List<Line3d> currentBrokenLoop : brokenLoops) {
 				  Line3d side = currentBrokenLoop.get(0);
 				  errors.add(new StlError((Triangle3d)side.getOriginatingFace(), side));
@@ -822,29 +830,29 @@ public class ZSlicer {
 					fillInScanLines.addAll(work.getScanLines());
 					buildArea += work.getBuildArea();
 				} catch (InterruptedException | ExecutionException e) {
-					// TODO Do something better than this!!!
-					e.printStackTrace();
+					logger.error("Error in executing polygon work", e);
 				}
 		  }
 		  
 		  //I'm not sure I want to do this. It just traces the polygon but doesn't provide much value other than an edge blur.
-		  //System.out.println("Polygons");
-		  //System.out.println("======");
+		  logger.debug("Polygons");
+		  logger.debug("======");
           fillInPolygons = compilePolygons(completedFillInLoops);
-		  
-		  /*System.out.println("TOTALS");
-		  System.out.println("======");
-		  System.out.println("Completed Loops(" + completedFillInLoops.size() + "):" + completedFillInLoops);
-		  for (List<Line3d> loop : completedFillInLoops) {
-			  System.out.println(loop.get(0));
-			  if (loop.size() > 1) {
-				  System.out.println(loop.get(loop.size() - 1));
+			  
+		  if (logger.isDebugEnabled()) {
+	          logger.debug("TOTALS");
+	          logger.debug("======");
+	          logger.debug("Completed Loops({}):{}", completedFillInLoops.size(), completedFillInLoops);
+			  for (List<Line3d> loop : completedFillInLoops) {
+				  logger.debug(loop.get(0));
+				  if (loop.size() > 1) {
+					  logger.debug("last loop element with size > 1:{}", loop.get(loop.size() - 1));
+				  }
+				  logger.debug("");
 			  }
-			  System.out.println();
+			  logger.debug("Working Loops({}):{}",workingLoops.size(), workingLoops);
+			  logger.debug("======");//*/
 		  }
-		  System.out.println("Working Loops(" + workingLoops.size() + "):" + workingLoops);
-		  System.out.println("======");//*/
-		  
 		  pool.shutdown();
 		  return completedFillInLoops;
 	 }

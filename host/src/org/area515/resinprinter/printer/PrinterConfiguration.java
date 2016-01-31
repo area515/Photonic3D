@@ -86,4 +86,9 @@ public class PrinterConfiguration {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return name;
+	}
 }

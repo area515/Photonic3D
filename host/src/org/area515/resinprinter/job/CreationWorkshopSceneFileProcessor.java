@@ -24,11 +24,14 @@ import javax.imageio.ImageIO;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
 
 public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcessor<Object> {
+	private static final Logger logger = LogManager.getLogger();
 	private HashMap<PrintJob, BufferedImage> currentlyDisplayedImage = new HashMap<PrintJob, BufferedImage>();
 	
 	@Override
@@ -39,7 +42,14 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	@Override
 	public boolean acceptsFile(File processingFile) {
 		//TODO: we shouldn't except all zip files only those that have embedded gif/jpg/png information.
-		return processingFile.getName().toLowerCase().endsWith(".zip") || processingFile.getName().toLowerCase().endsWith(".cws");
+		if (processingFile.getName().toLowerCase().endsWith(".zip") || processingFile.getName().toLowerCase().endsWith(".cws")) {
+			if (zipHasGCode(processingFile)) {
+				// if the zip has gcode, treat it as a CW scene
+				logger.info("Accepting new printable {} as a {}", processingFile.getName(), this.getFriendlyName());
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	@Override
@@ -61,7 +71,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		BufferedReader stream = null;
 		long startOfLastImageDisplay = -1;
 		try {
-			System.out.println("Parsing file:" + gCodeFile);
+			logger.info("Parsing file:{}", gCodeFile);
 			int padLength = determinePadLength(gCodeFile);
 			stream = new BufferedReader(new FileReader(gCodeFile));
 			String currentLine;
@@ -86,7 +96,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 						}
 
 						if (matcher.group(1).toUpperCase().equals("BLANK")) {
-							System.out.println("Show Blank");
+							logger.info("Show Blank");
 							printer.showBlankImage();
 							
 							//This is the perfect time to wait for a pause if one is required.
@@ -110,7 +120,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 							BufferedImage newImage = ImageIO.read(imageFile);
 							applyBulbMask((Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
 							currentlyDisplayedImage.put(printJob, newImage);
-							System.out.println("Show picture: " + imageFilename);
+							logger.info("Show picture: {}", imageFilename);
 							
 							//Notify the client that the printJob has increased the currentSlice
 							NotificationManager.jobChanged(printer, printJob);
@@ -133,11 +143,11 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 							} else {
 								printJob.setExposureTime(sleepTime);
 							}
-							System.out.println("Sleep:" + sleepTime);
+							logger.info("Sleep:{}", sleepTime);
 							Thread.sleep(sleepTime);
-							System.out.println("Sleep complete");
+							logger.info("Sleep complete");
 						} catch (InterruptedException e) {
-							e.printStackTrace();
+							logger.error("Interrupted while waiting for exposure to complete.", e);
 						}
 						continue;
 					}
@@ -146,7 +156,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 					if (matcher.matches()) {
 						sliceCount = Integer.parseInt(matcher.group(1));
 						printJob.setTotalSlices(sliceCount);
-						System.out.println("Found:" + sliceCount + " slices");
+						logger.info("Found:{} slices", sliceCount);
 						continue;
 					}
 					
@@ -154,10 +164,10 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 					if (matcher.matches()) {
 						double foundLiftSpeed = Double.parseDouble(matcher.group(1));
 						if (printJob.isZLiftSpeedOverriden()) {
-							System.out.println("Override: LiftDistance:" + String.format("%1.3f", foundLiftSpeed) + " overrided to:" + String.format("%1.3f", printJob.getZLiftSpeed()));
+							logger.info("Override: LiftDistance:{} overrided to:{}" , String.format("%1.3f", foundLiftSpeed), String.format("%1.3f", printJob.getZLiftSpeed()));
 						} else {
 							printJob.setZLiftSpeed(foundLiftSpeed);
-							System.out.println("Found: LiftSpeed of:" + String.format("%1.3f", foundLiftSpeed));
+							logger.info("Found: LiftSpeed of:" + String.format("%1.3f", foundLiftSpeed));
 						}
 						continue;
 					}
@@ -166,10 +176,10 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 					if (matcher.matches()) {
 						double foundLiftDistance = Double.parseDouble(matcher.group(1));
 						if (printJob.isZLiftDistanceOverriden()) {
-							System.out.println("Override: LiftDistance:" + String.format("%1.3f", foundLiftDistance) + " overrided to:" + String.format("%1.3f", printJob.getZLiftDistance()));
+							logger.info("Override: LiftDistance:{} overrided to:{}", String.format("%1.3f", foundLiftDistance), String.format("%1.3f", printJob.getZLiftDistance()));
 						} else {
 							printJob.setZLiftDistance(foundLiftDistance);
-							System.out.println("Found: LiftDistance of:" + String.format("%1.3f", foundLiftDistance));
+							logger.info("Found: LiftDistance of:{}", String.format("%1.3f", foundLiftDistance));
 						}
 						continue;
 					}
@@ -177,26 +187,26 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 					matcher = gCodePattern.matcher(currentLine);
 					if (matcher.matches()) {
 						String gCode = matcher.group(1).trim();
-						System.out.println("Send GCode:" + gCode);
+						logger.info("Send GCode:{}", gCode);
 
 						for (int t = 0; t < 3; t++) {
 							gCode = printer.getGCodeControl().sendGcodeReturnIfPrinterStops(gCode);
 							if (gCode != null) {
 								break;
 							}
-							System.out.println("Printer timed out:" + t);
+							logger.info("Printer timed out:{}", t);
 						}
-						System.out.print("Printer Response:" + gCode);
+						logger.info("Printer Response:{}", gCode);
 						continue;
 					}
 					
 					// print out comments
-					System.out.println("Ignored line:" + currentLine);
+					logger.info("Ignored line:{}", currentLine);
 			}
 			
 			return printer.isPrintActive()?JobStatus.Completed:printer.getStatus();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Error occurred while processing file.", e);
 			throw e;
 		} finally {
 			if (stream != null) {
@@ -251,10 +261,32 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 			try {
 				FileUtils.deleteDirectory(extractDirectory);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error("Error while cleaning up environment", e);
 				throw new JobManagerException("Couldn't clean up extract directory");
 			}
 		}
+	}
+	
+	protected boolean zipHasGCode(File zipFile) {
+		ZipFile zip = null;
+		
+		try {
+			zip = new ZipFile(zipFile);
+			return zip.stream().anyMatch(z -> z.getName().toLowerCase().endsWith("gcode"));
+		} catch (IOException e) {
+			logger.error("Unable to open uploaded zip file", e);
+		} finally {
+			if (zip != null) {
+				try {
+					zip.close();
+				} catch (IOException e) {
+					logger.warn("Unable to close uploaded zip file", e);
+				}
+			}
+		}
+		
+		return false;
+		
 	}
 	
 	
@@ -304,8 +336,8 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 				}
 			}
 			String basename = FilenameUtils.removeExtension(jobFile.getName());
-			System.out.println("BaseName: " + FilenameUtils.removeExtension(basename));
-			findGcodeFile(jobFile);
+			logger.info("BaseName: {}", FilenameUtils.removeExtension(basename));
+			//findGcodeFile(jobFile);
 		} catch (IOException ioe) {
 			throw ioe;
 		} finally {

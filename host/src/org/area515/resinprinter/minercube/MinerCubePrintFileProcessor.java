@@ -15,6 +15,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
@@ -22,6 +24,7 @@ import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.server.Main;
 
 public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Object> {
+    private static final Logger logger = LogManager.getLogger();
 	private Map<PrintJob, PrintCube> minerCubesByPrintJob = new HashMap<PrintJob, PrintCube>();
 	
 	private class PrintCube {
@@ -123,7 +126,7 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 			printCube.cube = future;
 			minerCubesByPrintJob.put(printJob, printCube);
 		} catch (JAXBException e) {
-			e.printStackTrace();
+			logger.error("Marshalling error while processing file:" + processingFile, e);
 			throw new JobManagerException("I was expecting a MinerCube XML file. I don't understand this file.");
 		}
 	}

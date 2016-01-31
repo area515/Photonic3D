@@ -18,6 +18,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
@@ -31,6 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Path("printJobs")
 public class PrintJobService {
+    private static final Logger logger = LogManager.getLogger();
 	public static PrintJobService INSTANCE = new PrintJobService();
 	
 	private PrintJobService() {}
@@ -112,8 +115,7 @@ public class PrintJobService {
 		 		try {
 		 			ImageIO.write(image, "png", output);
 		 		} catch (IOException e) {
-		 			//TODO: For some reason we are getting an org.eclipse.jetty.io.EofException
-		 			e.printStackTrace();
+		 			logger.error("EofException from jetty are common when the browser cancels image queries", e);
 		 		}
 			}  
 	    };
@@ -210,7 +212,7 @@ public class PrintJobService {
 		try {
 			printJob.overrideZLiftDistance(liftDistance);
 		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
+			logger.error("Job:" + jobId + " distance:" + liftDistance, e);
 			return new MachineResponse("LiftDistance", false, e.getMessage());
 		}
 		return new MachineResponse("LiftDistance", true, "Set lift distance to:" + liftDistance);
@@ -235,7 +237,7 @@ public class PrintJobService {
 		try {
 			printJob.overrideZLiftSpeed(speed);
 		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
+			logger.error("Job:" + jobId + " speed:" + speed, e);
 			return new MachineResponse("zliftspeed", false, e.getMessage());
 		}
 		return new MachineResponse("zliftspeed", true, "Set lift speed to:" + speed);
@@ -282,10 +284,10 @@ public class PrintJobService {
 			String json = mapper.writeValueAsString(data);
 			return new MachineResponse("geometry", true, json);
 		} catch (JobManagerException e) {
-			e.printStackTrace();
+			logger.error("Job:" + jobId, e);
 			return new MachineResponse("geometry", false, e.getMessage());
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			logger.error("Job:" + jobId, e);
 			return new MachineResponse("geometry", false, "Couldn't convert geometry to JSON");
 		}
 	}

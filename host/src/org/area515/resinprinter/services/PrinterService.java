@@ -23,6 +23,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -51,6 +53,7 @@ import freemarker.template.TemplateException;
 
 @Path("printers")
 public class PrinterService {
+    private static final Logger logger = LogManager.getLogger();
 	public static PrinterService INSTANCE = new PrinterService();
 	
 	private PrinterService(){}
@@ -93,15 +96,15 @@ public class PrinterService {
 		List<PrinterConfiguration> identifiers = HostProperties.Instance().getPrinterConfigurations();
 		List<Printer> printers = new ArrayList<Printer>();
 		for (PrinterConfiguration current : identifiers) {
-		try {
-			Printer printer = PrinterManager.Instance().getPrinter(current.getName());
-			if (printer == null) {
-				printer = new Printer(current);
+			try {
+				Printer printer = PrinterManager.Instance().getPrinter(current.getName());
+				if (printer == null) {
+					printer = new Printer(current);
+				}
+				printers.add(printer);
+			} catch (InappropriateDeviceException e) {
+			    logger.error("Error getting printer list", e);
 			}
-			printers.add(printer);
-		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
-		}
 		}
 		
 		return printers;
@@ -143,7 +146,7 @@ public class PrinterService {
 			HostProperties.Instance().removePrinterConfiguration(currentConfiguration);
 			return new MachineResponse("deletePrinter", true, "Deleted:" + printerName);
 		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
+		    logger.error("Error deleting printer:" + printerName, e);
 			return new MachineResponse("deletePrinter", false, e.getMessage());
 		}
 	}
@@ -165,11 +168,11 @@ public class PrinterService {
 				HostProperties.Instance().addOrUpdatePrinterConfiguration(printerToSave.getConfiguration());
 				return new MachineResponse("savePrinter", true, "Created:" + printerToSave.getName() + "");
 			} catch (AlreadyAssignedException e) {
-				e.printStackTrace();
+			    logger.error("Error saving printer:" + printerToSave, e);
 				return new MachineResponse("savePrinter", false, e.getMessage());
 			}
 		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
+		    logger.error("Error saving printer:" + printerToSave, e);
 			return new MachineResponse("savePrinter", false, e.getMessage());
 		}
 	}
@@ -189,7 +192,7 @@ public class PrinterService {
 			printer = PrinterManager.Instance().startPrinter(currentConfiguration);
 			return new MachineResponse("startPrinter", true, "Started:" + printer.getName() + "");
 		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
-			e.printStackTrace();
+		    logger.error("Error starting printer:" + printerName, e);
 			return new MachineResponse("startPrinter", false, e.getMessage());
 		}
 	}	 
@@ -213,7 +216,7 @@ public class PrinterService {
 			SerialManager.Instance().removeAssignments(printer);
 			return new MachineResponse("stopPrinter", true, "Stopped:" + printerName);
 		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
+		    logger.error("Error stop printer:" + printerName, e);
 			return new MachineResponse("stopPrinter", false, e.getMessage());
 		}
 	}
@@ -221,12 +224,12 @@ public class PrinterService {
 	@POST
 	@Path("createTemplatePrinter")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Printer createTemplatePrinter() {
+	public Printer createTemplatePrinter() throws InappropriateDeviceException {
 		//TODO: Return a nice unused name for this printer instead of the hardcoded value below
 		PrinterConfiguration configuration = createTemplatePrinter(
 			 "CWH Template Printer", //"mUVe 1 DLP (Testing)", 
 			 DisplayManager.SIMULATED_DISPLAY, 
-			 ConsoleCommPort.CONSOLE_COMM_PORT, 
+			 ConsoleCommPort.GCODE_RESPONSE_SIMULATION, 
 			 134, 75, 185);
 		configuration.getSlicingProfile().getSelectedInkConfig().setNumberOfFirstLayers(10);
 		configuration.getSlicingProfile().getSelectedInkConfig().setFirstLayerExposureTime(20000);
@@ -293,13 +296,8 @@ public class PrinterService {
 				"	fractions,\n" +
 				"	colors,\n" +
 				"	java.awt.MultipleGradientPaint.CycleMethod.NO_CYCLE)");
-		try {
-			return new Printer(configuration);
-		} catch (InappropriateDeviceException e) {
-			//TODO: Throw an error if this fails!!!
-			e.printStackTrace();
-			return null;
-		}
+
+		return new Printer(configuration);
 	}
 
 	PrinterConfiguration createTemplatePrinter(String printername, String displayId, String comport, double physicalProjectionMMX, double physicalProjectionMMY, double buildHeightMMZ) {
@@ -346,7 +344,7 @@ public class PrinterService {
 			slicingProfile.setxResolution((int)monitor.getDLP_X_Res());
 			slicingProfile.setyResolution((int)monitor.getDLP_Y_Res());
 		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
+		    logger.error("Error creating graphics device for printer:" + printername, e);
 			throw new IllegalArgumentException("Couldn't get screen device");
 		}
 		
@@ -388,7 +386,7 @@ public class PrinterService {
 			currentPrinter.showCalibrationImage(pixels);
 			return new MachineResponse("calibrationscreenshown", true, "Showed calibration screen on:" + printerName);
 		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
+		    logger.error("Error showing calibration screen for printer:" + printerName, e);
 			return new MachineResponse("calibrationscreenshown", false, e.getMessage());
 		}
 	}
@@ -406,7 +404,7 @@ public class PrinterService {
 			currentPrinter.showBlankImage();
 			return new MachineResponse("blankscreenshown", true, "Showed blank screen on:" + printerName);
 		} catch (InappropriateDeviceException e) {
-			e.printStackTrace();
+		    logger.error("Error showing blank screen for printer:" + printerName, e);
 			return new MachineResponse("blankscreenshown", false, e.getMessage());
 		}
 	}
@@ -554,7 +552,7 @@ public class PrinterService {
 			printer.setProjectorPowerStatus(true);
 			return new MachineResponse("startProjector", true, "Projector started.");
 		} catch (IOException e) {
-			e.printStackTrace();
+		    logger.error("Error starting projector for printer:" + printerName, e);
 			return new MachineResponse("startProjector", false, e.getMessage());
 		}
 	}
@@ -572,7 +570,7 @@ public class PrinterService {
 			printer.setProjectorPowerStatus(false);
 			return new MachineResponse("stopProjector", true, "Projector stopped.");
 		} catch (IOException e) {
-			e.printStackTrace();
+		    logger.error("Error stopping projector for printer:" + printerName, e);
 			return new MachineResponse("stopProjector", false, e.getMessage());
 		}
 	}
@@ -595,7 +593,7 @@ public class PrinterService {
 			printJob = PrintJobManager.Instance().createJob(selectedFile, printer);
 			return new MachineResponse("start", true, printJob.getId() + "");
 		} catch (JobManagerException | AlreadyAssignedException e) {
-			e.printStackTrace();
+		    logger.error("Error starting job:" + fileName + " printer:" + printername, e);
 			return new MachineResponse("start", false, e.getMessage());
 		}
 	}
@@ -742,7 +740,7 @@ public class PrinterService {
 			materialLeft = detector.performMeasurement();
 			return new MachineResponse("remainingPrintMaterial", true, materialLeft + "");
 		} catch (IOException e) {
-			e.printStackTrace();
+		    logger.error("Error remaining print material for printer:" + printerName, e);
 			return new MachineResponse("remainingPrintMaterial", false, e.getMessage());
 		}
 	}

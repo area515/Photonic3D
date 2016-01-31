@@ -2,6 +2,8 @@ package org.area515.resinprinter.discover;
 
 import java.net.URI;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.client.Main;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
@@ -25,6 +27,7 @@ import org.fourthline.cling.model.types.UDN;
 import org.fourthline.cling.support.connectionmanager.AbstractPeeringConnectionManagerService;
 
 public class UPNPAdvertiser implements Advertiser {
+	private static final Logger logger = LogManager.getLogger();
 	public static UPNPSetup INSTANCE;
 	
 	private UpnpServiceImpl upnpService;
@@ -76,8 +79,8 @@ public class UPNPAdvertiser implements Advertiser {
 					null);
 	
 			LocalService<PrinterDirectoryService> contentManagerService = new AnnotationLocalServiceBinder().read(PrinterDirectoryService.class);
-			new PrinterHostSettingsServiceManager<PrinterDirectoryService>(getSetup(), webPresentationURI, contentManagerService, PrinterDirectoryService.class);
-			contentManagerService.setManager(new DefaultServiceManager<PrinterDirectoryService>(contentManagerService, PrinterDirectoryService.class));
+			PrinterHostSettingsServiceManager manager = new PrinterHostSettingsServiceManager<PrinterDirectoryService>(getSetup(), webPresentationURI, contentManagerService, PrinterDirectoryService.class);
+			contentManagerService.setManager(manager);//new DefaultServiceManager<PrinterDirectoryService>(contentManagerService, PrinterDirectoryService.class));
 			
 			LocalService<AbstractPeeringConnectionManagerService> connectionManagerService = new AnnotationLocalServiceBinder().read(AbstractPeeringConnectionManagerService.class);
 			connectionManagerService.setManager(new DefaultServiceManager<AbstractPeeringConnectionManagerService>(connectionManagerService, AbstractPeeringConnectionManagerService.class));
@@ -102,16 +105,16 @@ public class UPNPAdvertiser implements Advertiser {
 			//By this point the externallyAccessableIP will be setup with the local IP if it started off null
 			for (Resource device : upnpService.getRegistry().getResources()) {
 				if (device.getModel() instanceof LocalDevice) {
-					//LOGGER.info("===========");
-					//LOGGER.info(device.getModel() + " exposed on: " + httpAddress + device.getPathQuery());
-					System.out.println("Relative UPNP root descriptor:" + device.getPathQuery());
-					//LOGGER.info("===========");
+					logger.debug("===========");
+					logger.debug("{} exposed on: {}", device.getModel(), device.getPathQuery());
+					logger.info("Relative UPNP root descriptor: {}", device.getPathQuery());
+					logger.debug("===========");
 				} else {
-					//LOGGER.info(device.getModel() + " exposed on: " + httpAddress + device.getPathQuery());
+					logger.debug("{} exposed on: {}", device.getModel(), device.getPathQuery());
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Couldn't advertise URI:", webPresentationURI);
 			throw new RuntimeException("Couldn't advertise URI:" + webPresentationURI);
 		}
 	}

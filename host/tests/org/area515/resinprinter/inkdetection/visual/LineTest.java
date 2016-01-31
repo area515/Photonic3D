@@ -9,10 +9,14 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 public class LineTest {
-	private void produceImagesFromEdgeImage(BufferedImage input) throws IOException {
+    private static final Logger logger = LogManager.getLogger();
+
+    private void produceImagesFromEdgeImage(BufferedImage input) throws IOException {
 		VisualPrintMaterialDetector printMaterialDetector = new VisualPrintMaterialDetector();
 		BufferedImage output = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_INT_ARGB);
 		
@@ -20,7 +24,7 @@ public class LineTest {
 		//houghDetection.addWatch(new HoughReference(new int[]{460,  6, 0}, null), Color.BLUE);
 		houghDetection.houghTransform(input);
 		List<Line> centers = houghDetection.getShapes();
-		System.out.println(centers);
+		logger.info(centers);
 		Graphics g = output.getGraphics();
 		g.drawImage(input, 0, 0, null);
 		g.setColor(Color.RED);
@@ -31,7 +35,7 @@ public class LineTest {
 		//g.drawImage(mask, 0, 0, null);
 		ImageIO.write(output, "png", new File("images/outputline.png"));
 		ImageIO.write(houghDetection.generateHoughSpaceImage(true), "png", new File("images/houghspaceline.png"));
-		System.out.println("Complete");	
+		logger.info("Complete");	
 	}
 	
 	@Test
