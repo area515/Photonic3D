@@ -1,7 +1,7 @@
 package org.area515.resinprinter.job;
 
 public enum JobStatus {
-	Unpacking,
+	Ready,
 	Printing,
 	Failed,
 	Completed,
@@ -10,8 +10,7 @@ public enum JobStatus {
 	Deleted,
 	Paused,
 	PausedOutOfPrintMaterial,
-	PausedWithWarning,
-	Ready;
+	PausedWithWarning;
 	
 	public boolean isPrintInProgress() {
 		return this == JobStatus.Paused || this == JobStatus.Printing || this == JobStatus.PausedOutOfPrintMaterial || this == JobStatus.PausedWithWarning || this == JobStatus.Cancelling;

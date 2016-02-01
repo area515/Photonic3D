@@ -1,0 +1,35 @@
+		<div class="panel panel-default">
+			<div class="panel-heading clearfix">
+				<i class="fa pull-left fa-2x fa-bold"></i>
+				<h4 class="pull-left">Font Properties</h4>
+				<div class="btn-group pull-right" >
+					<button class="btn btn-primary" ng-disabled="printersController.currentPrinter.started" ng-click="printersController.savePrinter(printersController.currentPrinter)" >
+						<i class="fa fa-pencil"></i>
+						<span>Save</span>
+					</button>
+				</div>
+			</div>
+			<div class="list-group">
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-font pull-left"></i>
+					<div>
+						<h4 class="pull-left">Font Name</h4>
+					</div>
+					<select name="type" class="form-control"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.Font.Name" 
+						ng-options="item for item in printersController.fontNames"
+						required>
+					  <option value="">{{printersController.loadingFontsMessage}}</option>
+					</select>
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-text-height pull-left"></i>
+					<h4>Size</h4>
+					<input type="text" class="form-control" placeholder="pt" ng-model="printersController.currentPrinter.configuration.slicingProfile.Font.Size">
+				</div>
+			</div>
+			
+			<div class="panel-footer">
+				<span ng-include="'cardFooter.html'"></span>
+			</div>
+		</div>

@@ -68,13 +68,14 @@ public class SerialManager {
 					break;
 				}
 			} catch (AlreadyAssignedException | InappropriateDeviceException e) {
-				logger.debug("Attempting projector model detection on:{}", newComPortSettings);
+				logger.debug("Failed projector model detection on:{} due to:{}", newComPortSettings, e.getMessage());
 				return null;
 			} finally {
 				currentIdentifier.close();
 			}
 		}
 		
+		logger.debug("No projector model detected on:{}", newComPortSettings);
 		return currentModel;
 	}
 	

@@ -42,7 +42,7 @@ public class StandaloneImageRenderer implements Callable<StandaloneImageData> {
 	 * @param image
 	 * @return
 	 */
-	private long computePixelArea(BufferedImage image) throws JobManagerException {
+	private static long computePixelArea(BufferedImage image) throws JobManagerException {
 		int type = image.getType();
 		if (type != BufferedImage.TYPE_3BYTE_BGR
 				&& type != BufferedImage.TYPE_4BYTE_ABGR

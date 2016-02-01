@@ -133,6 +133,9 @@
 			if (printable.printFileProcessor.friendlyName === 'Zip of Slice Images') {
 				return "fa-stack-overflow";
 			}
+			if (printable.printFileProcessor.friendlyName === 'Simple Text') {
+				return "fa-bold";
+			}
 			return "fa-question-circle";
 		}
 		

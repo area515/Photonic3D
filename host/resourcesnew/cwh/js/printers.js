@@ -3,6 +3,7 @@
 	cwhApp.controller("PrintersController", ['$scope', '$http', '$location', '$anchorScroll', function ($scope, $http, $location, $anchorScroll) {
 		controller = this;
 		
+		this.loadingFontsMessage = "--- Loading fonts from server ---"
 		function refreshSelectedPrinter(printerList) {
         	var foundPrinter = false;
         	
@@ -161,6 +162,11 @@
 		$http.get('/services/machine/graphicsDisplays/list').success(
 				function (data) {
 					controller.graphicsDisplays = data;
+				});
+		$http.get('/services/machine/supportedFontNames').success(
+				function (data) {
+					controller.fontNames = data;
+					controller.loadingFontsMessage = "Select a font...";
 				});
 		
 		//TODO: All of these things should come from the MachineService

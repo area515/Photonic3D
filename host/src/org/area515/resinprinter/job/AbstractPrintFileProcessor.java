@@ -1,14 +1,15 @@
 package org.area515.resinprinter.job;
 
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.notification.NotificationManager;
@@ -17,16 +18,20 @@ import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.server.HostProperties;
-import org.area515.resinprinter.server.Main;
+import org.area515.resinprinter.services.PrinterService;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.TemplateEngine;
 
 public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcessor<G>{
+	//TODO: You can't have instance variables, PrintFileProcessor is a Singleton pattern!!!  
+	//Once two printers are printing at the same time we've got chaos!!!!! 
+	//FIXME by pulling these instance variables into the DataAid and getting rid of the DataAid instance variable.
+	//Instead of having each implementation keep it's own state in it's own hashtable, we should be doing all of that work in here...
 	private long currentSliceTime;
 	private InkDetector inkDetector;
 	private DataAid data;
 	
-	public class DataAid {
+	public static class DataAid {
 		public ScriptEngine scriptEngine;
 		public Printer printer;
 		public PrintJob printJob;
@@ -239,5 +244,37 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 				throw new IllegalArgumentException("The result of your bulb mask script needs to evaluate to an instance of java.awt.Paint");
 			}
 		}
+	}
+	
+	public Font buildFont() {
+		org.area515.resinprinter.printer.SlicingProfile.Font cwhFont = data.slicingProfile.getFont();
+		if (cwhFont == null) {
+			cwhFont = PrinterService.DEFAULT_FONT;
+		}
+		
+		if (cwhFont.getName() == null) {
+			cwhFont.setName(PrinterService.DEFAULT_FONT.getName());
+		}
+		
+		if (cwhFont.getSize() == 0) {
+			cwhFont.setSize(PrinterService.DEFAULT_FONT.getSize());
+		}
+		
+		return new Font(cwhFont.getName(), Font.PLAIN, cwhFont.getSize());
+	}
+	
+	@XmlTransient
+	public int getSuggestedSolidLayerCountFor2DGraphic() {
+		return data.inkConfiguration.getNumberOfFirstLayers() * 2;
+	}
+	
+	@XmlTransient
+	public int getSuggestedImplementationLayerCountFor2DGraphic() {
+		return data.inkConfiguration.getNumberOfFirstLayers() * 3;
+	}
+	
+	@XmlTransient
+	public int getSuggestedPrettyBorderWidth() {
+		return 50;
 	}
 }

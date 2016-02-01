@@ -38,7 +38,7 @@ public class PrintJobManager {
 		@Override
 		public void run() {
 			try {
-				//You can't change the state of the job after this point. Too many people are waiting for the future jobStatus for a final outcome of the job
+				//You can't change the state of the job after this point. Too many processes are waiting for the future jobStatus for a final outcome of the job
 				printer.setStatus(futureJobStatus.get());
 				logger.info("Job Success:{}", Thread.currentThread().getName());
 				NotificationManager.jobChanged(printer, newJob);
@@ -57,9 +57,11 @@ public class PrintJobManager {
 				
 				//If we don't do this, the next print will carry the last pause along with it and make falsify the slicing time.
 				printer.setCurrentSlicePauseTime(0);
-				
 				PrinterManager.Instance().removeAssignment(newJob);
 				newJob.setPrintFileProcessor(new StubPrintFileProcessor<>(newJob.getPrintFileProcessor()));
+				
+				//Set the jobstatus back on the printer to Ready
+				printer.setStatus(JobStatus.Ready);
 				logger.info("Job Ended:{}", Thread.currentThread().getName());
 			}
 		}

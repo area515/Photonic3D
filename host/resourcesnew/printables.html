@@ -6,18 +6,18 @@
 							<h3 class="panel-title pull-left">Printable Files</h3>
 							<div class="row">
 								<div class="btn-group pull-right" >
-									<a class="btn btn-success" ng-show="printablesController.currentPrintable != null" ng-click="printablesController.printPrintable()" >
+									<button class="btn btn-success" ng-disabled="printablesController.currentPrintable == null" ng-click="printablesController.printPrintable()" >
 										<i class="fa fa-print"></i>
 										<span>Print</span>
-									</a>
-									<a class="btn btn-danger" ng-show="printablesController.currentPrintable != null" ng-click="printablesController.deletePrintable()">
+									</button>
+									<button class="btn btn-danger" ng-disabled="printablesController.currentPrintable == null" ng-click="printablesController.deletePrintable()">
 										<i class="fa fa-trash-o"></i> 
 										<span>Remove</span>
-									</a>
-									<a class="btn btn-primary" ng-click="printablesController.showUpload()">
+									</button>
+									<button class="btn btn-primary" ng-click="printablesController.showUpload()">
 										<i class="fa fa-upload"></i> 
 										<span>Upload</span>
-									</a>
+									</button>
 							    </div>
 						</div>
 					</div>
@@ -28,7 +28,7 @@
 								<i class="pull-left fa fa-2x" ng-class="printablesController.getPrintableIconClass(printable)"></i>
 								<h4 class="list-group-item-heading">{{printable.name}}</h4>
 								<p class="list-group-item-text">
-									Size: {{printable.size}}  
+									Size: {{printable.size | number}}  
 								</p>
 								<p class="list-group-item-text">
 									<span class="pull-left">Date: {{printable.modifiedDate}}</span>
