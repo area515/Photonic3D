@@ -19,6 +19,35 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SlicingProfile {
     private static final Logger logger = LogManager.getLogger();
 
+    public static class Font {
+        @XmlElement(name="Name")
+    	private String name;
+        @XmlElement(name="Size")
+    	private int size;
+        
+        public Font() {}
+        
+        public Font(String name, int size) {
+        	this.name = name;
+        	this.size = size;
+        }
+        
+        @XmlTransient
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		
+        @XmlTransient
+		public int getSize() {
+			return size;
+		}
+		public void setSize(int size) {
+			this.size = size;
+		}
+    }
     public static class InkConfig {
 		@XmlElement(name="PrintMaterialDetector")
 		private String printMaterialDetector;
@@ -191,7 +220,9 @@ public class SlicingProfile {
 	private int testExposureStep;
     @XmlElement(name="InkConfig")
 	private List<InkConfig> inkConfig;
-	
+    @XmlElement(name="Font")
+	private Font font;
+
 	@XmlTransient
 	public int getxResolution() {
 		return xResolution;
@@ -270,6 +301,14 @@ public class SlicingProfile {
 	}
 	public void setNotes(String notes) {
 		this.notes = notes;
+	}
+	
+	@XmlTransient
+	public Font getFont() {
+		return font;
+	}
+	public void setFont(Font font) {
+		this.font = font;
 	}
 	
 	public String getgCodeHeader() {

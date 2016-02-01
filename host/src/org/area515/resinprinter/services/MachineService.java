@@ -1,6 +1,7 @@
 package org.area515.resinprinter.services;
 
 import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -207,6 +208,15 @@ public class MachineService {
 			fileTypes.addAll(Arrays.asList(processor.getFileExtensions()));
 		}
 		return fileTypes;
+	}
+	
+	@GET
+	@Path("supportedFontNames")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Set<String> getSupportedFontFamilies() {
+		Set<String> fontNames = new HashSet<String>();
+		fontNames.addAll(Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()));
+		return fontNames;
 	}
 	
 	@GET

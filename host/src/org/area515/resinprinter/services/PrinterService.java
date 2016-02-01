@@ -42,6 +42,7 @@ import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.printer.SlicingProfile;
+import org.area515.resinprinter.printer.SlicingProfile.Font;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialManager;
@@ -55,7 +56,7 @@ import freemarker.template.TemplateException;
 public class PrinterService {
     private static final Logger logger = LogManager.getLogger();
 	public static PrinterService INSTANCE = new PrinterService();
-	
+	public static Font DEFAULT_FONT = new Font("Dialog", 20);
 	private PrinterService(){}
 	
 	private MachineResponse openShutter(String printerName, boolean shutter) throws InappropriateDeviceException {
@@ -299,7 +300,7 @@ public class PrinterService {
 
 		return new Printer(configuration);
 	}
-
+	
 	PrinterConfiguration createTemplatePrinter(String printername, String displayId, String comport, double physicalProjectionMMX, double physicalProjectionMMY, double buildHeightMMZ) {
 		PrinterConfiguration currentConfiguration = new PrinterConfiguration(printername, printername, false);
 		ComPortSettings firmwareComSettings = new ComPortSettings();
@@ -347,7 +348,7 @@ public class PrinterService {
 		    logger.error("Error creating graphics device for printer:" + printername, e);
 			throw new IllegalArgumentException("Couldn't get screen device");
 		}
-		
+				
 		InkConfig ink = new InkConfig();
 		ink.setName("Default");
 		ink.setNumberOfFirstLayers(3);
@@ -359,6 +360,7 @@ public class PrinterService {
 		List<InkConfig> configs = new ArrayList<InkConfig>();
 		configs.add(ink);
 		
+		slicingProfile.setFont(DEFAULT_FONT);
 		slicingProfile.setInkConfigs(configs);
 		slicingProfile.setSelectedInkConfigName("Default");
 		slicingProfile.setDotsPermmX(monitor.getDLP_X_Res() / physicalProjectionMMX);

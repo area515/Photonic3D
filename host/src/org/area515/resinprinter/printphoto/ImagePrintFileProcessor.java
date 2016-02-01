@@ -9,6 +9,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import javax.imageio.ImageIO;
@@ -18,15 +19,30 @@ import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.server.Main;
+import org.area515.resinprinter.twodim.TwoDimensionalPlatformPrintFileProcessor;
 
-public class ImagePrintFileProcessor extends AbstractPrintFileProcessor<Object> {
-	private Map<PrintJob, PrintImage> printImagesByPrintJob = new HashMap<PrintJob, PrintImage>();
-	
-	private class PrintImage {
+public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProcessor<Object> {
+	private class PrintImage implements TwoDimensionalPrintState {
 		Future<BufferedImage> futureImage;
 		BufferedImage currentImage;
+		
+		@Override
+		public BufferedImage getCurrentImage() {
+			return currentImage;
+		}
+		
+		@Override
+		public void setCurrentImage(BufferedImage image) {
+			currentImage = image;
+		}
+		@Override
+		public BufferedImage buildImplementationImage(DataAid aid, Graphics2D graphics) throws ExecutionException, InterruptedException {
+			currentImage = futureImage.get();
+			return currentImage;
+		}
 	}
 	
 	@Override
@@ -39,79 +55,6 @@ public class ImagePrintFileProcessor extends AbstractPrintFileProcessor<Object> 
 		//TODO: this could be smarter by loading the file instead of just checking the file type
 		String name = processingFile.getName().toLowerCase();
 		return name.endsWith("gif") || name.endsWith("jpg") || name.endsWith("jpeg") || name.endsWith("png");
-	}
-	
-	@Override
-	public BufferedImage getCurrentImage(PrintJob printJob) {
-		PrintImage printImage = printImagesByPrintJob.get(printJob);
-		return printImage.currentImage;
-	}
-	
-	@Override
-	public Double getBuildAreaMM(PrintJob printJob) {
-		//TODO: haven't built any of this
-		return null;
-	}
-	
-	@Override
-	public JobStatus processFile(PrintJob printJob) throws Exception {
-		int border = 50;
-		DataAid data = initializeDataAid(printJob);
-		performHeader();
-	
-		PrintImage printImage = printImagesByPrintJob.get(printJob);
-		printJob.setTotalSlices(data.inkConfiguration.getNumberOfFirstLayers() * 5);
-
-		int centerX = data.xResolution / 2;
-		int centerY = data.yResolution / 2;
-
-		int firstSlices = data.inkConfiguration.getNumberOfFirstLayers() * 2;
-		int imageSlices = data.inkConfiguration.getNumberOfFirstLayers() * 3;
-
-		BufferedImage image = printImage.futureImage.get();
-		while (firstSlices > 0 || imageSlices > 0) {
-			//Performs all of the duties that are common to most print files
-			JobStatus status = performPreSlice(null);
-			if (status != null) {
-				return status;
-			}
-			
-			BufferedImage screenImage = new BufferedImage(data.xResolution, data.yResolution, BufferedImage.TYPE_INT_ARGB_PRE);
-			Graphics2D graphics = (Graphics2D)screenImage.getGraphics();
-			graphics.setColor(Color.black);
-			graphics.fillRect(0, 0, data.xResolution, data.yResolution);
-			graphics.setColor(Color.white);
-			
-			if (firstSlices > 0) {
-				int actualWidth = image.getWidth() + border > screenImage.getWidth()?screenImage.getWidth():image.getWidth() + border;
-				int actualHeight = image.getHeight() + border > screenImage.getHeight()?screenImage.getHeight(): image.getHeight() + border;
-				
-				graphics.fillRoundRect(centerX - (actualWidth / 2), centerY - (actualHeight / 2), actualWidth, actualHeight, border, border);
-			} else {
-				int actualWidth = image.getWidth();
-				int actualHeight = image.getHeight();
-				
-				graphics.drawImage(image, centerX - (actualWidth / 2), centerY - (actualHeight / 2), null);
-			}
-			
-			applyBulbMask(graphics, image.getWidth(), image.getHeight());
-			data.printer.showImage(screenImage);
-			printImage.currentImage = screenImage;
-			
-			//Performs all of the duties that are common to most print files
-			status = performPostSlice();
-			if (status != null) {
-				return status;
-			}
-
-			if (firstSlices > 0) {
-				firstSlices--;
-			} else {
-				imageSlices--;
-			}
-		}
-		
-		return performFooter();
 	}
 	
 	@Override
@@ -153,7 +96,7 @@ public class ImagePrintFileProcessor extends AbstractPrintFileProcessor<Object> 
 		});
 		PrintImage printCube = new PrintImage();
 		printCube.futureImage = future;
-		printImagesByPrintJob.put(printJob, printCube);
+		createTwoDimensionlPrintState(printJob, printCube);
 	}
 
 	@Override

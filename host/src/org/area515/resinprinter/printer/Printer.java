@@ -54,7 +54,7 @@ public class Printer {
 	private SerialCommunicationsPort projectorSerialPort;
 	
 	//For Job Status
-	private volatile JobStatus status;
+	private volatile JobStatus status = JobStatus.Ready;
 	private ReentrantLock statusLock = new ReentrantLock();
 	private Condition jobContinued = statusLock.newCondition();
 	
