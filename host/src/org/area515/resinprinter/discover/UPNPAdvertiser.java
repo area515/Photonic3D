@@ -5,6 +5,7 @@ import java.net.URI;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.client.Main;
+import org.area515.resinprinter.plugin.Feature;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
@@ -26,7 +27,7 @@ import org.fourthline.cling.model.types.UDADeviceType;
 import org.fourthline.cling.model.types.UDN;
 import org.fourthline.cling.support.connectionmanager.AbstractPeeringConnectionManagerService;
 
-public class UPNPAdvertiser implements Advertiser {
+public class UPNPAdvertiser implements Feature {
 	private static final Logger logger = LogManager.getLogger();
 	public static UPNPSetup INSTANCE;
 	

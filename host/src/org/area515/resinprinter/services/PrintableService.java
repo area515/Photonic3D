@@ -178,7 +178,7 @@ public class PrintableService {
 			output = new FileOutputStream(tempFile);
 			IOUtils.copy(uploadedInputStream, output);
 			try {output.close();} catch (IOException e) {}
-			Files.move(tempFile.toPath(), permanentFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+			Files.move(tempFile.toPath(), permanentFile.toPath(), StandardCopyOption.REPLACE_EXISTING);//Can't use StandardCopyOption.ATOMIC_MOVE due to moving files from the USB drive
 			if (PrintFileFilter.INSTANCE.accept(permanentFile)) {
 				NotificationManager.fileUploadComplete(permanentFile);
 				return true;
