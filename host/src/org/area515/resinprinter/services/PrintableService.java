@@ -181,6 +181,7 @@ public class PrintableService {
 			Files.move(tempFile.toPath(), permanentFile.toPath(), StandardCopyOption.REPLACE_EXISTING);//Can't use StandardCopyOption.ATOMIC_MOVE due to moving files from the USB drive
 			if (PrintFileFilter.INSTANCE.accept(permanentFile)) {
 				NotificationManager.fileUploadComplete(permanentFile);
+			    logger.info("File saved to:{}", permanentFile);
 				return true;
 			}
 				

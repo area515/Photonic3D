@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.plugin.Feature;
+import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.services.PrintableService;
 import org.area515.util.PrintFileFilter;
@@ -26,7 +27,7 @@ public class USBUploader implements Feature {
 	private void uploadFromRoot(File root) {
 		for (File currentFile : root.listFiles(PrintFileFilter.INSTANCE)) {
 			try (InputStream stream = new BufferedInputStream(new FileInputStream(currentFile))) {
-				PrintableService.uploadFile(currentFile.getName(), stream, root);
+				PrintableService.uploadFile(currentFile.getName(), stream, HostProperties.Instance().getUploadDir());
 			} catch (IOException e) {
 				logger.error("Couldn't upload file:" + currentFile, e);
 			}
