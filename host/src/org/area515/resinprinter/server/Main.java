@@ -5,7 +5,7 @@ import java.net.NetworkInterface;
 import java.net.URI;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,8 +14,8 @@ import javax.websocket.server.ServerContainer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.discover.BroadcastManager;
 import org.area515.resinprinter.notification.NotificationManager;
+import org.area515.resinprinter.plugin.FeatureManager;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.security.JettySecurityUtils;
 import org.area515.resinprinter.services.MachineService;
@@ -41,7 +41,7 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 public class Main {
     private static final Logger logger = LogManager.getLogger();
-	public static ExecutorService GLOBAL_EXECUTOR = new ScheduledThreadPoolExecutor(3, new ThreadFactory() {
+	public static ScheduledExecutorService GLOBAL_EXECUTOR = new ScheduledThreadPoolExecutor(3, new ThreadFactory() {
 		private AtomicInteger threads = new AtomicInteger();
 		@Override
 		public Thread newThread(Runnable r) {
@@ -149,12 +149,12 @@ public class Main {
 		}
 		   
 		//Start broadcasting server
-		BroadcastManager.start(new URI("http" + (HostProperties.Instance().isUseSSL()?"s://":"://") + externallyAccessableIP + ":" + port));
+		FeatureManager.start(new URI("http" + (HostProperties.Instance().isUseSSL()?"s://":"://") + externallyAccessableIP + ":" + port));
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
 				try {
-					BroadcastManager.shutdown();
+					FeatureManager.shutdown();
 				} catch (Exception e) {
 					logger.error("Error shutting down BroadcastManager", e);
 				}

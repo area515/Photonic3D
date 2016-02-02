@@ -31,7 +31,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.area515.resinprinter.discover.Advertiser;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -40,6 +39,7 @@ import org.area515.resinprinter.network.LinuxNetworkManager;
 import org.area515.resinprinter.network.NetworkManager;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.notification.Notifier;
+import org.area515.resinprinter.plugin.Feature;
 import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
@@ -74,7 +74,7 @@ public class HostProperties {
 	private boolean fakedisplay = false;
 	private boolean removeJobOnCompletion = true;
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
-	private List<Class<Advertiser>> advertisementClasses = new ArrayList<Class<Advertiser>>();
+	private List<Class<Feature>> featureClasses = new ArrayList<Class<Feature>>();
 	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
 	private List<PrintFileProcessor> printFileProcessors = new ArrayList<PrintFileProcessor>();
 	private Class<SerialCommunicationsPort> serialPortClass;
@@ -146,16 +146,16 @@ public class HostProperties {
 		hostGUI = configurationProperties.getProperty("hostGUI", "resources");
 		visibleCards = Arrays.asList(configurationProperties.getProperty("visibleCards", "printers,printJobs,printables,users,settings").split(","));
 				
-		//This loads advertisers
+		//This loads features
 		for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
 			String currentPropertyString = currentProperty.getKey() + "";
-			if (currentPropertyString.startsWith("advertise.")) {
-				currentPropertyString = currentPropertyString.replace("advertise.", "");
+			if (currentPropertyString.startsWith("feature.")) {
+				currentPropertyString = currentPropertyString.replace("feature.", "");
 				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
 					try {
-						advertisementClasses.add((Class<Advertiser>)Class.forName(currentPropertyString));
+						featureClasses.add((Class<Feature>)Class.forName(currentPropertyString));
 					} catch (ClassNotFoundException e) {
-						logger.error("Failed to load advertiser:{}", currentPropertyString);
+						logger.error("Failed to load feature:{}", currentPropertyString);
 					}
 				}
 			}
@@ -412,8 +412,8 @@ public class HostProperties {
 		return networkManagerClass;
 	}
 	
-	public List<Class<Advertiser>> getAdvertisers() {
-		return advertisementClasses;
+	public List<Class<Feature>> getFeatures() {
+		return featureClasses;
 	}
 	
 	public List<Class<Notifier>> getNotifiers() {
