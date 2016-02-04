@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
+import org.area515.resinprinter.printer.ComPortSettings;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.projector.ProjectorModel;
 import org.area515.resinprinter.server.HostProperties;

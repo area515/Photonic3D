@@ -2,7 +2,7 @@ package org.area515.resinprinter.serial;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
+import org.area515.resinprinter.printer.ComPortSettings;
 
 public class ConsoleCommPort implements SerialCommunicationsPort {
     private static final Logger logger = LogManager.getLogger();

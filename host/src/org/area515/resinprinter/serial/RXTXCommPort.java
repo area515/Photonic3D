@@ -13,7 +13,7 @@ import java.util.TooManyListenersException;
 
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
+import org.area515.resinprinter.printer.ComPortSettings;
 import org.area515.resinprinter.printer.Printer;
 
 public abstract class RXTXCommPort implements SerialCommunicationsPort {

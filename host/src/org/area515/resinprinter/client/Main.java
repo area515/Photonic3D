@@ -170,7 +170,7 @@ public class Main {
 		client.disconnect();
 		
 		String host = client.getHost();
-		while (System.currentTimeMillis() - start < 30000) {
+		while (System.currentTimeMillis() - start < 60000) {
 			client = new SSHClient();
 			try {
 				client.connect("pi", "raspberry", host, 22);

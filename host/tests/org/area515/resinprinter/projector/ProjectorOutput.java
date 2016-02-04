@@ -3,12 +3,15 @@ package org.area515.resinprinter.projector;
 import gnu.io.CommPortIdentifier;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.area515.resinprinter.printer.MachineConfig.ComPortSettings;
+import org.area515.resinprinter.printer.ComPortSettings;
 import org.area515.resinprinter.serial.JSSCCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
@@ -16,8 +19,21 @@ import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.test.HardwareCompatibilityTestSuite;
 
 public class ProjectorOutput {
+	public static String getCustomString(BufferedReader reader) throws IOException {
+		Pattern pattern = Pattern.compile("0[xX]([1234567890a-fA-F]{2})\\s*");
+		System.out.println("Enter custom hex string in the form \"0x00 0x00 0x00\" (then press enter):");
+		String data = reader.readLine();
+		StringBuilder builder = new StringBuilder();
+		Matcher matcher = pattern.matcher(data);
+		while (matcher.find()) {
+			builder.append(matcher.group(1));
+		}
+		return builder.toString();
+	}
+	
 	public static void main(String[] args) throws Exception {
-		BufferedReader inputStream = new BufferedReader(new InputStreamReader(System.in));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		//System.out.println(getCustomString(reader));
 		System.out.println("Projector Output Test.");
 		int index = 0;
 		List<CommPortIdentifier> ports = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
@@ -25,14 +41,14 @@ public class ProjectorOutput {
 			System.out.println(index++ + ". " + port.getName());
 		}
 		System.out.println("Type the number of the Serial Port that you would like to test (then press enter):");
-		CommPortIdentifier serialPort = (CommPortIdentifier)ports.get(Integer.parseInt(inputStream.readLine()));
+		CommPortIdentifier serialPort = (CommPortIdentifier)ports.get(Integer.parseInt(reader.readLine()));
 
 		index = 0;
 		for (long speed : HardwareCompatibilityTestSuite.COMMON_SPEEDS) {
 			System.out.println(index++ + ". " + speed);
 		}
 		System.out.println("Type the number of the speed that you would like to test (then press enter):");
-		long speed = HardwareCompatibilityTestSuite.COMMON_SPEEDS[Integer.parseInt(inputStream.readLine())];
+		long speed = HardwareCompatibilityTestSuite.COMMON_SPEEDS[Integer.parseInt(reader.readLine())];
 
 		ComPortSettings newComPortSettings = new ComPortSettings();
 		newComPortSettings.setSpeed(speed);
@@ -44,22 +60,23 @@ public class ProjectorOutput {
 		SerialCommunicationsPort port = new JSSCCommPort();
 		port.open("ProjectorOutputTest", SerialManager.TIME_OUT, newComPortSettings);
 
-		while (true) {
-			index = 0;
-			List<ProjectorModel> models = HostProperties.Instance().getAutodetectProjectors();
-			for (ProjectorModel model : models) {
-				System.out.println(index++ + ". " + model.getName());
-			}
-			System.out.println("Type the number of the projector that you would like to test (then press enter):");
-			HexCodeBasedProjector projector = (HexCodeBasedProjector)models.get(Integer.parseInt(inputStream.readLine()));
+		index = 0;
+		List<ProjectorModel> models = HostProperties.Instance().getAutodetectProjectors();
+		for (ProjectorModel model : models) {
+			System.out.println(index++ + ". " + model.getName());
+		}
+		System.out.println("Type the number of the projector that you would like to test (then press enter):");
+		HexCodeBasedProjector projector = (HexCodeBasedProjector)models.get(Integer.parseInt(reader.readLine()));
 			
+		while (true) {
 			System.out.println("0. On Hex");
 			System.out.println("1. Off Hex");
 			System.out.println("2. Detection Hex");
+			System.out.println("3. Custom (0x00 0x00...)");
 			
 			System.out.println("Type the number of the hexcode that you would like to test (then press enter):");
-			int hex = Integer.parseInt(inputStream.readLine());
-	
+			int hex = Integer.parseInt(reader.readLine());
+			
 			switch (hex) {
 			case 0:
 				System.out.println(projector.testCodeAgainstPattern(port, projector.getOnHex()));
@@ -69,6 +86,9 @@ public class ProjectorOutput {
 				break;
 			case 2:
 				System.out.println(projector.testCodeAgainstPattern(port, projector.getDetectionHex()));
+				break;
+			case 3:
+				System.out.println(projector.testCodeAgainstPattern(port, getCustomString(reader)));
 				break;
 			}
 		}
