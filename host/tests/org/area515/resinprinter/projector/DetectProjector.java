@@ -20,7 +20,7 @@ public class DetectProjector {
     private static final Logger logger = LogManager.getLogger();
 
     @Test
-	public void noErrorsInAutodetectProjectors() {
+	public void noErrorsInGetAutodetectProjectors() {
 		logger.info("Projector json parse test.");
 		HostProperties.Instance().getAutodetectProjectors();
 	}
