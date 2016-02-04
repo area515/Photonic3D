@@ -108,7 +108,15 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	public void setBulbHoursResponseRegex(String bulbHoursResponsePattern) {
 		this.bulbHoursResponsePattern = Pattern.compile(bulbHoursResponsePattern);
 	}
-	
+
+	@JsonProperty
+	public Conversion getBulbHoursConversion() {
+		return bulbHoursConversion;
+	}
+	public void setBulbHoursConversion(Conversion bulbHoursConversion) {
+		this.bulbHoursConversion = bulbHoursConversion;
+	}
+
 	public String findString(SerialCommunicationsPort port, byte[] writeHex, Pattern responsePattern) {
 		StringBuilder builder = new StringBuilder();
 		try {
