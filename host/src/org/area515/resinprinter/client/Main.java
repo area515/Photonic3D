@@ -272,7 +272,7 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		boolean askedUserToInstallCWH = false;
+		boolean installCompleted = false;
 		SubnetScanner scanner = new SubnetScanner();
 		try {
 			scanner.startSubnetScan();
@@ -328,8 +328,7 @@ public class Main {
 				//Unlikely to happen
 			}
 			
-			boolean installCompleted = false;
-			if (foundDevices.size() == 0 && !askedUserToInstallCWH) {
+			if (foundDevices.size() == 0 && !installCompleted) {
 				try {
 					List<Box> boxes = scanner.waitForDevicesWithPossibleRemoteInstallCapability();
 					if (boxes.size() > 0) {
