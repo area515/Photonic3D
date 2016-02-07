@@ -272,7 +272,8 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		boolean installCompleted = false;
+		boolean installCompletedOnThisLoopIteration = false;
+		boolean userHasbeenAskedToInstall = false;
 		SubnetScanner scanner = new SubnetScanner();
 		try {
 			scanner.startSubnetScan();
@@ -284,8 +285,11 @@ public class Main {
 		final JOptionPane searchOptionPane = new JOptionPane("Searching for all 3d printers on network...", JOptionPane.INFORMATION_MESSAGE, JOptionPane.CANCEL_OPTION, null, new String[]{"Cancel"}, "Cancel");
 
 		do {
-			final CountDownLatch waitForURLFound = new CountDownLatch(1);
+			if (installCompletedOnThisLoopIteration) {
+				installCompletedOnThisLoopIteration = false;
+			}
 			
+			final CountDownLatch waitForURLFound = new CountDownLatch(1);
 			Thread searchThread = new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -328,7 +332,8 @@ public class Main {
 				//Unlikely to happen
 			}
 			
-			if (foundDevices.size() == 0 && !installCompleted) {
+			if (foundDevices.size() == 0 && !userHasbeenAskedToInstall) {
+				userHasbeenAskedToInstall = true;
 				try {
 					List<Box> boxes = scanner.waitForDevicesWithPossibleRemoteInstallCapability();
 					if (boxes.size() > 0) {
@@ -348,6 +353,7 @@ public class Main {
 									if (!performInstall(box, "pi", "raspberry")) {
 										System.exit(-1);
 									}
+									installCompletedOnThisLoopIteration = true;
 								} else {
 									JOptionPane.showConfirmDialog(null, "Installation on this device is not yet supported");
 								}
@@ -357,13 +363,12 @@ public class Main {
 								System.exit(-2);
 							}
 						}
-						installCompleted = true;
 					}
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 				
-				if (!installCompleted) {
+				if (!installCompletedOnThisLoopIteration) {
 					System.out.println("3d printer not found after waiting:" + maxLengthToWaitForAll);
 					JOptionPane optionPane = new JOptionPane();
 					optionPane.setMessage("Couldn't find your printer on this network.\n"
