@@ -46,7 +46,8 @@ public class StandaloneImageRenderer implements Callable<StandaloneImageData> {
 		int type = image.getType();
 		if (type != BufferedImage.TYPE_3BYTE_BGR
 				&& type != BufferedImage.TYPE_4BYTE_ABGR
-				&& type != BufferedImage.TYPE_4BYTE_ABGR_PRE) {
+				&& type != BufferedImage.TYPE_4BYTE_ABGR_PRE
+				&& type != BufferedImage.TYPE_BYTE_GRAY) {
 			// BufferedImage is not any of the types that are currently supported.
 			throw(new JobManagerException(
 					"Slice image is not in a 3 or 4 byte BGR/ABGR format."
@@ -70,6 +71,11 @@ public class StandaloneImageRenderer implements Callable<StandaloneImageData> {
 			pixLen = 4;
 		}
 		
+		// except for TYPE_BYTE_GRAY, where the pixel is just one byte
+		if (type == BufferedImage.TYPE_BYTE_GRAY) {
+			pixLen = 1;
+		}
+		
 		// Iterate linearly across the pixels, summing up cases where the color
 		// is not black (e.g. any color channel nonzero)
 		for (int i = 0; i<pixels.length; i+=pixLen) {
@@ -79,6 +85,10 @@ public class StandaloneImageRenderer implements Callable<StandaloneImageData> {
 				}
 			} else if (pixLen == 4) {
 				if (pixels[i+1] != 0 || pixels[i+2] != 0 || pixels[i+3] != 0) {
+					area++;
+				}
+			} else if (pixLen == 1) {
+				if (pixels[i] != 0) {
 					area++;
 				}
 			}
