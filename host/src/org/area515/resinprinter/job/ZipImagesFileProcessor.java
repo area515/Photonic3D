@@ -19,6 +19,8 @@ import org.area515.resinprinter.job.render.StandaloneImageRenderer;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.server.Main;
 
+import se.sawano.java.text.AlphanumericComparator;
+
 public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 	private static final Logger logger = LogManager.getLogger();
 
@@ -135,7 +137,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 				FileUtils.listFiles(buildExtractionDirectory(jobFile.getName()),
 				extensions, recursive);
 
-		TreeMap<String, File> images = new TreeMap<>();
+		TreeMap<String, File> images = new TreeMap<>(new AlphanumericComparator());
 
 		for (File file : files) {
 			images.put(file.getName(), file);
