@@ -95,6 +95,10 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	
 	@JsonProperty
 	public String getBulbHoursHex() {
+		if (bulbHoursHex == null) {
+			return null;
+		}
+		
 		return DatatypeConverter.printHexBinary(bulbHoursHex);
 	}
 	public void setBulbHoursHex(String bulbHoursHex) {
@@ -103,6 +107,10 @@ public class HexCodeBasedProjector implements ProjectorModel {
 
 	@JsonProperty
 	public String geBulbHoursResponseRegex() {
+		if (bulbHoursResponsePattern == null) {
+			return null;
+		}
+		
 		return bulbHoursResponsePattern.pattern();
 	}
 	public void setBulbHoursResponseRegex(String bulbHoursResponsePattern) {

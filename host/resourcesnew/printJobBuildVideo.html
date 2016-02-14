@@ -14,14 +14,20 @@
 						<i class="fa fa-stop"></i> 
 						<span>Stop</span>
 					</a>
+					<a class="btn btn-success" ng-show="printJobsController.currentPrintJob.printInProgress" ng-click="printJobsController.startLiveStream()">
+						<span class="fa fa-video-camera"></span> 
+						<span class="fa fa-wifi fa-rotate-90"></span> 
+						<span>Live</span>
+					</a>
 				</span>
 			</div>
 	</div>
 	<div class="panel-body"><!--  width="275" height="206" -->
-		<video class="vcenter" class="img-responsive" controls>
+		<video class="vcenter" class="img-responsive" controls ng-show="printJobsController.currentBuildLiveStream.url == null">
 			<source src="video/camera.mp4" ng-src="{{printJobsController.currentBuildVideo.url}}" class="img-responsive" type="video/mp4">
 			Your browser does not support the video tag.
 		</video>
+		<img ng-src="{{printJobsController.currentBuildLiveStream.url}}" ng-show="printJobsController.currentBuildLiveStream.url != null">
 	</div>
 	<div class="panel-footer">
 		<span ng-include="'cardFooter.html'"></span>
