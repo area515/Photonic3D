@@ -1,6 +1,7 @@
 package org.area515.resinprinter.services;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,6 +10,13 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -18,12 +26,15 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.server.Main;
+import org.area515.util.Log4jTimer;
 
 import com.coremedia.iso.boxes.Container;
 import com.google.common.io.ByteStreams;
@@ -35,20 +46,184 @@ import com.googlecode.mp4parser.authoring.tracks.H264TrackImpl;
 @Path("media")
 public class MediaService {
     private static final Logger logger = LogManager.getLogger();
+	private static final String boundaryDelimiter = "--EndOfJPEG";
 	public static MediaService INSTANCE = new MediaService();
-
+	
+	//TODO: We need to Lock per Printer, not a global lock!
+	private Lock processLock = new ReentrantLock();
+	
 	//All static for now, just to get this done...
 	private File rawh264StreamFile = new File(System.getProperty("java.io.tmpdir"), "tempraw.h246");
 	private File mp4StreamFile = new File(System.getProperty("java.io.tmpdir"), "temp.mp4");
 	private Process rawH264ProducerProcess;
 	
-	//TODO: We need to Lock per Printer, not a global lock!
-	private Lock processLock = new ReentrantLock();
+	//These are for live streaming only
+	private Map<String, ClientStream> mjpegStreamerClients = new HashMap<String, ClientStream>();
+	private Lock liveStreamerModificationLock = new ReentrantLock(true);
+	private Future<byte[]> nextLiveStreamImage;
+	private ExecutorService liveStreamingThrottlingService;
 	
-	private MediaService(){}
-
+	private MediaService() {
+		if (HostProperties.Instance().getLimitLiveStreamToOneCPU()) {
+			liveStreamingThrottlingService = Executors.newSingleThreadScheduledExecutor();
+		} else {
+			liveStreamingThrottlingService = Executors.newWorkStealingPool();
+		}
+	}
+	
 	public File getRecordedFile() {
 		return mp4StreamFile;
+	}
+	
+	public class SourceImageReader implements Callable<byte[]> {
+		private int x;
+		private int y;
+		private int timeBetweenFrames;
+		private boolean firstIteration;
+		
+		public SourceImageReader(int x, int y, int timeBetweenFrames, boolean firstIteration) {
+			this.x = x;
+			this.y = y;
+			this.timeBetweenFrames = timeBetweenFrames;
+			this.firstIteration = firstIteration;
+		}
+
+		@Override
+		public byte[] call() throws Exception {
+			try {
+				ImageSnapshotCapture taker = new ImageSnapshotCapture(x, y);
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				taker.write(stream);
+				return stream.toByteArray();
+			} finally {
+				liveStreamerModificationLock.lock();//TODO: Can we can eliminate this critical section?
+				try {
+					if (mjpegStreamerClients.size() > 0) {
+						nextLiveStreamImage = Main.GLOBAL_EXECUTOR.submit(new SourceImageReader(x, y, timeBetweenFrames, false));
+					}
+				} finally {
+					liveStreamerModificationLock.unlock();
+				}
+				if (!firstIteration) {
+					Thread.sleep(timeBetweenFrames);
+				}
+			}
+		}
+	}
+	
+	public class ImageSnapshotCapture implements StreamingOutput {
+		private int x;
+		private int y;
+		
+		public ImageSnapshotCapture(int x, int y) {
+			this.x = x;
+			this.y = y;
+		}
+		
+		@Override
+		public void write(OutputStream output) throws IOException, WebApplicationException {
+			logger.debug("Image snapshot start", ()->Log4jTimer.startTimer("PictureTimer"));
+			String[] streamingCommand = HostProperties.Instance().getImagingCommand();
+			String[] replacedCommands = new String[streamingCommand.length];
+			for (int t = 0; t < streamingCommand.length; t++) {
+				replacedCommands[t] = MessageFormat.format(streamingCommand[t], x, y);
+			}
+			
+			InputStream inputStream = null;
+			processLock.lock();
+			try {
+				Process imagingProcess = Runtime.getRuntime().exec(replacedCommands);
+				ByteStreams.copy(imagingProcess.getInputStream(), output);
+				logger.debug("Image snapshot complete @{}", ()-> Log4jTimer.completeTimer("PictureTimer"));
+			} finally {
+				if (inputStream != null) {
+					try {
+						inputStream.close();
+					} catch (IOException e) {
+					}
+				}
+				if (output != null) {
+					try {
+						output.close();
+					} catch (IOException e) {
+					}
+				}
+				processLock.unlock();
+			}
+		}
+	}
+	
+	private enum CloseType {
+		Normal,
+		DontRemoveClient
+	}
+
+	public class ClientStream implements StreamingOutput {
+		private String clientId;
+		private CloseType closeNow;
+		
+		public ClientStream(String clientId) {
+			this.clientId = clientId;
+		}
+		
+		@Override
+		public void write(OutputStream outputStream) throws IOException, WebApplicationException {
+			while (true) {//Stream forever until they tell us to quit.
+				try {
+					logger.debug("Client asking to stream", ()->Log4jTimer.startTimer("ClientStreamTimer"));
+					
+					byte[] imageData = nextLiveStreamImage.get();
+					Future<Object> run = liveStreamingThrottlingService.submit(new Callable<Object>() {
+						public Object call() throws IOException {
+						    outputStream.write((
+						    		boundaryDelimiter + "\r\n" +
+						            "Content-type: image/jpg\r\n" +
+						            "Content-Length: " + imageData.length + "\r\n\r\n").getBytes());
+					        outputStream.write(imageData);
+					        outputStream.write("\r\n\r\n".getBytes());
+					        outputStream.flush();
+							return null;
+						}
+					});
+					logger.debug("Client waiting to stream image {}ms", ()->Log4jTimer.splitTimer("ClientStreamTimer"));
+					run.get();//It may seem strange to setup a future and then run get, but this limits the concurrency level in the event we have a crazy amount of clients
+					logger.debug("Client streamed image {}ms", ()-> Log4jTimer.completeTimer("ClientStreamTimer"));
+					
+					//We've been asked to close nicely from the browser instead of the user just closing the page.
+					if (closeNow != null) {
+						outputStream.close();
+					}
+				} catch (InterruptedException | ExecutionException e) {
+					logger.debug("Client destroyed");
+					
+					if (closeNow == CloseType.Normal) {
+						liveStreamerModificationLock.lock();
+						try {
+							mjpegStreamerClients.remove(clientId);
+						} finally {
+							liveStreamerModificationLock.unlock();
+						}
+					}
+					if (e instanceof InterruptedException) {
+						e.printStackTrace();
+						break;
+					}
+					if (e.getCause().getCause() instanceof IOException) {
+						throw (IOException)e.getCause().getCause();
+					}
+					
+					logger.error("Unknown error while streaming", e);
+				}
+			}
+		}
+		public void closeWithoutRemovingClient() {
+			closeNow = CloseType.DontRemoveClient;
+		}
+		public void close() {
+			if (closeNow != null) {
+				closeNow = CloseType.Normal;
+			}
+		}
 	}
 	
 	public class StreamCopier implements Runnable {
@@ -199,39 +374,52 @@ public class MediaService {
 	
 	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
 	@GET
+	@Path("startlivemjpegstream/{printerName}/clientid/{clientId}/x/{x}/y/{y}")
+	@Produces("multipart/x-mixed-replace; boundary=" + boundaryDelimiter)
+	public Response startLiveStream(@PathParam("printerName") String printerName, @PathParam("clientId") String clientId, @PathParam("x") int x, @PathParam("y") int y) {
+		ClientStream stream = null;
+		liveStreamerModificationLock.lock();
+		try {
+			stream = mjpegStreamerClients.get(clientId);
+			if (stream != null) {
+				stream.closeWithoutRemovingClient();//We don't want to remove the client because it will happen after this critical section and it will actually remove us and not the "old" one!!
+			}
+			stream = new ClientStream(clientId);
+			
+			if (mjpegStreamerClients.size() == 0) {
+				nextLiveStreamImage = Main.GLOBAL_EXECUTOR.submit(new SourceImageReader(x, y, 1000, true));
+			}
+			mjpegStreamerClients.put(clientId, stream);
+		} finally {
+			liveStreamerModificationLock.unlock();
+		}
+		
+		return Response.ok().entity(stream).build();
+	}
+	
+	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
+	@GET
+	@Path("stoplivemjpegstream/{printerName}/clientid/{clientId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MachineResponse stopLiveStream(@PathParam("clientId") String clientId) {
+		liveStreamerModificationLock.lock();
+		try {
+			ClientStream stream = mjpegStreamerClients.remove(clientId);
+			if (stream != null) {
+				stream.close();
+			}
+		} finally {
+			liveStreamerModificationLock.unlock();
+		}
+		
+		return new MachineResponse("stoplivemjpegstream", true, "Live stream stopped");
+	}
+
+	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
+	@GET
 	@Path("takesnapshot/{printerName}/x/{x}/y/{y}")
-    @Produces("image/png")
+    @Produces("image/jpg")
 	public StreamingOutput takePicture(@PathParam("printerName") String printerName, @PathParam("x") final int x, @PathParam("y") final int y) {
-	    return new StreamingOutput() {
-			@Override
-			public void write(OutputStream output) throws IOException, WebApplicationException {
-				String[] streamingCommand = HostProperties.Instance().getImagingCommand();
-				String[] replacedCommands = new String[streamingCommand.length];
-				for (int t = 0; t < streamingCommand.length; t++) {
-					replacedCommands[t] = MessageFormat.format(streamingCommand[t], x, y);
-				}
-				
-				InputStream inputStream = null;
-				processLock.lock();
-				try {
-					Process imagingProcess = Runtime.getRuntime().exec(replacedCommands);
-					ByteStreams.copy(imagingProcess.getInputStream(), output);
-				} finally {
-					if (inputStream != null) {
-						try {
-							inputStream.close();
-						} catch (IOException e) {
-						}
-					}
-					if (output != null) {
-						try {
-							output.close();
-						} catch (IOException e) {
-						}
-					}
-					processLock.unlock();
-				}
-			}  
-	    };
+	    return new ImageSnapshotCapture(x, y);
 	}
 }

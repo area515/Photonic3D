@@ -73,6 +73,7 @@ public class HostProperties {
 	private boolean fakeSerial = false;
 	private boolean fakedisplay = false;
 	private boolean removeJobOnCompletion = true;
+	private boolean limitLiveStreamToOneCPU = false;
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
 	private List<Class<Feature>> featureClasses = new ArrayList<Class<Feature>>();
 	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
@@ -223,6 +224,7 @@ public class HostProperties {
 		clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
 		forwardHeader = configurationProperties.getProperty("forwardHeader", null);
 		removeJobOnCompletion = new Boolean(configurationProperties.getProperty("removeJobOnCompletion", "true"));
+		limitLiveStreamToOneCPU = new Boolean(configurationProperties.getProperty("limitLiveStreamToOneCPU", "false"));
 		scriptEngineLanguage = configurationProperties.getProperty("scriptEngineLanguage", "js");
 		
 		streamingCommand = getJSonStringArray(configurationProperties, "streamingCommand");
@@ -454,6 +456,10 @@ public class HostProperties {
 	
 	public String[] getImagingCommand() {
 		return imagingCommand;
+	}
+	
+	public boolean getLimitLiveStreamToOneCPU() {
+		return limitLiveStreamToOneCPU;
 	}
 
 	public List<String> getVisibleCards() {
