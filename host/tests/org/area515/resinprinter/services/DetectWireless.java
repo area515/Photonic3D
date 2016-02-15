@@ -13,7 +13,7 @@ public class DetectWireless {
 		logger.info("Network detection test");
 	
 		for (WirelessNetwork wireless : MachineService.INSTANCE.getWirelessNetworks()) {
-			logger.info(" {}:{}" +  wireless.getParentInterfaceName(), wireless.getSsid());
+			logger.info(" {}:{}", wireless.getParentInterfaceName(), wireless.getSsid());
 		}
 	}
 }
