@@ -95,6 +95,9 @@ public class MediaService {
 				ByteArrayOutputStream stream = new ByteArrayOutputStream();
 				taker.write(stream);
 				return stream.toByteArray();
+			} catch (IOException e) {
+				logger.error("Problem occurred while taking snapshot (recovering)", e);
+				throw e;
 			} finally {
 				liveStreamerModificationLock.lock();//TODO: Can we can eliminate this critical section?
 				try {
@@ -134,7 +137,7 @@ public class MediaService {
 			try {
 				Process imagingProcess = Runtime.getRuntime().exec(replacedCommands);
 				ByteStreams.copy(imagingProcess.getInputStream(), output);
-				logger.debug("Image snapshot complete @{}", ()-> Log4jTimer.completeTimer("PictureTimer"));
+				logger.debug("Image snapshot complete {}ms", ()-> Log4jTimer.completeTimer("PictureTimer"));
 			} finally {
 				if (inputStream != null) {
 					try {
@@ -220,7 +223,7 @@ public class MediaService {
 			closeNow = CloseType.DontRemoveClient;
 		}
 		public void close() {
-			if (closeNow != null) {
+			if (closeNow == null) {
 				closeNow = CloseType.Normal;
 			}
 		}
