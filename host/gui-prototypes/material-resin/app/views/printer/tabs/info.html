@@ -13,7 +13,7 @@
                 Status: {{item.status === null ? 'Unknown' : item.status}}
               </p>
             </div>
-            <md-divider inset=""></md-divider>
+            <md-divider inset="" ng-if="!$last"></md-divider>
           </md-list-item>
 
           <!-- <md-list-item class="md-2-line">
