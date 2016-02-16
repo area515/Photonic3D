@@ -1,15 +1,20 @@
 package org.area515.resinprinter.projector;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.printer.ComPortSettings;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
+import org.area515.resinprinter.server.HostProperties;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,16 +28,92 @@ public class HexCodeBasedProjector implements ProjectorModel {
 		LittleEndian
 	}
 	
+	public static class HexCommand {
+		private String script;
+		private byte[] hex;
+		
+		public HexCommand(String script) {
+			this.script = script;
+		}
+		
+		public HexCommand(byte[] hex) {
+			this.hex = hex;
+		}
+		
+		public byte[] buildHex() {
+			if (hex != null) {
+				return hex;
+			}
+			
+			ScriptEngine engine = HostProperties.Instance().buildScriptEngine();
+			try {
+				Object value = engine.eval(script);
+				if (value == null) {
+					return null;
+				}
+				if (value instanceof byte[]) {
+					return (byte[])value;
+				}
+				return value.toString().getBytes();
+			} catch (ScriptException e) {
+				logger.error("Script Error", e);
+				return null;
+			}
+		}
+		
+		public String toString() {
+			return script != null?script:DatatypeConverter.printHexBinary(hex);
+		}
+		
+		public static List<HexCommand> parseHexCommands(String commandString) {
+			List<HexCommand> commands = new ArrayList<HexCommand>();
+			Pattern hexAndScript = Pattern.compile("([0-9a-fA-F]+)?(s*\\(.*\\)\\s*\\(\\s*\\))?");
+			Matcher matcher = hexAndScript.matcher(commandString);
+			while (matcher.find()) {
+				if (matcher.group(1) != null) {
+					commands.add(new HexCommand(DatatypeConverter.parseHexBinary(matcher.group(1))));
+				}
+				if (matcher.group(2) != null) {
+					commands.add(new HexCommand(matcher.group(2)));
+				}
+			}
+			
+			if (matcher.end() != commandString.length()) {
+				logger.error("Partial command ignored:{} in full commandString:{}", commandString.substring(matcher.end()), commandString);
+			}
+			
+			return commands;
+		}
+		
+		public static String formatHexCommands(List<HexCommand> commands) {
+			if (commands == null || commands.isEmpty()) {
+				return null;
+			}
+			
+			StringBuilder builder = new StringBuilder();
+			for (HexCommand command : commands) {
+				if (command.hex != null) {
+					builder.append(DatatypeConverter.printHexBinary(command.hex));
+				}
+				if (command.script != null) {
+					builder.append(command.script);
+				}
+			}
+			
+			return builder.toString();
+		}
+	}
+	
 	@JsonIgnore
 	private byte[] onHex;
 	@JsonIgnore
 	private byte[] offHex;
 	@JsonIgnore
-	private byte[] detectionHex;
+	private List<HexCommand> detectionHex;
 	@JsonIgnore
 	private Pattern detectionResponsePattern;
 	@JsonIgnore
-	private byte[] bulbHoursHex;
+	private List<HexCommand> bulbHoursHex;
 	@JsonIgnore
 	private Pattern bulbHoursResponsePattern;
 	@JsonIgnore
@@ -71,10 +152,10 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	
 	@JsonProperty
 	public String getDetectionHex() {
-		return DatatypeConverter.printHexBinary(detectionHex);
+		return HexCommand.formatHexCommands(detectionHex);
 	}
 	public void setDetectionHex(String detectionHex) {
-		this.detectionHex = DatatypeConverter.parseHexBinary(detectionHex);
+		this.detectionHex = HexCommand.parseHexCommands(detectionHex);
 	}
 
 	@JsonProperty
@@ -99,10 +180,10 @@ public class HexCodeBasedProjector implements ProjectorModel {
 			return null;
 		}
 		
-		return DatatypeConverter.printHexBinary(bulbHoursHex);
+		return HexCommand.formatHexCommands(bulbHoursHex);
 	}
 	public void setBulbHoursHex(String bulbHoursHex) {
-		this.bulbHoursHex = DatatypeConverter.parseHexBinary(bulbHoursHex);
+		this.bulbHoursHex = HexCommand.parseHexCommands(bulbHoursHex);
 	}
 
 	@JsonProperty
@@ -125,10 +206,16 @@ public class HexCodeBasedProjector implements ProjectorModel {
 		this.bulbHoursConversion = bulbHoursConversion;
 	}
 
-	public String findString(SerialCommunicationsPort port, byte[] writeHex, Pattern responsePattern) {
+	public String findString(SerialCommunicationsPort port, List<HexCommand> writeHex, Pattern responsePattern) {
 		StringBuilder builder = new StringBuilder();
 		try {
-			port.write(writeHex);
+			for (HexCommand command : writeHex) {
+				byte[] data = command.buildHex();
+				if (data != null) {
+					port.write(data);
+				}
+			}
+			
 			long start = System.currentTimeMillis();
 			while (true) {
 				byte[] response = port.read();
