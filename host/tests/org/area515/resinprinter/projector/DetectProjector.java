@@ -4,9 +4,12 @@ import gnu.io.CommPortIdentifier;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.printer.ComPortSettings;
 import org.area515.resinprinter.serial.JSSCCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
@@ -15,16 +18,23 @@ import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.test.HardwareCompatibilityTestSuite;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class DetectProjector {
     private static final Logger logger = LogManager.getLogger();
 
     @Test
-	public void noErrorsInGetAutodetectProjectors() {
-		logger.info("Projector json parse test.");
-		HostProperties.Instance().getAutodetectProjectors();
-	}
-	
+	public void noJSONErrorsAndJavaScriptAutodetectProjectors() {
+    	SerialCommunicationsPort port = Mockito.mock(SerialCommunicationsPort.class, Mockito.RETURNS_MOCKS);
+    	
+		logger.info("Projector json parse and javascript eval test.");
+		List<ProjectorModel> models = HostProperties.Instance().getAutodetectProjectors();
+    	for (ProjectorModel model : models) {
+    		HexCodeBasedProjector projector = (HexCodeBasedProjector)model;
+    		projector.autodetect(port);
+    	}
+    }
+    
 	@Test
 	public void noErrorsDetectingProjector() {
 		logger.info("Projector detection test.");
