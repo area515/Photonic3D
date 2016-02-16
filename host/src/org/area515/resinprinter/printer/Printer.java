@@ -300,7 +300,7 @@ public class Printer {
 		
 		projectorModel.setPowerState(powerOn, projectorSerialPort);
 	}
-	
+
 	public PrinterConfiguration getConfiguration() {
 		return configuration;
 	}
