@@ -25,7 +25,8 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	
 	public static enum Conversion {
 		BigEndian,
-		LittleEndian
+		LittleEndian,
+		ASCII
 	}
 	
 	public static class HexCommand {
@@ -305,6 +306,8 @@ public class HexCodeBasedProjector implements ProjectorModel {
 				hours += bytes[power] << (8*power);
 			}
 			return hours;
+		case ASCII :
+			return Integer.parseInt(bulbResponse);
 		}
 	}
 }

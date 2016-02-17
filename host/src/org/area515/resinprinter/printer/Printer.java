@@ -43,6 +43,7 @@ public class Printer {
 	private BufferedImage displayImage;
 	private boolean started;
 	private boolean shutterOpen;
+	private Integer bulbHours;
 	private String displayDeviceID;
 	private long currentSlicePauseTime;
 	private int sliceNumber;
@@ -288,6 +289,12 @@ public class Printer {
 	public void setProjectorModel(ProjectorModel projectorModel) {
 		this.projectorModel = projectorModel;
 	}
+	@JsonIgnore
+	@XmlTransient
+	
+	public ProjectorModel getProjectorModel() {
+		return projectorModel;
+	}
 	
 	public void setProjectorPowerStatus(boolean powerOn) throws IOException {
 		if (projectorModel == null) {
@@ -315,6 +322,20 @@ public class Printer {
 		this.shutterOpen = shutterOpen;
 	}
 
+	public Integer getBulbHours() {
+		if (bulbHours == null) {
+			try {
+				bulbHours = projectorModel.getBulbHours(projectorSerialPort);
+			} catch (IOException e) {
+				logger.error("Failed communicating with projector for bulb hours", e);
+			}
+		}
+		
+		return bulbHours;
+	}
+	public void setBulbHours(Integer bulbHours) {
+		this.bulbHours = bulbHours;
+	}
 	public long getCurrentSlicePauseTime() {
 		return currentSlicePauseTime;
 	}
@@ -364,6 +385,7 @@ public class Printer {
 		if (refreshFrame != null) {
 			refreshFrame.dispose();
 		}
+		bulbHours = null;
 		started = false;
 	}
 
