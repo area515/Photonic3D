@@ -42,6 +42,7 @@ public class TemplateEngine {
 		String[] replacements = new String[] {
 				"CURSLICE", 
 				"LayerThickness", 
+				"bulbHours", 
 				"shutterOpen", 
 				"ZDir", 
 				"ZLiftRate", 
@@ -87,6 +88,7 @@ public class TemplateEngine {
 
 		root.put("now", new Date());
 		root.put("shutterOpen", printer.isShutterOpen());
+		root.put("bulbHours", printer.getBulbHours());
 		root.put("CURSLICE", job.getCurrentSlice());
 		root.put("LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
 		root.put("ZDir", printer.getConfiguration().getSlicingProfile().getDirection().getVector());
@@ -117,9 +119,16 @@ public class TemplateEngine {
         } catch (TemplateException e) {
         	//This means that buildAreaMM isn't supported for this printer
         	if (e.getBlamedExpressionString().equals("buildAreaMM") && e.getMessage().contains("The following has evaluated to null or missing")) {
+        		logger.error("buildAreaMM was used in a template:" + templateString + ", but isn't supported by this print processor.");
         		return null;
         	}
 
+        	//This means that bulbHours isn't supported for this printer
+        	if (e.getBlamedExpressionString().equals("bulbHours") && e.getMessage().contains("The following has evaluated to null or missing")) {
+        		logger.error("bulbHours was used in a template:" + templateString + ", but isn't supported by this projector model:" + printer.getProjectorModel());
+        		return null;
+        	}
+        	
         	throw e;
         }
 	}
@@ -127,6 +136,8 @@ public class TemplateEngine {
 	public static Object runScript(PrintJob job, Printer printer, ScriptEngine engine, String script, String scriptName, Map<String, Object> overrides) throws ScriptException {
 		engine.put("now", new Date());
 		engine.put("$shutterOpen", printer.isShutterOpen());
+		Integer bulbHours = printer.getBulbHours();
+		engine.put("$bulbHours", bulbHours == null || bulbHours < 0?Double.NaN:new Double(bulbHours));
 		engine.put("$CURSLICE", job.getCurrentSlice());
 		engine.put("$LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
 		engine.put("$ZDir", printer.getConfiguration().getSlicingProfile().getDirection().getVector());
