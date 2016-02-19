@@ -33,7 +33,10 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 		if (settings.getStopbits() == null) {
 			throw new InappropriateDeviceException("Stopbits havn't been configured for this device(" + settings.getPortName() + ").");
 		}
-		if (settings.getSpeed() == 0) {
+		if (settings.getDatabits() == null) {
+			throw new InappropriateDeviceException("Databits havn't been configured for this device(" + settings.getPortName() + ").");
+		}
+		if (settings.getSpeed() == null || settings.getSpeed() == 0) {
 			throw new InappropriateDeviceException("Speed hasn't been configured for this device(" + settings.getPortName() + ").");
 		}
 		
@@ -60,7 +63,7 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 		}
 		try {
 			port.openPort();
-			port.setParams((int)settings.getSpeed(), settings.getDatabits(), stopBits, parity);
+			port.setParams(settings.getSpeed().intValue(), settings.getDatabits(), stopBits, parity);
 			if (!port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXCLEAR)) {
 				throw new InappropriateDeviceException("Comm port couldn't be purged:" + settings.getPortName());
 			}
