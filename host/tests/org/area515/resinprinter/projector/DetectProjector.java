@@ -29,6 +29,7 @@ public class DetectProjector {
     	
 		logger.info("Projector json parse and javascript eval test.");
 		List<ProjectorModel> models = HostProperties.Instance().getAutodetectProjectors();
+		Assert.assertTrue("There must be at least 1 projector found!", models.size() > 0);
     	for (ProjectorModel model : models) {
     		HexCodeBasedProjector projector = (HexCodeBasedProjector)model;
     		projector.autodetect(port);
@@ -40,32 +41,24 @@ public class DetectProjector {
 		logger.info("Projector detection test.");
 
 		boolean hasFound = false;
-		for (long speed : HardwareCompatibilityTestSuite.COMMON_SPEEDS ) {
-			ComPortSettings newComPortSettings = new ComPortSettings();
-			newComPortSettings.setSpeed(speed);
-			newComPortSettings.setDatabits(8);
-			newComPortSettings.setParity("NONE");
-			newComPortSettings.setStopbits("1");
+		ComPortSettings newComPortSettings = new ComPortSettings();
+		ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
+		for (CommPortIdentifier currentIdentifier : identifiers) {
+			newComPortSettings.setPortName(currentIdentifier.getName());
 			
-			ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
-			for (CommPortIdentifier currentIdentifier : identifiers) {
-				newComPortSettings.setPortName(currentIdentifier.getName());
-				
-				logger.info("Port:{} Baud:{}", currentIdentifier.getName(), speed);
-				
-				SerialCommunicationsPort port = new JSSCCommPort();
-				ProjectorModel model = SerialManager.Instance().getProjectorModel(port, newComPortSettings);
-				if (model != null) {
-					hasFound = true;
-				}
-				logger.info("  JSSCCommPort projector detection:{}", model);
-				
-				/*port = new RXTXEventBasedCommPort();
-				logger.info("  RXTXEventBasedCommPort projector detection:{}", SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
-				
-				port = new RXTXSynchronousReadBasedCommPort();
-				logger.info("  RXTXSynchronousReadBasedCommPort projector detection:{}", SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));*/
+			logger.info("Attempting detection on port:{}", currentIdentifier.getName());
+			SerialCommunicationsPort port = new JSSCCommPort();
+			ProjectorModel model = SerialManager.Instance().getProjectorModel(port, newComPortSettings);
+			if (model != null) {
+				hasFound = true;
 			}
+			logger.info("  JSSCCommPort projector detection:{}", model);
+			
+			/*port = new RXTXEventBasedCommPort();
+			logger.info("  RXTXEventBasedCommPort projector detection:{}", SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
+			
+			port = new RXTXSynchronousReadBasedCommPort();
+			logger.info("  RXTXSynchronousReadBasedCommPort projector detection:{}", SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));*/
 		}
 		Assert.assertTrue(hasFound);
 	}

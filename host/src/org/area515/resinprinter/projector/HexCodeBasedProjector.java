@@ -188,7 +188,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	}
 
 	@JsonProperty
-	public String geBulbHoursResponseRegex() {
+	public String getBulbHoursResponseRegex() {
 		if (bulbHoursResponsePattern == null) {
 			return null;
 		}
@@ -244,7 +244,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 		return findString(port, detectionHex, detectionResponsePattern) != null;
 	}
 	
-	public String testCodeAgainstPattern(SerialCommunicationsPort port, String hexCode) throws IOException {
+	public String testCodeAgainstPattern(SerialCommunicationsPort port, String hexCode, Pattern pattern) throws IOException {
 		logger.info("Writing:{}", hexCode);
 		port.write(DatatypeConverter.parseHexBinary(hexCode));
 		long start = System.currentTimeMillis();
@@ -254,13 +254,13 @@ public class HexCodeBasedProjector implements ProjectorModel {
 			if (response != null) {
 				builder.append(new String(response));
 				
-				if (detectionResponsePattern.matcher(builder.toString()).matches()) {
-					return "Match:(" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + ") against: " + detectionResponsePattern.pattern();
+				if (pattern != null && pattern.matcher(builder.toString()).matches()) {
+					return "Match:(" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + ") against: " + pattern.pattern();
 				}
 			}
 			
 			if (System.currentTimeMillis() - start >= PROJECTOR_TIMEOUT) {
-				return "No Match:(" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + ") against: " + detectionResponsePattern.pattern();
+				return "No Match:(" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + ") against: " + pattern != null?pattern.pattern():null;
 			}
 		}
 	}

@@ -7,9 +7,9 @@ public class ComPortSettings {
 	@XmlElement(name="PortName")
 	private String portName;
 	@XmlElement(name="Speed")
-	private long speed;		
+	private Long speed;		
 	@XmlElement(name="Databits")
-	private int databits;
+	private Integer databits;
 	@XmlElement(name="Parity")
 	private String parity;
 	@XmlElement(name="Stopbits")
@@ -21,6 +21,10 @@ public class ComPortSettings {
 	}
 	
 	public ComPortSettings(ComPortSettings settings) {
+		if (settings == null) {
+			return;
+		}
+		
 		this.portName = settings.portName;
 		this.speed = settings.speed;
 		this.databits = settings.databits;
@@ -38,18 +42,18 @@ public class ComPortSettings {
 	}
 	
 	@XmlTransient
-	public long getSpeed() {
+	public Long getSpeed() {
 		return speed;
 	}
-	public void setSpeed(long speed) {
+	public void setSpeed(Long speed) {
 		this.speed = speed;
 	}
 	
 	@XmlTransient
-	public int getDatabits() {
+	public Integer getDatabits() {
 		return databits;
 	}
-	public void setDatabits(int databits) {
+	public void setDatabits(Integer databits) {
 		this.databits = databits;
 	}
 	

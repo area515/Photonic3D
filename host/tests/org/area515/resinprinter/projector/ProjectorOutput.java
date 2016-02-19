@@ -50,16 +50,6 @@ public class ProjectorOutput {
 		System.out.println("Type the number of the speed that you would like to test (then press enter):");
 		long speed = HardwareCompatibilityTestSuite.COMMON_SPEEDS[Integer.parseInt(reader.readLine())];
 
-		ComPortSettings newComPortSettings = new ComPortSettings();
-		newComPortSettings.setSpeed(speed);
-		newComPortSettings.setDatabits(8);
-		newComPortSettings.setParity("NONE");
-		newComPortSettings.setStopbits("1");
-		newComPortSettings.setPortName(serialPort.getName());
-
-		SerialCommunicationsPort port = new JSSCCommPort();
-		port.open("ProjectorOutputTest", SerialManager.TIME_OUT, newComPortSettings);
-
 		index = 0;
 		List<ProjectorModel> models = HostProperties.Instance().getAutodetectProjectors();
 		for (ProjectorModel model : models) {
@@ -67,28 +57,35 @@ public class ProjectorOutput {
 		}
 		System.out.println("Type the number of the projector that you would like to test (then press enter):");
 		HexCodeBasedProjector projector = (HexCodeBasedProjector)models.get(Integer.parseInt(reader.readLine()));
-			
+		
+		SerialCommunicationsPort port = new JSSCCommPort();
+		port.open("ProjectorOutputTest", SerialManager.TIME_OUT, projector.getComPortSettings());
+
 		while (true) {
 			System.out.println("0. On Hex");
 			System.out.println("1. Off Hex");
 			System.out.println("2. Detection Hex");
-			System.out.println("3. Custom (0x00 0x00...)");
+			System.out.println("3. Bulb hours Hex");
+			System.out.println("4. Custom (0x00 0x00...)");
 			
 			System.out.println("Type the number of the hexcode that you would like to test (then press enter):");
 			int hex = Integer.parseInt(reader.readLine());
 			
 			switch (hex) {
 			case 0:
-				System.out.println(projector.testCodeAgainstPattern(port, projector.getOnHex()));
+				System.out.println(projector.testCodeAgainstPattern(port, projector.getOnHex(), null));
 				break;
 			case 1:
-				System.out.println(projector.testCodeAgainstPattern(port, projector.getOffHex()));
+				System.out.println(projector.testCodeAgainstPattern(port, projector.getOffHex(), null));
 				break;
 			case 2:
-				System.out.println(projector.testCodeAgainstPattern(port, projector.getDetectionHex()));
+				System.out.println(projector.testCodeAgainstPattern(port, projector.getDetectionHex(), Pattern.compile(projector.getDetectionResponseRegex())));
 				break;
 			case 3:
-				System.out.println(projector.testCodeAgainstPattern(port, getCustomString(reader)));
+				System.out.println(projector.testCodeAgainstPattern(port, projector.getBulbHoursHex(), Pattern.compile(projector.getBulbHoursResponseRegex())));
+				break;
+			case 4:
+				System.out.println(projector.testCodeAgainstPattern(port, getCustomString(reader), null));
 				break;
 			}
 		}

@@ -309,7 +309,7 @@ public class PrinterService {
 		firmwareComSettings.setHandshake("None");
 		firmwareComSettings.setStopbits("One");
 		firmwareComSettings.setParity("None");
-		firmwareComSettings.setSpeed(115200);
+		firmwareComSettings.setSpeed(115200L);
 		
 		MotorsDriverConfig motors = new MotorsDriverConfig();
 		motors.setComPortSettings(firmwareComSettings);
@@ -320,7 +320,7 @@ public class PrinterService {
 		projectorComSettings.setHandshake("None");
 		projectorComSettings.setStopbits("One");
 		projectorComSettings.setParity("None");
-		projectorComSettings.setSpeed(9600);
+		projectorComSettings.setSpeed(9600L);
 		monitor.setComPortSettings(projectorComSettings);
 		
 		MachineConfig machineConfig = new MachineConfig();
