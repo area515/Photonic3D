@@ -88,28 +88,30 @@ public class SerialManager {
 		mergeTo.setStopbits(mergeFrom.getStopbits());
 	}
 	
-	public ProjectorModel getProjectorModel(SerialCommunicationsPort currentIdentifier, ComPortSettings printerOverriddenComPortSettings) {
+	public ProjectorModel getProjectorModel(SerialCommunicationsPort currentIdentifier, ComPortSettings printerSettings) {
 		ProjectorModel currentModel = null;
 		for (ProjectorModel model : HostProperties.Instance().getAutodetectProjectors()) {
 			try {
-				logger.debug("Projector settings from printer:{}", printerOverriddenComPortSettings);
-				mergeSettings(printerOverriddenComPortSettings, model.getComPortSettings());
-				logger.debug("Merged settings from projector:{} and attempting detection with: {}", model.getComPortSettings(), printerOverriddenComPortSettings);
+				ComPortSettings newSettings = new ComPortSettings(printerSettings);
+				
+				logger.debug("Projector settings from printer:{}", newSettings);
+				mergeSettings(newSettings, model.getComPortSettings());
+				logger.debug("Merged settings from projector:{} and attempting detection with: {}", model.getComPortSettings(), newSettings);
 
-				currentIdentifier.open(AUTO_DETECT_PROJECTOR, TIME_OUT, printerOverriddenComPortSettings);
+				currentIdentifier.open(AUTO_DETECT_PROJECTOR, TIME_OUT, newSettings);
 				if (model.autodetect(currentIdentifier)) {
 					currentModel = model;
 					break;
 				}
 			} catch (AlreadyAssignedException | InappropriateDeviceException e) {
-				logger.debug("Failed projector model detection on:{} due to:{}", printerOverriddenComPortSettings, e.getMessage());
+				logger.debug("Failed projector model detection on:{} due to:{}", printerSettings, e.getMessage());
 				return null;
 			} finally {
 				currentIdentifier.close();
 			}
 		}
 		
-		logger.debug("No projector model detected on:{}", printerOverriddenComPortSettings);
+		logger.debug("No projector model detected on:{}", printerSettings);
 		return currentModel;
 	}
 	
