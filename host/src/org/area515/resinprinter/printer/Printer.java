@@ -323,7 +323,7 @@ public class Printer {
 	}
 
 	public Integer getBulbHours() {
-		if (bulbHours == null) {
+		if (bulbHours == null && projectorModel != null) {
 			try {
 				bulbHours = projectorModel.getBulbHours(projectorSerialPort);
 			} catch (IOException e) {
