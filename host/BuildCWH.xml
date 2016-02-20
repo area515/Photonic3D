@@ -29,6 +29,7 @@
 			<zipfileset dir="libs/mp4parser" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/guava" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/log4j" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/alphanumeric-comparator" prefix="lib" includes="**/*"/>
 		</zip>
 		<zip destfile="${deployedTestZipFile}">
 			<zipfileset dir="." includes="**/build.number"/>
@@ -55,7 +56,7 @@
 			<zipfileset dir="libs/testing" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/guava" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/log4j" prefix="lib" includes="**/*"/>
-      <zipfileset dir="libs/alphanumeric-comparator" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/alphanumeric-comparator" prefix="lib" includes="**/*"/>
 		</zip>
 		<zip destfile="${deployedClientZipFile}">
 			<zipfileset dir="srcbin/org/area515/resinprinter/client" prefix="org/area515/resinprinter/client" includes="**/*.class"/>
