@@ -14,6 +14,7 @@ import org.area515.resinprinter.printer.ComPortSettings;
 import org.area515.resinprinter.serial.JSSCCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
+import org.area515.resinprinter.serial.SerialManager.DetectedResources;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.test.HardwareCompatibilityTestSuite;
 import org.junit.Assert;
@@ -48,11 +49,11 @@ public class DetectProjector {
 			
 			logger.info("Attempting detection on port:{}", currentIdentifier.getName());
 			SerialCommunicationsPort port = new JSSCCommPort();
-			ProjectorModel model = SerialManager.Instance().getProjectorModel(port, newComPortSettings);
-			if (model != null) {
+			DetectedResources resources = SerialManager.Instance().getProjectorModel(port, newComPortSettings);
+			if (resources != null) {
 				hasFound = true;
 			}
-			logger.info("  JSSCCommPort projector detection:{}", model);
+			logger.info("  JSSCCommPort projector detection:{}", resources);
 			
 			/*port = new RXTXEventBasedCommPort();
 			logger.info("  RXTXEventBasedCommPort projector detection:{}", SerialManager.Instance().getProjectorModel(port, newComPortSettings, false));
