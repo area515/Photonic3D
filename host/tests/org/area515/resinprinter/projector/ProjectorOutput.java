@@ -59,7 +59,7 @@ public class ProjectorOutput {
 		HexCodeBasedProjector projector = (HexCodeBasedProjector)models.get(Integer.parseInt(reader.readLine()));
 		
 		SerialCommunicationsPort port = new JSSCCommPort();
-		port.open("ProjectorOutputTest", SerialManager.TIME_OUT, projector.getComPortSettings());
+		port.open("ProjectorOutputTest", SerialManager.TIME_OUT, projector.getDefaultComPortSettings());
 
 		while (true) {
 			System.out.println("0. On Hex");

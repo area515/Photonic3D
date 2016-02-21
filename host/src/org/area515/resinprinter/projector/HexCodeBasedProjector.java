@@ -168,7 +168,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	}
 	
 	@JsonProperty
-	public ComPortSettings getComPortSettings() {
+	public ComPortSettings getDefaultComPortSettings() {
 		return comPortSettings;
 	}
 	public void setComPortSettings(ComPortSettings comPortSettings) {

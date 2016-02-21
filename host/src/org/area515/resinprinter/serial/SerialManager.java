@@ -79,28 +79,22 @@ public class SerialManager {
 		}
 	}
 	
-	private void overwriteSettings(ComPortSettings mergeTo, ComPortSettings mergeFrom) {
-		mergeTo.setPortName(mergeFrom.getPortName());
-		mergeTo.setDatabits(mergeFrom.getDatabits());
-		mergeTo.setHandshake(mergeFrom.getHandshake());
-		mergeTo.setParity(mergeFrom.getParity());
-		mergeTo.setSpeed(mergeFrom.getSpeed());
-		mergeTo.setStopbits(mergeFrom.getStopbits());
-	}
-	
-	public ProjectorModel getProjectorModel(SerialCommunicationsPort currentIdentifier, ComPortSettings printerSettings) {
-		ProjectorModel currentModel = null;
+	public DetectedResources getProjectorModel(SerialCommunicationsPort currentIdentifier, ComPortSettings printerSettings) {
+		DetectedResources resources = null;
 		for (ProjectorModel model : HostProperties.Instance().getAutodetectProjectors()) {
 			try {
 				ComPortSettings newSettings = new ComPortSettings(printerSettings);
 				
 				logger.debug("Projector settings from printer:{}", newSettings);
-				mergeSettings(newSettings, model.getComPortSettings());
-				logger.debug("Merged settings from projector:{} and attempting detection with: {}", model.getComPortSettings(), newSettings);
-
+				mergeSettings(newSettings, model.getDefaultComPortSettings());
+				logger.debug("Merged settings from projector:{} and attempting detection with: {}", model.getDefaultComPortSettings(), newSettings);
+				
 				currentIdentifier.open(AUTO_DETECT_PROJECTOR, TIME_OUT, newSettings);
 				if (model.autodetect(currentIdentifier)) {
-					currentModel = model;
+					resources = new DetectedResources();
+					resources.model = model;
+					resources.settings = newSettings;
+					resources.comPort = currentIdentifier;//TODO: Should I keep the port open to save some time???
 					break;
 				}
 			} catch (AlreadyAssignedException | InappropriateDeviceException e) {
@@ -111,8 +105,12 @@ public class SerialManager {
 			}
 		}
 		
-		logger.debug("No projector model detected on:{}", printerSettings);
-		return currentModel;
+		if (resources == null) {
+			logger.debug("Projector model not detected on:{}", printerSettings);
+		} else {
+			logger.debug("Projector model detected on:{}", printerSettings);
+		}
+		return resources;
 	}
 	
 	public boolean is3dFirmware(SerialCommunicationsPort currentIdentifier, ComPortSettings newComPortSettings) {
@@ -154,7 +152,7 @@ public class SerialManager {
 		logger.info("Attempting to autodetect resources for:{} using serialPort:{} with settings:{} to printer:{}", reservationStyle, identifier, printerOverriddenComPortSettings, printer);
 		
 		ComPortSettings currentlyOverridenSettings = new ComPortSettings(printerOverriddenComPortSettings);
-		DetectedResources resources = new DetectedResources();
+		DetectedResources resources = null;
 		String identifierName = identifier.getName();
 		if (identifierName.equals(AUTO_DETECT_3D_FIRMWARE) && reservationStyle != ComPortReservation.PrinterFirmware) {
 			throw new InappropriateDeviceException("It doesn't make sense to use:" + AUTO_DETECT_3D_FIRMWARE + " with:" + reservationStyle);
@@ -190,10 +188,8 @@ public class SerialManager {
 					}
 					
 					if (identifierName.equals(AUTO_DETECT_PROJECTOR)) {
-						ProjectorModel model = getProjectorModel(check, currentlyOverridenSettings);
-						if (model != null) {
-							identifier = check;
-							resources.model = model;
+						resources = getProjectorModel(check, currentlyOverridenSettings);
+						if (resources != null) {
 							break;
 						}
 					}
@@ -209,16 +205,21 @@ public class SerialManager {
 		
 		//This is a bit confusing, but if we are a projector and they chose their port directly, or chose FIRST_AVAILABLE_PORT, we haven't yet detected their projector model
 		if (reservationStyle == ComPortReservation.Projector && !identifierName.equals(AUTO_DETECT_PROJECTOR)) {
-			resources.model = getProjectorModel(identifier, currentlyOverridenSettings);
+			resources = getProjectorModel(identifier, currentlyOverridenSettings);
 		}
-
+		
 		Printer otherPrintJob = printersBySerialPort.putIfAbsent(identifier, printer);
 		if (otherPrintJob != null) {
 			throw new AlreadyAssignedException("SerialPort already assigned to this job:" + otherPrintJob, otherPrintJob);
 		}
 		
-		resources.settings = currentlyOverridenSettings;
-		resources.comPort = identifier;
+		//This means we are firmware and we need to be setup...
+		if (resources == null) {
+			resources = new DetectedResources();
+			resources.settings = currentlyOverridenSettings;
+			resources.comPort = identifier;
+		}
+		
 		logger.info("Resources detected:{}", resources);
 		return resources;
 	}
