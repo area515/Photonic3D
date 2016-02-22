@@ -171,7 +171,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	public ComPortSettings getDefaultComPortSettings() {
 		return comPortSettings;
 	}
-	public void setComPortSettings(ComPortSettings comPortSettings) {
+	public void setDefaultComPortSettings(ComPortSettings comPortSettings) {
 		this.comPortSettings = comPortSettings;
 	}
 	

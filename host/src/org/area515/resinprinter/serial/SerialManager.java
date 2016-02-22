@@ -58,6 +58,10 @@ public class SerialManager {
 	}
 	
 	private void mergeSettings(ComPortSettings mergeTo, ComPortSettings mergeFrom) {
+		if (mergeFrom == null) {
+			return;
+		}
+		
 		if (mergeTo.getDatabits() == null) {
 			mergeTo.setDatabits(mergeFrom.getDatabits());
 		}
@@ -82,13 +86,13 @@ public class SerialManager {
 	public DetectedResources getProjectorModel(SerialCommunicationsPort currentIdentifier, ComPortSettings printerSettings) {
 		DetectedResources resources = null;
 		for (ProjectorModel model : HostProperties.Instance().getAutodetectProjectors()) {
+			ComPortSettings newSettings = new ComPortSettings(printerSettings);
+			
+			logger.debug("Projector settings from printer:{}", newSettings);
+			mergeSettings(newSettings, model.getDefaultComPortSettings());
+			logger.debug("Merged settings from projector:{} and attempting detection with: {}", model.getDefaultComPortSettings(), newSettings);
+				
 			try {
-				ComPortSettings newSettings = new ComPortSettings(printerSettings);
-				
-				logger.debug("Projector settings from printer:{}", newSettings);
-				mergeSettings(newSettings, model.getDefaultComPortSettings());
-				logger.debug("Merged settings from projector:{} and attempting detection with: {}", model.getDefaultComPortSettings(), newSettings);
-				
 				currentIdentifier.open(AUTO_DETECT_PROJECTOR, TIME_OUT, newSettings);
 				if (model.autodetect(currentIdentifier)) {
 					resources = new DetectedResources();
