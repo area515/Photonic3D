@@ -200,7 +200,7 @@ public class SerialManager {
 				}
 			}
 			
-			if (identifier == null) {
+			if (identifier == null && resources == null) {
 				//This next statement isn't required because we aren't overriding the settings anymore.
 				//currentlyOverridenSettings.setPortName(identifierName);
 				throw new InappropriateDeviceException("Failed to assign " + reservationStyle + " for " + identifierName);
