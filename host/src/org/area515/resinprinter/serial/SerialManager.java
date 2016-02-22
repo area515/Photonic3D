@@ -192,6 +192,7 @@ public class SerialManager {
 					}
 					
 					if (identifierName.equals(AUTO_DETECT_PROJECTOR)) {
+						identifier = check;
 						resources = getProjectorModel(check, currentlyOverridenSettings);
 						if (resources != null) {
 							break;
@@ -200,7 +201,7 @@ public class SerialManager {
 				}
 			}
 			
-			if (identifier == null && resources == null) {
+			if (identifier == null) {
 				//This next statement isn't required because we aren't overriding the settings anymore.
 				//currentlyOverridenSettings.setPortName(identifierName);
 				throw new InappropriateDeviceException("Failed to assign " + reservationStyle + " for " + identifierName);
