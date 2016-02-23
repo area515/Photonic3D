@@ -292,6 +292,11 @@ public class HexCodeBasedProjector implements ProjectorModel {
 		int hours = 0;
 		byte[] bytes = null;
 		String bulbResponse = findString(port, bulbHoursHex, bulbHoursResponsePattern);
+		if (bulbResponse == null) {
+			logger.info("Projector didn't return a recognized bulbHoursResponse.");
+			return null;
+		}
+		
 		switch (bulbHoursConversion == null?Conversion.LittleEndian:bulbHoursConversion) {
 		case BigEndian:
 			bytes = bulbResponse.getBytes();
