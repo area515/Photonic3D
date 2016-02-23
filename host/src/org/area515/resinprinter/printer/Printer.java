@@ -322,6 +322,7 @@ public class Printer {
 		this.shutterOpen = shutterOpen;
 	}
 
+	@JsonIgnore
 	public Integer getBulbHours() {
 		if (bulbHours == null && projectorModel != null) {
 			try {
