@@ -12,7 +12,7 @@
 			<zipfileset dir="srcbin" includes="**/*.png"/>
 			<zipfileset dir="srcbin" includes="**/*.properties"/>
 			<zipfileset dir="os" prefix="os" includes="**/*"/>
-			<zipfileset dir="bin" includes="**/*"/>
+			<zipfileset dir="bin" excludes="**/browseprinter.*"/>
 			<zipfileset dir="resources" prefix="resources" includes="**/*"/>
 			<zipfileset dir="resourcesnew" prefix="resourcesnew" includes="**/*"/>
 			<zipfileset dir="libs/freemarker" prefix="lib" includes="**/*"/>

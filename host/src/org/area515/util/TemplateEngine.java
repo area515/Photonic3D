@@ -79,7 +79,7 @@ public class TemplateEngine {
         	$ZLiftRate// the rate at which we're lifting
         $ZBottomLiftRate// the rate at which we're lifting for the bottom layers
         $ZRetractRate// how fast we'r retracting
-        $SlideTiltVal// any used slide / tilt value on the x axis
+        	$SlideTiltVal// any used slide / tilt value on the x axis
         $BlankTime// how long to show the blank in ms
         	$LayerTime// total delay for a layer for gcode commands to complete - not including expusre time
         	$FirstLayerTime// time to expose the first layers in ms
@@ -99,6 +99,7 @@ public class TemplateEngine {
 		root.put("LayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
 		root.put("FirstLayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
 		root.put("NumFirstLayers", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
+		root.put("SlideTiltVal", printer.getConfiguration().getSlicingProfile().getSlideTiltValue());
 		root.put("buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
 		root.put("buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
 		root.put("job", job);
@@ -148,6 +149,7 @@ public class TemplateEngine {
 		engine.put("$LayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
 		engine.put("$FirstLayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
 		engine.put("$NumFirstLayers", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
+		engine.put("$SlideTiltVal", printer.getConfiguration().getSlicingProfile().getSlideTiltValue());
 		engine.put("$buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
 		engine.put("$buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
 		engine.put("job", job);
