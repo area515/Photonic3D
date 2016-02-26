@@ -50,8 +50,8 @@ import com.jcraft.jsch.JSchException;
 public class Main {
 	public static final String PRINTER_TYPE = "3DPrinterHost";
 	public static final String PRINTERS_DIRECTORY = "printers";
-	public static final String REPO = "area515";
 	public static final String BRANCH = "master";
+	public static String REPO = "area515";
 	
 	private static Set<PrintableDevice> foundDevices = new HashSet<PrintableDevice>();
 	private static long maxLengthToWait = 5000;
@@ -244,11 +244,12 @@ public class Main {
 		HttpHost restTarget = new HttpHost("api.github.com", 443, "https");
 		HttpHost cwhTarget = new HttpHost(installToBox.getName(), 9091, "http");
 		HttpGet getRequest = new HttpGet("/repos/" + REPO + "/Creation-Workshop-Host/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH);
-		System.out.println("Setup request to:" + getRequest);
 		
 		PrinterEntry[] printers = null;
 		try {
+			System.out.println("Request:" + getRequest);
 			HttpResponse httpResponse = httpClient.execute(restTarget, getRequest);
+			System.out.println("Response:" + httpResponse.getStatusLine());
 			HttpEntity entity = httpResponse.getEntity();
 			ObjectMapper mapper = new ObjectMapper(new JsonFactory());//EntityUtils.toString(entity)entity.consumeContent();
 			printers = mapper.readValue(entity.getContent(), new TypeReference<PrinterEntry[]>(){});
@@ -274,14 +275,15 @@ public class Main {
 		HttpHost rawTarget = new HttpHost("raw.githubusercontent.com", 443, "https");;
 		try {
 			getRequest = new HttpGet("/" + REPO + "/Creation-Workshop-Host/master/host/" + PRINTERS_DIRECTORY + "/" + URLEncoder.encode(selectedPrinter.getName(), "ASCII").replaceAll("\\+", "%20"));
-			System.out.println("Setup request to:" + getRequest);
 		} catch (UnsupportedEncodingException e2) {
 			e2.printStackTrace();
 			return false;
 		}
 			 
 		try {
+			System.out.println("Request:" + getRequest);
 			HttpResponse httpResponse = httpClient.execute(rawTarget, getRequest);
+			System.out.println("Response:" + httpResponse.getStatusLine());
 			HttpEntity printerJsonOutput = httpResponse.getEntity();
 			String json = EntityUtils.toString(printerJsonOutput);
 			
@@ -289,8 +291,9 @@ public class Main {
 			StringEntity printerJsonInput = new StringEntity(json);
 			printerJsonInput.setContentType("application/json");
 			installNewPrinterPost.setEntity(printerJsonInput);
+			System.out.println("Request:" + installNewPrinterPost);
 			CloseableHttpResponse response = httpClient.execute(cwhTarget, installNewPrinterPost);
-			System.out.println(response.getStatusLine());
+			System.out.println("Response:" + httpResponse.getStatusLine());
 			return response.getStatusLine().getStatusCode() == 200;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -333,7 +336,7 @@ public class Main {
 			}
 			
 			installOptionPane.setMessage("Downloading installation scripts...");
-			String[] output = client.send("wget https://github.com/area515/Creation-Workshop-Host/raw/master/host/bin/start.sh");
+			String[] output = client.send("wget https://github.com/" + REPO + "/Creation-Workshop-Host/raw/master/host/bin/start.sh");
 			if (!findSuccessLine(output, "start.sh' saved")) {
 				writeOutput(output);
 				throw new IOException("This device can't seem to reach the internet.");
@@ -379,6 +382,10 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		if (args.length > 0) {
+			REPO = args[0];
+		}
+		
 		boolean installCompletedOnThisLoopIteration = false;
 		boolean userHasbeenAskedToInstall = false;
 		SubnetScanner scanner = new SubnetScanner();
