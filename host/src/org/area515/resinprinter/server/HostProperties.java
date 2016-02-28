@@ -73,6 +73,7 @@ public class HostProperties {
 	private boolean fakeSerial = false;
 	private boolean fakedisplay = false;
 	private boolean removeJobOnCompletion = true;
+	private boolean forceCalibrationOnFirstUse = false;
 	private boolean limitLiveStreamToOneCPU = false;
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
 	private List<Class<Feature>> featureClasses = new ArrayList<Class<Feature>>();
@@ -224,6 +225,7 @@ public class HostProperties {
 		clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
 		forwardHeader = configurationProperties.getProperty("forwardHeader", null);
 		removeJobOnCompletion = new Boolean(configurationProperties.getProperty("removeJobOnCompletion", "true"));
+		forceCalibrationOnFirstUse = new Boolean(configurationProperties.getProperty("forceCalibrationOnFirstUse", "false"));
 		limitLiveStreamToOneCPU = new Boolean(configurationProperties.getProperty("limitLiveStreamToOneCPU", "false"));
 		scriptEngineLanguage = configurationProperties.getProperty("scriptEngineLanguage", "js");
 		
@@ -472,6 +474,10 @@ public class HostProperties {
 	
 	public boolean isHostReady() {
 		return hostReady.getCount() == 0;
+	}
+	
+	public boolean isForceCalibrationOnFirstUse() {
+		return forceCalibrationOnFirstUse;
 	}
 	
 	public boolean waitForReady(long timeout, TimeUnit unit) {

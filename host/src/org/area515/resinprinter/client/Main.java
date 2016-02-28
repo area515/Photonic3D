@@ -31,8 +31,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.area515.resinprinter.client.SubnetScanner.Box;
 import org.fourthline.cling.UpnpService;
@@ -122,7 +120,7 @@ public class Main {
 		panel.add(label, BorderLayout.CENTER);
 		panel.add(pass, BorderLayout.SOUTH);
 		String[] options = new String[]{"OK", "Cancel"};
-		int option = JOptionPane.showOptionDialog(null, panel, title, JOptionPane.NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[1]);
+		int option = JOptionPane.showOptionDialog(null, panel, title, JOptionPane.NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
 		if(option == 0) {
 		    char[] password = pass.getPassword();
 		    return password;
@@ -317,7 +315,7 @@ public class Main {
 		installPane.pack();
 		installPane.setLocationRelativeTo(null);
 		installPane.setVisible(true);
-		
+
 		SSHClient client = new SSHClient();
 		try {
 			installOptionPane.setMessage("Connecting to printer...");
@@ -352,17 +350,16 @@ public class Main {
 			
 			if (box.isRaspberryPi()) {
 				installPane.setVisible(false);
+				
 				char[] password = getPassword("Please Secure This Device", 
 						"<html>This device was setup with a default password<br>" + 
 						"from the manufacturer. It is not advisable that<br>" + 
 						"you keep this password. Please enter another<br>" + 
 						"password to help secure your printer.<html>");
-				if (password == null) {
-					return true;
+				if (password != null) {
+					output = client.send("echo 'pi:" + new String(password) + "' | chpasswd");
+					//JOptionPane.showMessageDialog(null, "Failed to set password. " + output[0], "Bad Password", JOptionPane.WARNING_MESSAGE);
 				}
-			
-				output = client.send("echo 'pi:" + new String(password) + "' | chpasswd");
-				//JOptionPane.showMessageDialog(null, "Failed to set password. " + output[0], "Bad Password", JOptionPane.WARNING_MESSAGE);
 			}
 			
 			installPrinterProfile(box);
