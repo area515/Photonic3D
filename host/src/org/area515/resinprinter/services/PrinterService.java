@@ -414,17 +414,17 @@ public class PrinterService {
 	
 	//This is the only method that breaks the rules that says that you can't save a printer while it is started...
 	@GET
-	@Path("calibrate/{printername}/{xpixels}/{ypixels}")
+	@Path("calibrate/{printername}/{xpixelspermm}/{ypixelspermm}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MachineResponse calibrate(@PathParam("printername") String printerName, @PathParam("xpixelspermm") double xPixelsPerMM,  @PathParam("ypixelspermm") double yPixelsPerMM) {
 		try {
 			PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
 			if (currentConfiguration == null) {
 				throw new InappropriateDeviceException("No printer with that name:" + printerName);
-			}				
+			}
 			
 			currentConfiguration.getSlicingProfile().setDotsPermmX(xPixelsPerMM);
-			currentConfiguration.getSlicingProfile().setDotsPermmY(xPixelsPerMM);
+			currentConfiguration.getSlicingProfile().setDotsPermmY(yPixelsPerMM);
 			
 			HostProperties.Instance().addOrUpdatePrinterConfiguration(currentConfiguration);
 			return new MachineResponse("calibratePrinter", true, "Calibrated printer:" + printerName + "");
