@@ -17,12 +17,12 @@ else
 fi;
 
 #Its pretty hard to keep these updated, let me know when they get too old
-if [ "${cpu}" = "armv6l" ]; then 
-	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u33-b05/jdk-8u33-linux-arm-vfp-hflt.tar.gz"
+if [ "${cpu}" = "armv6l" -o "${cpu}" = "armv7l" ]; then 
+	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-arm32-vfp-hflt.tar.gz"
 elif [ "${cpu}" = "i686" ]; then 
-	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u31-b13/jdk-8u31-linux-i586.tar.gz"
+	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-i586.tar.gz"
 elif [ "${cpu}" = "x86_64" ]; then 
-	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u31-b13/jdk-8u31-linux-x64.tar.gz"
+	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-x64.tar.gz"
 fi
 
 if [ ! -f "/usr/lib/jni/librxtxSerial.so" ]; then
