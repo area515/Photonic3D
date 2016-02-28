@@ -64,6 +64,10 @@
 			<zipfileset dir="srcbin/org/area515/resinprinter/stl" prefix="org/area515/resinprinter/stl" includes="**/*.class"/>
 			<zipfileset dir="libs/cling" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/jsch" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/commons-logging" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/resteasy" prefix="lib" includes="**/jackson-annotations*.jar"/>
+			<zipfileset dir="libs/resteasy" prefix="lib" includes="**/jackson-core*.jar"/>
+			<zipfileset dir="libs/resteasy" prefix="lib" includes="**/jackson-databind*.jar"/>
 			<zipfileset dir="bin" includes="**/browseprinter.*"/>
 			<zipfileset dir="bin" includes="**/slicebrowser.*"/>
 		</zip>

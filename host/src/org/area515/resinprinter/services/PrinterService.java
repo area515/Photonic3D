@@ -631,7 +631,7 @@ public class PrinterService {
 		}
 		
 		//Printer must have been calibrated before it can print
-		if (!printer.getConfiguration().isCalibrated()) {
+		if (HostProperties.Instance().isForceCalibrationOnFirstUse() && !printer.getConfiguration().isCalibrated()) {
 		    logger.error("Printer:{} can't print because it wasn't calibrated", printername);
 			return new MachineResponse("startPrinter", false, "Printer:" + printername + " must be calibrated before it's first use.");
 		}
