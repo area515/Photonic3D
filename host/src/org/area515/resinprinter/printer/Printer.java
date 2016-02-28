@@ -1,5 +1,6 @@
 package org.area515.resinprinter.printer;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -39,7 +40,8 @@ public class Printer {
 	//For Display
 	private Frame refreshFrame;
 	private DisplayState displayState = DisplayState.Blank;
-	private int calibrationSquareSize;
+	private int gridSquareSize;
+	private Point calibrationXY;
 	private BufferedImage displayImage;
 	private boolean started;
 	private boolean shutterOpen;
@@ -67,6 +69,7 @@ public class Printer {
 	
 	public static enum DisplayState {
 		Calibration,
+		Grid,
 		Blank,
 		CurrentSlice
 	}
@@ -204,17 +207,40 @@ public class Printer {
 					g2.setBackground(Color.black);
 					g2.clearRect(0, 0, screenSize.width, screenSize.height);
 					return;
+				case Grid :
+					g2.setBackground(Color.black);
+					g2.clearRect(0, 0, screenSize.width, screenSize.height);
+					g2.setColor(Color.RED);
+					for (int x = 0; x < screenSize.width; x += gridSquareSize) {
+						g2.drawLine(x, 0, x, screenSize.height);
+					}
+					
+					for (int y = 0; y < screenSize.height; y += gridSquareSize) {
+						g2.drawLine(0, y, screenSize.width, y);
+					}
+					return;
 				case Calibration :
 					g2.setBackground(Color.black);
 					g2.clearRect(0, 0, screenSize.width, screenSize.height);
 					g2.setColor(Color.RED);
-					for (int x = 0; x < screenSize.width; x += calibrationSquareSize) {
-						g2.drawLine(x, 0, x, screenSize.height);
-					}
+					int startingX = screenSize.width / 2 - calibrationXY.x / 2;
+					int startingY = screenSize.height / 2 - calibrationXY.y / 2;
+					int halfLengthOfDimLines = 50;
 					
-					for (int y = 0; y < screenSize.height; y += calibrationSquareSize) {
-						g2.drawLine(0, y, screenSize.width, y);
-					}
+					//X Dimension lines
+					g2.drawLine(startingX                  , screenSize.height / 2 - halfLengthOfDimLines, startingX                  , screenSize.height / 2 + halfLengthOfDimLines);
+					g2.drawLine(startingX + calibrationXY.x, screenSize.height / 2 - halfLengthOfDimLines, startingX + calibrationXY.x, screenSize.height / 2 + halfLengthOfDimLines);
+					
+					//Y Dimension lines
+					g2.drawLine(screenSize.width / 2 - halfLengthOfDimLines, startingY                  , screenSize.width / 2 + halfLengthOfDimLines, startingY);
+					g2.drawLine(screenSize.width / 2 - halfLengthOfDimLines, startingY + calibrationXY.y, screenSize.width / 2 + halfLengthOfDimLines, startingY + calibrationXY.y);
+										
+					//Vertical line of cross
+					g2.drawLine(screenSize.width / 2, startingY, screenSize.width / 2, startingY + calibrationXY.y);
+
+					//Horizontal line of cross
+					g2.setStroke(new BasicStroke(5, 0, 0, 1.0f, new float[]{10, 10}, 2.0f));
+					g2.drawLine(startingX, screenSize.height / 2, startingX + calibrationXY.x, screenSize.height / 2);
 					return;
 				case CurrentSlice :
 					g2.drawImage(displayImage, null, screenSize.width / 2 - displayImage.getWidth() / 2, screenSize.height / 2 - displayImage.getHeight() / 2);
@@ -265,9 +291,15 @@ public class Printer {
 		refreshFrame.repaint();
 	}
 	
-	public void showCalibrationImage(int pixels) {
+	public void showCalibrationImage(int xPixels, int yPixels) {
 		displayState = DisplayState.Calibration;
-		calibrationSquareSize = pixels;
+		calibrationXY = new Point(xPixels, yPixels);
+		refreshFrame.repaint();
+	}
+	
+	public void showGridImage(int pixels) {
+		displayState = DisplayState.Grid;
+		gridSquareSize = pixels;
 		refreshFrame.repaint();
 	}
 	

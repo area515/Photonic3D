@@ -415,9 +415,12 @@ public class MachineService {
 	 @Path("createprinter/{printername}/{display}/{comport}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse createPrinter(@PathParam("printername") String printername, @PathParam("display") String displayId, @PathParam("comport") String comport) {
-		//TODO: This data needs to be set by the user interface...
-		//========================================================
-		PrinterConfiguration currentConfiguration = PrinterService.INSTANCE.createTemplatePrinter(printername, displayId, comport, 134, 75, 185);
+		 //TODO: This data needs to be set by the user interface...
+		 //========================================================
+		int buildXSizeInMM = 134;
+		int buildYSizeInMM = 75;
+		int buildZSizeInMM = 185;
+		PrinterConfiguration currentConfiguration = PrinterService.INSTANCE.createTemplatePrinter(printername, displayId, comport, buildXSizeInMM, buildYSizeInMM, buildZSizeInMM);
 		if (displayId.equals(DisplayManager.SIMULATED_DISPLAY) &&
 			comport.equals(ConsoleCommPort.GCODE_RESPONSE_SIMULATION)) {
 			currentConfiguration.getSlicingProfile().setgCodeLift("Lift Z; Lift the platform");
@@ -517,16 +520,16 @@ public class MachineService {
 	 
 	 @Deprecated
 	 @GET
-	 @Path("showcalibrationscreen/{printername}/{pixels}")
+	 @Path("showGridScreen/{printername}/{pixels}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse showCalibrationScreen(@PathParam("printername") String printerName, @PathParam("pixels") int pixels) {
+	 public MachineResponse showGridScreen(@PathParam("printername") String printerName, @PathParam("pixels") int pixels) {
 		try {
 			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
 			if (currentPrinter == null) {
 				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
 			}
 			
-			currentPrinter.showCalibrationImage(pixels);
+			currentPrinter.showGridImage(pixels);
 			return new MachineResponse("calibrationscreenshown", true, "Showed calibration screen on:" + printerName);
 		} catch (InappropriateDeviceException e) {
 			logger.error("Couldn't show calibration screen: " + printerName, e);

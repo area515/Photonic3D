@@ -1,0 +1,10 @@
+<h6>X in mm (thick dotted line)</h6>
+<input type="text" class="form-control" placeholder="mm" ng-model="printerControlsController.calibration.xMM">
+<h6>Change distance between X lines</h6>
+<span class="input-group-addon input-large btn btn-success" ng-click="printerControlsController.showCalibrationScreen(1, 0)">+</span>
+<span class="input-group-addon input-large btn btn-danger" ng-click="printerControlsController.showCalibrationScreen(-1, 0)">-</span>
+<h6>Y in mm</h6>
+<input type="text" class="form-control" placeholder="mm" ng-model="printerControlsController.calibration.yMM">
+<h6>Change distance between Y lines</h6>
+<span class="input-group-addon input-large btn btn-success" ng-click="printerControlsController.showCalibrationScreen(0, 1)">+</span>
+<span class="input-group-addon input-large btn btn-danger" ng-click="printerControlsController.showCalibrationScreen(0, -1)">-</span>

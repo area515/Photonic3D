@@ -2,11 +2,31 @@
 	var cwhApp = angular.module('cwhApp');
 	cwhApp.controller("PrinterControlsController", ['$scope', '$http', '$location', '$routeParams', 'cwhWebSocket', function ($scope, $http, $location, $routeParams, cwhWebSocket) {
 		controller = this;
+		this.currentPrintJob = null;
+		this.gcodeProcessing = "";
+		this.gCodeToSend = "";
+		this.squarePixelSize = 10;
+		var printerName = $location.search().printerName;
+		
+		function refreshPrinter(printer) {
+			controller.currentPrinter = printer;
+			if (controller.calibration == null) {
+				controller.calibration = {
+					startedCalibration:false, 
+					xMM:controller.squarePixelSize, 
+					yMM:controller.squarePixelSize, 
+					xPixels:Math.round(controller.squarePixelSize * controller.currentPrinter.configuration.slicingProfile.DotsPermmX), 
+					yPixels:Math.round(controller.squarePixelSize * controller.currentPrinter.configuration.slicingProfile.DotsPermmY)};
+			} else {
+				controller.calibration.xPixels = Math.round(controller.calibration.xMM * controller.currentPrinter.configuration.slicingProfile.DotsPermmX); 
+				controller.calibration.xPixels = Math.round(controller.calibration.yMM * controller.currentPrinter.configuration.slicingProfile.DotsPermmY);
+			}
+		}
 		
 		function attachToPrinter(printerName) {
 			this.printerSocket = cwhWebSocket.connect("services/printerNotification/" + encodeURIComponent(printerName), $scope).onJsonContent(
 				function(printerEvent) {
-					controller.currentPrinter = printerEvent.printer;
+					refreshPrinter(printerEvent.printer);
 				}
 			);
 			if (printerSocket == null) {
@@ -14,14 +34,9 @@
 			}
 		}
 		
-		this.currentPrintJob = null;
-		this.gcodeProcessing = "";
-		this.gCodeToSend = "";
-		this.squarePixelSize = 10;
-		var printerName = $location.search().printerName;
 		$http.get("/services/printers/get/" + printerName).success(
 	        		function (data) {
-	        			controller.currentPrinter = data;
+	        			refreshPrinter(data);
 	        		})
 		$http.get("/services/printJobs/getByPrinterName/" + printerName).success(
         		function (data) {
@@ -56,9 +71,25 @@
         this.projector = function projector(startStop) {
 			$http.get("services/printers/" + startStop + "Projector/" + printerName).then(gCodeSuccess, errorFunction)
 		}
-        this.showCalibrationScreen = function showCalibrationScreen() {
-			$http.get("services/printers/showCalibrationScreen/" + printerName + "/" + controller.squarePixelSize).then(gCodeSuccess, errorFunction)
+        this.showGridScreen = function showGridScreen() {
+			$http.get("services/printers/showGridScreen/" + printerName + "/" + controller.squarePixelSize).then(gCodeSuccess, errorFunction)
 		}
+        this.showCalibrationScreen = function showCalibrationScreen(xInc, yInc) {
+        	controller.calibration.xPixels += xInc;
+        	controller.calibration.yPixels += yInc;
+        	
+			$http.get("services/printers/showCalibrationScreen/" + printerName + "/" + controller.calibration.xPixels + "/" + controller.calibration.yPixels).then(gCodeSuccess, errorFunction)
+		}
+        this.calibrate = function calibrate() {
+        	if (controller.calibration.startedCalibration) {
+        		controller.calibration.startedCalibration = false;
+    			$http.get("services/printers/calibrate/" + printerName + "/" + (controller.calibration.xPixels/controller.calibration.xMM) + "/" + (controller.calibration.yPixels/controller.calibration.xMM).then(gCodeSuccess, errorFunction);
+        		showBlankScreen();
+        	} else {
+        		controller.calibration.startedCalibration = true;
+    			$http.get("services/printers/showCalibrationScreen/" + printerName + "/" + controller.calibration.xPixels + "/" + controller.calibration.yPixels).then(gCodeSuccess, errorFunction);
+        	}
+        }
         this.showBlankScreen = function showBlankScreen() {
 			$http.get("services/printers/showBlankScreen/" + printerName).then(gCodeSuccess, errorFunction)
 		}

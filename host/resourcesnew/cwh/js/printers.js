@@ -58,7 +58,7 @@
 			openSavePrinterDialog(editTitle, false);
 		}
 
-		function savePrinter(printer, newPrinter) {
+		$scope.savePrinter = function savePrinter(printer, newPrinter) {
 			if (newPrinter) {
 				controller.editPrinter.configuration.MachineConfigurationName = controller.editPrinter.configuration.name;
 				controller.editPrinter.configuration.SlicingProfileName = controller.editPrinter.configuration.name;
@@ -81,7 +81,7 @@
 		        	editPrinter: function () {return controller.editPrinter;}
 		        }
 			});
-		    editPrinterModal.result.then(function (savedPrinter) {savePrinter(savedPrinter, newPrinter)});
+		    editPrinterModal.result.then(function (savedPrinter) {$scope.savePrinter(savedPrinter, newPrinter)});
 		}
 		
 		this.createNewPrinter = function createNewPrinter(editTitle) {

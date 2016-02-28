@@ -698,6 +698,7 @@ public class HostProperties {
 		NotificationManager.hostSettingsChanged();
 	}
 
+	//TODO: Implement versioning so that we don't have any lost update issues.
 	public void addOrUpdatePrinterConfiguration(PrinterConfiguration configuration) throws AlreadyAssignedException {
 		getPrinterConfigurations();
 
