@@ -404,6 +404,7 @@ public class PrinterService {
 				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
 			}
 			
+			logger.info("Showing calibration screen for xPixels:{} yPixels:{}", xPixels, yPixels);
 			currentPrinter.showCalibrationImage(xPixels, yPixels);
 			return new MachineResponse("calibrationscreenshown", true, "Showed calibration screen on:" + printerName);
 		} catch (InappropriateDeviceException e) {
@@ -425,6 +426,8 @@ public class PrinterService {
 			
 			currentConfiguration.getSlicingProfile().setDotsPermmX(xPixelsPerMM);
 			currentConfiguration.getSlicingProfile().setDotsPermmY(yPixelsPerMM);
+			
+			logger.info("Showing calibration screen for xPixelsPerMM:{} yPixelsPerMM:{}", xPixelsPerMM, yPixelsPerMM);
 			
 			HostProperties.Instance().addOrUpdatePrinterConfiguration(currentConfiguration);
 			return new MachineResponse("calibratePrinter", true, "Calibrated printer:" + printerName + "");
