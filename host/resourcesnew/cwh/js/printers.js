@@ -51,8 +51,8 @@
 		        		})
 			}
 		}
-				
-		function editCurrentPrinter(editTitle) {
+		
+		$scope.editCurrentPrinter = function editCurrentPrinter(editTitle) {
 			controller.editTitle = editTitle;
 			controller.editPrinter = JSON.parse(JSON.stringify(controller.currentPrinter));
 			openSavePrinterDialog(editTitle, false);
