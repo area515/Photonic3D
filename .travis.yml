@@ -1,0 +1,18 @@
+sudo: false
+git:
+  depth: 3
+language: java
+jdk:
+- oraclejdk8
+os:
+- linux
+script: (cd host ; ant clean dist)
+deploy:
+  provider: bintray
+  file: ".bintray.yml"
+  user: jmkao
+  key:
+    secure: lt+DYM/l8U4E2z1uV+86kxt7089Flwvmxm+DvwMMp4pMM7DUITYF3zR3eOQntwIy2cwPyhBhke2Z9eTZTGy8U1xvDE71lOLDmXBaxCX3i7CSA+qRQq9eMYeHO3XGvo+1BLD/dppZU2AvkkQHGCjYtOi868Kd9L/ppr0LwCE1q8oa1TYkhpxjbBVfqIJ8lq8UvXteVELn7WHj15xulT6cPSGdNbUtHtybZ2i7UaGrlXfXfyDpWvGj4A1Uel43mkP4xHyapIUYwV0/E/c8lV7LAcUTNrJeWAqDvEJ8kOvpBHtFBf3QHzoZcoJ0ybiFyz+bD5jSClyIRZoWt03wbAlmIA3fJD35iG4+18eT98tGYT0AhcqIX/yva1HQ3NrkkbEfa6Q9M1LnLmgIx/EQNFkrw3rjmsbz6xzzWNrNLfxPuBDd3RPXgokH0aTs7oP5LPPouiJR9lpUDFsdGCIcIx3WRq6eZMI/a956ZGMOxuy0Qge/vudkuTPs5DST0JaNxOVs0JwsJ/+H8x8SsQ7t9661LnGlvEJEfYwQ4z5uDt/yFIXOpI3k2hp/mKyyJ1nmAhYMRWQ74HsDlLCNIhYzB5jHA+SkaGlK0dyCrW0vsEX5lP88Vv04ublLh6+MK45NLy0vZRpQieaVip/UaXVpxGwzIcMgfgkysZNKTAg6+gZaMRk=
+  on:
+    tags: true
+  dry-run: true
