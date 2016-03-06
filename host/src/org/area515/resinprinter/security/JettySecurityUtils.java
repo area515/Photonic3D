@@ -19,6 +19,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Calendar;
 import java.util.Date;
 
 import org.area515.resinprinter.server.HostInformation;
@@ -161,7 +162,10 @@ public class JettySecurityUtils {
 			HostInformation info = HostProperties.Instance().loadHostInformation();
     		generateRSAKeypairAndKeystore(
     				"cn=" + ipAddress + ",ou=" + info.getDeviceName() + ",ou=" + info.getManufacturer(),
-    				new Date(new Date().getYear() + 5, 1, 1),
+    				new Calendar.Builder().set(Calendar.YEAR, Calendar.getInstance()
+    						.get(Calendar.YEAR) + 5).set(Calendar.MONTH, 2)
+    						.set(Calendar.DAY_OF_MONTH, 1)
+    						.build().getTime(),
     				keystoreFile + "", 
     				ipAddress, 
     				HostProperties.Instance().getKeypairPassword(), 

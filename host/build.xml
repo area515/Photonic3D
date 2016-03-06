@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<project name="cwh" basedir=".">
+<project name="cwh" basedir="." default="build">
   <include file="BuildCWH.xml" as="packaging"/>
 
   <property name="build" location="srcbin"/>
@@ -76,7 +76,10 @@
 
   <target name="compile" depends="setup">
     <javac srcdir="${src}" destdir="${build}" classpathref="libs" source="1.8"
-           includeantruntime="false" debug="true"/>
+           includeantruntime="false" debug="true">
+      <compilerarg value="-XDignore.symbol.file" />
+      <!-- <compilerarg value="-Xlint:deprecation,unchecked" /> -->
+    </javac>
   </target>
 
   <target name="testcompile" depends="setup">
