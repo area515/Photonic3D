@@ -113,4 +113,19 @@
       <sysproperty key="log4j.configurationFile" path="${log4jconf}"/>
     </java>
   </target>
+
+  <target name="test" depends="build,testbuild,os">
+    <junit haltonerror="false" haltonfailure="false" filtertrace="true" fork="true">
+      <sysproperty key="java.library.path" path="${toString:oslib}"/>
+      <sysproperty key="log4j.configurationFile" path="${log4jconf}"/>
+      <classpath>
+        <path refid="run.classpath"/>
+        <pathelement location="${testbuild}"/>
+      </classpath>
+      <batchtest skipNonTests="true">
+        <fileset dir="${testsrc}" includes="**/*.java" excludes="**/*Suite*"/>
+        <formatter type="plain" usefile="false"/>
+      </batchtest>
+    </junit>
+  </target>
 </project>
