@@ -27,60 +27,60 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore( {"javax.management.*"}) 
+@PowerMockIgnore({"javax.management.*"})
 public class IOUtilitiesTest {
     private static final Logger logger = LogManager.getLogger();
 
     private class InputStreamReadDelayedAnswer implements Answer<Integer>{
 		private int delay;
 		private byte[] byteData;
-		
+
 		public InputStreamReadDelayedAnswer(int delay, byte[] byteData) {
 			this.delay = delay;
 			this.byteData = byteData;
 		}
-		
+
 		@Override
 		public Integer answer(InvocationOnMock invocation) throws Throwable {
 			byte[] data = (byte[])invocation.getArguments()[0];
 			int offset = (int)invocation.getArguments()[1];
 			int length = (int)invocation.getArguments()[2];
-			
+
 			Assert.assertEquals(byteData.length, length);
 			Thread.sleep(delay);
 			System.arraycopy(byteData, 0, data, offset, length);
 			return byteData.length;
 		}
 	}
-	
+
 	private class SerialPortReadDelayedAnswer implements Answer<byte[]>{
 		private int delay;
 		private byte[] byteData;
-		
+
 		public SerialPortReadDelayedAnswer(int delay, byte[] byteData) {
 			this.delay = delay;
 			this.byteData = byteData;
 		}
-		
+
 		@Override
 		public byte[] answer(InvocationOnMock invocation) throws Throwable {
 			Thread.sleep(delay);
 			return byteData;
 		}
 	}
-	
+
 	private ByteArrayOutputStream mockRuntime(String dataToReturn) throws IOException {
 		Runtime runtime = Mockito.mock(Runtime.class);
 		PowerMockito.mockStatic(Runtime.class);
 		PowerMockito.when(Runtime.getRuntime()).thenReturn(runtime);
-		
+
 		final ByteArrayOutputStream output = new ByteArrayOutputStream();
 		final Process mockedProcess = Mockito.mock(Process.class);
 		Mockito.when(mockedProcess.getInputStream())
 			.thenReturn(new StringBufferInputStream(dataToReturn));
 		Mockito.when(mockedProcess.getOutputStream())
 			.thenReturn(output);
-		
+
 		Mockito.when(runtime.exec(Mockito.any(String[].class)))
 			.then(new Answer<Process>() {
 				@Override
@@ -88,7 +88,7 @@ public class IOUtilitiesTest {
 					return mockedProcess;
 				}
 			});
-		
+
 		return output;
 	}
 
@@ -97,15 +97,15 @@ public class IOUtilitiesTest {
 		byte[] firstBytes = line.getBytes();
 		Mockito.when(stream.available()).thenReturn(firstBytes.length).thenReturn(firstBytes.length);
 		Mockito.when(stream.read(Mockito.any(byte[].class), Mockito.eq(0), Mockito.eq(firstBytes.length))).thenAnswer(new InputStreamReadDelayedAnswer(0, firstBytes));
-		
+
 		ParseState state = IOUtilities.readLine(stream, builder, "[\n]", 0, 0, cpuDelay);
-		
+
 		Assert.assertEquals(0, state.parseLocation);
 		Assert.assertEquals(line, state.currentLine);
 	}
-	
-	
-	
+
+
+
 	@Test
 	@PrepareForTest(IOUtilities.class)
 	public void testNativeCommandExecution() throws IOException {
@@ -115,12 +115,12 @@ public class IOUtilitiesTest {
 			builder.append(directory);
 			builder.append("\n");
 		}
-		
+
 		mockRuntime(builder.toString());
 		String[] returnedDirectories = IOUtilities.executeNativeCommand(new String[]{"ls {0}"}, null, "stuff");
 		Assert.assertArrayEquals(directories, returnedDirectories);
 	}
-	
+
 	@Test
 	@PrepareForTest(IOUtilities.class)
 	public void testNativeCommandCommunication() throws IOException {
@@ -132,7 +132,7 @@ public class IOUtilitiesTest {
 		actions.add(new ParseAction(new String[]{""}, "\\s*>", SearchStyle.RepeatUntilMatch));
 		actions.add(new ParseAction(new String[]{"scan_results\n"}, "bssid.*", SearchStyle.RepeatUntilMatch));
 		actions.add(new ParseAction(new String[]{""}, "\\s*([A-Fa-f0-9:]+)\\s+(\\d+)\\s+(\\d+)\\s+([\\[\\]\\+\\-\\w]+)\\s+(\\w*)\\s*", SearchStyle.RepeatWhileMatching));
-		
+
 		List<String[]> dataReturned = IOUtilities.communicateWithNativeCommand(actions, "^>|\n", true, null, "wlan0");
 		Assert.assertEquals("SomeNetwork", dataReturned.get(0)[4]);
 		Assert.assertEquals("CenturyLink9999", dataReturned.get(1)[4]);
@@ -142,10 +142,10 @@ public class IOUtilitiesTest {
 	public void inputStreamReadLineTest() throws IOException {
 		StringBuilder builder = new StringBuilder();
 		InputStream stream = org.mockito.Mockito.mock(InputStream.class);
-		
+
 		testSingleLine("ok\n", builder, stream);
 		testSingleLine("\n", builder, stream);
-		
+
 		logger.info(builder);
 	}
 
@@ -154,7 +154,7 @@ public class IOUtilitiesTest {
 		int streamDelayTooLong = 100;
 		int timeout = 50;
 		int cpuDelay = 10;
-		
+
 		StringBuilder builder = new StringBuilder();
 		InputStream stream = org.mockito.Mockito.mock(InputStream.class);
 		byte[] bytes = "o".getBytes();
@@ -173,7 +173,7 @@ public class IOUtilitiesTest {
 			.thenAnswer(new InputStreamReadDelayedAnswer(streamDelayTooLong, bytes3))
 			.thenAnswer(new InputStreamReadDelayedAnswer(streamDelayTooLong, bytes4))
 			.thenThrow(new IllegalArgumentException("The read method should never have been called this time."));
-		
+
 		//This tests that an inputstream read wasn't able to complete a full line read in the given timeout period.
 		ParseState state = IOUtilities.readLine(stream, builder, "[\n]", 0, timeout, cpuDelay);
 		Assert.assertEquals(1, state.parseLocation);
@@ -194,13 +194,13 @@ public class IOUtilitiesTest {
 		Assert.assertEquals(0, state.parseLocation);
 		Assert.assertEquals("world\n", state.currentLine);
 	}
-	
+
 	@Test
 	public void serialPortSplitReadLineTest() throws IOException {
 		int streamDelayTooLong = 100;
 		int timeout = 50;
 		int cpuDelay = 10;
-		
+
 		StringBuilder builder = new StringBuilder();
 		SerialCommunicationsPort serial = org.mockito.Mockito.mock(SerialCommunicationsPort.class);
 		Printer printer = org.mockito.Mockito.mock(Printer.class);
@@ -214,7 +214,7 @@ public class IOUtilitiesTest {
 			.thenAnswer(new SerialPortReadDelayedAnswer(streamDelayTooLong, bytes3))
 			.thenAnswer(new SerialPortReadDelayedAnswer(streamDelayTooLong, bytes4))
 			.thenThrow(new IllegalArgumentException("The read method should never have been called this time."));
-		
+
 		//This tests that an inputstream read wasn't able to complete a full line read in the given timeout period.
 		ParseState state = IOUtilities.readLine(printer, serial, builder, 0, timeout, cpuDelay);
 		Assert.assertEquals(1, state.parseLocation);
@@ -235,14 +235,14 @@ public class IOUtilitiesTest {
 		Assert.assertEquals(0, state.parseLocation);
 		Assert.assertEquals("world\n", state.currentLine);
 	}
-	
+
 	@Test
 	public void readWithTimeoutSerialPortTest() throws IOException, InterruptedException {
 		int streamDelayTooLong = 200;
 		int streamDelayOk = 5;
 		int timeout = 100;
 		int cpuDelay = 10;
-		
+
 		SerialCommunicationsPort serial = org.mockito.Mockito.mock(SerialCommunicationsPort.class);
 		byte[] bytes = "j".getBytes();
 		byte[] bytes2 = "k".getBytes();
@@ -255,28 +255,28 @@ public class IOUtilitiesTest {
 
 		String data = IOUtilities.readWithTimeout(serial, timeout, cpuDelay);
 		Assert.assertEquals("", data);
-		
+
 		data = IOUtilities.readWithTimeout(serial, timeout, cpuDelay);
 		Assert.assertEquals("j", data);
-		
+
 		data = IOUtilities.readWithTimeout(serial, timeout, cpuDelay);
 		Assert.assertEquals("k", data);
 
 	}
-	
+
 	@Test
 	public void readWithTimeoutInputStreamTest() throws IOException, InterruptedException {
 		int streamDelayTooLong = 200;
 		int streamDelayOk = 5;
 		int timeout = 100;
 		int cpuDelay = 10;
-		
+
 		InputStream stream = org.mockito.Mockito.mock(InputStream.class);
 		byte[] bytes = "hello".getBytes();
 		byte[] bytes2 = "worlds".getBytes();
 		byte[] checkBytes = new byte[bytes.length];
 		byte[] checkBytes2 = new byte[bytes2.length];
-		
+
 		Mockito.when(stream.available())
 			.thenReturn(0)
 			.thenReturn(bytes.length)
@@ -289,11 +289,11 @@ public class IOUtilitiesTest {
 
 		int dataRead = IOUtilities.readWithTimeout(stream, checkBytes, timeout, cpuDelay);
 		Assert.assertEquals(0, dataRead);
-		
+
 		dataRead = IOUtilities.readWithTimeout(stream, checkBytes, timeout, cpuDelay);
 		Assert.assertEquals(bytes.length, dataRead);
 		Assert.assertArrayEquals(bytes, checkBytes);
-		
+
 		dataRead = IOUtilities.readWithTimeout(stream, checkBytes2, timeout, cpuDelay);
 		Assert.assertArrayEquals(bytes2, checkBytes2);
 	}

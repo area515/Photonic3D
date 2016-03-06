@@ -76,13 +76,13 @@
 
   <target name="compile" depends="setup">
     <javac srcdir="${src}" destdir="${build}" classpathref="libs" source="1.8"
-           includeantruntime="false" />
+           includeantruntime="false" debug="true"/>
   </target>
 
   <target name="testcompile" depends="setup">
     <javac srcdir="${testsrc}" destdir="${testbuild}"
            classpathref="run.classpath" source="1.8"
-           includeantruntime="false"/>
+           includeantruntime="false" debug="true"/>
   </target>
 
   <target name="build" depends="compile">
@@ -101,7 +101,7 @@
       </fileset>
     </copy>
   </target>
- 
+
   <target name="dist" depends="build,packaging.BuildCWH">
   </target>
 
@@ -115,7 +115,8 @@
   </target>
 
   <target name="test" depends="build,testbuild,os">
-    <junit haltonerror="false" haltonfailure="false" filtertrace="true" fork="true">
+    <junit haltonerror="false" haltonfailure="false" filtertrace="true"
+      fork="true" failureproperty="test.failed">
       <sysproperty key="java.library.path" path="${toString:oslib}"/>
       <sysproperty key="log4j.configurationFile" path="${log4jconf}"/>
       <classpath>
@@ -123,9 +124,11 @@
         <pathelement location="${testbuild}"/>
       </classpath>
       <batchtest skipNonTests="true">
-        <fileset dir="${testsrc}" includes="**/*.java" excludes="**/*Suite*"/>
+        <fileset dir="${testsrc}" includes="**/*TestSuite.java"
+          excludes="**/*Hardware*"/>
         <formatter type="plain" usefile="false"/>
       </batchtest>
     </junit>
+    <fail message="Test failure detected, check test results." if="test.failed" />
   </target>
 </project>
