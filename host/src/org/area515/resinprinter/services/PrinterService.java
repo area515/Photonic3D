@@ -426,7 +426,7 @@ public class PrinterService {
 			
 			currentConfiguration.getSlicingProfile().setDotsPermmX(xPixelsPerMM);
 			currentConfiguration.getSlicingProfile().setDotsPermmY(yPixelsPerMM);
-			
+			currentConfiguration.setCalibrated(true);
 			logger.info("Showing calibration screen for xPixelsPerMM:{} yPixelsPerMM:{}", xPixelsPerMM, yPixelsPerMM);
 			
 			HostProperties.Instance().addOrUpdatePrinterConfiguration(currentConfiguration);
