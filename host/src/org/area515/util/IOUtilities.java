@@ -109,7 +109,7 @@ public class IOUtilities {
 			for (ParseAction parseAction : parseActions) {
 				String[] replacedCommands = new String[parseAction.command.length];
 				for (int t = 0; t < parseAction.command.length; t++) {
-					replacedCommands[t] = MessageFormat.format(parseAction.command[t], arguments);
+					replacedCommands[t] = MessageFormat.format(parseAction.command[t], (Object)arguments);
 				}
 
 				if (firstIteration) {
@@ -328,7 +328,7 @@ public class IOUtilities {
 		try {
 			String[] replacedCommands = new String[commands.length];
 			for (int t = 0; t < commands.length; t++) {
-				replacedCommands[t] = MessageFormat.format(commands[t], arguments);
+				replacedCommands[t] = MessageFormat.format(commands[t], (Object)arguments);
 			}
 			listSSIDProcess = Runtime.getRuntime().exec(replacedCommands);
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
