@@ -1,3 +1,4 @@
 #Build Number for ANT. Do not edit!
 #Sun Feb 14 18:09:03 CST 2016
 build.number=228
+repo.version=@@REPO_VER@@

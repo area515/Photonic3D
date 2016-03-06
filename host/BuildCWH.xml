@@ -1,13 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Packaging Generator" default="BuildCWH">
-	<target name="BuildCWH" description="build server and client">
+	<available file=".git" type="dir" property="git.present"/>
+
+	<target name="git" description="Store git revision in ${repository.version}">
+	    <exec executable="git" outputproperty="git.revision" failifexecutionfails="false" errorproperty="">
+	        <arg value="describe"/>
+	        <arg value="--abbrev=5"/>
+	        <arg value="--always"/>
+	        <arg value="--tags"/>
+	    </exec>
+	    <condition property="repo.version" value="${git.revision}" else="unknown">
+	        <and>
+	            <isset property="git.revision"/>
+	            <length string="${git.revision}" trim="yes" length="0" when="greater"/>
+	        </and>
+	    </condition>
+			<echo>Repo version is: ${repo.version}</echo>
+	</target>
+
+	<target name="BuildCWH" depends="git" description="build server and client">
 		<buildnumber/>
-		<property name="deployedServerZipFile" value="cwh-0.${build.number}.zip"/>
-		<property name="deployedTestZipFile" value="cwhTestKit-0.${build.number}.zip"/>
-		<property name="deployedClientZipFile" value="cwhClient-0.${build.number}.zip"/>
+		<property name="deployedServerZipFile" value="cwh-${repo.version}-${build.number}.zip"/>
+		<property name="deployedTestZipFile" value="cwhTestKit-${repo.version}-${build.number}.zip"/>
+		<property name="deployedClientZipFile" value="cwhClient-${repo.version}-${build.number}.zip"/>
+
+		<copy file="build.number" tofile="srcbin/build.number" overwrite="yes">
+			<filterchain>
+				<replacetokens>
+					<token key="@REPO_VER@" value="${repo.version}" />
+				</replacetokens>
+			</filterchain>
+		</copy>
 
 		<zip destfile="${deployedServerZipFile}">
-			<zipfileset dir="." includes="**/build.number"/>
+			<zipfileset dir="srcbin" includes="**/build.number"/>
 			<zipfileset dir="srcbin" includes="**/*.class"/>
 			<zipfileset dir="srcbin" includes="**/*.png"/>
 			<zipfileset dir="srcbin" includes="**/*.properties"/>
@@ -31,7 +57,7 @@
 			<zipfileset dir="libs/log4j" prefix="lib" includes="**/*"/>
 		</zip>
 		<zip destfile="${deployedTestZipFile}">
-			<zipfileset dir="." includes="**/build.number"/>
+			<zipfileset dir="srcbin" includes="**/build.number"/>
 			<zipfileset dir="srcbin" includes="**/*.class"/>
 			<zipfileset dir="srcbin" includes="**/*.png"/>
 			<zipfileset dir="srcbin" includes="**/*.properties"/>
@@ -58,6 +84,7 @@
       <zipfileset dir="libs/alphanumeric-comparator" prefix="lib" includes="**/*"/>
 		</zip>
 		<zip destfile="${deployedClientZipFile}">
+			<zipfileset dir="srcbin" includes="**/build.number"/>
 			<zipfileset dir="srcbin/org/area515/resinprinter/client" prefix="org/area515/resinprinter/client" includes="**/*.class"/>
 			<zipfileset dir="srcbin/org/area515/resinprinter/slice" prefix="org/area515/resinprinter/slice" includes="**/*.class"/>
 			<zipfileset dir="srcbin/org/area515/resinprinter/stl" prefix="org/area515/resinprinter/stl" includes="**/*.class"/>

@@ -1,21 +1,20 @@
 {
   "package": {
-    "name": "Creation-Workshop-Host",
-    "repo": "CWH",
-    "subject": "jmkao"
+    "name": "Photonic3D",
+    "repo": "Photonic3D",
+    "subject": "area515"
   },
 
   "version": {
-    "name": "Dev"
+    "name": "Development-Stream"
   },
 
   "files": [
     {
-      "includePattern": "host\/(.*)-.*\.zip",
+      "includePattern": "host\/([^-]+)-.*\.zip",
       "uploadPattern": "$1.zip",
       "matrixParams": { "override": 1 }
     }
   ],
-  "publish": false
+  "publish": true
 }
-
