@@ -118,7 +118,7 @@ public abstract class GCodeControl {
     	return sendGcode(String.format("G1 Y%1.3f\r\n", dist));
     }
     public String executeMoveZ(double dist) {
-    	return sendGcode(String.format("G1 Z%1.3f\r\n", dist));
+    	return sendGcode(String.format("G1 Z%1.3f F100.0\r\n", dist));
     }
     public String executeMotorsOn() {
     	return sendGcode("M17\r\n");
@@ -133,7 +133,7 @@ public abstract class GCodeControl {
         return sendGcode("G28 Y\r\n");
     }
     public String executeZHome() {
-        return sendGcode("G28 Z\r\n");
+        return sendGcode("G28\r\n");
     }
     public String executeHomeAll() {
         return sendGcode("G28\r\n");
