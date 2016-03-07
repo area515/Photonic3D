@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Packaging Generator" default="BuildCWH">
-	<available file=".git" type="dir" property="git.present"/>
+	<property environment="env"/>
 
 	<target name="git" description="Store git revision in ${repository.version}">
 	    <exec executable="git" outputproperty="git.revision" failifexecutionfails="false" errorproperty="">
@@ -20,9 +20,21 @@
 
 	<target name="BuildCWH" depends="git" description="build server and client">
 		<buildnumber/>
-		<property name="deployedServerZipFile" value="cwh-${repo.version}-${build.number}.zip"/>
-		<property name="deployedTestZipFile" value="cwhTestKit-${repo.version}-${build.number}.zip"/>
-		<property name="deployedClientZipFile" value="cwhClient-${repo.version}-${build.number}.zip"/>
+
+		<condition property="deployedServerZipFile" value="cwh-${repo.version}-${build.number}.zip"
+			else="cwh-0.${build.number}.zip">
+			<istrue value="${env.CI}"/>
+		</condition>
+
+		<condition property="deployedTestZipFile" value="cwhTestKit-${repo.version}-${build.number}.zip"
+			else="cwhTestKit-0.${build.number}.zip">
+			<istrue value="${env.CI}"/>
+		</condition>
+
+		<condition property="deployedClientZipFile" value="cwhClient-${repo.version}-${build.number}.zip"
+			else="cwhClient-0.${build.number}.zip">
+			<istrue value="${env.CI}"/>
+		</condition>
 
 		<copy file="build.number" tofile="srcbin/build.number" overwrite="yes">
 			<filterchain>
