@@ -1,0 +1,74 @@
+// Configuration:
+plugins {
+  id "co.riiid.gradle" version "0.4.2"
+  id 'org.ajoberstar.grgit' version '1.4.2'
+}
+repositories {
+
+}
+
+dependencies {
+
+}
+
+github {
+  // Set owner, repo, and token in gradle.properties
+  owner = releaseRepoOwner
+  repo = releaseRepoName
+  token = releaseRepoToken
+  // tagName = 'd001'
+  // Must compute assets in task, otherwise you can't release with dist
+  // assets = ant.path {fileset(dir: '.', includes: '*.zip')} . list()
+}
+
+// Setup:
+import org.ajoberstar.grgit.*
+
+ant.importBuild 'build.xml'
+grgit = Grgit.open(project.file('..'), new Credentials(releaseRepoOwner, releaseRepoToken));
+
+// Tasks:
+task setupRelease() << {
+
+  if (releaseRepoToken.equals('GITHUB_API_TOKEN')) {
+    throw new GradleException("Please setup your gradle.properties for GitHub Releases")
+  }
+  def status = grgit.status();
+  println("----------------------------------------------")
+  println("Description of current commit: "+grgit.describe())
+  println("UNCOMMITTED STAGED CHANGES: "+status.staged)
+  println("UNCOMMITTED UNSTAGED CHANGES: "+status.unstaged)
+  println("----------------------------------------------")
+  github.assets = ant.path {fileset(dir: '.', includes: '*.zip')} . list()
+  if (github.assets.size() < 1) {
+    throw new GradleException("There are no zip files to release in the project directory.")
+  }
+
+  def releaseUrl = "https://github.com/${github.owner}/${github.repo}.git"
+  println("Releasing to: "+releaseUrl)
+
+  def matchingRemotes = grgit.remote.list().findAll({it.url==releaseUrl})
+  if (matchingRemotes.size < 1) {
+    throw new GradleException("No configured remotes match the release URL!")
+  }
+
+  def remoteName = matchingRemotes[0].name
+
+  def tagName
+  def console = System.console()
+  if (console) {
+    console.printf("\n\n");
+    println("Releasing the following files: "+github.assets);
+    tagName = console.readLine('\nEnter the tag to create for this release > ');
+  } else {
+    throw new GradleException('Cannot create console to get user input')
+  }
+
+  github.tagName = tagName
+
+  grgit.tag.add(name: tagName, force: true)
+  grgit.push(tags: true, remote: remoteName);
+}
+
+// Post-setup
+githubRelease.dependsOn setupRelease
