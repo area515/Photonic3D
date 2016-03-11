@@ -190,7 +190,7 @@ public class MachineService {
 		
 					if (!iFaceUp) {
 						//After executing this method, don't expect this JVM to stick around much longer
-						IOUtilities.executeNativeCommand(HostProperties.Instance().getRebootCommand(), null, null);
+						IOUtilities.executeNativeCommand(HostProperties.Instance().getRebootCommand(), null, (String)null);
 					}
 					
 					return true;

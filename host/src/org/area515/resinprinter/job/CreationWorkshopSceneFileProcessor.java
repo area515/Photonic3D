@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -271,7 +272,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		ZipFile zip = null;
 		
 		try {
-			zip = new ZipFile(zipFile);
+			zip = new ZipFile(zipFile, Charset.forName("CP437"));
 			return zip.stream().anyMatch(z -> z.getName().toLowerCase().endsWith("gcode"));
 		} catch (IOException e) {
 			logger.error("Unable to open uploaded zip file", e);
@@ -319,7 +320,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		OutputStream out = null;
 		File extractDirectory = buildExtractionDirectory(jobFile.getName());
 		try {
-			zipFile = new ZipFile(jobFile);
+			zipFile = new ZipFile(jobFile, Charset.forName("CP437"));
 			Enumeration<? extends ZipEntry> entries = zipFile.entries();
 			while (entries.hasMoreElements()) {
 				ZipEntry entry = entries.nextElement();

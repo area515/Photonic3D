@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+
+<project name="cwh" basedir="." default="build">
+  <include file="BuildCWH.xml" as="packaging"/>
+
+  <property name="build" location="srcbin"/>
+  <property name="testbuild" location="testbin"/>
+  <property name="src" location="src" />
+  <property name="testsrc" location="tests" />
+
+  <property name="log4jconf" location="${src}/eclipselog4j2.properties"/>
+
+  <condition property="isLinux64">
+    <os name="Linux" arch="amd64"/>
+  </condition>
+
+  <condition property="isLinux32">
+    <os name="Linux" arch="x86"/>
+  </condition>
+
+  <condition property="isWin32">
+    <os family="windows" arch="x86"/>
+  </condition>
+
+  <condition property="isWin64">
+    <os family="windows" arch="amd64"/>
+  </condition>
+
+  <path id="libs">
+    <fileset dir="libs" includes="**/*.jar"/>
+  </path>
+
+  <path id="run.classpath">
+    <path refid="libs"/>
+    <pathelement location="${build}"/>
+  </path>
+
+  <target name="os" depends="win32,win64,linux32,linux64"/>
+
+  <target name="win32" if="isWin32">
+    <path id="oslib" location="os/win32"/>
+  </target>
+
+  <target name="win64" if="isWin64">
+    <path id="oslib" location="os/win64"/>
+  </target>
+
+  <target name="linux32" if="isLinux32">
+    <path id="oslib" location="os/Linux/i686"/>
+  </target>
+
+  <target name="linux64" if="isLinux64">
+    <path id="oslib" location="os/Linux/x86_64"/>
+  </target>
+
+  <target name="init">
+    <tstamp />
+    <echo>System = ${os.name} ${os.arch}</echo>
+  </target>
+
+  <target name="testclean">
+    <delete dir="${testbuild}"/>
+  </target>
+
+  <target name="clean">
+    <delete dir="${build}"/>
+    <delete>
+      <fileset dir="." includes="*.zip"/>
+    </delete>
+  </target>
+
+  <target name="setup" depends="init">
+    <mkdir dir="${build}"/>
+    <mkdir dir="${testbuild}"/>
+  </target>
+
+  <target name="compile" depends="setup">
+    <javac srcdir="${src}" destdir="${build}" classpathref="libs" source="1.8"
+           includeantruntime="false" debug="true">
+      <compilerarg value="-XDignore.symbol.file" />
+      <!-- <compilerarg value="-Xlint:deprecation,unchecked" /> -->
+    </javac>
+  </target>
+
+  <target name="testcompile" depends="setup">
+    <javac srcdir="${testsrc}" destdir="${testbuild}"
+           classpathref="run.classpath" source="1.8"
+           includeantruntime="false" debug="true"/>
+  </target>
+
+  <target name="build" depends="compile">
+    <copy todir="${build}">
+      <fileset dir="${src}">
+        <exclude name="**/*.java" />
+      </fileset>
+    </copy>
+
+  </target>
+
+  <target name="testbuild" depends="testcompile">
+    <copy todir="${testbuild}">
+      <fileset dir="${testsrc}">
+        <exclude name="**/*.java" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="dist" depends="build,packaging.BuildCWH">
+  </target>
+
+  <target name="run" depends="build,os">
+    <java classname="org.area515.resinprinter.server.Main"
+          classpathref="run.classpath"
+          fork="true">
+      <sysproperty key="java.library.path" path="${toString:oslib}"/>
+      <sysproperty key="log4j.configurationFile" path="${log4jconf}"/>
+    </java>
+  </target>
+
+  <target name="test" depends="build,testbuild,os">
+    <junit haltonerror="false" haltonfailure="false" filtertrace="true"
+      fork="true" failureproperty="test.failed">
+      <sysproperty key="java.library.path" path="${toString:oslib}"/>
+      <sysproperty key="log4j.configurationFile" path="${log4jconf}"/>
+      <classpath>
+        <path refid="run.classpath"/>
+        <pathelement location="${testbuild}"/>
+      </classpath>
+      <batchtest skipNonTests="true">
+        <fileset dir="${testsrc}" includes="**/*TestSuite.java"
+          excludes="**/*Hardware*"/>
+        <formatter type="plain" usefile="false"/>
+      </batchtest>
+    </junit>
+    <fail message="Test failure detected, check test results." if="test.failed" />
+  </target>
+</project>

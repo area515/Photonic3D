@@ -1,0 +1,21 @@
+{
+  "package": {
+    "name": "Creation-Workshop-Host",
+    "repo": "CWH",
+    "subject": "jmkao"
+  },
+
+  "version": {
+    "name": "Dev"
+  },
+
+  "files": [
+    {
+      "includePattern": "host\/(.*)-.*\.zip",
+      "uploadPattern": "$1.zip",
+      "matrixParams": { "override": 1 }
+    }
+  ],
+  "publish": false
+}
+
