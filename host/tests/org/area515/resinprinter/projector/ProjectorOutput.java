@@ -45,7 +45,8 @@ public class ProjectorOutput {
 			System.out.println(portIndex++ + ". " + port.getName());
 		}
 		System.out.println("Type the number of the Serial Port that you would like to test (then press enter):");
-
+		portIndex = Integer.parseInt(reader.readLine());
+		
 		int index = 0;
 		List<ProjectorModel> models = HostProperties.Instance().getAutodetectProjectors();
 		for (ProjectorModel model : models) {
@@ -53,7 +54,7 @@ public class ProjectorOutput {
 		}
 		System.out.println("Type the number of the projector that you would like to test (then press enter):");
 		HexCodeBasedProjector projector = (HexCodeBasedProjector)models.get(Integer.parseInt(reader.readLine()));
-		projector.getDefaultComPortSettings().setPortName(ports.get(index).getName());
+		projector.getDefaultComPortSettings().setPortName(ports.get(portIndex).getName());
 		
 		SerialCommunicationsPort port = new JSSCCommPort();
 		port.open("ProjectorOutputTest", SerialManager.TIME_OUT, projector.getDefaultComPortSettings());
