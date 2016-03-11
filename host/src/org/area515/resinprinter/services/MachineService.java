@@ -1,5 +1,7 @@
 package org.area515.resinprinter.services;
 
+import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
@@ -8,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -16,6 +19,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -43,6 +47,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -210,12 +215,38 @@ public class MachineService {
 		return fileTypes;
 	}
 	
+	@POST
+	@Path("/uploadFont")
+	@Consumes("application/octet-stream")
+	public Response uploadFont(InputStream istream) {
+		try {
+			Font font = Font.createFont(Font.TRUETYPE_FONT, istream);
+			if (!GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(font)) {
+				String output = "Failed to register font due to a possible naming conflict";
+			    logger.info(output);
+				return Response.status(Status.BAD_REQUEST).entity(output).build();
+			}
+			
+			NotificationManager.fileUploadComplete(new File(font.getName()));
+		    logger.info("Font:{} registered:{} glyphs", font.getName(), font.getNumGlyphs());
+		    return Response.status(Status.BAD_REQUEST).entity(font.getName()).build();
+		} catch (IOException e) {
+			String output = "Error while uploading font";
+			logger.error(output, e);
+			return Response.status(Status.BAD_REQUEST).entity(output).build();
+		} catch (FontFormatException e) {
+			String output = "This font didn't seem to be a true type font.";
+			logger.error(output, e);
+			return Response.status(Status.BAD_REQUEST).entity(output).build();
+		}
+	}
+	
 	@GET
 	@Path("supportedFontNames")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Set<String> getSupportedFontFamilies() {
-		Set<String> fontNames = new HashSet<String>();
-		fontNames.addAll(Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()));
+	public List<String> getSupportedFontFamilies() {
+		List<String> fontNames = new ArrayList<String>(Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()));
+		Collections.sort(fontNames);
 		return fontNames;
 	}
 	

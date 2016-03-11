@@ -68,20 +68,37 @@
 	        controller.openType = null;
 		}
 		
-		function openSavePrinterDialog(title, newPrinter) {
-			var newPrinter = newPrinter;
+		function openSavePrinterDialog() {
 			var editPrinterModal = $uibModal.open({
 		        animation: true,
 		        templateUrl: 'editPrinter.html',
 		        controller: 'EditPrinterController',
 		        size: "lg",
 		        resolve: {
-		        	editTitle: function () {return title;},
+		        	title: function () {return "Upload Printable File";},
 		        	openType: function () {return newPrinter;},
 		        	editPrinter: function () {return controller.editPrinter;}
 		        }
 			});
 		    editPrinterModal.result.then(function (savedPrinter) {$scope.savePrinter(savedPrinter, newPrinter)});
+		}
+		
+		//TODO: When we get an upload complete message, we need to refresh file list...
+		this.showFontUpload = function showFontUpload() {
+			var fileChosenModal = $uibModal.open({
+		        animation: true,
+		        templateUrl: 'upload.html',
+		        controller: 'UploadFileController',
+		        size: "lg",
+		        resolve: {
+		        	title: function () {return "Upload True Type Font";},
+		        	supportedFileTypes: function () {return ".ttf";},
+		        	getRestfulFileUploadURL: function () {return function (filename) {return '/services/machine/uploadFont';}},
+		        	getRestfulURLUploadURL: function () {return null;}
+		        }
+			});
+			
+			//fileChosenModal.result.then(function (savedPrinter) {$scope.savePrinter(savedPrinter, newPrinter)});
 		}
 		
 		this.createNewPrinter = function createNewPrinter(editTitle) {

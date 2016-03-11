@@ -52,16 +52,16 @@
     	    $locationProvider.html5Mode({enabled: true, requireBase: true, rewriteLinks: true});
     	}])//*/
     	
-    	cwhApp.controller("IndexController", function ($scope, $http) {
+    	cwhApp.controller("IndexController", function ($rootScope, $scope, $http) {
     		this.changeCurrentPage = function changeCurrentPage(newPageName) {
     			this.currentPage = newPageName;
     		}
     		
-			$scope.$on("MachineResponse", function (event, args) {
+			$rootScope.$on("MachineResponse", function (event, args) {
 				//args = machineResponse, successFunction, afterErrorFunction
             	if (!args.machineResponse.response) {
             		args.machineResponse.command = "Error On " + args.machineResponse.command;
-            		$scope.currentError = args.machineResponse;
+            		$rootScope.currentError = args.machineResponse;
                 	
                 	$('#errorModal').modal().after
                 	if (args.afterErrorFunction != null) {
@@ -70,7 +70,7 @@
             	} else if (args.successFunction != null) {
             		args.successFunction(args.machineResponse);
             	} else {
-            		$scope.currentError = args.machineResponse;
+            		$rootScope.currentError = args.machineResponse;
                 	
                 	$('#errorModal').modal().after
                 	if (args.afterErrorFunction != null) {
@@ -78,7 +78,7 @@
                 	}
             	}
             });
-			$scope.$on("HTTPError", function (event, args){
+			$rootScope.$on("HTTPError", function (event, args){
 				//args = data, status, headers, config, statusText
         		var customMessage;
     			if (args.status == "401") {
@@ -86,15 +86,16 @@
     			} else if (args.status == "400") {
     				customMessage = args.statusText;
     				args.status = "";
-    			} else if (args.startText == null) {
+    			} else if (args.statusText == null) {
     				customMessage = "Problem communicating with host printer.";
     			} else {
     				customMessage = "Problem communicating with host printer. (http:" + args.statusText + ")";
     			}
     			
-    			$scope.currentError = {command:"Server Error " + args.status, message : customMessage};
+    			$rootScope.currentError = {command:"Server Error " + args.status, message : customMessage};
     	    	$('#errorModal').modal();
     	    });
+			
 	        $http.get('/services/settings/visibleCards').success(function(data) {
             	$scope.visibleCards = data;
             });

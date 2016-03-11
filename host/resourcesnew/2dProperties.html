@@ -3,6 +3,10 @@
 				<i class="fa pull-left fa-2x fa-bold"></i>
 				<h4 class="pull-left">Font Properties</h4>
 				<div class="btn-group pull-right" >
+					<button class="btn btn-primary" ng-click="printersController.showFontUpload()">
+						<i class="fa fa-upload"></i> 
+						<span>Upload</span>
+					</button>
 					<button class="btn btn-primary" ng-disabled="printersController.currentPrinter.started" ng-click="savePrinter(printersController.currentPrinter, null)" >
 						<i class="fa fa-pencil"></i>
 						<span>Save</span>

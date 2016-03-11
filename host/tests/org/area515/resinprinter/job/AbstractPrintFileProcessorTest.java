@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutionException;
 import javax.script.ScriptException;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.gcode.GCodeControl;
 import org.area515.resinprinter.gcode.eGENERICGCodeControl;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.Printer;
@@ -16,10 +17,15 @@ import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@RunWith(PowerMockRunner.class)
 public class AbstractPrintFileProcessorTest {
 	@Test
 	public void EnsureMethodsThrowExceptionIfNotInitialized() throws IOException, InappropriateDeviceException, ScriptException, InterruptedException, ExecutionException {
@@ -51,7 +57,7 @@ public class AbstractPrintFileProcessorTest {
 		}
 	}
 	
-	public static PrintJob createTestPrintJob(PrintFileProcessor processor) throws InappropriateDeviceException {
+	public static PrintJob createTestPrintJob(PrintFileProcessor processor) throws InappropriateDeviceException, Exception {
 		PrintJob printJob = Mockito.mock(PrintJob.class);
 		Printer printer = Mockito.mock(Printer.class);
 		PrinterConfiguration printerConfiguration = Mockito.mock(PrinterConfiguration.class);
@@ -71,12 +77,12 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printer.getGCodeControl()).thenReturn(gCode);
 		Mockito.when(slicingProfile.getgCodeLift()).thenReturn("Lift z");
 		Mockito.doCallRealMethod().when(gCode).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString());
-		
+		//PowerMockito.when(gCode, PowerMockito.method(GCodeControl.class, "getPrinter")).withNoArguments().thenReturn(printer);
 		return printJob;
 	}
 	
 	@Test
-	public void unsupportedBuildAreaDoesntBreakProjectorGradient() throws InappropriateDeviceException, ScriptException {
+	public void unsupportedBuildAreaDoesntBreakProjectorGradient() throws InappropriateDeviceException, ScriptException, Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		Graphics2D graphics = Mockito.mock(Graphics2D.class);
 		PrintJob printJob = createTestPrintJob(processor);
@@ -87,7 +93,7 @@ public class AbstractPrintFileProcessorTest {
 	}
 	
 	@Test
-	public void unsupportedBuildAreaDoesntBreakLiftDistanceCalculator() throws InappropriateDeviceException, ScriptException, ExecutionException, InterruptedException {
+	public void unsupportedBuildAreaDoesntBreakLiftDistanceCalculator() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn("var mm = $buildAreaMM * 2;mm");
@@ -97,7 +103,7 @@ public class AbstractPrintFileProcessorTest {
 	}
 	
 	@Test
-	public void getExceptionWhenWeReturnGarbageForLiftDistanceCalculator() throws InappropriateDeviceException, ExecutionException, InterruptedException, ScriptException {
+	public void getExceptionWhenWeReturnGarbageForLiftDistanceCalculator() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn("var mm = $buildAreaMM * 2;java.awt.Color.ORANGE");
@@ -111,7 +117,7 @@ public class AbstractPrintFileProcessorTest {
 	}
 	
 	@Test
-	public void noNullPointerWhenWeReturnNull() throws InappropriateDeviceException, ExecutionException, InterruptedException, ScriptException {
+	public void noNullPointerWhenWeReturnNull() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn(";");
@@ -125,7 +131,7 @@ public class AbstractPrintFileProcessorTest {
 	}
 	
 	@Test
-	public void usingUnsupportedBuildAreaWithLiftDistance() throws InappropriateDeviceException, InterruptedException, ScriptException, ExecutionException {
+	public void usingUnsupportedBuildAreaWithLiftDistance() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		Graphics2D graphics = Mockito.mock(Graphics2D.class);
 		PrintJob printJob = createTestPrintJob(processor);
@@ -149,7 +155,7 @@ public class AbstractPrintFileProcessorTest {
 	}
 	
 	@Test
-	public void syntaxErrorInTemplate() throws InappropriateDeviceException, ScriptException, InterruptedException, ExecutionException {
+	public void syntaxErrorInTemplate() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		Graphics2D graphics = Mockito.mock(Graphics2D.class);
 		PrintJob printJob = createTestPrintJob(processor);
@@ -165,7 +171,7 @@ public class AbstractPrintFileProcessorTest {
 	}
 	
 	@Test
-	public void properGCodeCreated() throws InappropriateDeviceException, ExecutionException, InterruptedException, ScriptException {
+	public void properGCodeCreated() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		Graphics2D graphics = Mockito.mock(Graphics2D.class);
 		PrintJob printJob = createTestPrintJob(processor);

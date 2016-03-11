@@ -19,16 +19,20 @@ import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.test.HardwareCompatibilityTestSuite;
 
 public class ProjectorOutput {
-	public static String getCustomString(BufferedReader reader) throws IOException {
+    public static String convertHexString(String data) {
 		Pattern pattern = Pattern.compile("0[xX]([1234567890a-fA-F]{2})\\s*");
-		System.out.println("Enter custom hex string in the form \"0x00 0x00 0x00\" (then press enter):");
-		String data = reader.readLine();
 		StringBuilder builder = new StringBuilder();
 		Matcher matcher = pattern.matcher(data);
 		while (matcher.find()) {
 			builder.append(matcher.group(1));
 		}
 		return builder.toString();
+    }
+
+    public static String getCustomString(BufferedReader reader) throws IOException {
+		System.out.println("Enter custom hex string in the form \"0x00 0x00 0x00\" (then press enter):");
+		String data = reader.readLine();
+		return convertHexString(data);
 	}
 	
 	public static void main(String[] args) throws Exception {

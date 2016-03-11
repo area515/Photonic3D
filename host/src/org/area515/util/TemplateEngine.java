@@ -118,6 +118,9 @@ public class TemplateEngine {
 	        template.process(root, out);
 	        return out.toString();
         } catch (TemplateException e) {
+        	
+        	//TODO: this is a bit of a gray area, we aren't throwing an exception when they use buildAreaMM/bulbHours in something that doesn't use the print processor, but should we???
+        	
         	//This means that buildAreaMM isn't supported for this printer
         	if (e.getBlamedExpressionString().equals("buildAreaMM") && e.getMessage().contains("The following has evaluated to null or missing")) {
         		logger.error("buildAreaMM was used in a template:" + templateString + ", but isn't supported by this print processor.");
