@@ -174,6 +174,7 @@ public class PrintableService {
 	static boolean saveFile(InputStream uploadedInputStream, File permanentFile) throws IOException {
 		OutputStream output = null;
 		try {
+			//TODO: Why the heck is this so complicated? Just save the stream to a file for goodness sake!
 			File tempFile = File.createTempFile("upload", permanentFile.getName().substring(permanentFile.getName().lastIndexOf(".")));
 			output = new FileOutputStream(tempFile);
 			IOUtils.copy(uploadedInputStream, output);
@@ -187,6 +188,13 @@ public class PrintableService {
 				
 			Files.delete(permanentFile.toPath());
 			return false;
+		} catch (Exception e) {
+			try {
+				Files.delete(permanentFile.toPath());
+			} catch (IOException ex) {
+				logger.error("Couldn't delete file, that's ok because the exception that caused this is much worse.", ex);
+			}
+			throw e;
 		} finally {
 			if (output != null) {
 				try {output.close();} catch (IOException e) {}

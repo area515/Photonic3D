@@ -369,6 +369,14 @@ public class Printer {
 	public void setBulbHours(Integer bulbHours) {
 		this.bulbHours = bulbHours;
 	}
+	
+	public Integer getCachedBulbHours() {
+		return bulbHours;
+	}
+	public void setCachedBulbHours(Integer bulbHours) {
+		this.bulbHours = bulbHours;
+	}
+	
 	public long getCurrentSlicePauseTime() {
 		return currentSlicePauseTime;
 	}

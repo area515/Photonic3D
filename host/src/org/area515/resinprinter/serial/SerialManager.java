@@ -86,9 +86,10 @@ public class SerialManager {
 	public DetectedResources getProjectorModel(SerialCommunicationsPort currentIdentifier, ComPortSettings printerSettings) {
 		DetectedResources resources = null;
 		for (ProjectorModel model : HostProperties.Instance().getAutodetectProjectors()) {
+			logger.debug("Are you using projector:{}", model.getName());
 			ComPortSettings newSettings = new ComPortSettings(printerSettings);
 			
-			logger.debug("Projector settings from printer:{}", newSettings);
+			logger.debug("Projector settings from printer configuration:{}", newSettings);
 			mergeSettings(newSettings, model.getDefaultComPortSettings());
 			logger.debug("Merged settings from projector:{} and attempting detection with: {}", model.getDefaultComPortSettings(), newSettings);
 				
@@ -135,7 +136,7 @@ public class SerialManager {
 				logger.debug("No data received from:{}", newComPortSettings);
 				return false;
 			}
-			if (lines[lines.length - 1].matches("[Oo][Kk].*")) {
+			if (lines[lines.length - 1].matches("(?s:[Oo][Kk].*)")) {
 				logger.debug("3dprinter firmware found on:{}", newComPortSettings);
 				return true;
 			}

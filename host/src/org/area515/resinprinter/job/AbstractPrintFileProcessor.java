@@ -97,6 +97,9 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		data.printJob.setExposureTime(data.inkConfiguration.getExposureTime());
 		data.printJob.setZLiftDistance(data.slicingProfile.getLiftFeedRate());
 		data.printJob.setZLiftSpeed(data.slicingProfile.getLiftDistance());
+		
+		//Initialize bulb hours only once per print
+		data.printer.getBulbHours();
 	}
 	
 	public JobStatus performPreSlice(List<StlError> errors) throws InappropriateDeviceException {
