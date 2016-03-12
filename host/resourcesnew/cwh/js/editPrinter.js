@@ -1,8 +1,8 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
 
-	cwhApp.controller("EditPrinterController", function ($scope, $http, $uibModalInstance, editTitle, openType, editPrinter) {
-		$scope.editTitle = editTitle;
+	cwhApp.controller("EditPrinterController", function ($scope, $http, $uibModalInstance, title, editPrinter) {
+		$scope.title = title;
 		$scope.editPrinter = editPrinter;
 		
 		//TODO: All of these things should come from the MachineService

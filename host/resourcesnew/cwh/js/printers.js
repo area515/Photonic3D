@@ -58,8 +58,8 @@
 			openSavePrinterDialog(editTitle, false);
 		}
 
-		$scope.savePrinter = function savePrinter(printer, newPrinter) {
-			if (newPrinter) {
+		$scope.savePrinter = function savePrinter(printer, isNewPrinter) {
+			if (isNewPrinter) {
 				controller.editPrinter.configuration.MachineConfigurationName = controller.editPrinter.configuration.name;
 				controller.editPrinter.configuration.SlicingProfileName = controller.editPrinter.configuration.name;
 			}
@@ -68,19 +68,18 @@
 	        controller.openType = null;
 		}
 		
-		function openSavePrinterDialog() {
+		function openSavePrinterDialog(editTitle, isNewPrinter) {
 			var editPrinterModal = $uibModal.open({
 		        animation: true,
 		        templateUrl: 'editPrinter.html',
 		        controller: 'EditPrinterController',
 		        size: "lg",
 		        resolve: {
-		        	title: function () {return "Upload Printable File";},
-		        	openType: function () {return newPrinter;},
+		        	title: function () {return editTitle;},
 		        	editPrinter: function () {return controller.editPrinter;}
 		        }
 			});
-		    editPrinterModal.result.then(function (savedPrinter) {$scope.savePrinter(savedPrinter, newPrinter)});
+		    editPrinterModal.result.then(function (savedPrinter) {$scope.savePrinter(savedPrinter, isNewPrinter)});
 		}
 		
 		//TODO: When we get an upload complete message, we need to refresh file list...

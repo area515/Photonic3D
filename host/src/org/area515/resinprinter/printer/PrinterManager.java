@@ -103,11 +103,12 @@ public class PrinterManager {
 			throw new AlreadyAssignedException("Printer already started:" + currentConfiguration.getName(), (Printer)null);
 		}
 		
-		Lock printerLock = inProgressLocksByName.putIfAbsent(currentConfiguration.getName(), new ReentrantLock());
-		if (!printerLock.tryLock()) {
+		Lock printerLock = new ReentrantLock();
+		printerLock.lock();
+		Lock oldLock = inProgressLocksByName.putIfAbsent(currentConfiguration.getName(), printerLock);
+		if (oldLock != null && !oldLock.tryLock()) {
 			throw new JobManagerException("This printer:" + currentConfiguration.getName() + " is being started. Can't start again.");
 		}
-		
 		try {
 			printer = new Printer(currentConfiguration);
 			String monitorId = currentConfiguration.getMachineConfig().getOSMonitorID();
