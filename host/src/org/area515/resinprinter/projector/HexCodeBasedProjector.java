@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class HexCodeBasedProjector implements ProjectorModel {
     private static final Logger logger = LogManager.getLogger();
-	private static final int PROJECTOR_TIMEOUT = 5000;
+	public static final int PROJECTOR_TIMEOUT = 5000;
 	
 	public static enum Conversion {
 		BigEndian,
@@ -242,27 +242,6 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	@Override
 	public boolean autodetect(SerialCommunicationsPort port) {
 		return findString(port, detectionHex, detectionResponsePattern) != null;
-	}
-	
-	public String testCodeAgainstPattern(SerialCommunicationsPort port, String hexCode, Pattern pattern) throws IOException {
-		logger.info("Writing:{}", hexCode);
-		port.write(DatatypeConverter.parseHexBinary(hexCode));
-		long start = System.currentTimeMillis();
-		StringBuilder builder = new StringBuilder();
-		while (true) {
-			byte[] response = port.read();
-			if (response != null) {
-				builder.append(new String(response));
-				
-				if (pattern != null && pattern.matcher(builder.toString()).matches()) {
-					return "Match:(" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + ") against: " + pattern.pattern();
-				}
-			}
-			
-			if (System.currentTimeMillis() - start >= PROJECTOR_TIMEOUT) {
-				return "No Match:(" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + ") against: " + pattern != null?pattern.pattern():null;
-			}
-		}
 	}
 
 	@Override
