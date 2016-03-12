@@ -45,28 +45,30 @@ public class ProjectorOutput {
 			if (response != null) {
 				builder.append(new String(response));
 				
-				Matcher matcher = pattern.matcher(builder.toString());
-				if (pattern != null && matcher.matches()) {
-					StringBuilder returnBuilder = new StringBuilder();
-					returnBuilder.append("Match:");
-					
-					for (int t = 0; t <= matcher.groupCount(); t++) {
-						returnBuilder.append("\nGroup ");
-						returnBuilder.append(t);
-						returnBuilder.append(" Hex:");
-						if (matcher.group(t) == null) {
-							returnBuilder.append("null");
-						} else {
-							returnBuilder.append(DatatypeConverter.printHexBinary(matcher.group(t).getBytes()));
+				if (pattern != null) {
+					Matcher matcher = pattern.matcher(builder.toString());
+					if (matcher.matches()) {
+						StringBuilder returnBuilder = new StringBuilder();
+						returnBuilder.append("Match:");
+						
+						for (int t = 0; t <= matcher.groupCount(); t++) {
+							returnBuilder.append("\nGroup ");
+							returnBuilder.append(t);
+							returnBuilder.append(" Hex:");
+							if (matcher.group(t) == null) {
+								returnBuilder.append("null");
+							} else {
+								returnBuilder.append(DatatypeConverter.printHexBinary(matcher.group(t).getBytes()));
+							}
+							returnBuilder.append("\nGroup ");
+							returnBuilder.append(t);
+							returnBuilder.append(" ASCII:");
+							returnBuilder.append(matcher.group(t));
 						}
-						returnBuilder.append("\nGroup ");
-						returnBuilder.append(t);
-						returnBuilder.append(" ASCII:");
-						returnBuilder.append(matcher.group(t));
+						returnBuilder.append("\nAgainst:");
+						returnBuilder.append(pattern.pattern());
+						return returnBuilder.toString();
 					}
-					returnBuilder.append("\nAgainst:");
-					returnBuilder.append(pattern.pattern());
-					return returnBuilder.toString();
 				}
 			}
 			
