@@ -88,7 +88,7 @@ public class TemplateEngine {
 
 		root.put("now", new Date());
 		root.put("shutterOpen", printer.isShutterOpen());
-		root.put("bulbHours", printer.getBulbHours());
+		root.put("bulbHours", printer.getCachedBulbHours());
 		root.put("CURSLICE", job.getCurrentSlice());
 		root.put("LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
 		root.put("ZDir", printer.getConfiguration().getSlicingProfile().getDirection().getVector());
@@ -140,7 +140,7 @@ public class TemplateEngine {
 	public static Object runScript(PrintJob job, Printer printer, ScriptEngine engine, String script, String scriptName, Map<String, Object> overrides) throws ScriptException {
 		engine.put("now", new Date());
 		engine.put("$shutterOpen", printer.isShutterOpen());
-		Integer bulbHours = printer.getBulbHours();
+		Integer bulbHours = printer.getCachedBulbHours();
 		engine.put("$bulbHours", bulbHours == null || bulbHours < 0?Double.NaN:new Double(bulbHours));
 		engine.put("$CURSLICE", job.getCurrentSlice());
 		engine.put("$LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());

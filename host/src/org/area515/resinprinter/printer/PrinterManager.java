@@ -5,6 +5,8 @@ import java.awt.GraphicsDevice;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +25,7 @@ public class PrinterManager {
 	private ConcurrentHashMap<Printer, PrintJob> printJobsByPrinter = new ConcurrentHashMap<Printer, PrintJob>();
 	private ConcurrentHashMap<String, Printer> printersByName = new ConcurrentHashMap<String, Printer>();
 	private ConcurrentHashMap<PrintJob, Printer> printersByJob = new ConcurrentHashMap<PrintJob, Printer>();
+	private ConcurrentHashMap<String, Lock> inProgressLocksByName = new ConcurrentHashMap<String, Lock>();
 	
 	public static PrinterManager Instance() {
 		if (INSTANCE == null) {
@@ -100,6 +103,11 @@ public class PrinterManager {
 			throw new AlreadyAssignedException("Printer already started:" + currentConfiguration.getName(), (Printer)null);
 		}
 		
+		Lock printerLock = inProgressLocksByName.putIfAbsent(currentConfiguration.getName(), new ReentrantLock());
+		if (!printerLock.tryLock()) {
+			throw new JobManagerException("This printer:" + currentConfiguration.getName() + " is being started. Can't start again.");
+		}
+		
 		try {
 			printer = new Printer(currentConfiguration);
 			String monitorId = currentConfiguration.getMachineConfig().getOSMonitorID();
@@ -158,6 +166,8 @@ public class PrinterManager {
 				printer.close();
 			}
 			throw new InappropriateDeviceException("Internal error on server");
+		} finally {
+			printerLock.unlock();
 		}
 	}
 	
