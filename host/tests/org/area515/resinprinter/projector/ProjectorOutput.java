@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.area515.resinprinter.printer.ComPortSettings;
+import javax.xml.bind.DatatypeConverter;
+
 import org.area515.resinprinter.serial.JSSCCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
-import org.area515.resinprinter.test.HardwareCompatibilityTestSuite;
 
 public class ProjectorOutput {
     public static String convertHexString(String data) {
@@ -33,6 +33,50 @@ public class ProjectorOutput {
 		System.out.println("Enter custom hex string in the form \"0x00 0x00 0x00\" (then press enter):");
 		String data = reader.readLine();
 		return convertHexString(data);
+	}
+	
+	public static String testCodeAgainstPattern(SerialCommunicationsPort port, String hexCode, Pattern pattern) throws IOException {
+		System.out.println("Writing:" + hexCode);
+		port.write(DatatypeConverter.parseHexBinary(hexCode));
+		long start = System.currentTimeMillis();
+		StringBuilder builder = new StringBuilder();
+		while (true) {
+			byte[] response = port.read();
+			if (response != null) {
+				builder.append(new String(response));
+				
+				Matcher matcher = pattern.matcher(builder.toString());
+				if (pattern != null && matcher.matches()) {
+					StringBuilder returnBuilder = new StringBuilder();
+					returnBuilder.append("Match:");
+					
+					for (int t = 0; t <= matcher.groupCount(); t++) {
+						returnBuilder.append("\nGroup ");
+						returnBuilder.append(t);
+						returnBuilder.append(" Hex:");
+						if (matcher.group(t) == null) {
+							returnBuilder.append("null");
+						} else {
+							returnBuilder.append(DatatypeConverter.printHexBinary(matcher.group(t).getBytes()));
+						}
+						returnBuilder.append("\nGroup ");
+						returnBuilder.append(t);
+						returnBuilder.append(" ASCII:");
+						returnBuilder.append(matcher.group(t));
+					}
+					returnBuilder.append("\nAgainst:");
+					returnBuilder.append(pattern.pattern());
+					return returnBuilder.toString();
+				}
+			}
+			
+			if (System.currentTimeMillis() - start >= HexCodeBasedProjector.PROJECTOR_TIMEOUT) {
+				return "No Match\n"
+						+ " Hex:" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + "\n"
+						+ " ASCII:" + builder.toString().getBytes() + "\n"
+						+ "Against:" + (pattern != null?pattern.pattern():null);
+			}
+		}
 	}
 	
 	public static void main(String[] args) throws Exception {
@@ -71,19 +115,19 @@ public class ProjectorOutput {
 			
 			switch (hex) {
 			case 0:
-				System.out.println(projector.testCodeAgainstPattern(port, projector.getOnHex(), null));
+				System.out.println(testCodeAgainstPattern(port, projector.getOnHex(), null));
 				break;
 			case 1:
-				System.out.println(projector.testCodeAgainstPattern(port, projector.getOffHex(), null));
+				System.out.println(testCodeAgainstPattern(port, projector.getOffHex(), null));
 				break;
 			case 2:
-				System.out.println(projector.testCodeAgainstPattern(port, projector.getDetectionHex(), Pattern.compile(projector.getDetectionResponseRegex())));
+				System.out.println(testCodeAgainstPattern(port, projector.getDetectionHex(), Pattern.compile(projector.getDetectionResponseRegex())));
 				break;
 			case 3:
-				System.out.println(projector.testCodeAgainstPattern(port, projector.getBulbHoursHex(), Pattern.compile(projector.getBulbHoursResponseRegex())));
+				System.out.println(testCodeAgainstPattern(port, projector.getBulbHoursHex(), Pattern.compile(projector.getBulbHoursResponseRegex())));
 				break;
 			case 4:
-				System.out.println(projector.testCodeAgainstPattern(port, getCustomString(reader), null));
+				System.out.println(testCodeAgainstPattern(port, getCustomString(reader), null));
 				break;
 			}
 		}
