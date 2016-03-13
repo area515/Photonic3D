@@ -2,24 +2,12 @@
 <project name="Packaging Generator" default="BuildCWH">
 	<property environment="env"/>
 
-	<target name="git" description="Store git revision in ${repository.version}">
-	    <exec executable="git" outputproperty="git.revision" failifexecutionfails="false" errorproperty="">
-	        <arg value="describe"/>
-	        <arg value="--abbrev=5"/>
-	        <arg value="--always"/>
-	        <arg value="--tags"/>
-	    </exec>
-	    <condition property="repo.version" value="${git.revision}" else="unknown">
-	        <and>
-	            <isset property="git.revision"/>
-	            <length string="${git.revision}" trim="yes" length="0" when="greater"/>
-	        </and>
-	    </condition>
-			<echo>Repo version is: ${repo.version}</echo>
-	</target>
-
-	<target name="BuildCWH" depends="git" description="build server and client">
+	<target name="BuildCWH" description="build server and client">
 		<buildnumber/>
+
+		<condition property="repo.version" value="${repo.version}" else="unknown">
+			<isset property="repo.version" />
+		</condition>
 
 		<condition property="deployedServerZipFile" value="cwh-${repo.version}-${build.number}.zip"
 			else="cwh-0.${build.number}.zip">
