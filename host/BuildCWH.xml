@@ -39,7 +39,7 @@
 		<copy file="build.number" tofile="srcbin/build.number" overwrite="yes">
 			<filterchain>
 				<replacetokens>
-					<token key="@REPO_VER@" value="${repo.version}" />
+					<token key="REPO_VER" value="${repo.version}" />
 				</replacetokens>
 			</filterchain>
 		</copy>
