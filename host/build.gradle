@@ -25,9 +25,27 @@ github {
 import org.ajoberstar.grgit.*
 
 ant.importBuild 'build.xml'
-grgit = Grgit.open(project.file('..'), new Credentials(releaseRepoOwner, releaseRepoToken));
+grgit = Grgit.open(project.file('..'), new Credentials(releaseRepoOwner, releaseRepoToken))
+def commitVersion = "unknown"
 
 // Tasks:
+task repoVersion() << {
+  commitVersion = grgit.describe()
+
+  if (commitVersion == null) {
+    def history = grgit.log(maxCommits: 1)
+    commitVersion = history[0].id.take(5)
+  }
+
+  ant.properties['repo.version'] = commitVersion
+
+  println("Git Commit Description: "+commitVersion)
+}
+
+task dist(dependsOn: ['build', 'BuildCWH', 'repoVersion']) {
+
+}
+
 task setupRelease() << {
 
   if (releaseRepoToken.equals('GITHUB_API_TOKEN')) {
@@ -72,3 +90,5 @@ task setupRelease() << {
 
 // Post-setup
 githubRelease.dependsOn setupRelease
+BuildCWH.mustRunAfter build
+BuildCWH.mustRunAfter repoVersion
