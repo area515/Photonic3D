@@ -2,6 +2,11 @@
 	var cwhApp = angular.module('cwhApp');
 	cwhApp.controller("PrintersController", ['$scope', '$http', '$location', '$anchorScroll', '$uibModal', function ($scope, $http, $location, $anchorScroll, $uibModal) {
 		controller = this;
+		var PRINTERS_DIRECTORY = "printers";
+		var BRANCH = "master";
+		var REPO = "WesGilster";
+		
+		$scope.repo = REPO;
 		
 		this.loadingFontsMessage = "--- Loading fonts from server ---"
 		function refreshSelectedPrinter(printerList) {
@@ -83,7 +88,7 @@
 		}
 		
 		//TODO: When we get an upload complete message, we need to refresh file list...
-		this.showFontUpload = function showFontUpload() {
+		$scope.showFontUpload = function showFontUpload() {
 			var fileChosenModal = $uibModal.open({
 		        animation: true,
 		        templateUrl: 'upload.html',
@@ -99,6 +104,18 @@
 			
 			//fileChosenModal.result.then(function (savedPrinter) {$scope.savePrinter(savedPrinter, newPrinter)});
 		}
+		
+		$scope.installCommunityPrinter = function installCommunityPrinter(printer) {
+	        $http.post(printer.download_url).success(
+	        		function (data) {
+	        			controller.editPrinter = data;
+	        			$scope.savePrinter(controller.editPrinter, true);
+	        		}).error(
+    				function (data, status, headers, config, statusText) {
+ 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
+	        		})
+	        return;
+	    }
 		
 		this.createNewPrinter = function createNewPrinter(editTitle) {
 			if (controller.currentPrinter == null) {
@@ -195,6 +212,12 @@
 					controller.fontNames = data;
 					controller.loadingFontsMessage = "Select a font...";
 				});
+		
+		$http.get("https://api.github.com/repos/" + REPO + "/Creation-Workshop-Host/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(
+			function (data) {
+				$scope.communityPrinters = data;
+			}
+		);
 		
 		controller.inkDetectors = [{name:"Visual Ink Detector", className:"org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector"}];
 		refreshPrinters();

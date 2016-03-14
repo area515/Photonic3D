@@ -29,9 +29,25 @@
 		  						<i class="fa fa-stack-2x fa-2x fa-play text-danger" ng-show="printer.printInProgress"></i>
 								<i class="fa fa-stack-3x fa-2x fa-ban text-danger" ng-hide="printer.started"></i>
 							</span>
-							<!-- <img src="/images/Sofia Acey.jpg" class="img-rounded pull-left"/>-->
 							<h4 class="list-group-item-heading">{{printer.configuration.name}}</h4>
 							<p class="list-group-item-text">{{printer.printInProgress?"Status:" + printer.status:"Port:" + printer.configuration.machineConfig.MotorsDriverConfig.ComPortSettings.PortName + " Display:" + printer.configuration.machineConfig.MonitorDriverConfig.OSMonitorID}}</p>
+						</a>
+						<div class="list-group-item" ng-show="printers.length == 0">
+							<i class="pull-left fa fa-2x fa-exclamation-triangle"></i>
+							<h3 class="list-group-item-heading" >Haven't setup a printer?<br>Try one of these...</h3>
+						</div>
+						<a class="list-group-item" ng-show="printers.length == 0" ng-repeat="printer in communityPrinters" ng-click="installCommunityPrinter(printer)">
+							<i class="pull-left fa fa-2x fa-print"></i>
+							<h4 class="list-group-item-heading">Printer: {{printer.name}}</h4>
+							<p class="list-group-item-text">
+									Printer Community: {{repo}}
+							</p>
+							<p class="list-group-item-text">
+									SHA: {{printer.sha}}
+							</p>
+							<p class="list-group-item-text">
+									Size: {{printer.size}}
+							</p>
 						</a>
 				</div>
 				<div class="panel-footer">

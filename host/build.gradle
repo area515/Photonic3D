@@ -47,7 +47,6 @@ task dist(dependsOn: ['build', 'BuildCWH', 'repoVersion']) {
 }
 
 task setupRelease() << {
-
   if (releaseRepoToken.equals('GITHUB_API_TOKEN')) {
     throw new GradleException("Please setup your gradle.properties for GitHub Releases")
   }
@@ -62,7 +61,7 @@ task setupRelease() << {
     throw new GradleException("There are no zip files to release in the project directory.")
   }
 
-  def releaseUrl = "https://github.com/${github.owner}/${github.repo}.git"
+  def releaseUrl = "https://github.com/${github.owner}/${github.repo}"
   println("Releasing to: "+releaseUrl)
 
   def matchingRemotes = grgit.remote.list().findAll({it.url==releaseUrl})
@@ -72,14 +71,16 @@ task setupRelease() << {
 
   def remoteName = matchingRemotes[0].name
 
-  def tagName
-  def console = System.console()
-  if (console) {
-    console.printf("\n\n");
-    println("Releasing the following files: "+github.assets);
-    tagName = console.readLine('\nEnter the tag to create for this release > ');
-  } else {
-    throw new GradleException('Cannot create console to get user input')
+  def tagName = "$System.env.tagName";
+  if (tagName == "${null}") {
+	  def console = System.console()
+	  if (console) {
+	    console.printf("\n\n");
+	    println("Releasing the following files: "+github.assets);
+	    tagName = console.readLine('\nEnter the tag to create for this release > ');
+	  } else {
+	    throw new GradleException('Cannot create console to get user input')
+	  }
   }
 
   github.tagName = tagName
