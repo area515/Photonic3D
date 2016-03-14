@@ -1,0 +1,103 @@
+{  
+   "configuration":{  
+      "name":"Photocentric 10",
+      "machineConfig":{  
+         "FileVersion":0,
+         "PlatformXSize":222.72,
+         "PlatformYSize":125.28,
+         "PlatformZSize":200.0,
+         "MaxXFeedRate":0,
+         "MaxYFeedRate":0,
+         "MaxZFeedRate":0,
+         "XRenderSize":1366,
+         "YRenderSize":768,
+         "MotorsDriverConfig":{  
+            "DriverType":"Photocentric",
+            "ComPortSettings":{  
+               "PortName":"Autodetect 3d printer firmware",
+               "Speed":115200,
+               "Databits":8,
+               "Parity":"None",
+               "Stopbits":"One",
+               "Handshake":"None"
+            }
+         },
+         "MonitorDriverConfig":{  
+            "DLP_X_Res":1366.0,
+            "DLP_Y_Res":768.0,
+            "OSMonitorID":"0.0",
+            "DisplayCommEnabled":false,
+            "ComPortSettings":{  
+               "PortName":"Autodetect projector",
+               "Handshake":"None"
+            },
+            "MonitorTop":12.65,
+            "MonitorLeft":11.36,
+            "MonitorRight":11.36,
+            "MonitorBottom":12.64,
+            "UseMask":false
+         }
+      },
+      "slicingProfile":{  
+         "gCodeHeader":"G91;M17",
+         "gCodeFooter":"G1 Z 5;M18",
+         "gCodePreslice":null,
+         "gCodeLift":"G1{$SlideTiltVal != 0? X$SlideTiltVal:} Z($ZLiftDist * $ZDir) F{$CURSLICE &lt; $NumFirstLayers?$ZBottomLiftRate:$ZLiftRate}; G1{$SlideTiltVal != 0? X($SlideTiltVal * -1):} Z(($LayerThickness-$ZLiftDist) * $ZDir) F$ZRetractRate;&lt;Delay&gt; %d($ZLiftDist*60000/$ZRetractRate+200)",
+         "gCodeShutter":null,
+         "zliftDistanceGCode":"M650 D${ZLiftDist} S${ZLiftRate}",
+         "zliftSpeedGCode":"M650 D${ZLiftDist} S${ZLiftRate}",
+         "selectedInkConfigIndex":0,
+         "DotsPermmX":6.133261494252874,
+         "DotsPermmY":6.130268199233716,
+         "XResolution":1366,
+         "YResolution":768,
+         "BlankTime":0,
+         "PlatformTemp":0,
+         "ExportSVG":0,
+         "Export":false,
+         "ExportPNG":false,
+         "Direction":"Bottom_Up",
+         "LiftDistance":5.0,
+         "SlideTiltValue":0,
+         "AntiAliasing":false,
+         "UseMainLiftGCode":false,
+         "AntiAliasingValue":0.0,
+         "LiftFeedRate":50.0,
+         "LiftRetractRate":0.0,
+         "FlipX":false,
+         "FlipY":true,
+         "ZLiftDistanceCalculator":"var value = 9.0;\nif ($CURSLICE > $NumFirstLayers) {\n value = 3.5555555555555420e+000 * Math.pow($buildAreaMM,0) + 4.3333333333334060e-003 * Math.pow($buildAreaMM,1) + 1.1111111111110492e-006 * Math.pow($buildAreaMM,2);\n}\nvalue",
+         "ZLiftSpeedCalculator":"var value = 0.25;\nif ($CURSLICE > $NumFirstLayers) {\n value = 4.6666666666666705e+000 * Math.pow($buildAreaMM,0) + -7.0000000000000184e-003 * Math.pow($buildAreaMM,1) + 3.3333333333333490e-006 * Math.pow($buildAreaMM,2);\n}\nvalue",
+         "ProjectorGradientCalculator":"var bulbCenter = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\nvar bulbFocus = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\nvar totalSizeOfGradient = $buildPlatformXPixels > $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;\nvar fractions = [0.0, 1.0];\n//Let's start with 20% opaque in the center of the projector bulb\nvar colors = [new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.2), new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.0)];\nnew Packages.java.awt.RadialGradientPaint(\n\tbulbCenter,\n\ttotalSizeOfGradient,\n\tbulbFocus,\n\tfractions,\n\tcolors,\n\tjava.awt.MultipleGradientPaint.CycleMethod.NO_CYCLE)",
+         "ExposureTimeCalculator":"var value = $FirstLayerTime;\nif ($CURSLICE > $NumFirstLayers) {\n\tvalue = $LayerTime\n}\nvalue",
+         "SelectedInk":"Default",
+         "MinTestExposure":0,
+         "TestExposureStep":0,
+         "InkConfig":[  
+            {  
+               "PercentageOfPrintMaterialConsideredEmpty":10.0,
+               "Name":"Default",
+               "SliceHeight":0.1,
+               "LayerTime":26000,
+               "FirstLayerTime":140000,
+               "NumberofBottomLayers":10,
+               "ResinPriceL":65.0
+            }
+         ],
+         "Font":{  
+            "Name":"Dialog",
+            "Size":20
+         }
+      },
+      "MachineConfigurationName":"Photocentric 10",
+      "SlicingProfileName":"Hard daylight red 0.1",
+      "AutoStart":true
+   },
+   "started":true,
+   "shutterOpen":false,
+   "displayDeviceID":"0.0",
+   "currentSlicePauseTime":0,
+   "status":"Ready",
+   "printInProgress":false,
+   "printPaused":false
+}
