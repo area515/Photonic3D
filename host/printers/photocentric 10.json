@@ -14,7 +14,7 @@
          "MotorsDriverConfig":{  
             "DriverType":"Photocentric",
             "ComPortSettings":{  
-               "PortName":"First available serial port",
+               "PortName":"Autodetect 3d printer firmware",
                "Speed":115200,
                "Databits":8,
                "Parity":"None",
@@ -68,7 +68,7 @@
          "FlipY":true,
          "ZLiftDistanceCalculator":"var value = 9.0;\nif ($CURSLICE > $NumFirstLayers) {\n value = 3.5555555555555420e+000 * Math.pow($buildAreaMM,0) + 4.3333333333334060e-003 * Math.pow($buildAreaMM,1) + 1.1111111111110492e-006 * Math.pow($buildAreaMM,2);\n}\nvalue",
          "ZLiftSpeedCalculator":"var value = 0.25;\nif ($CURSLICE > $NumFirstLayers) {\n value = 4.6666666666666705e+000 * Math.pow($buildAreaMM,0) + -7.0000000000000184e-003 * Math.pow($buildAreaMM,1) + 3.3333333333333490e-006 * Math.pow($buildAreaMM,2);\n}\nvalue",
-         "ProjectorGradientCalculator":"var bulbCenter = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\nvar bulbFocus = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\nvar totalSizeOfGradient = $buildPlatformXPixels > $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;\nvar fractions = [0.0, 1.0];\n//Let's start with 20% opaque in the center of the projector bulb\nvar colors = [new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.0), new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.0)];\nnew Packages.java.awt.RadialGradientPaint(\n\tbulbCenter,\n\ttotalSizeOfGradient,\n\tbulbFocus,\n\tfractions,\n\tcolors,\n\tjava.awt.MultipleGradientPaint.CycleMethod.NO_CYCLE)",
+         "ProjectorGradientCalculator":null,
          "ExposureTimeCalculator":"var value = $FirstLayerTime;\nif ($CURSLICE > $NumFirstLayers) {\n\tvalue = $LayerTime\n}\nvalue",
          "SelectedInk":"Default",
          "MinTestExposure":0,
