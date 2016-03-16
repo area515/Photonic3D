@@ -79,7 +79,7 @@ Do you want to install the latest unstable daily development build?
 ```
 sudo wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/bin/start.sh
 sudo chmod 777 start.sh
-sudo ./start.sh WesGilster
+sudo ./start.sh WesGilster/Creation-Workshop-Host
 ```
 
 Do you want to install under Windows?
