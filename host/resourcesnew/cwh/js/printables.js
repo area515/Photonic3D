@@ -1,11 +1,8 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$anchorScroll', 'Upload', 'cwhWebSocket', function ($scope, $http, $location, $anchorScroll, Upload, cwhWebSocket) {
+	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket) {
 		controller = this;
 		
-		this.urlToUpload = null;
-		this.filenameToUpload = null;
-		this.fileToUpload = null;
 		this.currentPrintable = null;
 		this.supportedFileTypes = null;
 		
@@ -54,51 +51,25 @@
 		this.changeCurrentPrintable = function changeCurrentPrintable(newPrintable) {
 			controller.currentPrintable = newPrintable;
 		}
-		this.uploadFile = function uploadFile() {
-			//TODO: we shouldn't do this here! There needs to be validations on the form!!!
-			if (controller.fileToUpload == null) {
-				$scope.$emit("MachineResponse", {machineResponse: {"command":"File Upload", "message":"Select a file first!"}, successFunction:null, afterErrorFunction:null});
-				return;
-			}
-		    controller.fileToUpload.upload = Upload.http({
-		      url: '/services/printables/uploadPrintableFile/' + encodeURIComponent(controller.fileToUpload.name),
-		      method: 'POST',
-		      headers: {
-		        'Content-Type': "application/octet-stream"//"multipart/form-data"//controller.fileToUpload.type
-		      },
-		      data: controller.fileToUpload
-		    });
-	
-		    controller.fileToUpload.upload.then(function (response) {
-		    	//TODO: Upload complete should reload file list
-		    		controller.fileToUpload.result = response.data;
-		    	}, function (response) {
-			    	//TODO: Upload complete should reload file list
-		    		if (response.status > 0)
-		    			$scope.errorMsg = response.status + ': ' + response.data;
-		    	}
-		    );
-	
-		    controller.fileToUpload.upload.progress(function (evt) {
-		      controller.fileToUpload.progress = Math.min(100, parseInt(100.0 * evt.loaded / evt.total));
-		    });
-		}
-		
-		this.uploadURL = function uploadURL() {
-			$http.post("services/printables/uploadviaurl/" + encodeURIComponent(controller.filenameToUpload) + "/" + encodeURIComponent(controller.urlToUpload)).then(
-		    		function (data) {
-		    			alert("Upload submitted...");
-		    		},
-		    		function (error) {
- 	        			$scope.$emit("HTTPError", {status:error.status, statusText:error.data});
-		    		});
-		}
-		
+
 		//TODO: When we get an upload complete message, we need to refresh file list...
 		this.showUpload = function showUpload() {
-			//TODO: use data-toggle="modal" don't need js...
-        	$('#uploadModal').modal();
+			var fileChosenModal = $uibModal.open({
+		        animation: true,
+		        templateUrl: 'upload.html',
+		        controller: 'UploadFileController',
+		        size: "lg",
+		        resolve: {
+		        	title: function () {return "Upload Printable";},
+		        	supportedFileTypes: function () {return null},
+		        	getRestfulFileUploadURL: function () {return function (filename) {return '/services/printables/uploadPrintableFile/' + encodeURIComponent(filename);}},
+		        	getRestfulURLUploadURL: function () {return function (filename, url) {return "services/printables/uploadviaurl/" + encodeURIComponent(filename) + "/" + encodeURIComponent(url)}}
+		        }
+			});
+			
+			//fileChosenModal.result.then(function (savedPrinter) {$scope.savePrinter(savedPrinter, newPrinter)});
 		}
+		
 		this.getPrintableIconClass = function getPrintableIconClass(printable) {
 			if (printable.printFileProcessor.friendlyName === 'Image') {
 				return "fa-photo";
@@ -120,17 +91,7 @@
 			}
 			return "fa-question-circle";
 		}
-		this.loadSupportedFileTypes = function loadSupportedFileTypes() {
-			$http.get("/services/machine/supportedFileTypes").success(
-	        		function (data) {
-	        			controller.supportedFileTypes = data.map(function (element) {
-	        				return "." + element;
-	        			}).join();
-	        		}
-		        );
-		}
-		
-		this.loadSupportedFileTypes();
+
 		this.refreshPrintables();
 	}])
 

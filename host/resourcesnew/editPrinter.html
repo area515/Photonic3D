@@ -1,60 +1,61 @@
 <form class="form-horizontal" >
 	<div class="modal-header">
 			<div class="btn-group pull-left">
-				<button class="btn btn-danger" data-dismiss="modal">
+				<button class="btn btn-danger" data-dismiss="modal" ng-click="cancel()">
 					Cancel
 				</button>
 			</div>
 			
 			<div class="btn-group pull-right">
-				<button class="btn btn-success" data-dismiss="modal" ng-click="printersController.savePrinter(printersController.editPrinter)">
+				<button class="btn btn-success" data-dismiss="modal" ng-click="save()">
 					Save
 				</button>
 			</div>
+			
 			<h4 class="modal-title">
-					{{printersController.editTitle}}
+					{{title}}
 			</h4>
 	</div>
 	<div class="modal-body">
 			<div class="form-group">
 				<label class="col-xs-4 control-label">Printer Name</label>
 				<div class="col-xs-8">
-					<input type="text" class="form-control" placeholder="Printer Name" ng-model="printersController.editPrinter.configuration.name">
+					<input type="text" class="form-control" placeholder="Printer Name" ng-model="editPrinter.configuration.name">
 				</div>
 			</div>
 			<div class="form-group">
 				<label class="col-xs-4 control-label"></label>
 				<div class="col-xs-8">
-					<input type="checkbox" ng-model="printersController.editPrinter.configuration.AutoStart">Start printer when CWH starts</label>
+					<input type="checkbox" ng-model="editPrinter.configuration.AutoStart">Start printer when CWH starts</label>
 				</div>
 			</div>
 			<div class="form-group">
 				<label class="col-xs-4 control-label">Display</label>
 				<div class="col-xs-8">
 					<select name="type" class="form-control" 
-						ng-model="printersController.editPrinter.configuration.machineConfig.MonitorDriverConfig.OSMonitorID" 
-						ng-options="graphicsDisplay for graphicsDisplay in printersController.graphicsDisplays">
+						ng-model="editPrinter.configuration.machineConfig.MonitorDriverConfig.OSMonitorID" 
+						ng-options="graphicsDisplay for graphicsDisplay in graphicsDisplays">
 					  <option value="" selected>Select a Graphics Display...</option>
 					</select>
 				</div>
 			</div>
 			<div cwh-comport
 				serialportlabel="'Motors Serial Port'"
-				ng-model="printersController.editPrinter.configuration.machineConfig.MotorsDriverConfig.ComPortSettings"
-				serialportchoices="printersController.serialPorts"
-				speedchoices="printersController.comPortSpeeds"
-				paritychoices="printersController.parities"
-				stopbitschoices="printersController.stopBits"
-				databitschoices="printersController.dataBits">
+				ng-model="editPrinter.configuration.machineConfig.MotorsDriverConfig.ComPortSettings"
+				serialportchoices="serialPorts"
+				speedchoices="comPortSpeeds"
+				paritychoices="parities"
+				stopbitschoices="stopBits"
+				databitschoices="dataBits">
 			</div>
 			<div cwh-comport
 				serialportlabel="'Projector Serial Port'"
-				ng-model="printersController.editPrinter.configuration.machineConfig.MonitorDriverConfig.ComPortSettings"
-				serialportchoices="printersController.serialPorts"
-				speedchoices="printersController.comPortSpeeds"
-				paritychoices="printersController.parities"
-				stopbitschoices="printersController.stopBits"
-				databitschoices="printersController.dataBits">
+				ng-model="editPrinter.configuration.machineConfig.MonitorDriverConfig.ComPortSettings"
+				serialportchoices="serialPorts"
+				speedchoices="comPortSpeeds"
+				paritychoices="parities"
+				stopbitschoices="stopBits"
+				databitschoices="dataBits">
 			</div>
 	</div>
 </form>

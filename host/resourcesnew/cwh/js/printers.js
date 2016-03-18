@@ -1,7 +1,12 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("PrintersController", ['$scope', '$http', '$location', '$anchorScroll', function ($scope, $http, $location, $anchorScroll) {
+	cwhApp.controller("PrintersController", ['$scope', '$http', '$location', '$anchorScroll', '$uibModal', function ($scope, $http, $location, $anchorScroll, $uibModal) {
 		controller = this;
+		var PRINTERS_DIRECTORY = "printers";
+		var BRANCH = "master";
+		var REPO = "WesGilster";
+		
+		$scope.repo = REPO;
 		
 		this.loadingFontsMessage = "--- Loading fonts from server ---"
 		function refreshSelectedPrinter(printerList) {
@@ -18,6 +23,7 @@
         		controller.currentPrinter = null;
         	}
         }
+		
 		function refreshPrinters() {
 	        $http.get('/services/printers/list').success(function(data) {
 	        	$scope.printers = data;
@@ -25,7 +31,7 @@
 	        });
 	    }
 		
-		this.executeActionAndRefreshPrinters = function executeActionAndRefreshPrinters(command, message, service, targetPrinter, postTargetPrinter) {
+		function executeActionAndRefreshPrinters(command, message, service, targetPrinter, postTargetPrinter) {
 			if (targetPrinter == null) {
     			$scope.$emit("MachineResponse", {machineResponse: {command:command, message:message, successFunction:null, afterErrorFunction:null}});
 		        return;
@@ -51,13 +57,72 @@
 			}
 		}
 		
-		this.createNewPrinter = function createNewPrinter(editTitle) {
+		$scope.editCurrentPrinter = function editCurrentPrinter(editTitle) {
 			controller.editTitle = editTitle;
+			controller.editPrinter = JSON.parse(JSON.stringify(controller.currentPrinter));
+			openSavePrinterDialog(editTitle, false);
+		}
+
+		$scope.savePrinter = function savePrinter(printer, isNewPrinter) {
+			if (isNewPrinter) {
+				controller.editPrinter.configuration.MachineConfigurationName = controller.editPrinter.configuration.name;
+				controller.editPrinter.configuration.SlicingProfileName = controller.editPrinter.configuration.name;
+			}
+			executeActionAndRefreshPrinters("Save Printer", "No printer selected to save.", '/services/printers/save', printer, true);
+	        controller.editPrinter = null;
+	        controller.openType = null;
+		}
+		
+		function openSavePrinterDialog(editTitle, isNewPrinter) {
+			var editPrinterModal = $uibModal.open({
+		        animation: true,
+		        templateUrl: 'editPrinter.html',
+		        controller: 'EditPrinterController',
+		        size: "lg",
+		        resolve: {
+		        	title: function () {return editTitle;},
+		        	editPrinter: function () {return controller.editPrinter;}
+		        }
+			});
+		    editPrinterModal.result.then(function (savedPrinter) {$scope.savePrinter(savedPrinter, isNewPrinter)});
+		}
+		
+		//TODO: When we get an upload complete message, we need to refresh file list...
+		$scope.showFontUpload = function showFontUpload() {
+			var fileChosenModal = $uibModal.open({
+		        animation: true,
+		        templateUrl: 'upload.html',
+		        controller: 'UploadFileController',
+		        size: "lg",
+		        resolve: {
+		        	title: function () {return "Upload True Type Font";},
+		        	supportedFileTypes: function () {return ".ttf";},
+		        	getRestfulFileUploadURL: function () {return function (filename) {return '/services/machine/uploadFont';}},
+		        	getRestfulURLUploadURL: function () {return null;}
+		        }
+			});
+			
+			//fileChosenModal.result.then(function (savedPrinter) {$scope.savePrinter(savedPrinter, newPrinter)});
+		}
+		
+		$scope.installCommunityPrinter = function installCommunityPrinter(printer) {
+	        $http.post(printer.download_url).success(
+	        		function (data) {
+	        			controller.editPrinter = data;
+	        			$scope.savePrinter(controller.editPrinter, true);
+	        		}).error(
+    				function (data, status, headers, config, statusText) {
+ 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
+	        		})
+	        return;
+	    }
+		
+		this.createNewPrinter = function createNewPrinter(editTitle) {
 			if (controller.currentPrinter == null) {
 		        $http.post('/services/printers/createTemplatePrinter').success(
 		        		function (data) {
 		        			controller.editPrinter = data;
-		                	$('#editModal').modal();
+		        			openSavePrinterDialog(editTitle, true);
 		        		}).error(
 	    				function (data, status, headers, config, statusText) {
 	 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
@@ -70,31 +135,19 @@
 			//These must be set before we save a printer, otherwise the xml files aren't saved properly
 			controller.editPrinter.configuration.MachineConfigurationName = controller.editPrinter.configuration.name;
 			controller.editPrinter.configuration.SlicingProfileName = controller.editPrinter.configuration.name;
-        	$('#editModal').modal();
-		}
-		
-		this.editCurrentPrinter = function editCurrentPrinter(editTitle) {
-			controller.editTitle = editTitle;
-			controller.editPrinter = JSON.parse(JSON.stringify(controller.currentPrinter));
-			//TODO: use data-toggle="modal" don't need js...
-        	$('#editModal').modal();
+			openSavePrinterDialog(editTitle, true);
 		}
 
-		this.savePrinter = function savePrinter(printer) {
-			this.executeActionAndRefreshPrinters("Save Printer", "No printer selected to save.", '/services/printers/save', printer, true);
-	        controller.editPrinter = null;
-		}
-		
 		this.startCurrentPrinter = function startCurrentPrinter() {
-			this.executeActionAndRefreshPrinters("Start Printer", "No printer selected to start.", '/services/printers/start/', controller.currentPrinter, false);
+			executeActionAndRefreshPrinters("Start Printer", "No printer selected to start.", '/services/printers/start/', controller.currentPrinter, false);
 		}
 		
 		this.stopCurrentPrinter = function stopCurrentPrinter() {
-			this.executeActionAndRefreshPrinters("Stop Printer", "No printer selected to Stop.", '/services/printers/stop/', controller.currentPrinter, false);
+			executeActionAndRefreshPrinters("Stop Printer", "No printer selected to Stop.", '/services/printers/stop/', controller.currentPrinter, false);
 		}
 		
 		this.deleteCurrentPrinter = function deleteCurrentPrinter() {
-			this.executeActionAndRefreshPrinters("Delete Printer", "No printer selected to Delete.", '/services/printers/delete/', controller.currentPrinter, false);
+			executeActionAndRefreshPrinters("Delete Printer", "No printer selected to Delete.", '/services/printers/delete/', controller.currentPrinter, false);
 	        controller.currentPrinter = null;
 		}
 		
@@ -154,26 +207,18 @@
     		})
 		}
 		
-		$http.get('/services/machine/serialPorts/list').success(
-				function (data) {
-					controller.serialPorts = data;
-				});
-		
-		$http.get('/services/machine/graphicsDisplays/list').success(
-				function (data) {
-					controller.graphicsDisplays = data;
-				});
 		$http.get('/services/machine/supportedFontNames').success(
 				function (data) {
 					controller.fontNames = data;
 					controller.loadingFontsMessage = "Select a font...";
 				});
 		
-		//TODO: All of these things should come from the MachineService
-		controller.comPortSpeeds = [1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200];
-		controller.parities = ["Even", "Mark", "None", "Odd", "Space"];
-		controller.stopBits = ["None", "One", "1.5", "Two"];
-		controller.dataBits = [5, 6, 7, 8, 9];
+		$http.get("https://api.github.com/repos/" + REPO + "/Creation-Workshop-Host/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(
+			function (data) {
+				$scope.communityPrinters = data;
+			}
+		);
+		
 		controller.inkDetectors = [{name:"Visual Ink Detector", className:"org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector"}];
 		refreshPrinters();
 	}])

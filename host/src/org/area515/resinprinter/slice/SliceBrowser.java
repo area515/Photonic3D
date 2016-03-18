@@ -261,8 +261,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		
 		System.out.println("Bulb Mask Properties");
 		System.out.println("====================");
-		System.out.println("var bulbCenter = new Packages.java.awt.geom.Point2D.Double(${buildPlatformXPixels} * " + ((float)centerX / (float)r.width) + ", ${buildPlatformYPixels} * " + ((float)centerY / (float)r.height) + ")");
-		System.out.println("var bulbFocus = new Packages.java.awt.geom.Point2D.Double(${buildPlatformXPixels} * " + (bulbFocus.getX() / r.width) + ", ${buildPlatformYPixels} * " + (bulbFocus.getY() / r.height) + ")");
+		System.out.println("var bulbCenter = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels * " + ((float)centerX / (float)r.width) + ", $buildPlatformYPixels * " + ((float)centerY / (float)r.height) + ")");
+		System.out.println("var bulbFocus = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels * " + (bulbFocus.getX() / r.width) + ", $buildPlatformYPixels * " + (bulbFocus.getY() / r.height) + ")");
 		System.out.println("var colors = [new Packages.java.awt.Color(0.0, 0.0, 0.0, " + ((float)opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum()) + "), new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.0)];");
 		System.out.println("var fractions = [0.0, 1.0];");
 		System.out.println("var totalSizeOfGradient = $buildPlatformXPixels > $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;");
