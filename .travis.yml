@@ -6,7 +6,9 @@ jdk:
 - oraclejdk8
 os:
 - linux
-script: "(cd host ; ant clean dist)"
+script:
+  - chmod a+rx host/gradlew
+  - "(cd host ; ./gradlew clean dist)"
 deploy:
   - provider: bintray
     file: ".bintray.yml"

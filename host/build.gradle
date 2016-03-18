@@ -12,21 +12,23 @@ dependencies {
 }
 
 github {
-  // Set owner, repo, and token in gradle.properties
-  owner = releaseRepoOwner
-  repo = releaseRepoName
-  token = releaseRepoToken
+  // owner and repo will be determined from the origin 
+  // owner = releaseRepoOwner
+  // repo = releaseRepoName
+  
+  // Set token in gradle.properties
+  token = releaseRepoToken;
   // tagName = 'd001'
   // Must compute assets in task, otherwise you can't release with dist
   // assets = ant.path {fileset(dir: '.', includes: '*.zip')} . list()
-}
+};
 
 // Setup:
-import org.ajoberstar.grgit.*
+import org.ajoberstar.grgit.*;
 
-ant.importBuild 'build.xml'
-grgit = Grgit.open(project.file('..'), new Credentials(releaseRepoOwner, releaseRepoToken))
-def commitVersion = "unknown"
+ant.importBuild 'build.xml';
+grgit = Grgit.open(project.file('..'));
+def commitVersion = "unknown";
 
 // Tasks:
 task repoVersion() << {
@@ -40,13 +42,35 @@ task repoVersion() << {
   ant.properties['repo.version'] = commitVersion
 
   println("Git Commit Description: "+commitVersion)
-}
+};
 
 task dist(dependsOn: ['build', 'BuildCWH', 'repoVersion']) {
 
-}
+};
 
 task setupRelease() << {
+  def matchingRemotes = grgit.remote.list().findAll({it.name==releaseRepoRemoteName});
+  if (matchingRemotes.size < 1) {
+    throw new GradleException("No configured remotes match the the remote named: ${releaseRepoRemoteName}");
+  }
+
+  def remote = matchingRemotes;
+  //def releaseUrl = "https://github.com/${github.owner}/${github.repo}"
+  def releaseUrl = remote.url;
+  println("Releasing to: "+releaseUrl);
+
+  def repoMatch = (releaseUrl =~ /github\.com\/([^\/]+)\/([^\/]*?)(\.git)?.?$/);
+  
+  def repoOwner = repoMatch[0][1];
+  def repoName = repoMatch[0][2];
+  
+  println("Repo Owner: ${repoOwner} / Repo Name: ${repoName}");
+  
+  github.owner = repoOwner;
+  github.repo = repoName;
+  
+  grgit = Grgit.open(project.file('..'), new Credentials(username: github.owner, password: github.token));
+   
   if (releaseRepoToken.equals('GITHUB_API_TOKEN')) {
     throw new GradleException("Please setup your gradle.properties for GitHub Releases")
   }
@@ -56,20 +80,11 @@ task setupRelease() << {
   println("UNCOMMITTED STAGED CHANGES: "+status.staged)
   println("UNCOMMITTED UNSTAGED CHANGES: "+status.unstaged)
   println("----------------------------------------------")
-  github.assets = ant.path {fileset(dir: '.', includes: '*.zip')} . list()
+  github.assets = fileTree('.').include("*.zip") as List;
   if (github.assets.size() < 1) {
     throw new GradleException("There are no zip files to release in the project directory.")
   }
 
-  def releaseUrl = "https://github.com/${github.owner}/${github.repo}"
-  println("Releasing to: "+releaseUrl)
-
-  def matchingRemotes = grgit.remote.list().findAll({it.url==releaseUrl})
-  if (matchingRemotes.size < 1) {
-    throw new GradleException("No configured remotes match the release URL!")
-  }
-
-  def remoteName = matchingRemotes[0].name
 
   def tagName = "$System.env.tagName";
   if (tagName == "${null}") {
@@ -81,12 +96,12 @@ task setupRelease() << {
 	  } else {
 	    throw new GradleException('Cannot create console to get user input')
 	  }
-  }
+  }	
 
-  github.tagName = tagName
+  github.tagName = tagName;
 
-  grgit.tag.add(name: tagName, force: true)
-  grgit.push(tags: true, remote: remoteName);
+  grgit.tag.add(name: tagName, force: true);
+  grgit.push(tags: true, remote: releaseRepoRemoteName);
 }
 
 // Post-setup
