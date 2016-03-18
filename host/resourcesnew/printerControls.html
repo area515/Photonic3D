@@ -167,16 +167,25 @@
 				</div>
 				<div class="list-group-item" ng-hide="printerControlsController.currentPrinter.printInProgress">
 					<i class="fa fa-2x fa-th pull-left"></i>
-					<h4>Calibration Screen (pixels)</h4>
-					<div class="input-group" 
+					<h4>Grid Screen (pixels)</h4>
+					<div class="input-group"
 						cwh-spinner 
 						placeholder="pixels"
 						min="1" 
 						max="500" 
 						inc="1" 
-						goClick="printerControlsController.showCalibrationScreen()" 
+						goClick="printerControlsController.showGridScreen()" 
 						ng-model="printerControlsController.squarePixelSize">
 					</div>
+				</div>
+				<div class="list-group-item" ng-hide="printerControlsController.currentPrinter.printInProgress">
+					<i class="fa fa-2x fa-crosshairs pull-left"></i>
+					<h4>Calibration Process</h4>
+					<span ng-include="'calibration.html'"></span>
+					<a class="btn btn-primary btn-sm" ng-click="printerControlsController.calibrate()">
+						<b class="fa fa-crosshairs"></b>
+						<b class="cwh-text-indent">{{printerControlsController.calibration.startedCalibration?'Calibrate':'Start'}}</b>
+					</a>
 				</div>
 				<div class="list-group-item" ng-hide="printerControlsController.currentPrinter.printInProgress">
 					<a class="btn btn-primary btn-sm" ng-click="printerControlsController.showBlankScreen()">

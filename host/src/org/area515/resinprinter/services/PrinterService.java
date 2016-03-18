@@ -139,7 +139,8 @@ public class PrinterService {
 			if (currentPrinter != null) {
 				throw new InappropriateDeviceException("Can't delete printer when it's started:" + printerName);
 			}
-				PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
+			
+			PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
 			if (currentConfiguration == null) {
 				throw new InappropriateDeviceException("No printer with that name:" + printerName);
 			}				
@@ -177,7 +178,7 @@ public class PrinterService {
 			return new MachineResponse("savePrinter", false, e.getMessage());
 		}
 	}
- 
+	
 	@GET
 	@POST
 	@Path("start/{printername}")
@@ -189,7 +190,7 @@ public class PrinterService {
 			if (currentConfiguration == null) {
 				throw new InappropriateDeviceException("No printer with that name:" + printerName);
 			}
-		
+			
 			printer = PrinterManager.Instance().startPrinter(currentConfiguration);
 			return new MachineResponse("startPrinter", true, "Started:" + printer.getName() + "");
 		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
@@ -309,7 +310,7 @@ public class PrinterService {
 		firmwareComSettings.setHandshake("None");
 		firmwareComSettings.setStopbits("One");
 		firmwareComSettings.setParity("None");
-		firmwareComSettings.setSpeed(115200);
+		firmwareComSettings.setSpeed(115200L);
 		
 		MotorsDriverConfig motors = new MotorsDriverConfig();
 		motors.setComPortSettings(firmwareComSettings);
@@ -320,7 +321,7 @@ public class PrinterService {
 		projectorComSettings.setHandshake("None");
 		projectorComSettings.setStopbits("One");
 		projectorComSettings.setParity("None");
-		projectorComSettings.setSpeed(9600);
+		projectorComSettings.setSpeed(9600L);
 		monitor.setComPortSettings(projectorComSettings);
 		
 		MachineConfig machineConfig = new MachineConfig();
@@ -376,20 +377,66 @@ public class PrinterService {
 	}
 	
 	@GET
-	@Path("showCalibrationScreen/{printername}/{pixels}")
+	@Path("showGridScreen/{printername}/{pixels}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MachineResponse showCalibrationScreen(@PathParam("printername") String printerName, @PathParam("pixels") int pixels) {
+	public MachineResponse showGridScreen(@PathParam("printername") String printerName, @PathParam("pixels") int pixels) {
 		try {
 			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
 			if (currentPrinter == null) {
 				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
 			}
 			
-			currentPrinter.showCalibrationImage(pixels);
+			currentPrinter.showGridImage(pixels);
+			return new MachineResponse("gridscreenshown", true, "Showed calibration screen on:" + printerName);
+		} catch (InappropriateDeviceException e) {
+		    logger.error("Error showing grid screen for printer:" + printerName, e);
+			return new MachineResponse("gridscreenshown", false, e.getMessage());
+		}
+	}
+	
+	@GET
+	@Path("showCalibrationScreen/{printername}/{xpixels}/{ypixels}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MachineResponse showCalibrationScreen(@PathParam("printername") String printerName, @PathParam("xpixels") int xPixels,  @PathParam("ypixels") int yPixels) {
+		try {
+			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
+			if (currentPrinter == null) {
+				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
+			}
+			
+			logger.info("Showing calibration screen for xPixels:{} yPixels:{}", xPixels, yPixels);
+			currentPrinter.showCalibrationImage(xPixels, yPixels);
 			return new MachineResponse("calibrationscreenshown", true, "Showed calibration screen on:" + printerName);
 		} catch (InappropriateDeviceException e) {
 		    logger.error("Error showing calibration screen for printer:" + printerName, e);
 			return new MachineResponse("calibrationscreenshown", false, e.getMessage());
+		}
+	}
+	
+	//This is the only method that breaks the rules that says that you can't save a printer while it is started...
+	@GET
+	@Path("calibrate/{printername}/{xpixelspermm}/{ypixelspermm}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MachineResponse calibrate(@PathParam("printername") String printerName, @PathParam("xpixelspermm") double xPixelsPerMM,  @PathParam("ypixelspermm") double yPixelsPerMM) {
+		try {
+			PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
+			if (currentConfiguration == null) {
+				throw new InappropriateDeviceException("No printer with that name:" + printerName);
+			}
+			
+			currentConfiguration.getSlicingProfile().setDotsPermmX(xPixelsPerMM);
+			currentConfiguration.getSlicingProfile().setDotsPermmY(yPixelsPerMM);
+			currentConfiguration.setCalibrated(true);
+			logger.info("Showing calibration screen for xPixelsPerMM:{} yPixelsPerMM:{}", xPixelsPerMM, yPixelsPerMM);
+			
+			HostProperties.Instance().addOrUpdatePrinterConfiguration(currentConfiguration);
+			return new MachineResponse("calibratePrinter", true, "Calibrated printer:" + printerName + "");
+		} catch (InappropriateDeviceException e) {
+		    logger.error("Error calibrating printer:" + printerName, e);
+			return new MachineResponse("calibratePrinter", false, e.getMessage());
+		} catch (AlreadyAssignedException e) {
+		    logger.error("Error saving printer:" + printerName, e);
+			return new MachineResponse("calibratePrinter", false, e.getMessage());
 		}
 	}
 	
@@ -584,6 +631,12 @@ public class PrinterService {
 		Printer printer = PrinterManager.Instance().getPrinter(printername);
 		if (printer == null) {
 			return new MachineResponse("start", false, "Printer not started:" + printername);
+		}
+		
+		//Printer must have been calibrated before it can print
+		if (HostProperties.Instance().isForceCalibrationOnFirstUse() && !printer.getConfiguration().isCalibrated()) {
+		    logger.error("Printer:{} can't print because it wasn't calibrated", printername);
+			return new MachineResponse("startPrinter", false, "Printer:" + printername + " must be calibrated before it's first use.");
 		}
 		
 		// Create job

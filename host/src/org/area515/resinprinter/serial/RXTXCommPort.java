@@ -24,6 +24,25 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 
 	@Override
 	public void open(String printerName, int timeout, ComPortSettings settings) throws AlreadyAssignedException, InappropriateDeviceException {
+		if (settings == null) {
+			throw new InappropriateDeviceException("Port settings haven't been configured for this device.");
+		}
+		if (settings.getPortName() == null) {
+			throw new InappropriateDeviceException("Port name hasn't been configured for this device.");
+		}
+		if (settings.getParity() == null) {
+			throw new InappropriateDeviceException("Parity hasn't been configured for this device(" + settings.getPortName() + ").");
+		}
+		if (settings.getStopbits() == null) {
+			throw new InappropriateDeviceException("Stopbits havn't been configured for this device(" + settings.getPortName() + ").");
+		}
+		if (settings.getDatabits() == null) {
+			throw new InappropriateDeviceException("Databits havn't been configured for this device(" + settings.getPortName() + ").");
+		}
+		if (settings.getSpeed() == null || settings.getSpeed() == 0) {
+			throw new InappropriateDeviceException("Speed hasn't been configured for this device(" + settings.getPortName() + ").");
+		}
+		
 		String portName = settings.getPortName();
 		try {
 			CommPortIdentifier identifier = CommPortIdentifier.getPortIdentifier(portName);
@@ -52,7 +71,7 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 			} else if (settings.getStopbits().equalsIgnoreCase("Two") || settings.getStopbits().equals("2")) {
 				stopBits = SerialPort.STOPBITS_2;
 			}
-			serialPort.setSerialPortParams((int)settings.getSpeed(), settings.getDatabits(), stopBits, parity);
+			serialPort.setSerialPortParams(settings.getSpeed().intValue(), settings.getDatabits(), stopBits, parity);
 
 			inputStream = serialPort.getInputStream();
 			outputStream = serialPort.getOutputStream();

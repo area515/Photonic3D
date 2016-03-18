@@ -1,0 +1,110 @@
+// Configuration:
+plugins {
+  id "co.riiid.gradle" version "0.4.2"
+  id 'org.ajoberstar.grgit' version '1.4.2'
+}
+repositories {
+
+}
+
+dependencies {
+
+}
+
+github {
+  // owner and repo will be determined from the origin 
+  // owner = releaseRepoOwner
+  // repo = releaseRepoName
+  
+  // Set token in gradle.properties
+  token = releaseRepoToken;
+  // tagName = 'd001'
+  // Must compute assets in task, otherwise you can't release with dist
+  // assets = ant.path {fileset(dir: '.', includes: '*.zip')} . list()
+};
+
+// Setup:
+import org.ajoberstar.grgit.*;
+
+ant.importBuild 'build.xml';
+grgit = Grgit.open(project.file('..'));
+def commitVersion = "unknown";
+
+// Tasks:
+task repoVersion() << {
+  commitVersion = grgit.describe()
+
+  if (commitVersion == null) {
+    def history = grgit.log(maxCommits: 1)
+    commitVersion = history[0].id.take(5)
+  }
+
+  ant.properties['repo.version'] = commitVersion
+
+  println("Git Commit Description: "+commitVersion)
+};
+
+task dist(dependsOn: ['build', 'BuildCWH', 'repoVersion']) {
+
+};
+
+task setupRelease() << {
+  def matchingRemotes = grgit.remote.list().findAll({it.name==releaseRepoRemoteName});
+  if (matchingRemotes.size < 1) {
+    throw new GradleException("No configured remotes match the the remote named: ${releaseRepoRemoteName}");
+  }
+
+  def remote = matchingRemotes;
+  //def releaseUrl = "https://github.com/${github.owner}/${github.repo}"
+  def releaseUrl = remote.url;
+  println("Releasing to: "+releaseUrl);
+
+  def repoMatch = (releaseUrl =~ /github\.com\/([^\/]+)\/([^\/]*?)(\.git)?.?$/);
+  
+  def repoOwner = repoMatch[0][1];
+  def repoName = repoMatch[0][2];
+  
+  println("Repo Owner: ${repoOwner} / Repo Name: ${repoName}");
+  
+  github.owner = repoOwner;
+  github.repo = repoName;
+  
+  grgit = Grgit.open(project.file('..'), new Credentials(username: github.owner, password: github.token));
+   
+  if (releaseRepoToken.equals('GITHUB_API_TOKEN')) {
+    throw new GradleException("Please setup your gradle.properties for GitHub Releases")
+  }
+  def status = grgit.status();
+  println("----------------------------------------------")
+  println("Description of current commit: "+grgit.describe())
+  println("UNCOMMITTED STAGED CHANGES: "+status.staged)
+  println("UNCOMMITTED UNSTAGED CHANGES: "+status.unstaged)
+  println("----------------------------------------------")
+  github.assets = fileTree('.').include("*.zip") as List;
+  if (github.assets.size() < 1) {
+    throw new GradleException("There are no zip files to release in the project directory.")
+  }
+
+
+  def tagName = "$System.env.tagName";
+  if (tagName == "${null}") {
+	  def console = System.console()
+	  if (console) {
+	    console.printf("\n\n");
+	    println("Releasing the following files: "+github.assets);
+	    tagName = console.readLine('\nEnter the tag to create for this release > ');
+	  } else {
+	    throw new GradleException('Cannot create console to get user input')
+	  }
+  }	
+
+  github.tagName = tagName;
+
+  grgit.tag.add(name: tagName, force: true);
+  grgit.push(tags: true, remote: releaseRepoRemoteName);
+}
+
+// Post-setup
+githubRelease.dependsOn setupRelease
+BuildCWH.mustRunAfter build
+BuildCWH.mustRunAfter repoVersion

@@ -34,15 +34,15 @@ public abstract class GCodeControl {
     	//this.port = printer.getSerialPort();
     }
 	
-    private SerialCommunicationsPort getSerialPort() {
-    	return printer.getPrinterFirmwareSerialPort();
+    private Printer getPrinter() {
+    	return printer;
     }
-	
+    
 	private String readUntilOkOrStoppedPrinting(Printer printer) throws IOException {
 		StringBuilder responseBuilder = new StringBuilder();
 		ParseState state = null;
 		do {
-			state = IOUtilities.readLine(printer, getSerialPort(), builder, parseLocation, SUGGESTED_TIMEOUT_FOR_ONE_GCODE, IOUtilities.CPU_LIMITING_DELAY);
+			state = IOUtilities.readLine(printer, getPrinter().getPrinterFirmwareSerialPort(), builder, parseLocation, SUGGESTED_TIMEOUT_FOR_ONE_GCODE, IOUtilities.CPU_LIMITING_DELAY);
 			parseLocation = state.parseLocation;
 			
 			if (state.currentLine != null) {
@@ -63,7 +63,7 @@ public abstract class GCodeControl {
         	}
         	
         	logger.info("Write: {}", cmd);
-        	getSerialPort().write(cmd.getBytes());
+        	getPrinter().getPrinterFirmwareSerialPort().write(cmd.getBytes());
         	return readUntilOkOrStoppedPrinting(printer);
         } finally {
         	gCodeLock.unlock();
@@ -78,7 +78,7 @@ public abstract class GCodeControl {
         	}
         	
         	logger.info("Write: {}", cmd);
-        	getSerialPort().write(cmd.getBytes());
+        	getPrinter().getPrinterFirmwareSerialPort().write(cmd.getBytes());
         	return readUntilOkOrStoppedPrinting(null);
         } catch (IOException ex) {
         	logger.error("Couldn't send:" + cmd, ex);
@@ -98,7 +98,7 @@ public abstract class GCodeControl {
     public String readWelcomeChitChat() throws IOException {
 		try {
 			StringBuilder builder = new StringBuilder();
-			builder.append(IOUtilities.readWithTimeout(getSerialPort(), SerialManager.TIME_OUT, SerialManager.CPU_LIMITING_DELAY));
+			builder.append(IOUtilities.readWithTimeout(getPrinter().getPrinterFirmwareSerialPort(), SerialManager.TIME_OUT, SerialManager.CPU_LIMITING_DELAY));
 			builder.append(executeSetAbsolutePositioning());
 			return builder.toString();
 		} catch (InterruptedException e) {
@@ -147,7 +147,11 @@ public abstract class GCodeControl {
 			}
 			
 			StringBuilder buffer = new StringBuilder();
-			gcodes = TemplateEngine.buildData(printJob, printer, gcodes);
+			gcodes = TemplateEngine.buildData(printJob, printJob.getPrinter(), gcodes);
+			if (gcodes == null) {
+				return null;
+			}
+			
 			for (String gcode : gcodes.split("[\r]?\n")) {
 				if (gcode != null) {
 					Matcher matcher = gCodePattern.matcher(gcode);

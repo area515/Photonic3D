@@ -1,39 +1,39 @@
-<form ng-submit="printablesController.uploadURL()" class="form-horizontal">
+<form ng-submit="formSubmit()" class="form-horizontal">
 <div class="modal-header">
 		<div class="btn-group pull-left">
-			<button class="btn btn-danger" data-dismiss="modal">
+			<a class="btn btn-danger" data-dismiss="modal" ng-click="cancel()">
 				Cancel
-			</button>
+			</a>
 		</div>
-	
+		
 		<div class="btn-group pull-right">
-			<button class="btn btn-primary" data-dismiss="modal" ng-disabled="printablesController.fileToUpload == null" ng-click="printablesController.uploadFile()">
+			<button class="btn btn-primary" data-dismiss="modal" ng-disabled="fileToUpload == null" ng-click="uploadFileClicked()">
 				Upload File
 			</button>
 		</div>
 		<div class="btn-group pull-right">
-			<button class="btn btn-primary"  ng-disabled="printablesController.urlToUpload == null || printablesController.urlToUpload.trim() == '' || printablesController.filenameToUpload == null || printablesController.filenameToUpload == ''">
+			<button class="btn btn-primary" data-dismiss="modal" ng-show="getRestfulURLUploadURL != null" ng-disabled="urlToUpload == null || urlToUpload.trim() == '' || filenameToUpload == null || filenameToUpload == ''" ng-click="uploadURLClicked()">
 				Upload URL
 			</button>
 		</div>
 		<h4 class="modal-title">
-				Upload Printable
+				{{title}}
 		</h4>
 </div>
 <div class="modal-body">
-		<div class="form-group">
+		<div class="form-group" ng-show="getRestfulURLUploadURL != null">
 			<label class="col-xs-4 control-label">URL</label>
 			<div class="col-xs-8">
-				<input type="text" class="form-control" placeholder="URL" ng-model="printablesController.urlToUpload" ng-required="true">
+				<input type="text" class="form-control" placeholder="URL" ng-model="urlToUpload" ng-required="urlToUpload != null || filenameToUpload != null">
 			</div>
 		</div>
-		<div class="form-group">
+		<div class="form-group" ng-show="getRestfulURLUploadURL != null">
 			<label class="col-xs-4 control-label">Filename</label>
 			<div class="col-xs-8">
-				<input type="text" class="form-control" placeholder="filename.filetype" ng-model="printablesController.filenameToUpload" ng-required="true">
+				<input type="text" class="form-control" placeholder="filename.filetype" ng-model="filenameToUpload" ng-required="urlToUpload != null || filenameToUpload != null">
 			</div>
 		</div>
-		<div class="form-group">
+		<div class="form-group" ng-show="getRestfulURLUploadURL != null">
 			<label class="col-xs-4 control-label"></label>
 			<div class="col-xs-8">OR</div>
 		</div>
@@ -41,7 +41,7 @@
 			<label class="col-xs-4 control-label"></label>
 			<div class="col-md-8">
 				<!-- <input id="choosefilebutton" onchange="angular.element(this).scope().fileChanged(this)" type="file" /> -->
-				<input ngf-select ng-model="printablesController.fileToUpload" name="file" type="file" accept="{{printablesController.supportedFileTypes}}">
+				<input ngf-select ng-model="fileToUpload" name="file" type="file" accept="{{supportedFileTypes}}">
   			</div>
 		</div>
 </div>

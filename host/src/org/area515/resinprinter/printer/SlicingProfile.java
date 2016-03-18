@@ -224,6 +224,14 @@ public class SlicingProfile {
 	private Font font;
 
 	@XmlTransient
+	public int getSlideTiltValue() {
+		return slideTiltValue;
+	}
+	public void setSlideTiltValue(int slideTiltValue) {
+		this.slideTiltValue = slideTiltValue;
+	}
+	
+	@XmlTransient
 	public int getxResolution() {
 		return xResolution;
 	}

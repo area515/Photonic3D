@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <project name="cwh" basedir="." default="build">
-  <include file="BuildCWH.xml" as="packaging"/>
+  <import file="BuildCWH.xml"/>
 
   <property name="build" location="srcbin"/>
   <property name="testbuild" location="testbin"/>
@@ -105,8 +105,10 @@
     </copy>
   </target>
 
-  <target name="dist" depends="build,packaging.BuildCWH">
+  <!-- Moved to Gradle
+  <target name="dist" depends="build,BuildCWH">
   </target>
+  -->
 
   <target name="run" depends="build,os">
     <java classname="org.area515.resinprinter.server.Main"

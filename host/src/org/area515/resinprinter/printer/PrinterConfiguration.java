@@ -13,6 +13,8 @@ public class PrinterConfiguration {
 	private String slicingProfileName;
 	@XmlElement(name="AutoStart")
 	private boolean autoStart;
+	@XmlElement(name="Calibrated")
+	private boolean calibrated;
 	
 	private MachineConfig machineConfig;
 	private SlicingProfile slicingProfile;
@@ -24,6 +26,7 @@ public class PrinterConfiguration {
 		 this.machineConfigName = machineConfigName;
 		 this.slicingProfileName = slicingProfileName;
 		 this.autoStart = autoStart;
+		 this.calibrated = false;
 	}
 	
 	public String getMachineConfigName() {
@@ -63,6 +66,14 @@ public class PrinterConfiguration {
 		this.autoStart = autoStart;
 	}
 
+	@XmlTransient
+	public boolean isCalibrated() {
+		return calibrated;
+	}
+	public void setCalibrated(boolean calibrated) {
+		this.calibrated = calibrated;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -70,6 +81,7 @@ public class PrinterConfiguration {
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

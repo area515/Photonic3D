@@ -1,5 +1,7 @@
 package org.area515.resinprinter.services;
 
+import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
@@ -8,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -16,6 +19,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -43,6 +47,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -210,12 +215,38 @@ public class MachineService {
 		return fileTypes;
 	}
 	
+	@POST
+	@Path("/uploadFont")
+	@Consumes("application/octet-stream")
+	public Response uploadFont(InputStream istream) {
+		try {
+			Font font = Font.createFont(Font.TRUETYPE_FONT, istream);
+			if (!GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(font)) {
+				String output = "Failed to register font due to a possible naming conflict";
+			    logger.info(output);
+				return Response.status(Status.BAD_REQUEST).entity(output).build();
+			}
+			
+			NotificationManager.fileUploadComplete(new File(font.getName()));
+		    logger.info("Font:{} registered:{} glyphs", font.getName(), font.getNumGlyphs());
+		    return Response.status(Status.BAD_REQUEST).entity(font.getName()).build();
+		} catch (IOException e) {
+			String output = "Error while uploading font";
+			logger.error(output, e);
+			return Response.status(Status.BAD_REQUEST).entity(output).build();
+		} catch (FontFormatException e) {
+			String output = "This font didn't seem to be a true type font.";
+			logger.error(output, e);
+			return Response.status(Status.BAD_REQUEST).entity(output).build();
+		}
+	}
+	
 	@GET
 	@Path("supportedFontNames")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Set<String> getSupportedFontFamilies() {
-		Set<String> fontNames = new HashSet<String>();
-		fontNames.addAll(Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()));
+	public List<String> getSupportedFontFamilies() {
+		List<String> fontNames = new ArrayList<String>(Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()));
+		Collections.sort(fontNames);
 		return fontNames;
 	}
 	
@@ -415,9 +446,12 @@ public class MachineService {
 	 @Path("createprinter/{printername}/{display}/{comport}")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public MachineResponse createPrinter(@PathParam("printername") String printername, @PathParam("display") String displayId, @PathParam("comport") String comport) {
-		//TODO: This data needs to be set by the user interface...
-		//========================================================
-		PrinterConfiguration currentConfiguration = PrinterService.INSTANCE.createTemplatePrinter(printername, displayId, comport, 134, 75, 185);
+		 //TODO: This data needs to be set by the user interface...
+		 //========================================================
+		int buildXSizeInMM = 134;
+		int buildYSizeInMM = 75;
+		int buildZSizeInMM = 185;
+		PrinterConfiguration currentConfiguration = PrinterService.INSTANCE.createTemplatePrinter(printername, displayId, comport, buildXSizeInMM, buildYSizeInMM, buildZSizeInMM);
 		if (displayId.equals(DisplayManager.SIMULATED_DISPLAY) &&
 			comport.equals(ConsoleCommPort.GCODE_RESPONSE_SIMULATION)) {
 			currentConfiguration.getSlicingProfile().setgCodeLift("Lift Z; Lift the platform");
@@ -517,16 +551,16 @@ public class MachineService {
 	 
 	 @Deprecated
 	 @GET
-	 @Path("showcalibrationscreen/{printername}/{pixels}")
+	 @Path("showGridScreen/{printername}/{pixels}")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public MachineResponse showCalibrationScreen(@PathParam("printername") String printerName, @PathParam("pixels") int pixels) {
+	 public MachineResponse showGridScreen(@PathParam("printername") String printerName, @PathParam("pixels") int pixels) {
 		try {
 			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
 			if (currentPrinter == null) {
 				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
 			}
 			
-			currentPrinter.showCalibrationImage(pixels);
+			currentPrinter.showGridImage(pixels);
 			return new MachineResponse("calibrationscreenshown", true, "Showed calibration screen on:" + printerName);
 		} catch (InappropriateDeviceException e) {
 			logger.error("Couldn't show calibration screen: " + printerName, e);

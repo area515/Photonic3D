@@ -1,5 +1,5 @@
 (function() {
-		var cwhApp = angular.module('cwhApp', ['ngRoute', 'cwh.comport', 'cwh.spinner', 'cwh.webSocket', 'cwh.testscript', 'ngFileUpload', 'ngAnimate', 'chart.js']);
+		var cwhApp = angular.module('cwhApp', ['ui.bootstrap', 'ngRoute', 'cwh.comport', 'cwh.spinner', 'cwh.webSocket', 'cwh.testscript', 'ngFileUpload', 'ngAnimate', 'chart.js']);
 		cwhApp.filter('secondsToDateTime', [function() {
 		    return function(milliseconds) {
 		        return new Date(1970, 0, 1).setMilliseconds(milliseconds);
@@ -12,8 +12,10 @@
 
 		    //disable IE ajax request caching
 		    $httpProvider.defaults.headers.get['If-Modified-Since'] = 'Mon, 26 Jul 1997 05:00:00 GMT';
-		    $httpProvider.defaults.headers.get['Cache-Control'] = 'no-cache';
-		    $httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
+		    
+		    //TODO: We should be removing these ONLY on CORS requests.  Other requests should keep them.
+		    //$httpProvider.defaults.headers.get['Cache-Control'] = 'no-cache';
+		    //$httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
 
     	    $routeProvider.when('/dashboardPage', {
     	        templateUrl: '/dashboard.html',
@@ -52,16 +54,16 @@
     	    $locationProvider.html5Mode({enabled: true, requireBase: true, rewriteLinks: true});
     	}])//*/
     	
-    	cwhApp.controller("IndexController", function ($scope, $http) {
+    	cwhApp.controller("IndexController", function ($rootScope, $scope, $http) {
     		this.changeCurrentPage = function changeCurrentPage(newPageName) {
     			this.currentPage = newPageName;
     		}
     		
-			$scope.$on("MachineResponse", function (event, args) {
+			$rootScope.$on("MachineResponse", function (event, args) {
 				//args = machineResponse, successFunction, afterErrorFunction
             	if (!args.machineResponse.response) {
             		args.machineResponse.command = "Error On " + args.machineResponse.command;
-            		$scope.currentError = args.machineResponse;
+            		$rootScope.currentError = args.machineResponse;
                 	
                 	$('#errorModal').modal().after
                 	if (args.afterErrorFunction != null) {
@@ -70,7 +72,7 @@
             	} else if (args.successFunction != null) {
             		args.successFunction(args.machineResponse);
             	} else {
-            		$scope.currentError = args.machineResponse;
+            		$rootScope.currentError = args.machineResponse;
                 	
                 	$('#errorModal').modal().after
                 	if (args.afterErrorFunction != null) {
@@ -78,7 +80,7 @@
                 	}
             	}
             });
-			$scope.$on("HTTPError", function (event, args){
+			$rootScope.$on("HTTPError", function (event, args){
 				//args = data, status, headers, config, statusText
         		var customMessage;
     			if (args.status == "401") {
@@ -86,15 +88,16 @@
     			} else if (args.status == "400") {
     				customMessage = args.statusText;
     				args.status = "";
-    			} else if (args.startText == null) {
+    			} else if (args.statusText == null) {
     				customMessage = "Problem communicating with host printer.";
     			} else {
     				customMessage = "Problem communicating with host printer. (http:" + args.statusText + ")";
     			}
     			
-    			$scope.currentError = {command:"Server Error " + args.status, message : customMessage};
+    			$rootScope.currentError = {command:"Server Error " + args.status, message : customMessage};
     	    	$('#errorModal').modal();
     	    });
+			
 	        $http.get('/services/settings/visibleCards').success(function(data) {
             	$scope.visibleCards = data;
             });

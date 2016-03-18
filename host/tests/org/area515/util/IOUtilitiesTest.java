@@ -22,8 +22,8 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
@@ -31,7 +31,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 public class IOUtilitiesTest {
     private static final Logger logger = LogManager.getLogger();
 
-    private class InputStreamReadDelayedAnswer implements Answer<Integer>{
+    public static class InputStreamReadDelayedAnswer implements Answer<Integer>{
 		private int delay;
 		private byte[] byteData;
 
@@ -53,7 +53,7 @@ public class IOUtilitiesTest {
 		}
 	}
 
-	private class SerialPortReadDelayedAnswer implements Answer<byte[]>{
+	public static class SerialPortReadDelayedAnswer implements Answer<byte[]>{
 		private int delay;
 		private byte[] byteData;
 

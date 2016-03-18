@@ -540,7 +540,7 @@
 		
 		$("#calibrationPixelsText").val(pixels);
 		
-		var requestValue = '/machine/showcalibrationscreen/' + encodeURIComponent(printerName) + "/" + encodeURIComponent(pixels);
+		var requestValue = '/machine/showGridScreen/' + encodeURIComponent(printerName) + "/" + encodeURIComponent(pixels);
 
 		request(requestValue, false);
 	}

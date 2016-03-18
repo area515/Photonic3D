@@ -3,7 +3,9 @@ package org.area515.resinprinter.client;
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -20,6 +22,16 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.area515.resinprinter.client.SubnetScanner.Box;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.UpnpServiceImpl;
@@ -27,14 +39,42 @@ import org.fourthline.cling.model.message.header.STAllHeader;
 import org.fourthline.cling.model.meta.Device;
 import org.fourthline.cling.model.meta.RemoteDevice;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.JSchException;
 
 public class Main {
 	public static final String PRINTER_TYPE = "3DPrinterHost";
+	public static final String PRINTERS_DIRECTORY = "printers";
+	public static final String BRANCH = "master";
+	public static String REPO = "area515";
 	
 	private static Set<PrintableDevice> foundDevices = new HashSet<PrintableDevice>();
 	private static long maxLengthToWait = 5000;
 	private static long maxLengthToWaitForAll = 7000;
+	
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public static class PrinterEntry {
+		private String name;
+		
+		private String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		
+		public String toString() {
+			int prefixIndex = name.lastIndexOf(".");
+			if (prefixIndex < 0) {
+				return name;
+			}
+			
+			return name.substring(0, prefixIndex);
+		}
+	}
 	
 	public static class PrintableDevice {
 		public Device device;
@@ -80,7 +120,7 @@ public class Main {
 		panel.add(label, BorderLayout.CENTER);
 		panel.add(pass, BorderLayout.SOUTH);
 		String[] options = new String[]{"OK", "Cancel"};
-		int option = JOptionPane.showOptionDialog(null, panel, title, JOptionPane.NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[1]);
+		int option = JOptionPane.showOptionDialog(null, panel, title, JOptionPane.NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
 		if(option == 0) {
 		    char[] password = pass.getPassword();
 		    return password;
@@ -194,6 +234,73 @@ public class Main {
 		return client;
 	}
 	
+	public static boolean installPrinterProfile(Box installToBox) {
+		HttpClientBuilder builder = HttpClientBuilder.create();
+		CloseableHttpClient httpClient = builder.build();
+		
+	    // specify the host, protocol, and port
+		HttpHost restTarget = new HttpHost("api.github.com", 443, "https");
+		HttpHost cwhTarget = new HttpHost(installToBox.getName(), 9091, "http");
+		HttpGet getRequest = new HttpGet("/repos/" + REPO + "/Creation-Workshop-Host/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH);
+		
+		PrinterEntry[] printers = null;
+		try {
+			System.out.println("Request:" + getRequest);
+			HttpResponse httpResponse = httpClient.execute(restTarget, getRequest);
+			System.out.println("Response:" + httpResponse.getStatusLine());
+			HttpEntity entity = httpResponse.getEntity();
+			ObjectMapper mapper = new ObjectMapper(new JsonFactory());//EntityUtils.toString(entity)entity.consumeContent();
+			printers = mapper.readValue(entity.getContent(), new TypeReference<PrinterEntry[]>(){});
+		} catch (IOException e) {
+			e.printStackTrace();
+			try {httpClient.close();} catch (IOException e1) {}
+			return false;
+		}
+		
+		PrinterEntry selectedPrinter = (PrinterEntry)JOptionPane.showInputDialog(null, 
+				"Please choose a printer profile that you would like to install.",
+				"Install a Printer?",
+				JOptionPane.QUESTION_MESSAGE,
+				null,
+				printers,
+				printers[0]);
+		if (selectedPrinter == null) {
+			try {httpClient.close();} catch (IOException e1) {}
+			return false;
+		}
+		
+		//https://raw.githubusercontent.com/area515/Creation-Workshop-Host/master/host/.classpath
+		HttpHost rawTarget = new HttpHost("raw.githubusercontent.com", 443, "https");;
+		try {
+			getRequest = new HttpGet("/" + REPO + "/Creation-Workshop-Host/master/host/" + PRINTERS_DIRECTORY + "/" + URLEncoder.encode(selectedPrinter.getName(), "ASCII").replaceAll("\\+", "%20"));
+		} catch (UnsupportedEncodingException e2) {
+			e2.printStackTrace();
+			return false;
+		}
+			 
+		try {
+			System.out.println("Request:" + getRequest);
+			HttpResponse httpResponse = httpClient.execute(rawTarget, getRequest);
+			System.out.println("Response:" + httpResponse.getStatusLine());
+			HttpEntity printerJsonOutput = httpResponse.getEntity();
+			String json = EntityUtils.toString(printerJsonOutput);
+			
+			HttpPost installNewPrinterPost = new HttpPost("/services/printers/save");
+			StringEntity printerJsonInput = new StringEntity(json);
+			printerJsonInput.setContentType("application/json");
+			installNewPrinterPost.setEntity(printerJsonInput);
+			System.out.println("Request:" + installNewPrinterPost);
+			CloseableHttpResponse response = httpClient.execute(cwhTarget, installNewPrinterPost);
+			System.out.println("Response:" + httpResponse.getStatusLine());
+			return response.getStatusLine().getStatusCode() == 200;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		} finally {
+			try {httpClient.close();} catch (IOException e1) {}
+		}
+	}
+	
 	public static boolean performInstall(Box box, String username, String oldPassword) throws IOException, JSchException  {
 		System.out.println("User chose install on:" + box);
 		
@@ -208,7 +315,7 @@ public class Main {
 		installPane.pack();
 		installPane.setLocationRelativeTo(null);
 		installPane.setVisible(true);
-		
+
 		SSHClient client = new SSHClient();
 		try {
 			installOptionPane.setMessage("Connecting to printer...");
@@ -227,7 +334,7 @@ public class Main {
 			}
 			
 			installOptionPane.setMessage("Downloading installation scripts...");
-			String[] output = client.send("wget https://github.com/area515/Creation-Workshop-Host/raw/master/host/bin/start.sh");
+			String[] output = client.send("wget https://github.com/" + REPO + "/Creation-Workshop-Host/raw/master/host/bin/start.sh");
 			if (!findSuccessLine(output, "start.sh' saved")) {
 				writeOutput(output);
 				throw new IOException("This device can't seem to reach the internet.");
@@ -243,19 +350,19 @@ public class Main {
 			
 			if (box.isRaspberryPi()) {
 				installPane.setVisible(false);
+				
 				char[] password = getPassword("Please Secure This Device", 
 						"<html>This device was setup with a default password<br>" + 
 						"from the manufacturer. It is not advisable that<br>" + 
 						"you keep this password. Please enter another<br>" + 
 						"password to help secure your printer.<html>");
-				if (password == null) {
-					return true;
+				if (password != null) {
+					output = client.send("echo 'pi:" + new String(password) + "' | chpasswd");
+					//JOptionPane.showMessageDialog(null, "Failed to set password. " + output[0], "Bad Password", JOptionPane.WARNING_MESSAGE);
 				}
-			
-				output = client.send("echo 'pi:" + new String(password) + "' | chpasswd");
-				//JOptionPane.showMessageDialog(null, "Failed to set password. " + output[0], "Bad Password", JOptionPane.WARNING_MESSAGE);
 			}
 			
+			installPrinterProfile(box);
 			return true;
 
 		} finally {
@@ -272,6 +379,10 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		if (args.length > 0) {
+			REPO = args[0];
+		}
+		
 		boolean installCompletedOnThisLoopIteration = false;
 		boolean userHasbeenAskedToInstall = false;
 		SubnetScanner scanner = new SubnetScanner();

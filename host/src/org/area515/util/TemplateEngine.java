@@ -42,6 +42,7 @@ public class TemplateEngine {
 		String[] replacements = new String[] {
 				"CURSLICE", 
 				"LayerThickness", 
+				"bulbHours", 
 				"shutterOpen", 
 				"ZDir", 
 				"ZLiftRate", 
@@ -78,7 +79,7 @@ public class TemplateEngine {
         	$ZLiftRate// the rate at which we're lifting
         $ZBottomLiftRate// the rate at which we're lifting for the bottom layers
         $ZRetractRate// how fast we'r retracting
-        $SlideTiltVal// any used slide / tilt value on the x axis
+        	$SlideTiltVal// any used slide / tilt value on the x axis
         $BlankTime// how long to show the blank in ms
         	$LayerTime// total delay for a layer for gcode commands to complete - not including expusre time
         	$FirstLayerTime// time to expose the first layers in ms
@@ -87,6 +88,7 @@ public class TemplateEngine {
 
 		root.put("now", new Date());
 		root.put("shutterOpen", printer.isShutterOpen());
+		root.put("bulbHours", printer.getCachedBulbHours());
 		root.put("CURSLICE", job.getCurrentSlice());
 		root.put("LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
 		root.put("ZDir", printer.getConfiguration().getSlicingProfile().getDirection().getVector());
@@ -97,6 +99,7 @@ public class TemplateEngine {
 		root.put("LayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
 		root.put("FirstLayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
 		root.put("NumFirstLayers", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
+		root.put("SlideTiltVal", printer.getConfiguration().getSlicingProfile().getSlideTiltValue());
 		root.put("buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
 		root.put("buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
 		root.put("job", job);
@@ -115,11 +118,21 @@ public class TemplateEngine {
 	        template.process(root, out);
 	        return out.toString();
         } catch (TemplateException e) {
+        	
+        	//TODO: this is a bit of a gray area, we aren't throwing an exception when they use buildAreaMM/bulbHours in something that doesn't use the print processor, but should we???
+        	
         	//This means that buildAreaMM isn't supported for this printer
         	if (e.getBlamedExpressionString().equals("buildAreaMM") && e.getMessage().contains("The following has evaluated to null or missing")) {
+        		logger.error("buildAreaMM was used in a template:" + templateString + ", but isn't supported by this print processor.");
         		return null;
         	}
 
+        	//This means that bulbHours isn't supported for this printer
+        	if (e.getBlamedExpressionString().equals("bulbHours") && e.getMessage().contains("The following has evaluated to null or missing")) {
+        		logger.error("bulbHours was used in a template:" + templateString + ", but isn't supported by this projector model:" + printer.getProjectorModel());
+        		return null;
+        	}
+        	
         	throw e;
         }
 	}
@@ -127,6 +140,8 @@ public class TemplateEngine {
 	public static Object runScript(PrintJob job, Printer printer, ScriptEngine engine, String script, String scriptName, Map<String, Object> overrides) throws ScriptException {
 		engine.put("now", new Date());
 		engine.put("$shutterOpen", printer.isShutterOpen());
+		Integer bulbHours = printer.getCachedBulbHours();
+		engine.put("$bulbHours", bulbHours == null || bulbHours < 0?Double.NaN:new Double(bulbHours));
 		engine.put("$CURSLICE", job.getCurrentSlice());
 		engine.put("$LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
 		engine.put("$ZDir", printer.getConfiguration().getSlicingProfile().getDirection().getVector());
@@ -137,6 +152,7 @@ public class TemplateEngine {
 		engine.put("$LayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
 		engine.put("$FirstLayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
 		engine.put("$NumFirstLayers", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
+		engine.put("$SlideTiltVal", printer.getConfiguration().getSlicingProfile().getSlideTiltValue());
 		engine.put("$buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
 		engine.put("$buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
 		engine.put("job", job);
