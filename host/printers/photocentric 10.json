@@ -28,7 +28,7 @@
             "OSMonitorID":":0.0",
             "DisplayCommEnabled":false,
             "ComPortSettings":{  
-               "PortName":"Select a Serial Port...",
+               "PortName":null,
                "Handshake":"None"
             },
             "MonitorTop":12.65,
