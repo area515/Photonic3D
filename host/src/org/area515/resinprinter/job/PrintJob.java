@@ -25,6 +25,7 @@ public class PrintJob {
 	private volatile double totalCost = 0;
 	private volatile double currentSliceCost = 0;
 	private volatile PrintFileProcessor<?> printFileProcessor;
+	private volatile String errorDescription;
 	
 	//Overridables
 	private volatile boolean overrideExposureTime;
@@ -165,8 +166,12 @@ public class PrintJob {
 			}
 		}
 		
-		return null;
+		return errorDescription;
 	}
+	public void setErrorDescription(String errorDescription) {
+		this.errorDescription = errorDescription;
+	}
+	
 	public PrintFileProcessor<?> getPrintFileProcessor() {
 		return printFileProcessor;
 	}

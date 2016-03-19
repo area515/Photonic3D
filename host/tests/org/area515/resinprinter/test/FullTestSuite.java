@@ -1,5 +1,6 @@
 package org.area515.resinprinter.test;
 
+import org.area515.resinprinter.gcode.FirmwareResponseSimulation;
 import org.area515.resinprinter.inkdetection.visual.CircleTest;
 import org.area515.resinprinter.inkdetection.visual.LineTest;
 import org.area515.resinprinter.inkdetection.visual.TestVisualPrintMaterialDetector;
@@ -23,6 +24,7 @@ import org.junit.runners.Suite;
 	TestScriptAndTemplating.class,
 	HexCodeBasedProjectorTesting.class,
 	DetectFirmwareMock.class,
+	FirmwareResponseSimulation.class,
 })
 
 public class FullTestSuite {

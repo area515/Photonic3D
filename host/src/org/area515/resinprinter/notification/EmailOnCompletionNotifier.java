@@ -78,12 +78,6 @@ public class EmailOnCompletionNotifier implements Notifier {
 	}
 
 	@Override
-	public void printerOutOfMatter(Printer printer, PrintJob job) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
 	public void hostSettingsChanged() {
 	}
 

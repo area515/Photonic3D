@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +25,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -250,10 +252,7 @@ public class MachineService {
 		return fontNames;
 	}
 	
-	@GET
-	@Path("executeDiagnostic")
-	@Produces(MediaType.APPLICATION_JSON)
-	public void emailSupportLogs() {
+	private File buildLogFileBundle() {
 		File zippedFile = new File("LogBundle.zip");
 		String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
 		IOUtilities.executeNativeCommand(HostProperties.Instance().getDumpStackTraceCommand(), null, pid);
@@ -276,13 +275,40 @@ public class MachineService {
 			IOUtilities.zipStream("System.properties", new ByteArrayInputStream(byteStream.toByteArray()), zipOutputStream);
 			
 			zipOutputStream.finish();
+			return zippedFile;
 		} catch (IOException e) {
 			logger.error("Error executing diagnostic", e);
 			throw new IllegalArgumentException("Failure creating log bundle.", e);
 		} finally {
 			IOUtils.closeQuietly(zipOutputStream);
 		}
-		
+	}
+	
+	@GET
+	@Path("downloadDiagnostic/{zipName}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public StreamingOutput downloadSupportLogs() {
+	    return new StreamingOutput() {
+			@Override
+			public void write(OutputStream output) throws IOException, WebApplicationException {
+				File zippedFile = buildLogFileBundle();
+				FileInputStream stream = null;
+				try {
+					stream = new FileInputStream(zippedFile);
+					IOUtils.copy(stream, output);
+				} finally {
+					try {stream.close();} catch (IOException e) {}
+					zippedFile.delete();
+				}
+			}  
+	    };
+	}
+	
+	@GET
+	@Path("executeDiagnostic")
+	@Produces(MediaType.APPLICATION_JSON)
+	public void emailSupportLogs() {
+		File zippedFile = buildLogFileBundle();
 		Transport transport = null;
 		try {
 			CwhEmailSettings settings = HostProperties.Instance().loadEmailSettings();

@@ -98,11 +98,6 @@ public class WebSocketHostNotifier implements Notifier {
 	}
 
 	@Override
-	public void printerOutOfMatter(Printer printer, PrintJob job) {
-		//Not for the host
-	}
-
-	@Override
 	public void hostSettingsChanged() {
 		for (Session currentSession : sessionsBySessionId.values()) {
 			currentSession.getAsyncRemote().sendObject(new HostEvent("HostSettingsChanged", NotificationEvent.SettingsChanged));

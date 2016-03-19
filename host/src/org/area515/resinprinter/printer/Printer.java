@@ -11,6 +11,7 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.PrintJob;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;

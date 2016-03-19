@@ -110,22 +110,6 @@ public class WebSocketPrinterNotifier implements Notifier {
 	}
 
 	@Override
-	public void printerOutOfMatter(Printer printer, PrintJob job) {
-		ConcurrentHashMap<String, Session> sessionsBySessionId = sessionsByPrinterName.get(printer.getName());
-		if (sessionsBySessionId == null) {
-			return;
-		}
-		
-		for (Session currentSession : sessionsBySessionId.values()) {
-			try {
-				currentSession.getAsyncRemote().sendObject(new PrinterEvent(printer, NotificationEvent.PrinterChanged));
-			} catch (Exception e) {
-				logger.error("Error sending event to websocket:" + currentSession.getId(), e);
-			}
-		}
-	}
-
-	@Override
 	public void hostSettingsChanged() {
 		//Not for printers
 	}

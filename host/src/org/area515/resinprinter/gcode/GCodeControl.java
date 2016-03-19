@@ -8,10 +8,11 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.util.IOUtilities;
 import org.area515.util.IOUtilities.ParseState;
@@ -22,6 +23,7 @@ import freemarker.template.TemplateException;
 public abstract class GCodeControl {
 	public static Logger logger = LogManager.getLogger();
 	public int SUGGESTED_TIMEOUT_FOR_ONE_GCODE = 1000 * 60 * 2;//2 minutes
+	private Pattern GCODE_RESPONSE_PATTERN = Pattern.compile("(?i)(?:(o?k|e?rror:|a?larm:)(.*)|<?([^>]*)>|\\[?([^]]*)\\])\r?\n");
 	
     private Printer printer;
     private ReentrantLock gCodeLock = new ReentrantLock();
@@ -38,33 +40,61 @@ public abstract class GCodeControl {
     	return printer;
     }
     
-	private String readUntilOkOrStoppedPrinting(Printer printer) throws IOException {
+	private Matcher readUntilOkOrStoppedPrinting(Printer printer) throws IOException {
 		StringBuilder responseBuilder = new StringBuilder();
 		ParseState state = null;
+		Matcher matcher = null;
 		do {
 			state = IOUtilities.readLine(printer, getPrinter().getPrinterFirmwareSerialPort(), builder, parseLocation, SUGGESTED_TIMEOUT_FOR_ONE_GCODE, IOUtilities.CPU_LIMITING_DELAY);
 			parseLocation = state.parseLocation;
-			
 			if (state.currentLine != null) {
 				responseBuilder.append(state.currentLine);
+				matcher = GCODE_RESPONSE_PATTERN.matcher(state.currentLine);
 			}
 			
 			logger.info("lineRead: {}", state.currentLine);
-		} while (state.currentLine != null && !state.currentLine.matches("(?is:ok.*)"));
-		
-		return responseBuilder.toString();
+		} while (matcher != null && !matcher.matches());
+		return matcher;
 	}
 
-    public String sendGcodeReturnIfPrinterStops(String cmd) throws IOException {
+    public String sendGcodeAndRespectPrinter(PrintJob printJob, String cmd) throws IOException {
 		gCodeLock.lock();
         try {
         	if (!cmd.endsWith("\n")) {
         		cmd += "\n";
         	}
         	
-        	logger.info("Write: {}", cmd);
-        	getPrinter().getPrinterFirmwareSerialPort().write(cmd.getBytes());
-        	return readUntilOkOrStoppedPrinting(printer);
+        	StringBuilder builder = new StringBuilder();
+        	boolean mustAttempt = true;
+        	for (int attempt = 0; mustAttempt; attempt++) {
+	        	logger.info("Write {}: {}", attempt, cmd);
+	        	getPrinter().getPrinterFirmwareSerialPort().write(cmd.getBytes());
+	        	Matcher matcher = readUntilOkOrStoppedPrinting(printer);
+	        	if (matcher == null) {
+	        		return "";//I think this should be null, but I'm preserving backwards compatibility
+	        	}
+	        	
+	        	if (matcher.group(1) != null && matcher.group(1).toLowerCase().endsWith("rror:")) {
+	        		attempt++;
+	        		printJob.setErrorDescription(matcher.group(2));
+	        		printer.setStatus(JobStatus.PausedWithWarning);
+	        		NotificationManager.jobChanged(printer, printJob);
+	        		
+	        		//Allow the user to manipulate the printer while paused
+	        		gCodeLock.lock();
+	        		try {
+	        			mustAttempt = printer.waitForPauseIfRequired();
+	        		} finally {
+	        			gCodeLock.unlock();
+	        		}
+	        	} else {
+	        		mustAttempt = false;
+	        	}
+	        	
+	        	builder.append(matcher.group(0));
+        	}
+        	
+        	return builder.toString();
         } finally {
         	gCodeLock.unlock();
         }
@@ -79,7 +109,11 @@ public abstract class GCodeControl {
         	
         	logger.info("Write: {}", cmd);
         	getPrinter().getPrinterFirmwareSerialPort().write(cmd.getBytes());
-        	return readUntilOkOrStoppedPrinting(null);
+        	Matcher matcher = readUntilOkOrStoppedPrinting(null);
+        	if (matcher == null) {
+        		return "";
+        	}
+        	return matcher.group(0);
         } catch (IOException ex) {
         	logger.error("Couldn't send:" + cmd, ex);
         	return "IO Problem!";
@@ -153,10 +187,14 @@ public abstract class GCodeControl {
 			}
 			
 			for (String gcode : gcodes.split("[\r]?\n")) {
+				if (!printJob.getPrinter().isPrintActive()) {
+					break;
+				}
+				
 				if (gcode != null) {
 					Matcher matcher = gCodePattern.matcher(gcode);
 					if (matcher.matches()) {
-						buffer.append(sendGcode(matcher.group(1)));
+						buffer.append(sendGcodeAndRespectPrinter(printJob, matcher.group(1)));
 					}
 				}
 			}
