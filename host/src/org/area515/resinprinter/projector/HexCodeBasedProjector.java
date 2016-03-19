@@ -153,17 +153,35 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	
 	@JsonProperty
 	public String getDetectionHex() {
+		if (detectionHex == null) {
+			return null;
+		}
+		
 		return HexCommand.formatHexCommands(detectionHex);
 	}
 	public void setDetectionHex(String detectionHex) {
+		if (detectionHex == null) {
+			this.detectionHex = null;
+			return;
+		}		
+		
 		this.detectionHex = HexCommand.parseHexCommands(detectionHex);
 	}
 
 	@JsonProperty
 	public String getDetectionResponseRegex() {
+		if (detectionResponsePattern == null) {
+			return null;
+		}
+		
 		return detectionResponsePattern.pattern();
 	}
 	public void setDetectionResponseRegex(String detectionResponsePattern) {
+		if (detectionResponsePattern == null) {
+			this.detectionResponsePattern = null;
+			return;
+		}
+		
 		this.detectionResponsePattern = Pattern.compile(detectionResponsePattern);
 	}
 	
@@ -184,6 +202,11 @@ public class HexCodeBasedProjector implements ProjectorModel {
 		return HexCommand.formatHexCommands(bulbHoursHex);
 	}
 	public void setBulbHoursHex(String bulbHoursHex) {
+		if (bulbHoursHex == null) {
+			this.bulbHoursHex = null;
+			return;
+		}
+		
 		this.bulbHoursHex = HexCommand.parseHexCommands(bulbHoursHex);
 	}
 
@@ -196,6 +219,11 @@ public class HexCodeBasedProjector implements ProjectorModel {
 		return bulbHoursResponsePattern.pattern();
 	}
 	public void setBulbHoursResponseRegex(String bulbHoursResponsePattern) {
+		if (bulbHoursResponsePattern == null) {
+			this.bulbHoursResponsePattern = null;
+			return;                         
+		}
+		
 		this.bulbHoursResponsePattern = Pattern.compile(bulbHoursResponsePattern);
 	}
 
@@ -241,6 +269,10 @@ public class HexCodeBasedProjector implements ProjectorModel {
 	
 	@Override
 	public boolean autodetect(SerialCommunicationsPort port) {
+		if (detectionHex == null || detectionResponsePattern == null) {
+			return false;
+		}
+		
 		return findString(port, detectionHex, detectionResponsePattern) != null;
 	}
 

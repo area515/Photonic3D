@@ -12,7 +12,6 @@ import org.area515.resinprinter.slice.StlError;
 
 public interface Notifier {
 	public enum NotificationEvent {
-		OutOfInk,
 		PrinterChanged,
 		PrintJobChanged,
 		GeometryError,
@@ -27,7 +26,6 @@ public interface Notifier {
 	
 	//Events 
 	public void jobChanged(Printer printer, PrintJob job);
-	public void printerOutOfMatter(Printer printer, PrintJob job);
 	public void printerChanged(Printer printer);
 	public void fileUploadComplete(File fileUploaded);
 	public void geometryError(PrintJob job, List<StlError> error);

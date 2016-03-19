@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
 import org.area515.resinprinter.job.InkDetector;
+import org.area515.resinprinter.job.PrintJob;
 import org.area515.util.TemplateEngine;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -131,7 +132,7 @@ public class SlicingProfile {
 			this.percentageConsideredEmpty = percentageConsideredEmpty;
 		}
 		
-		public InkDetector getInkDetector(Printer printer) {
+		public InkDetector getInkDetector(PrintJob printJob) {
 			if (this.detector != null) {
 				return this.detector;
 			}
@@ -142,7 +143,7 @@ public class SlicingProfile {
 			}
 			
 			try {
-				this.detector = new InkDetector(printer, ((Class<PrintMaterialDetector>)Class.forName(detectorClass)).newInstance(), percentageConsideredEmpty);
+				this.detector = new InkDetector(printJob.getPrinter(), printJob, ((Class<PrintMaterialDetector>)Class.forName(detectorClass)).newInstance(), percentageConsideredEmpty);
 				return this.detector;
 			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 				logger.info("Failed to load PrintMaterialDetector:{}", detector);

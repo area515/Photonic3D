@@ -90,7 +90,7 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		}
 		
 		if (data.inkConfiguration != null) {
-			inkDetector = data.inkConfiguration.getInkDetector(data.printer);
+			inkDetector = data.inkConfiguration.getInkDetector(data.printJob);
 		}
 		
 		//Set the initial values for all variables.

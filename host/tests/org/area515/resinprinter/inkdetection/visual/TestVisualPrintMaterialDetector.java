@@ -35,7 +35,7 @@ public class TestVisualPrintMaterialDetector {
 	
 	@Test
 	public void testAgainstKnownPercentages() throws IOException {
-		float tolerance = .09f;
+		float tolerance = .05f;
 		VisualPrintMaterialDetector detector = new VisualPrintMaterialDetector();
 
 		HashMap<String, Float> knownFiles = new HashMap<>();

@@ -140,22 +140,6 @@ public class WebSocketPrintJobNotifier implements Notifier {
 	}
 
 	@Override
-	public void printerOutOfMatter(Printer printer, PrintJob job) {
-		ConcurrentHashMap<String, Session> sessionsBySessionId = sessionsByPrintJobName.get(job.getJobFile().getName());
-		if (sessionsBySessionId == null) {
-			return;
-		}
-		
-		for (Session currentSession : sessionsBySessionId.values()) {
-			try {
-				currentSession.getAsyncRemote().sendObject(new PrintJobEvent(job, NotificationEvent.OutOfInk));
-			} catch (Exception e) {
-				logger.error("Error sending event to websocket:" + currentSession.getId(), e);
-			}
-		}
-	}
-
-	@Override
 	public void hostSettingsChanged() {
 		//Not for print jobs
 	}

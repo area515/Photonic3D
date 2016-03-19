@@ -191,7 +191,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 						logger.info("Send GCode:{}", gCode);
 
 						for (int t = 0; t < 3; t++) {
-							gCode = printer.getGCodeControl().sendGcodeReturnIfPrinterStops(gCode);
+							gCode = printer.getGCodeControl().sendGcodeAndRespectPrinter(printJob, gCode);
 							if (gCode != null) {
 								break;
 							}

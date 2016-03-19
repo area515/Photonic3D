@@ -786,7 +786,7 @@ public class PrinterService {
 			return new MachineResponse("remainingPrintMaterial", false, "Printer not started:" + printerName);
 		}
 		
-		InkDetector detector = printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getInkDetector(printer);
+		InkDetector detector = printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getInkDetector(buildStubJob(printer));
 		if (detector == null) {
 			return new MachineResponse("remainingPrintMaterial", false, "This printer doesn't have a PrintMaterialDetector configured. Save and restart the printer.");
 		}

@@ -104,7 +104,7 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 	
 	GenericHoughDetection<Line> buildLineDetection(int width, int height) {
 		LineDetector lineDetector = new LineDetector(.001d);
-		GenericHoughDetection<Line> houghLineDetection = new GenericHoughDetection<Line>(new Rectangle(0,  0, width, height), lineDetector, 0.3f, 0, false);
+		GenericHoughDetection<Line> houghLineDetection = new GenericHoughDetection<Line>(new Rectangle(0,  0, width, height), lineDetector, 0.4f, 0, false);
 		return houghLineDetection;
 	}
 	
