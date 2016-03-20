@@ -9,17 +9,17 @@
 			<isset property="repo.version" />
 		</condition>
 
-		<condition property="deployedServerZipFile" value="cwh-${repo.version}-${build.number}.zip"
+		<condition property="deployedServerZipFile" value="cwh-${repo.version}.zip"
 			else="cwh-0.${build.number}.zip">
 			<istrue value="${env.CI}"/>
 		</condition>
 
-		<condition property="deployedTestZipFile" value="cwhTestKit-${repo.version}-${build.number}.zip"
+		<condition property="deployedTestZipFile" value="cwhTestKit-${repo.version}.zip"
 			else="cwhTestKit-0.${build.number}.zip">
 			<istrue value="${env.CI}"/>
 		</condition>
 
-		<condition property="deployedClientZipFile" value="cwhClient-${repo.version}-${build.number}.zip"
+		<condition property="deployedClientZipFile" value="cwhClient-${repo.version}.zip"
 			else="cwhClient-0.${build.number}.zip">
 			<istrue value="${env.CI}"/>
 		</condition>
