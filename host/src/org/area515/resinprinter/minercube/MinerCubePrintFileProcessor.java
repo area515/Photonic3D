@@ -59,7 +59,7 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 		DataAid data = initializeDataAid(printJob);
 		
 		//Everything needs to be setup in the dataByPrintJob before we start the header
-		performHeader();
+		performHeader(data);
 
 		PrintCube printCube = minerCubesByPrintJob.get(printJob);
 		MinerCube cube = printCube.cube.get();
@@ -73,7 +73,7 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 		List<Rectangle> rects = cube.buildNextPrintSlice(centerX, centerY);
 		while (cube.hasPrintSlice()) {
 			//Performs all of the duties that are common to most print files
-			JobStatus status = performPreSlice(null);
+			JobStatus status = performPreSlice(data, null);
 			if (status != null) {
 				return status;
 			}
@@ -88,12 +88,12 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 				graphics.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
 			}
 			
-			applyBulbMask(graphics, data.xResolution, data.yResolution);
+			applyBulbMask(data, graphics, data.xResolution, data.yResolution);
 			data.printer.showImage(image);
 			printCube.currentImage = image;
 			
 			//Performs all of the duties that are common to most print files
-			status = performPostSlice();
+			status = performPostSlice(data);
 			if (status != null) {
 				return status;
 			}
@@ -105,7 +105,7 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 			}
 		}
 		
-		return performFooter();
+		return performFooter(data);
 	}
 	
 	@Override

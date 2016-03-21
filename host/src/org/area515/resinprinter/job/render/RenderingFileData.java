@@ -5,12 +5,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.script.ScriptEngine;
-
-import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.slice.ZSlicer;
 
 public class RenderingFileData {
+	private Map<Object, RenderingFileData.ImageData> imageSync = new HashMap<>();
+	public ZSlicer slicer;
+	private Boolean currentImagePointer = Boolean.TRUE;
+	
 	public static class ImageData {
 		private BufferedImage image;
 		private double area;
@@ -25,19 +26,7 @@ public class RenderingFileData {
 			this.area = area;
 		}
 	}
-	
-	private ScriptEngine scriptEngine;
-	private Map<Object, RenderingFileData.ImageData> imageSync = new HashMap<>();
-	public ZSlicer slicer;
-	private AbstractPrintFileProcessor<?> aid;
-	private Boolean currentImagePointer;
-	
-	public RenderingFileData(AbstractPrintFileProcessor<?> aid, ScriptEngine scriptEngine) {
-		this.scriptEngine = scriptEngine;
-		this.aid = aid;
-		this.currentImagePointer = Boolean.TRUE;
-	}
-	
+
 	public ImageData get(Object imageToBuild) {
 		return imageSync.get(imageToBuild);
 	}
@@ -76,9 +65,5 @@ public class RenderingFileData {
 	
 	public void setCurrentRenderingPointer(Object pointer) {
 		currentImagePointer = (Boolean)pointer;
-	}
-
-	public AbstractPrintFileProcessor<?> getPrintFileProcessingAid() {
-		return aid;
 	}
 }

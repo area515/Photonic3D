@@ -2,6 +2,7 @@
 package org.area515.resinprinter.services;
 
 import java.awt.GraphicsDevice;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,6 +45,7 @@ import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.Font;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
+import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
 import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
@@ -56,7 +58,7 @@ import freemarker.template.TemplateException;
 public class PrinterService {
     private static final Logger logger = LogManager.getLogger();
 	public static PrinterService INSTANCE = new PrinterService();
-	public static Font DEFAULT_FONT = new Font("Dialog", 20);
+	public static Font DEFAULT_FONT = new Font("Dialog", 200);
 	private PrinterService(){}
 	
 	private MachineResponse openShutter(String printerName, boolean shutter) throws InappropriateDeviceException {
@@ -349,7 +351,7 @@ public class PrinterService {
 		    logger.error("Error creating graphics device for printer:" + printername, e);
 			throw new IllegalArgumentException("Couldn't get screen device");
 		}
-				
+		
 		InkConfig ink = new InkConfig();
 		ink.setName("Default");
 		ink.setNumberOfFirstLayers(3);
@@ -361,7 +363,13 @@ public class PrinterService {
 		List<InkConfig> configs = new ArrayList<InkConfig>();
 		configs.add(ink);
 		
-		slicingProfile.setFont(DEFAULT_FONT);
+		TwoDimensionalSettings settings = new TwoDimensionalSettings();
+		settings.setFont(DEFAULT_FONT);
+		settings.setPlatformCalculator("platformGraphics.fillRoundRect(centerX - (extrusionX / 2), centerY - (extrusionY / 2), extrusionX, extrusionY, 50, 50);");
+		settings.setExtrusionHeightMM(1.5);
+		settings.setPlatformHeightMM(1.5);
+		
+		slicingProfile.setTwoDimensionalSettings(settings);
 		slicingProfile.setInkConfigs(configs);
 		slicingProfile.setSelectedInkConfigName("Default");
 		slicingProfile.setDotsPermmX(monitor.getDLP_X_Res() / physicalProjectionMMX);
@@ -685,31 +693,49 @@ public class PrinterService {
 		return job;
 	}
 	
+	private Map<String, Object> buildPrintInProgressSimulation() {
+		BufferedImage image = new BufferedImage(200, 200, BufferedImage.TYPE_4BYTE_ABGR_PRE);
+		Map<String, Object> overrides = new HashMap<>();
+		overrides.put("platformGraphics", image.getGraphics());
+		overrides.put("extrusionX", 200);
+		overrides.put("extrusionY", 200);
+		overrides.put("centerX", 100);
+		overrides.put("centerY", 100);
+		
+		return overrides;
+	}
+	
 	@POST
 	@Path("testScript/{printername}/{scriptname}/{returnType}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public TestingResult testScript(@PathParam("printername")String printerName, @PathParam("scriptname")String scriptName, String javascript, @PathParam("returnType")String returnTypeExpectation) throws InappropriateDeviceException {
+	public TestingResult testScript(@PathParam("printername")String printerName, @PathParam("scriptname")String scriptName, String javascript, @PathParam("returnType")String expectedReturnTypeString) throws InappropriateDeviceException {
 		Printer printer = getPrinter(printerName);
 		PrintJob job = buildStubJob(printer);
 
 		try {
-			Class returnType = null;
+			Class expectedReturnType = null;
 			List<ChartData> chartData = null;
-			Matcher matcher = Pattern.compile("([^\\[]+)\\[([^\\]]+)\\]").matcher(returnTypeExpectation);
+			Matcher matcher = Pattern.compile("([^\\[]+)\\[([^\\]]+)\\]").matcher(expectedReturnTypeString);
 			if (matcher.matches()) {
-				returnTypeExpectation = matcher.group(1);
+				expectedReturnTypeString = matcher.group(1);
 				chartData = getChartData(matcher.group(2));
-				returnType = Class.forName(returnTypeExpectation);
+				expectedReturnType = Class.forName(expectedReturnTypeString);
 			} else {
-				returnType = Class.forName(returnTypeExpectation);
+				expectedReturnType = Class.forName(expectedReturnTypeString);
 			}
 
 			ScriptEngine engine = HostProperties.Instance().buildScriptEngine();
 			
 			if (chartData == null) {
-				Object returnObject = TemplateEngine.runScript(job, printer, engine, javascript, scriptName, null);
-				if (!returnType.isAssignableFrom(returnObject.getClass())) {
-					TestingResult result = new TestingResult("This method expects a return type of:" + returnTypeExpectation + " you provided:" + returnObject.getClass(), -1);
+				Object returnObject = TemplateEngine.runScript(job, printer, engine, javascript, scriptName, buildPrintInProgressSimulation());
+				
+				if (expectedReturnType.equals(Void.class)) {
+					TestingResult result = new TestingResult(null);
+					return result;
+				}
+				
+				if (returnObject == null || !expectedReturnType.isAssignableFrom(returnObject.getClass())) {
+					TestingResult result = new TestingResult("This method expects a return type of:" + expectedReturnTypeString + " you provided:" + (returnObject == null?null:returnObject.getClass()), -1);
 					return result;
 				}
 				
@@ -735,8 +761,8 @@ public class PrinterService {
 						TestingResult result = new TestingResult("You returned a null from your script.", -1);
 						return result;
 					}
-					if (!returnType.isAssignableFrom(returnObject.getClass())) {
-						TestingResult result = new TestingResult("This script expects a return type of:" + returnTypeExpectation + " you provided:" + returnObject.getClass(), -1);
+					if (!expectedReturnType.isAssignableFrom(returnObject.getClass())) {
+						TestingResult result = new TestingResult("This script expects a return type of:" + expectedReturnTypeString + " you provided:" + returnObject.getClass(), -1);
 						return result;
 					}
 					
@@ -753,7 +779,7 @@ public class PrinterService {
 			TestingResult result = new TestingResult(e.getMessage(), e.getLineNumber());
 			return result;
 		} catch (ClassNotFoundException e) {
-			TestingResult result = new TestingResult("Couldn't find type:" + returnTypeExpectation, -1);
+			TestingResult result = new TestingResult("Couldn't find type:" + expectedReturnTypeString, -1);
 			return result;
 		}
 	}

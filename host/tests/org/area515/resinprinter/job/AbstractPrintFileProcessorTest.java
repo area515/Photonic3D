@@ -1,14 +1,12 @@
 package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 import javax.script.ScriptException;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.gcode.GCodeControl;
 import org.area515.resinprinter.gcode.eGENERICGCodeControl;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
@@ -21,37 +19,37 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 public class AbstractPrintFileProcessorTest {
 	@Test
-	public void EnsureMethodsThrowExceptionIfNotInitialized() throws IOException, InappropriateDeviceException, ScriptException, InterruptedException, ExecutionException {
+	public void EnsureMethodsThrowExceptionIfNotInitialized() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
+		PrintJob printJob = createTestPrintJob(processor);
+		DataAid aid = null;
 		try {
-			processor.applyBulbMask(null, 0, 0);
+			processor.applyBulbMask(aid, null, 0, 0);
 			Assert.fail("Failed to throw IllegalStateException.");
 		} catch (IllegalStateException e) {
 		}
 		try {
-			processor.performFooter();
+			processor.performFooter(aid);
 			Assert.fail("Failed to throw IllegalStateException.");
 		} catch (IllegalStateException e) {
 		}		
 		try {
-			processor.performHeader();
+			processor.performHeader(aid);
 			Assert.fail("Failed to throw IllegalStateException.");
 		} catch (IllegalStateException e) {
 		}
 		try {
-			processor.performPostSlice();
+			processor.performPostSlice(aid);
 			Assert.fail("Failed to throw IllegalStateException.");
 		} catch (IllegalStateException e) {
 		}
 		try {
-			processor.performPreSlice(null);
+			processor.performPreSlice(aid, null);
 			Assert.fail("Failed to throw IllegalStateException.");
 		} catch (IllegalStateException e) {
 		}
@@ -88,8 +86,8 @@ public class AbstractPrintFileProcessorTest {
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getProjectorGradientCalculator()).thenReturn("var mm = $buildAreaMM * 2;java.awt.Color.ORANGE");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
-		processor.initializeDataAid(printJob);
-		processor.applyBulbMask(graphics, 0, 0);
+		DataAid aid = processor.initializeDataAid(printJob);
+		processor.applyBulbMask(aid, graphics, 0, 0);
 	}
 	
 	@Test
@@ -98,8 +96,8 @@ public class AbstractPrintFileProcessorTest {
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn("var mm = $buildAreaMM * 2;mm");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
-		processor.initializeDataAid(printJob);
-		processor.performPostSlice();
+		DataAid aid = processor.initializeDataAid(printJob);
+		processor.performPostSlice(aid);
 	}
 	
 	@Test
@@ -108,9 +106,9 @@ public class AbstractPrintFileProcessorTest {
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn("var mm = $buildAreaMM * 2;java.awt.Color.ORANGE");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
-		processor.initializeDataAid(printJob);
+		DataAid aid = processor.initializeDataAid(printJob);
 		try {
-			processor.performPostSlice();
+			processor.performPostSlice(aid);
 		} catch (IllegalArgumentException e) {
 			Assert.assertEquals("The result of your lift distance script needs to evaluate to an instance of java.lang.Number", e.getMessage());
 		}
@@ -122,9 +120,9 @@ public class AbstractPrintFileProcessorTest {
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn(";");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
-		processor.initializeDataAid(printJob);
+		DataAid aid = processor.initializeDataAid(printJob);
 		try {
-			processor.performPostSlice();
+			processor.performPostSlice(aid);
 		} catch (IllegalArgumentException e) {
 			Assert.assertEquals("The result of your lift distance script needs to evaluate to an instance of java.lang.Number", e.getMessage());
 		}
@@ -138,16 +136,16 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getZLiftDistanceGCode()).thenReturn("G99 ${1 + UnknownVariable * 2} ;dependent on buildArea");
 		Double whenBuilAreaMMCalled = printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class));
 		Mockito.when(whenBuilAreaMMCalled).thenReturn(null);
-		processor.initializeDataAid(printJob);
+		DataAid aid = processor.initializeDataAid(printJob);
 		try {
-			processor.performPostSlice();
+			processor.performPostSlice(aid);
 			Assert.fail("Must throw InappropriateDeviceException");
 		} catch (InappropriateDeviceException e) {
 			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(1)).getBuildAreaMM(Mockito.any(PrintJob.class));
 		}
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getZLiftDistanceGCode()).thenReturn("G99 ${1 + buildAreaMM * 2} ;dependent on buildArea");
 		try {
-			processor.performPostSlice();
+			processor.performPostSlice(aid);
 			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(4)).getBuildAreaMM(Mockito.any(PrintJob.class));
 		} catch (InappropriateDeviceException e) {
 			Assert.fail("Should not throw InappropriateDeviceException");
@@ -161,9 +159,9 @@ public class AbstractPrintFileProcessorTest {
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getZLiftDistanceGCode()).thenReturn("G99 ${ ;dependent on buildArea");
 		Double whenBuilAreaMMCalled = printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class));
-		processor.initializeDataAid(printJob);
+		DataAid aid = processor.initializeDataAid(printJob);
 		try {
-			processor.performPostSlice();
+			processor.performPostSlice(aid);
 			Assert.fail("Must throw InappropriateDeviceException");
 		} catch (InappropriateDeviceException e) {
 			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(2)).getBuildAreaMM(Mockito.any(PrintJob.class));
@@ -178,7 +176,7 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getZLiftDistanceGCode()).thenReturn("${1 + buildAreaMM * 2}");
 		Double whenBuilAreaMMCalled = printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class));
 		Mockito.when(whenBuilAreaMMCalled).thenReturn(new Double("5.0"));
-		processor.initializeDataAid(printJob);
+		DataAid aid = processor.initializeDataAid(printJob);
 		Mockito.when(printJob.getPrinter().getGCodeControl().sendGcode(Mockito.anyString())).then(new Answer<String>() {
 			private int count = 0;
 			
@@ -196,6 +194,6 @@ public class AbstractPrintFileProcessorTest {
 				return (String)invocation.getArguments()[0];
 			}
 		});
-		processor.performPostSlice();
+		processor.performPostSlice(aid);
 	}
 }

@@ -20,6 +20,49 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SlicingProfile {
     private static final Logger logger = LogManager.getLogger();
 
+    public static class TwoDimensionalSettings {
+        @XmlElement(name="Font")
+    	private Font font;
+        @XmlElement(name="PlatformHeightMM")
+        private Double platformHeightMM;
+        @XmlElement(name="ExtrusionHeightMM")
+        private Double extrusionHeightMM;
+        @XmlElement(name="PlatformCalculator")
+        private String platformCalculator;
+        
+        @XmlTransient
+		public Font getFont() {
+			return font;
+		}
+		public void setFont(Font font) {
+			this.font = font;
+		}
+		
+		@XmlTransient
+		public Double getPlatformHeightMM() {
+			return platformHeightMM;
+		}
+		public void setPlatformHeightMM(Double platformHeightMM) {
+			this.platformHeightMM = platformHeightMM;
+		}
+		
+		@XmlTransient
+		public Double getExtrusionHeightMM() {
+			return extrusionHeightMM;
+		}
+		public void setExtrusionHeightMM(Double extrusionHeightMM) {
+			this.extrusionHeightMM = extrusionHeightMM;
+		}
+		
+		@XmlTransient
+		public String getPlatformCalculator() {
+			return platformCalculator;
+		}
+		public void setPlatformCalculator(String platformCalculator) {
+			this.platformCalculator = platformCalculator;
+		}
+    }
+    
     public static class Font {
         @XmlElement(name="Name")
     	private String name;
@@ -49,6 +92,7 @@ public class SlicingProfile {
 			this.size = size;
 		}
     }
+    
     public static class InkConfig {
 		@XmlElement(name="PrintMaterialDetector")
 		private String printMaterialDetector;
@@ -221,9 +265,9 @@ public class SlicingProfile {
 	private int testExposureStep;
     @XmlElement(name="InkConfig")
 	private List<InkConfig> inkConfig;
-    @XmlElement(name="Font")
-	private Font font;
-
+    @XmlElement(name="TwoDimensionalSettings")
+    private TwoDimensionalSettings twoDimensionalSettings;
+    
 	@XmlTransient
 	public int getSlideTiltValue() {
 		return slideTiltValue;
@@ -313,11 +357,11 @@ public class SlicingProfile {
 	}
 	
 	@XmlTransient
-	public Font getFont() {
-		return font;
+	public TwoDimensionalSettings getTwoDimensionalSettings() {
+		return twoDimensionalSettings;
 	}
-	public void setFont(Font font) {
-		this.font = font;
+	public void setTwoDimensionalSettings(TwoDimensionalSettings twoDimensionalSettings) {
+		this.twoDimensionalSettings = twoDimensionalSettings;
 	}
 	
 	public String getgCodeHeader() {

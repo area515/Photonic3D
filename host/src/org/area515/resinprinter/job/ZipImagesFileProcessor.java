@@ -78,7 +78,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 		
 		printJob.setTotalSlices(imageFiles.size());
 
-		performHeader();
+		performHeader(dataAid);
 
 		Iterator<File> imgIter = imageFiles.values().iterator();
 
@@ -87,12 +87,12 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 			File imageFile = imgIter.next();
 			
 			Future<StandaloneImageData> prepareImage =
-					Main.GLOBAL_EXECUTOR.submit(new StandaloneImageRenderer(imageFile, this));
+					Main.GLOBAL_EXECUTOR.submit(new StandaloneImageRenderer(dataAid, imageFile, this));
 			boolean slicePending = true;
 			
 			do {
 
-				JobStatus status = performPreSlice(null);
+				JobStatus status = performPreSlice(dataAid, null);
 				if (status != null) {
 					return status;
 				}
@@ -109,19 +109,19 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 				
 				if (imgIter.hasNext()) {
 					imageFile = imgIter.next();
-					prepareImage = Main.GLOBAL_EXECUTOR.submit(new StandaloneImageRenderer(imageFile, this));
+					prepareImage = Main.GLOBAL_EXECUTOR.submit(new StandaloneImageRenderer(dataAid, imageFile, this));
 				} else {
 					slicePending = false;
 				}
 				
-				status = performPostSlice();
+				status = performPostSlice(dataAid);
 				if (status != null) {
 					return status;
 				}
 			} while (slicePending);
 		}
 		
-		return performFooter();
+		return performFooter(dataAid);
 	}
 
 	@Override
