@@ -66,7 +66,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	@Override
 	public JobStatus processFile(final PrintJob printJob) throws Exception {
 		File gCodeFile = findGcodeFile(printJob.getJobFile());
-		initializeDataAid(printJob);
+		DataAid aid = initializeDataAid(printJob);
 		
 		Printer printer = printJob.getPrinter();
 		BufferedReader stream = null;
@@ -119,7 +119,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 							String imageFilename = FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png";
 							File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
 							BufferedImage newImage = ImageIO.read(imageFile);
-							applyBulbMask((Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
+							applyBulbMask(aid, (Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
 							currentlyDisplayedImage.put(printJob, newImage);
 							logger.info("Show picture: {}", imageFilename);
 							

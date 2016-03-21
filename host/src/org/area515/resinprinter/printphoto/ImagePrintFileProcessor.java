@@ -1,13 +1,9 @@
 package org.area515.resinprinter.printphoto;
 
-import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -15,33 +11,19 @@ import java.util.concurrent.Future;
 import javax.imageio.ImageIO;
 
 import org.area515.resinprinter.inkdetection.visual.CannyEdgeDetector8BitGray;
-import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobManagerException;
-import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
-import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.twodim.TwoDimensionalPlatformPrintFileProcessor;
 
 public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProcessor<Object> {
-	private class PrintImage implements TwoDimensionalPrintState {
+	private class PrintImage extends TwoDimensionalPrintState {
 		Future<BufferedImage> futureImage;
-		BufferedImage currentImage;
-		
+
 		@Override
-		public BufferedImage getCurrentImage() {
-			return currentImage;
-		}
-		
-		@Override
-		public void setCurrentImage(BufferedImage image) {
-			currentImage = image;
-		}
-		@Override
-		public BufferedImage buildImplementationImage(DataAid aid, Graphics2D graphics) throws ExecutionException, InterruptedException {
-			currentImage = futureImage.get();
-			return currentImage;
+		public BufferedImage buildExtrusionImage(DataAid aid) throws ExecutionException, InterruptedException {
+			return futureImage.get();
 		}
 	}
 	
@@ -96,7 +78,7 @@ public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProc
 		});
 		PrintImage printCube = new PrintImage();
 		printCube.futureImage = future;
-		createTwoDimensionlPrintState(printJob, printCube);
+		createTwoDimensionalPrintState(printJob, printCube);
 	}
 
 	@Override

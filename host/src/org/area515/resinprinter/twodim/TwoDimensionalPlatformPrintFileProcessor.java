@@ -1,102 +1,175 @@
 package org.area515.resinprinter.twodim;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReentrantLock;
+
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.job.render.RenderingFileData;
+import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
+import org.area515.resinprinter.server.Main;
+import org.area515.resinprinter.services.PrinterService;
 
 public abstract class TwoDimensionalPlatformPrintFileProcessor<T> extends AbstractPrintFileProcessor<T> {
 	private Map<PrintJob, TwoDimensionalPrintState> twoDimensionalPrintDataByJob = new HashMap<PrintJob, TwoDimensionalPrintState>();
 	
-	public interface TwoDimensionalPrintState {
-		public BufferedImage getCurrentImage();
-		public void setCurrentImage(BufferedImage image);
-		public BufferedImage buildImplementationImage(DataAid aid, Graphics2D graphics) throws ExecutionException, InterruptedException;
+	public static abstract class TwoDimensionalPrintState extends RenderingFileData {
+		private BufferedImage twoDimensionalImage;
+		
+		public abstract BufferedImage buildExtrusionImage(DataAid aid) throws ExecutionException, InterruptedException;
+		
+		public BufferedImage getCachedExtrusionImage() {
+			return twoDimensionalImage;
+		}
+		
+		public void cacheExtrusionImage(DataAid aid) throws ExecutionException, InterruptedException {
+			this.twoDimensionalImage = buildExtrusionImage(aid);
+		}
 	}
 	
 	@Override
 	public BufferedImage getCurrentImage(PrintJob printJob) {
-		TwoDimensionalPrintState printCube = twoDimensionalPrintDataByJob.get(printJob);
-		return printCube.getCurrentImage();
+		TwoDimensionalPrintState printState = twoDimensionalPrintDataByJob.get(printJob);
+		if (printState == null) {
+			return null;
+		}
+		
+		ReentrantLock lock = printState.getCurrentLock();
+		lock.lock();
+		try {
+			BufferedImage currentImage = printState.getCurrentImage();
+			if (currentImage == null)
+				return null;
+			
+			return currentImage.getSubimage(0, 0, currentImage.getWidth(), currentImage.getHeight());
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
 	public Double getBuildAreaMM(PrintJob printJob) {
-		//TODO: this should call functions from within the org.area515.resinprinter.job.render.StandaloneImageRenderer but need to be piplined with futures first!
+		//TODO: this should call functions from within the org.area515.resinprinter.job.render.StandaloneImageRenderer but need to be pipelined with futures first!
 		return null;
 	}
 	
-	public void createTwoDimensionlPrintState(PrintJob printJob, TwoDimensionalPrintState state) {
+	public void createTwoDimensionalPrintState(PrintJob printJob, TwoDimensionalPrintState state) {
 		twoDimensionalPrintDataByJob.put(printJob, state);
 	}
 	
 	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
-		DataAid data = initializeDataAid(printJob);
+		DataAid dataAid = initializeDataAid(printJob);
 		try {
-			int border = getSuggestedPrettyBorderWidth();
-			performHeader();
-		
-			TwoDimensionalPrintState printImage = twoDimensionalPrintDataByJob.get(printJob);
-			int firstSlices = getSuggestedSolidLayerCountFor2DGraphic();
-			int imageSlices = getSuggestedImplementationLayerCountFor2DGraphic();
-			printJob.setTotalSlices(firstSlices + imageSlices);
+			performHeader(dataAid);
 			
-			int centerX = data.xResolution / 2;
-			int centerY = data.yResolution / 2;
-	
-			BufferedImage screenImage = new BufferedImage(data.xResolution, data.yResolution, BufferedImage.TYPE_INT_ARGB_PRE);
-			BufferedImage image = printImage.buildImplementationImage(data, (Graphics2D)screenImage.getGraphics());
-			while (firstSlices > 0 || imageSlices > 0) {
+			TwoDimensionalPrintState printState = twoDimensionalPrintDataByJob.get(printJob);
+			int platformSlices = getSuggestedPlatformLayerCount(dataAid);
+			int extrusionSlices = getSuggested2DExtrusionLayerCount(dataAid);
+			printJob.setTotalSlices(platformSlices + extrusionSlices);
+			
+			printState.cacheExtrusionImage(dataAid);
+			Object nextRenderingPointer = printState.getCurrentRenderingPointer();
+			Future<BufferedImage> currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution, platformSlices));
+			while (platformSlices > 0 || extrusionSlices > 0) {
+				
 				//Performs all of the duties that are common to most print files
-				JobStatus status = performPreSlice(null);
+				JobStatus status = performPreSlice(dataAid, null);
 				if (status != null) {
 					return status;
 				}
 				
-				Graphics2D graphics = (Graphics2D)screenImage.getGraphics();
-				graphics.setColor(Color.black);
-				graphics.fillRect(0, 0, data.xResolution, data.yResolution);
-				graphics.setColor(Color.white);
+				//Wait until the image has been properly rendered. Most likely, it's already done though...
+				BufferedImage image = currentImage.get();
 				
-				if (firstSlices > 0) {
-					int actualWidth = image.getWidth() + border > screenImage.getWidth()?screenImage.getWidth():image.getWidth() + border;
-					int actualHeight = image.getHeight() + border > screenImage.getHeight()?screenImage.getHeight(): image.getHeight() + border;
-					
-					graphics.fillRoundRect(centerX - (actualWidth / 2), centerY - (actualHeight / 2), actualWidth, actualHeight, border, border);
-				} else {
-					int actualWidth = image.getWidth();
-					int actualHeight = image.getHeight();
-					
-					graphics.drawImage(image, centerX - (actualWidth / 2), centerY - (actualHeight / 2), null);
+				//Now that the image has been rendered, we can make the switch to use the pointer that we were using while we were rendering
+				printState.setCurrentRenderingPointer(nextRenderingPointer);
+				
+				//Cure the current image
+				dataAid.printer.showImage(image);
+				
+				//Get the next pointer in line to start rendering the image into
+				nextRenderingPointer = printState.getNextRenderingPointer();
+				
+				//Render the next image while we are waiting for the current image to cure
+				if (platformSlices > 0) {
+					currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution, platformSlices));
+				} else if (extrusionSlices > 1) {
+					currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderExtrusionImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
 				}
-				
-				applyBulbMask(graphics, image.getWidth(), image.getHeight());
-				data.printer.showImage(screenImage);
-				printImage.setCurrentImage(screenImage);
-				
+
 				//Performs all of the duties that are common to most print files
-				status = performPostSlice();
+				status = performPostSlice(dataAid);
 				if (status != null) {
 					return status;
 				}
 	
-				if (firstSlices > 0) {
-					firstSlices--;
+				if (platformSlices > 0) {
+					platformSlices--;
 				} else {
-					imageSlices--;
+					extrusionSlices--;
 				}
 			}
 			
-			return performFooter();
+			return performFooter(dataAid);
 		} finally {
-			twoDimensionalPrintDataByJob.remove(data.printJob);
+			twoDimensionalPrintDataByJob.remove(dataAid.printJob);
 		}
+	}
+	
+	@XmlTransient
+	public int getSuggestedPlatformLayerCount(DataAid aid) {
+		int fallbackAmount = aid.inkConfiguration.getNumberOfFirstLayers() * 2;
+		TwoDimensionalSettings settings = aid.slicingProfile.getTwoDimensionalSettings();
+		if (settings == null) {
+			return fallbackAmount;
+		}
+		Double platformHeight = settings.getPlatformHeightMM();
+		if (platformHeight == null) {
+			return fallbackAmount;
+		}
+		
+		return (int)Math.round(platformHeight / aid.inkConfiguration.getSliceHeight());
+	}
+	
+	@XmlTransient
+	public int getSuggested2DExtrusionLayerCount(DataAid aid) {
+		int fallbackAmount = aid.inkConfiguration.getNumberOfFirstLayers() * 3;
+		TwoDimensionalSettings settings = aid.slicingProfile.getTwoDimensionalSettings();
+		if (settings == null) {
+			return fallbackAmount;
+		}
+		Double extrusionHeight = settings.getExtrusionHeightMM();
+		if (extrusionHeight == null) {
+			return fallbackAmount;
+		}
+		
+		return (int)Math.round(extrusionHeight / aid.inkConfiguration.getSliceHeight());
+	}
+	
+	public Font buildFont(DataAid data) {
+		TwoDimensionalSettings cwhTwoDim = data.slicingProfile.getTwoDimensionalSettings();
+		org.area515.resinprinter.printer.SlicingProfile.Font cwhFont = cwhTwoDim != null?cwhTwoDim.getFont():new org.area515.resinprinter.printer.SlicingProfile.Font();
+		if (cwhFont == null) {
+			cwhFont = PrinterService.DEFAULT_FONT;
+		}
+		
+		if (cwhFont.getName() == null) {
+			cwhFont.setName(PrinterService.DEFAULT_FONT.getName());
+		}
+		
+		if (cwhFont.getSize() == 0) {
+			cwhFont.setSize(PrinterService.DEFAULT_FONT.getSize());
+		}
+		
+		return new Font(cwhFont.getName(), Font.PLAIN, cwhFont.getSize());
 	}
 }

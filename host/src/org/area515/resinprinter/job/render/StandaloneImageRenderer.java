@@ -13,6 +13,7 @@ import javax.script.ScriptException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
 
 public class StandaloneImageRenderer implements Callable<StandaloneImageData> {
@@ -20,17 +21,19 @@ public class StandaloneImageRenderer implements Callable<StandaloneImageData> {
 
 	private File imageFile;
 	private AbstractPrintFileProcessor<?> processor;
+	private DataAid aid;
 	
-	public StandaloneImageRenderer(File imageFile, AbstractPrintFileProcessor<?> processor) {
+	public StandaloneImageRenderer(DataAid aid, File imageFile, AbstractPrintFileProcessor<?> processor) {
 		this.imageFile = imageFile;
 		this.processor = processor;
+		this.aid = aid;
 	}
 	
 	public StandaloneImageData call() throws ScriptException, JobManagerException, IOException {
 		long startTime = System.currentTimeMillis();
 		BufferedImage image = ImageIO.read(imageFile);
 		long pixelArea = computePixelArea(image);
-		processor.applyBulbMask((Graphics2D)image.getGraphics(), image.getWidth(), image.getHeight());
+		processor.applyBulbMask(aid, (Graphics2D)image.getGraphics(), image.getWidth(), image.getHeight());
 		logger.info("Loaded {}  with {} non-black pixels in {}ms", imageFile.getName(), pixelArea, System.currentTimeMillis()-startTime);
 		return new StandaloneImageData(image, pixelArea);
 	}

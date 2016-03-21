@@ -21,32 +21,24 @@ import org.area515.resinprinter.twodim.TwoDimensionalPlatformPrintFileProcessor;
 public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileProcessor<Object> {
     private static final Logger logger = LogManager.getLogger();
 	
-	private class TextData implements TwoDimensionalPrintState {
+	private class TextData extends TwoDimensionalPrintState {
 		Object[] lines;
-		BufferedImage currentImage;
 		
 		@Override
-		public BufferedImage getCurrentImage() {
-			return currentImage;
-		}
-		
-		@Override
-		public void setCurrentImage(BufferedImage image) {
-			currentImage = image;
-		}
-		
-		@Override
-		public BufferedImage buildImplementationImage(DataAid data, Graphics2D graphics) {
-			graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-			graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-			Font font = buildFont();
-			graphics.setFont(font);
-			FontMetrics metrics = graphics.getFontMetrics();
+		public BufferedImage buildExtrusionImage(DataAid aid) {
+	        BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB_PRE);
+	        Graphics2D chickenEggGraphics = img.createGraphics();
+
+	        chickenEggGraphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+	        chickenEggGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			Font font = buildFont(aid);
+			chickenEggGraphics.setFont(font);
+			FontMetrics metrics = chickenEggGraphics.getFontMetrics();
 			double maxWidth = 0;
 			double totalHeight = 0;
 	        for (int t = 0; t < lines.length; t++) {
 	        	String currentLine = ((String)lines[t]);
-	        	Rectangle2D rect = metrics.getStringBounds(currentLine.toCharArray(), 0, currentLine.length(), graphics);
+	        	Rectangle2D rect = metrics.getStringBounds(currentLine.toCharArray(), 0, currentLine.length(), chickenEggGraphics);
 	        	if (rect.getWidth() > maxWidth) {
 	        		maxWidth = rect.getWidth();
 	        	}
@@ -83,7 +75,7 @@ public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileP
 		try (BufferedReader reader = new BufferedReader(new FileReader(processingFile))) {
 			TextData textData = new TextData();
 			textData.lines = reader.lines().toArray();
-			createTwoDimensionlPrintState(printJob, textData);
+			createTwoDimensionalPrintState(printJob, textData);
 		} catch (IOException e) {
 			logger.error("IO error while reading file:" + processingFile, e);
 			throw new JobManagerException("There was a problem reading this file.");

@@ -1,6 +1,5 @@
 package org.area515.resinprinter.job;
 
-import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.io.IOException;
@@ -9,7 +8,6 @@ import java.util.concurrent.ExecutionException;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
-import javax.xml.bind.annotation.XmlTransient;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.notification.NotificationManager;
@@ -18,18 +16,11 @@ import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.server.HostProperties;
-import org.area515.resinprinter.services.PrinterService;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.TemplateEngine;
 
 public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcessor<G>{
-	//TODO: You can't have instance variables, PrintFileProcessor is a Singleton pattern!!!  
-	//Once two printers are printing at the same time we've got chaos!!!!! 
-	//FIXME by pulling these instance variables into the DataAid and getting rid of the DataAid instance variable.
-	//Instead of having each implementation keep it's own state in it's own hashtable, we should be doing all of that work in here...
-	private long currentSliceTime;
-	private InkDetector inkDetector;
-	private DataAid data;
+	//TODO: Instead of having each implementation keep it's own state in it's own hashtable, we should be doing all of that work in here...
 	
 	public static class DataAid {
 		public ScriptEngine scriptEngine;
@@ -43,6 +34,8 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		public int xResolution;
 		public int yResolution;
 		public double sliceHeight;
+		public InkDetector inkDetector;
+		public long currentSliceTime;
 		
 		public DataAid(PrintJob printJob) throws InappropriateDeviceException {
 			this.printJob = printJob;
@@ -68,161 +61,160 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 	}
 	
 	public DataAid initializeDataAid(PrintJob printJob) throws InappropriateDeviceException {
-		data = new DataAid(printJob);
-		return data;
+		return new DataAid(printJob);
 	}
 	
-	public void performHeader() throws InappropriateDeviceException, IOException {
-		if (data == null) {
+	public void performHeader(DataAid aid) throws InappropriateDeviceException, IOException {
+		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
 		
-		if (data.printer.isProjectorPowerControlSupported()) {
-			data.printer.setProjectorPowerStatus(true);
+		if (aid.printer.isProjectorPowerControlSupported()) {
+			aid.printer.setProjectorPowerStatus(true);
 		}
 		
 		//Set the default exposure time(this is only used if there isn't an exposure time calculator)
-		data.printJob.setExposureTime(data.inkConfiguration.getExposureTime());
+		aid.printJob.setExposureTime(aid.inkConfiguration.getExposureTime());
 		
 		//Perform the gcode associated with the printer start function
-		if (data.slicingProfile.getgCodeHeader() != null && data.slicingProfile.getgCodeHeader().trim().length() > 0) {
-			data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getgCodeHeader());
+		if (aid.slicingProfile.getgCodeHeader() != null && aid.slicingProfile.getgCodeHeader().trim().length() > 0) {
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeHeader());
 		}
 		
-		if (data.inkConfiguration != null) {
-			inkDetector = data.inkConfiguration.getInkDetector(data.printJob);
+		if (aid.inkConfiguration != null) {
+			aid.inkDetector = aid.inkConfiguration.getInkDetector(aid.printJob);
 		}
 		
 		//Set the initial values for all variables.
-		data.printJob.setExposureTime(data.inkConfiguration.getExposureTime());
-		data.printJob.setZLiftDistance(data.slicingProfile.getLiftFeedRate());
-		data.printJob.setZLiftSpeed(data.slicingProfile.getLiftDistance());
+		aid.printJob.setExposureTime(aid.inkConfiguration.getExposureTime());
+		aid.printJob.setZLiftDistance(aid.slicingProfile.getLiftFeedRate());
+		aid.printJob.setZLiftSpeed(aid.slicingProfile.getLiftDistance());
 		
 		//Initialize bulb hours only once per print
-		data.printer.getBulbHours();
+		aid.printer.getBulbHours();
 	}
 	
-	public JobStatus performPreSlice(List<StlError> errors) throws InappropriateDeviceException {
-		if (data == null) {
+	public JobStatus performPreSlice(DataAid aid, List<StlError> errors) throws InappropriateDeviceException {
+		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
-		currentSliceTime = System.currentTimeMillis();
+		aid.currentSliceTime = System.currentTimeMillis();
 
 		//Perform two actions at once here:
 		// 1. Pause if the user asked us to pause
 		// 2. Get out if the print is cancelled
-		if (!data.printer.waitForPauseIfRequired()) {
-			return data.printer.getStatus();
+		if (!aid.printer.waitForPauseIfRequired()) {
+			return aid.printer.getStatus();
 		}
 		
 		//Show the errors to our users if the stl file is broken, but we'll keep on processing like normal
 		if (errors != null && !errors.isEmpty()) {
-			NotificationManager.errorEncountered(data.printJob, errors);
+			NotificationManager.errorEncountered(aid.printJob, errors);
 		}
 		
 		//Execute preslice gcode
-		if (data.slicingProfile.getgCodePreslice() != null && data.slicingProfile.getgCodePreslice().trim().length() > 0) {
-			data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getgCodePreslice());
+		if (aid.slicingProfile.getgCodePreslice() != null && aid.slicingProfile.getgCodePreslice().trim().length() > 0) {
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodePreslice());
 		}
 		
 		return null;
 	}
 	
-	public JobStatus performPostSlice() throws ExecutionException, InterruptedException, InappropriateDeviceException, ScriptException {
-		if (data == null) {
+	public JobStatus performPostSlice(DataAid aid) throws ExecutionException, InterruptedException, InappropriateDeviceException, ScriptException {
+		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
 
 		//Start but don't wait for a potentially heavy weight operation to determine if we are out of ink.
-		if (inkDetector != null) {
-			inkDetector.startMeasurement();
+		if (aid.inkDetector != null) {
+			aid.inkDetector.startMeasurement();
 		}
 		
 		//Determine the dynamic amount of time we should expose our resin
-		if (!data.printJob.isExposureTimeOverriden() && data.slicingProfile.getExposureTimeCalculator() != null && data.slicingProfile.getExposureTimeCalculator().trim().length() > 0) {
-			Number value = calculate(data.slicingProfile.getExposureTimeCalculator(), "exposure time script");
+		if (!aid.printJob.isExposureTimeOverriden() && aid.slicingProfile.getExposureTimeCalculator() != null && aid.slicingProfile.getExposureTimeCalculator().trim().length() > 0) {
+			Number value = calculate(aid, aid.slicingProfile.getExposureTimeCalculator(), "exposure time script");
 			if (value != null) {
-				data.printJob.setExposureTime(value.intValue());
+				aid.printJob.setExposureTime(value.intValue());
 			}
 		}
 		
-		if (data.slicingProfile.getgCodeShutter() != null && data.slicingProfile.getgCodeShutter().trim().length() > 0) {
-			data.printer.setShutterOpen(true);
-			data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getgCodeShutter());
+		if (aid.slicingProfile.getgCodeShutter() != null && aid.slicingProfile.getgCodeShutter().trim().length() > 0) {
+			aid.printer.setShutterOpen(true);
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeShutter());
 		}
 		
 		//Sleep for the amount of time that we are exposing the resin.
-		Thread.sleep(data.printJob.getExposureTime());
+		Thread.sleep(aid.printJob.getExposureTime());
 		
-		if (data.slicingProfile.getgCodeShutter() != null && data.slicingProfile.getgCodeShutter().trim().length() > 0) {
-			data.printer.setShutterOpen(false);
-			data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getgCodeShutter());
+		if (aid.slicingProfile.getgCodeShutter() != null && aid.slicingProfile.getgCodeShutter().trim().length() > 0) {
+			aid.printer.setShutterOpen(false);
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeShutter());
 		}
 		
 		//Blank the screen in the case that our printer doesn't have a shutter
-		data.printer.showBlankImage();
+		aid.printer.showBlankImage();
 		
 		//Perform two actions at once here:
 		// 1. Pause if the user asked us to pause
 		// 2. Get out if the print is cancelled
-		if (!data.printer.waitForPauseIfRequired()) {
-			return data.printer.getStatus();
+		if (!aid.printer.waitForPauseIfRequired()) {
+			return aid.printer.getStatus();
 		}
 		
-		if (!data.printJob.isZLiftDistanceOverriden() && data.slicingProfile.getzLiftDistanceCalculator() != null && data.slicingProfile.getzLiftDistanceCalculator().trim().length() > 0) {
-			Number value = calculate(data.slicingProfile.getzLiftDistanceCalculator(), "lift distance script");
+		if (!aid.printJob.isZLiftDistanceOverriden() && aid.slicingProfile.getzLiftDistanceCalculator() != null && aid.slicingProfile.getzLiftDistanceCalculator().trim().length() > 0) {
+			Number value = calculate(aid, aid.slicingProfile.getzLiftDistanceCalculator(), "lift distance script");
 			if (value != null) {
-				data.printJob.setZLiftDistance(value.doubleValue());
+				aid.printJob.setZLiftDistance(value.doubleValue());
 			}
 		}
-		if (!data.printJob.isZLiftSpeedOverriden() && data.slicingProfile.getzLiftSpeedCalculator() != null && data.slicingProfile.getzLiftSpeedCalculator().trim().length() > 0) {
-			Number value = calculate(data.slicingProfile.getzLiftSpeedCalculator(), "lift speed script");
+		if (!aid.printJob.isZLiftSpeedOverriden() && aid.slicingProfile.getzLiftSpeedCalculator() != null && aid.slicingProfile.getzLiftSpeedCalculator().trim().length() > 0) {
+			Number value = calculate(aid, aid.slicingProfile.getzLiftSpeedCalculator(), "lift speed script");
 			if (value != null) {
-				data.printJob.setZLiftSpeed(value.doubleValue());
+				aid.printJob.setZLiftSpeed(value.doubleValue());
 			}
 		}
-		if (data.slicingProfile.getZLiftDistanceGCode() != null && data.slicingProfile.getZLiftDistanceGCode().trim().length() > 0) {
-			data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getZLiftDistanceGCode());
+		if (aid.slicingProfile.getZLiftDistanceGCode() != null && aid.slicingProfile.getZLiftDistanceGCode().trim().length() > 0) {
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getZLiftDistanceGCode());
 		}
-		if (data.slicingProfile.getZLiftSpeedGCode() != null && data.slicingProfile.getZLiftSpeedGCode().trim().length() > 0) {
-			data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getZLiftSpeedGCode());
+		if (aid.slicingProfile.getZLiftSpeedGCode() != null && aid.slicingProfile.getZLiftSpeedGCode().trim().length() > 0) {
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getZLiftSpeedGCode());
 		}
 		
 		//Perform the lift gcode manipulation
-		data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getgCodeLift());
+		aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeLift());
 		
 		//Perform area and cost manipulations for current slice
-		data.printJob.addNewSlice(System.currentTimeMillis() - currentSliceTime, getBuildAreaMM(data.printJob));
+		aid.printJob.addNewSlice(System.currentTimeMillis() - aid.currentSliceTime, getBuildAreaMM(aid.printJob));
 		
 		//Notify the client that the printJob has increased the currentSlice
-		NotificationManager.jobChanged(data.printer, data.printJob);
+		NotificationManager.jobChanged(aid.printer, aid.printJob);
 		
 		return null;
 	}
 
-	public JobStatus performFooter() throws IOException, InappropriateDeviceException {
-		if (data == null) {
+	public JobStatus performFooter(DataAid aid) throws IOException, InappropriateDeviceException {
+		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
 
-		if (!data.printer.isPrintActive()) {
-			return data.printer.getStatus();
+		if (!aid.printer.isPrintActive()) {
+			return aid.printer.getStatus();
 		}
 		
-		if (data.slicingProfile.getgCodeFooter() != null && data.slicingProfile.getgCodeFooter().trim().length() == 0) {
-			data.printer.getGCodeControl().executeGCodeWithTemplating(data.printJob, data.slicingProfile.getgCodeFooter());
+		if (aid.slicingProfile.getgCodeFooter() != null && aid.slicingProfile.getgCodeFooter().trim().length() == 0) {
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeFooter());
 		}
 		
-		if (data.printer.isProjectorPowerControlSupported()) {
-			data.printer.setProjectorPowerStatus(false);
+		if (aid.printer.isProjectorPowerControlSupported()) {
+			aid.printer.setProjectorPowerStatus(false);
 		}
 
 		return JobStatus.Completed;
 	}
 
-	private Number calculate(String calculator, String calculationName) throws ScriptException {
+	private Number calculate(DataAid aid, String calculator, String calculationName) throws ScriptException {
 		try {
-			Number num = (Number)TemplateEngine.runScript(data.printJob, data.printer, data.scriptEngine, calculator, calculationName, null);
+			Number num = (Number)TemplateEngine.runScript(aid.printJob, aid.printer, aid.scriptEngine, calculator, calculationName, null);
 			if (num == null || Double.isNaN(num.doubleValue())) {
 				return null;
 			}
@@ -232,52 +224,20 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		}
 	}
 	
-	public void applyBulbMask(Graphics2D g2, int width, int height) throws ScriptException {
-		if (data == null) {
+	public void applyBulbMask(DataAid aid, Graphics2D g2, int width, int height) throws ScriptException {
+		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
 
-		if (data.slicingProfile.getProjectorGradientCalculator() != null && data.slicingProfile.getProjectorGradientCalculator().length() > 0) {
+		if (aid.slicingProfile.getProjectorGradientCalculator() != null && aid.slicingProfile.getProjectorGradientCalculator().length() > 0) {
 			Paint maskPaint;
 			try {
-				maskPaint = (Paint)TemplateEngine.runScript(data.printJob, data.printer, data.scriptEngine, data.slicingProfile.getProjectorGradientCalculator(), "projector gradient script", null);
+				maskPaint = (Paint)TemplateEngine.runScript(aid.printJob, aid.printer, aid.scriptEngine, aid.slicingProfile.getProjectorGradientCalculator(), "projector gradient script", null);
 				g2.setPaint(maskPaint);
 				g2.fillRect(0, 0, width, height);
 			} catch (ClassCastException e) {
 				throw new IllegalArgumentException("The result of your bulb mask script needs to evaluate to an instance of java.awt.Paint");
 			}
 		}
-	}
-	
-	public Font buildFont() {
-		org.area515.resinprinter.printer.SlicingProfile.Font cwhFont = data.slicingProfile.getFont();
-		if (cwhFont == null) {
-			cwhFont = PrinterService.DEFAULT_FONT;
-		}
-		
-		if (cwhFont.getName() == null) {
-			cwhFont.setName(PrinterService.DEFAULT_FONT.getName());
-		}
-		
-		if (cwhFont.getSize() == 0) {
-			cwhFont.setSize(PrinterService.DEFAULT_FONT.getSize());
-		}
-		
-		return new Font(cwhFont.getName(), Font.PLAIN, cwhFont.getSize());
-	}
-	
-	@XmlTransient
-	public int getSuggestedSolidLayerCountFor2DGraphic() {
-		return data.inkConfiguration.getNumberOfFirstLayers() * 2;
-	}
-	
-	@XmlTransient
-	public int getSuggestedImplementationLayerCountFor2DGraphic() {
-		return data.inkConfiguration.getNumberOfFirstLayers() * 3;
-	}
-	
-	@XmlTransient
-	public int getSuggestedPrettyBorderWidth() {
-		return 50;
 	}
 }

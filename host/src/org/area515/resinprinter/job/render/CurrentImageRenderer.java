@@ -7,33 +7,41 @@ import java.util.concurrent.locks.Lock;
 
 import javax.script.ScriptException;
 
-public class CurrentImageRenderer implements Callable<BufferedImage> {
-	private RenderingFileData data;
-	private Object imageToBuild;
-	private int width;
-	private int height;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
+
+public abstract class CurrentImageRenderer implements Callable<BufferedImage> {
+	protected RenderingFileData data;
+	private Object imageIndexToBuild;
+	protected int width;
+	protected int height;
+	protected AbstractPrintFileProcessor<?> processor;
+	protected DataAid aid;
 	
-	public CurrentImageRenderer(RenderingFileData data, Object imageToBuild, int width, int height) {
+	public CurrentImageRenderer(DataAid aid, AbstractPrintFileProcessor<?> processor, RenderingFileData data, Object imageIndexToBuild, int width, int height) {
+		this.aid = aid;
 		this.data = data;
-		this.imageToBuild = imageToBuild;
-		data.initialize(imageToBuild, width, height);
+		this.processor = processor;
+		this.imageIndexToBuild = imageIndexToBuild;
+		data.initialize(imageIndexToBuild, width, height);
 		this.width = width;
 		this.height = height;
 	}
 	
 	public BufferedImage call() throws ScriptException {
-		data.slicer.colorizePolygons();
-		Lock lock = data.getSpecificLock(imageToBuild);
+		Lock lock = data.getSpecificLock(imageIndexToBuild);
 		lock.lock();
 		try {
-			Graphics2D g2 = (Graphics2D)data.getCurrentImage().getGraphics();
-			data.slicer.paintSlice(g2);
-			RenderingFileData.ImageData imageData = data.get(imageToBuild);
-			imageData.setArea((double)data.slicer.getBuildArea());
-			data.getPrintFileProcessingAid().applyBulbMask(g2, width, height);
+			RenderingFileData.ImageData imageData = data.get(imageIndexToBuild);
+			BufferedImage image = data.getCurrentImage();
+			Graphics2D graphics = (Graphics2D)image.getGraphics();
+			renderImage(graphics, imageData);
+			processor.applyBulbMask(aid, graphics, width, height);
 			return data.getCurrentImage();
 		} finally {
 			lock.unlock();
 		}
 	}
+	
+	abstract public void renderImage(Graphics2D graphics, RenderingFileData.ImageData imageData) throws ScriptException;
 }

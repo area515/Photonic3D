@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.area515.resinprinter.job.render.CurrentImageRenderer;
 import org.area515.resinprinter.job.render.RenderingFileData;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.SlicingProfile;
@@ -63,7 +62,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>
 	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
 		DataAid dataAid = initializeDataAid(printJob);
-		RenderingFileData stlData = new RenderingFileData(this, dataAid.scriptEngine);
+		RenderingFileData stlData = new RenderingFileData();
 		dataByPrintJob.put(printJob, stlData);
 		
 		stlData.slicer = new ZSlicer(printJob.getJobFile(), 1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, true);
@@ -73,17 +72,17 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>
 		//Get the slicer queued up for the first image;
 		stlData.slicer.setZ(stlData.slicer.getZMin());
 		Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
-		Future<BufferedImage> currentImage = Main.GLOBAL_EXECUTOR.submit(new CurrentImageRenderer(stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
+		Future<BufferedImage> currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
 		
 		//Everything needs to be setup in the dataByPrintJob before we start the header
-		performHeader();
+		performHeader(dataAid);
 		
 		int startPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(stlData.slicer.getZMin() + 1): (stlData.slicer.getZMax() + 1);
 		int endPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(stlData.slicer.getZMax() + 1): (stlData.slicer.getZMin() + 1);
 		for (int z = startPoint; z <= endPoint && dataAid.printer.isPrintActive(); z += dataAid.slicingProfile.getDirection().getVector()) {
 			
 			//Performs all of the duties that are common to most print files
-			JobStatus status = performPreSlice(stlData.slicer.getStlErrors());
+			JobStatus status = performPreSlice(dataAid, stlData.slicer.getStlErrors());
 			if (status != null) {
 				return status;
 			}
@@ -103,17 +102,17 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>
 			//Render the next image while we are waiting for the current image to cure
 			if (z < stlData.slicer.getZMax() + 1) {
 				stlData.slicer.setZ(z);
-				currentImage = Main.GLOBAL_EXECUTOR.submit(new CurrentImageRenderer(stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
+				currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
 			}
 			
 			//Performs all of the duties that are common to most print files
-			status = performPostSlice();
+			status = performPostSlice(dataAid);
 			if (status != null) {
 				return status;
 			}
 		}
 		
-		return performFooter();
+		return performFooter(dataAid);
 	}
 
 	@Override
