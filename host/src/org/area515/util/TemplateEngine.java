@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.script.Bindings;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
@@ -27,7 +30,7 @@ public class TemplateEngine {
     private static final Logger logger = LogManager.getLogger();
 	private static StringTemplateLoader templateLoader = new StringTemplateLoader();
 	private static Configuration config = null;
-	
+	private static Map<String, CompiledScript> SCRIPTS_BY_NAME = new HashMap<>();
 	
 	public static final TemplateExceptionHandler INFO_IGNORE_HANDLER = new TemplateExceptionHandler() {
 		public void handleTemplateException(TemplateException te, Environment env, Writer out) throws TemplateException {
@@ -138,34 +141,43 @@ public class TemplateEngine {
 	}
 	
 	public static Object runScript(PrintJob job, Printer printer, ScriptEngine engine, String script, String scriptName, Map<String, Object> overrides) throws ScriptException {
-		engine.put("now", new Date());
-		engine.put("$shutterOpen", printer.isShutterOpen());
+		Bindings bindings = engine.createBindings();
+		bindings.put("now", new Date());
+		bindings.put("$shutterOpen", printer.isShutterOpen());
 		Integer bulbHours = printer.getCachedBulbHours();
-		engine.put("$bulbHours", bulbHours == null || bulbHours < 0?Double.NaN:new Double(bulbHours));
-		engine.put("$CURSLICE", job.getCurrentSlice());
-		engine.put("$LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
-		engine.put("$ZDir", printer.getConfiguration().getSlicingProfile().getDirection().getVector());
-		engine.put("$ZLiftRate", job.getZLiftSpeed());
-		engine.put("$ZLiftDist", job.getZLiftDistance());
+		bindings.put("$bulbHours", bulbHours == null || bulbHours < 0?Double.NaN:new Double(bulbHours));
+		bindings.put("$CURSLICE", job.getCurrentSlice());
+		bindings.put("$LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
+		bindings.put("$ZDir", printer.getConfiguration().getSlicingProfile().getDirection().getVector());
+		bindings.put("$ZLiftRate", job.getZLiftSpeed());
+		bindings.put("$ZLiftDist", job.getZLiftDistance());
 		Double buildArea = job.getPrintFileProcessor().getBuildAreaMM(job);
-		engine.put("$buildAreaMM", buildArea == null || buildArea < 0?Double.NaN:buildArea);
-		engine.put("$LayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
-		engine.put("$FirstLayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
-		engine.put("$NumFirstLayers", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
-		engine.put("$SlideTiltVal", printer.getConfiguration().getSlicingProfile().getSlideTiltValue());
-		engine.put("$buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
-		engine.put("$buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
-		engine.put("job", job);
-		engine.put("printer", printer);
-		engine.put(ScriptEngine.FILENAME, scriptName);
+		bindings.put("$buildAreaMM", buildArea == null || buildArea < 0?Double.NaN:buildArea);
+		bindings.put("$LayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
+		bindings.put("$FirstLayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
+		bindings.put("$NumFirstLayers", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
+		bindings.put("$SlideTiltVal", printer.getConfiguration().getSlicingProfile().getSlideTiltValue());
+		bindings.put("$buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
+		bindings.put("$buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
+		bindings.put("job", job);
+		bindings.put("printer", printer);
+		bindings.put(ScriptEngine.FILENAME, scriptName);
 		
 		if (overrides != null) {
 			Iterator<Map.Entry<String, Object>> entries = overrides.entrySet().iterator();
 			while (entries.hasNext()) {
 				Map.Entry<String, Object> entry = entries.next();
-				engine.put(entry.getKey(), entry.getValue());
+				bindings.put(entry.getKey(), entry.getValue());
 			}
 		}
-		return engine.eval(script);
+		CompiledScript compiledScript = SCRIPTS_BY_NAME.get(scriptName);
+		if (engine instanceof Compilable && compiledScript == null) {
+			compiledScript = ((Compilable)engine).compile(script);
+			SCRIPTS_BY_NAME.put(scriptName, compiledScript);
+		}
+		if (compiledScript != null) {
+			compiledScript.eval(bindings);
+		}
+		return engine.eval(script, bindings);
 	}
 }

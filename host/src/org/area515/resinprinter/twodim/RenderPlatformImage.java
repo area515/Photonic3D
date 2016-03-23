@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
@@ -23,7 +24,7 @@ public class RenderPlatformImage extends CurrentImageRenderer {
 	}
 	
 	@Override
-	public void renderImage(Graphics2D graphics, ImageData imageData) throws ScriptException {
+	public void renderImage(BufferedImage image, Graphics2D graphics, ImageData imageData) throws ScriptException {
 		int centerX = width / 2;
 		int centerY = height / 2;
 		BufferedImage imageToDisplay = ((TwoDimensionalPrintState)data).getCachedExtrusionImage();
@@ -36,6 +37,7 @@ public class RenderPlatformImage extends CurrentImageRenderer {
 		
 		Map<String, Object> overrides = new HashMap<>();
 		overrides.put("platformGraphics", graphics);
+		overrides.put("platformRaster", image.getRaster());
 		overrides.put("extrusionX", extrusionX);
 		overrides.put("extrusionY", extrusionY);
 		overrides.put("centerX", centerX);
@@ -50,7 +52,7 @@ public class RenderPlatformImage extends CurrentImageRenderer {
 		if (platformScript == null) {
 			throw new IllegalArgumentException("This printer doesn't have 2D platform rendering calculator setup");
 		}
-		
+
 		TemplateEngine.runScript(aid.printJob, aid.printer, aid.scriptEngine, platformScript, "2D Platform rendering script", overrides);
 	}
 }
