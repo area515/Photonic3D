@@ -27,27 +27,27 @@
 				<div class="list-group-item">
 					<i class="fa fa-2x fa-adjust fa-rotate-90 pull-left"></i>
 					<h4>Pause on Print Material Remaining (%)</h4>
-					<input type="text" class="form-control" placeholder="%" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].PercentageOfPrintMaterialConsideredEmpty">
+					<input type="number" class="form-control" placeholder="%" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].PercentageOfPrintMaterialConsideredEmpty">
 				</div>
 				<div class="list-group-item">
 					<i class="fa fa-2x fa-money pull-left"></i>
 					<h4>Resin Price Per Liter ($)</h4>
-					<input type="text" class="form-control" placeholder="$" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].ResinPriceL">
+					<input type="number" class="form-control" placeholder="$" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].ResinPriceL">
 				</div>
 				<div class="list-group-item">
 					<i class="fa fa-2x fa-reorder pull-left"></i>
 					<h4>Slice Height (mm)</h4>
-					<input type="text" class="form-control" placeholder="mm" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].SliceHeight">
+					<input type="number" class="form-control" placeholder="mm" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].SliceHeight">
 				</div>
 				<div class="list-group-item">
 					<del><i class="fa fa-2x fa-fire pull-left"></i>
 					<h4>Exposure Time (ms)</h4></del>
-					<input type="text" class="form-control" placeholder="mm" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].LayerTime">
+					<input type="number" class="form-control" placeholder="mm" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].LayerTime">
 				</div>
 				<div class="list-group-item">
 					<del><i class="fa fa-2x fa-sort-numeric-asc pull-left"></i>
 					<h4>Number Of First Layers</h4></del>
-					<input type="text" class="form-control" placeholder="count" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers">
+					<input type="number" class="form-control" placeholder="count" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers">
 				</div>
 				<div class="list-group-item">
 					<del><span class="fa-stack fa-2x pull-left">
@@ -55,7 +55,7 @@
 						<i class="fa fa-stack-1x fa-reorder"></i>
 					</span>
 					<h4>Exposure Time For First Layers (ms)</h4></del>
-					<input type="text" class="form-control" placeholder="ms" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].FirstLayerTime">
+					<input type="number" class="form-control" placeholder="ms" ng-model="printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].FirstLayerTime">
 				</div>
 			</div>
 			

@@ -106,8 +106,13 @@ public class PrinterManager {
 		Lock printerLock = new ReentrantLock();
 		printerLock.lock();
 		Lock oldLock = inProgressLocksByName.putIfAbsent(currentConfiguration.getName(), printerLock);
-		if (oldLock != null && !oldLock.tryLock()) {
-			throw new JobManagerException("This printer:" + currentConfiguration.getName() + " is being started. Can't start again.");
+		if (oldLock != null) {
+			if (!oldLock.tryLock()) {
+				throw new JobManagerException("This printer:" + currentConfiguration.getName() + " is being started. Can't start again.");
+			}
+			
+			//If the oldLock is still in play, we don't care about the printerLock we just made...
+			printerLock = oldLock;
 		}
 		try {
 			printer = new Printer(currentConfiguration);

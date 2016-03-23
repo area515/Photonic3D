@@ -1,6 +1,7 @@
 package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.render.CurrentImageRenderer;
@@ -13,7 +14,7 @@ public class STLImageRenderer extends CurrentImageRenderer {
 	}
 
 	@Override
-	public void renderImage(Graphics2D g2, ImageData imageData) {
+	public void renderImage(BufferedImage image, Graphics2D g2, ImageData imageData) {
 		data.slicer.colorizePolygons();
 		data.slicer.paintSlice(g2);
 		imageData.setArea((double)data.slicer.getBuildArea());

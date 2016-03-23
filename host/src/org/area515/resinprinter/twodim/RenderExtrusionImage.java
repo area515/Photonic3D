@@ -17,7 +17,7 @@ public class RenderExtrusionImage extends CurrentImageRenderer {
 	}
 
 	@Override
-	public void renderImage(Graphics2D graphics, ImageData imageData) {
+	public void renderImage(BufferedImage image, Graphics2D graphics, ImageData imageData) {
 		int centerX = width / 2;
 		int centerY = height / 2;
 		BufferedImage imageToDisplay = ((TwoDimensionalPrintState)data).getCachedExtrusionImage();

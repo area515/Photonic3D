@@ -35,7 +35,7 @@ public abstract class CurrentImageRenderer implements Callable<BufferedImage> {
 			RenderingFileData.ImageData imageData = data.get(imageIndexToBuild);
 			BufferedImage image = data.getCurrentImage();
 			Graphics2D graphics = (Graphics2D)image.getGraphics();
-			renderImage(graphics, imageData);
+			renderImage(image, graphics, imageData);
 			processor.applyBulbMask(aid, graphics, width, height);
 			return data.getCurrentImage();
 		} finally {
@@ -43,5 +43,5 @@ public abstract class CurrentImageRenderer implements Callable<BufferedImage> {
 		}
 	}
 	
-	abstract public void renderImage(Graphics2D graphics, RenderingFileData.ImageData imageData) throws ScriptException;
+	abstract public void renderImage(BufferedImage image, Graphics2D graphics, RenderingFileData.ImageData imageData) throws ScriptException;
 }
