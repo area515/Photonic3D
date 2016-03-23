@@ -1,11 +1,17 @@
 package org.area515.resinprinter.job;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -40,7 +46,8 @@ public class PrintJob {
 	private Printer printer;
 	private Future<JobStatus> futureJobStatus;
 	private CountDownLatch futureJobStatusAssigned = new CountDownLatch(1);
-	
+	private static Map<String, CompiledScript> SCRIPTS_BY_NAME = new HashMap<>();
+
 	public PrintJob(File jobFile) {
 		this.jobFile = jobFile;
 	}
@@ -206,6 +213,15 @@ public class PrintJob {
 		this.zLiftDistance = zLiftDistance;
 	}
 
+	public CompiledScript buildCompiledScript(String scriptName, String script, ScriptEngine engine) throws ScriptException {
+		CompiledScript compiledScript = SCRIPTS_BY_NAME.get(scriptName);
+		if (engine instanceof Compilable && compiledScript == null) {
+			compiledScript = ((Compilable)engine).compile(script);
+			SCRIPTS_BY_NAME.put(scriptName, compiledScript);
+		}
+		
+		return compiledScript;
+	}
 	
 	public void stopOverridingZLiftSpeed() {
 		overrideZLiftSpeed = false;

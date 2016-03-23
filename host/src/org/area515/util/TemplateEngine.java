@@ -30,7 +30,6 @@ public class TemplateEngine {
     private static final Logger logger = LogManager.getLogger();
 	private static StringTemplateLoader templateLoader = new StringTemplateLoader();
 	private static Configuration config = null;
-	private static Map<String, CompiledScript> SCRIPTS_BY_NAME = new HashMap<>();
 	
 	public static final TemplateExceptionHandler INFO_IGNORE_HANDLER = new TemplateExceptionHandler() {
 		public void handleTemplateException(TemplateException te, Environment env, Writer out) throws TemplateException {
@@ -170,14 +169,12 @@ public class TemplateEngine {
 				bindings.put(entry.getKey(), entry.getValue());
 			}
 		}
-		CompiledScript compiledScript = SCRIPTS_BY_NAME.get(scriptName);
-		if (engine instanceof Compilable && compiledScript == null) {
-			compiledScript = ((Compilable)engine).compile(script);
-			SCRIPTS_BY_NAME.put(scriptName, compiledScript);
-		}
+		
+		CompiledScript compiledScript = job.buildCompiledScript(scriptName, scriptName, engine);
 		if (compiledScript != null) {
-			compiledScript.eval(bindings);
+			return compiledScript.eval(bindings);
 		}
+		
 		return engine.eval(script, bindings);
 	}
 }
