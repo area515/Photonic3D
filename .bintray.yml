@@ -1,0 +1,20 @@
+{
+  "package": {
+    "name": "Photonic3D",
+    "repo": "Photonic3D",
+    "subject": "area515"
+  },
+
+  "version": {
+    "name": "Development-Stream"
+  },
+
+  "files": [
+    {
+      "includePattern": "host\/([^-]+)-.*\.zip",
+      "uploadPattern": "$1.zip",
+      "matrixParams": { "override": 1 }
+    }
+  ],
+  "publish": true
+}
