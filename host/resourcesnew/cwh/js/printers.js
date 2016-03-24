@@ -13,7 +13,7 @@
         	var foundPrinter = false;
         	
         	for (printer of printerList) {
-        		if (controller.currentPrinter != null && printer.name === controller.currentPrinter.name) {
+        		if (controller.currentPrinter != null && printer.configuration.name === controller.currentPrinter.configuration.name) {
         			controller.currentPrinter = printer;
         			foundPrinter = true;
         		}
