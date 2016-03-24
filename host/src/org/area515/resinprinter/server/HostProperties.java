@@ -22,15 +22,17 @@ import java.util.zip.ZipOutputStream;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.util.JAXBSource;
+import javax.xml.namespace.QName;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -619,7 +621,14 @@ public class HostProperties {
 		return configurations.get(name);
 	}
 	
-	private void saveConfigurations() {
+	private static <T> T deepCopyJAXB(T object, Class<T> clazz) throws JAXBException {
+	    JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
+	    JAXBElement<T> contentObject = new JAXBElement<T>(new QName(clazz.getSimpleName()), clazz, object);
+	    JAXBSource source = new JAXBSource(jaxbContext, contentObject);
+	    return jaxbContext.createUnmarshaller().unmarshal(source, clazz).getValue();
+	}
+	
+	private void saveConfigurations(PrinterConfiguration focusedSave) {
 		for (PrinterConfiguration currentConfiguration : configurations.values()) {
 			JAXBContext jaxbContext;
 			try {
@@ -628,10 +637,19 @@ public class HostProperties {
 				jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
 				MachineConfig machineConfig = currentConfiguration.getMachineConfig();
-				SlicingProfile slicingProfile = currentConfiguration.getSlicingProfile();
+				if (focusedSave != null && currentConfiguration.getMachineConfigName().equals(focusedSave.getMachineConfigName())) {
+					machineConfig = deepCopyJAXB(focusedSave.getMachineConfig(), MachineConfig.class);
+					currentConfiguration.setMachineConfig(machineConfig);
+				}
 				
 				File machineFile = new File(MACHINE_DIR, currentConfiguration.getMachineConfigName() + MACHINE_EXTENSION);
 				jaxbMarshaller.marshal(machineConfig, machineFile);
+
+				SlicingProfile slicingProfile = currentConfiguration.getSlicingProfile();
+				if (focusedSave != null && currentConfiguration.getSlicingProfileName().equals(focusedSave.getSlicingProfileName())) {
+					slicingProfile = deepCopyJAXB(focusedSave.getSlicingProfile(), SlicingProfile.class);
+					currentConfiguration.setSlicingProfile(slicingProfile);
+				}
 
 				File slicingFile = new File(PROFILES_DIR, currentConfiguration.getSlicingProfileName() + PROFILES_EXTENSION);
 				jaxbMarshaller.marshal(slicingProfile, slicingFile);
@@ -709,7 +727,7 @@ public class HostProperties {
 		getPrinterConfigurations();
 
 		configurations.put(configuration.getName(), configuration);
-		saveConfigurations();
+		saveConfigurations(configuration);
 	}
 
 	public void removePrinterConfiguration(PrinterConfiguration configuration) throws InappropriateDeviceException {
