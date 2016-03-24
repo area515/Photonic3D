@@ -20,7 +20,9 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 
+@PowerMockIgnore("javax.management.*")
 @RunWith(PowerMockRunner.class)
 public class AbstractPrintFileProcessorTest {
 	@Test
@@ -37,7 +39,7 @@ public class AbstractPrintFileProcessorTest {
 			processor.performFooter(aid);
 			Assert.fail("Failed to throw IllegalStateException.");
 		} catch (IllegalStateException e) {
-		}		
+		}
 		try {
 			processor.performHeader(aid);
 			Assert.fail("Failed to throw IllegalStateException.");
@@ -54,7 +56,7 @@ public class AbstractPrintFileProcessorTest {
 		} catch (IllegalStateException e) {
 		}
 	}
-	
+
 	public static PrintJob createTestPrintJob(PrintFileProcessor processor) throws InappropriateDeviceException, Exception {
 		PrintJob printJob = Mockito.mock(PrintJob.class);
 		Printer printer = Mockito.mock(Printer.class);
@@ -63,7 +65,7 @@ public class AbstractPrintFileProcessorTest {
 		InkConfig inkConfiguration = Mockito.mock(InkConfig.class);
 		eGENERICGCodeControl gCode = Mockito.mock(eGENERICGCodeControl.class);
 		SerialCommunicationsPort serialPort = Mockito.mock(SerialCommunicationsPort.class);
-		
+
 		Mockito.when(printJob.getPrinter()).thenReturn(printer);
 		Mockito.when(printer.getPrinterFirmwareSerialPort()).thenReturn(serialPort);
 		Mockito.when(printJob.getPrintFileProcessor()).thenReturn(processor);
@@ -78,7 +80,7 @@ public class AbstractPrintFileProcessorTest {
 		//PowerMockito.when(gCode, PowerMockito.method(GCodeControl.class, "getPrinter")).withNoArguments().thenReturn(printer);
 		return printJob;
 	}
-	
+
 	@Test
 	public void unsupportedBuildAreaDoesntBreakProjectorGradient() throws InappropriateDeviceException, ScriptException, Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
@@ -89,7 +91,7 @@ public class AbstractPrintFileProcessorTest {
 		DataAid aid = processor.initializeDataAid(printJob);
 		processor.applyBulbMask(aid, graphics, 0, 0);
 	}
-	
+
 	@Test
 	public void unsupportedBuildAreaDoesntBreakLiftDistanceCalculator() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
@@ -99,7 +101,7 @@ public class AbstractPrintFileProcessorTest {
 		DataAid aid = processor.initializeDataAid(printJob);
 		processor.performPostSlice(aid);
 	}
-	
+
 	@Test
 	public void getExceptionWhenWeReturnGarbageForLiftDistanceCalculator() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
@@ -113,7 +115,7 @@ public class AbstractPrintFileProcessorTest {
 			Assert.assertEquals("The result of your lift distance script needs to evaluate to an instance of java.lang.Number", e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void noNullPointerWhenWeReturnNull() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
@@ -127,7 +129,7 @@ public class AbstractPrintFileProcessorTest {
 			Assert.assertEquals("The result of your lift distance script needs to evaluate to an instance of java.lang.Number", e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void usingUnsupportedBuildAreaWithLiftDistance() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
@@ -151,7 +153,7 @@ public class AbstractPrintFileProcessorTest {
 			Assert.fail("Should not throw InappropriateDeviceException");
 		}
 	}
-	
+
 	@Test
 	public void syntaxErrorInTemplate() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
@@ -167,7 +169,7 @@ public class AbstractPrintFileProcessorTest {
 			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(2)).getBuildAreaMM(Mockito.any(PrintJob.class));
 		}
 	}
-	
+
 	@Test
 	public void properGCodeCreated() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
@@ -179,7 +181,7 @@ public class AbstractPrintFileProcessorTest {
 		DataAid aid = processor.initializeDataAid(printJob);
 		Mockito.when(printJob.getPrinter().getGCodeControl().sendGcode(Mockito.anyString())).then(new Answer<String>() {
 			private int count = 0;
-			
+
 			@Override
 			public String answer(InvocationOnMock invocation) throws Throwable {
 				switch (count) {
