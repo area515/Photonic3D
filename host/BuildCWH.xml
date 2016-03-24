@@ -62,9 +62,8 @@
 			<zipfileset dir="srcbin" includes="**/*.class"/>
 			<zipfileset dir="srcbin" includes="**/*.png"/>
 			<zipfileset dir="srcbin" includes="**/*.properties"/>
-			<zipfileset dir="testbin" includes="**/*.jpg"/>
-			<zipfileset dir="testbin" includes="**/*.png"/>
-			<zipfileset dir="testbin" includes="**/*.class"/>
+			<zipfileset dir="build/resources/test" includes="**/*"/>
+			<zipfileset dir="build/classes/test" includes="**/*.class"/>
 			<zipfileset dir="os" prefix="os" includes="**/*"/>
 			<zipfileset dir="bin" includes="**/*"/>
 			<zipfileset dir="libs/freemarker" prefix="lib" includes="**/*"/>
