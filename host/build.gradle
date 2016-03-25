@@ -131,7 +131,7 @@ task setupRelease(dependsOn: ['setupRemote']) << {
   println("Check the above git push dry run to ensure that your push will succeed!");
   ant.input(message: "Press <return> to continue...")
 
-  if (tagname == null) {
+  if (tagName == "${null}") {
     ant.input(message: "Enter the tag to create for this release > ", addproperty: "tagName")
     tagName = ant.tagName
   }
@@ -145,6 +145,7 @@ task releaseDist (dependsOn: ['dist']) << {
   if (github.assets.size() < 1) {
     throw new GradleException("There are no zip files to release in the project directory.")
   }
+  println("Releasing the following files: "+github.assets);
 }
 
 task fullRelease(dependsOn: ['setupRelease', 'githubRelease']) << {
