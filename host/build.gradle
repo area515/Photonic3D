@@ -138,6 +138,7 @@ task setupRelease(dependsOn: ['setupRemote']) << {
 
   github.tagName = tagName;
   grgit.tag.add(name: tagName);
+  println("Added tag: ${tagName}");
 }
 
 task releaseDist (dependsOn: ['dist']) << {
