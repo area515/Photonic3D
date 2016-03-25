@@ -87,7 +87,7 @@ task dist(dependsOn: ['preDist', 'BuildCWH']) {
 
 };
 
-task setupRelease() << {
+task setupRemote << {
   def matchingRemotes = grgit.remote.list().findAll({it.name==releaseRepoRemoteName});
   if (matchingRemotes.size < 1) {
     throw new GradleException("No configured remotes match the the remote named: ${releaseRepoRemoteName}");
@@ -98,7 +98,7 @@ task setupRelease() << {
   def releaseUrl = remote.url;
   println("Releasing to: "+releaseUrl);
 
-  def repoMatch = (releaseUrl =~ /github\.com\/([^\/]+)\/([^\/]*?)(\.git)?.?$/);
+  def repoMatch = (releaseUrl =~ /github\.com[\/\:]([^\/]+)\/([^\/]*?)(\.git)?.?$/);
 
   def repoOwner = repoMatch[0][1];
   def repoName = repoMatch[0][2];
@@ -107,7 +107,10 @@ task setupRelease() << {
 
   github.owner = repoOwner;
   github.repo = repoName;
+}
 
+
+task setupRelease(dependsOn: ['setupRemote']) << {
   grgit = Grgit.open(project.file('..'), new Credentials(username: github.owner, password: github.token));
 
   if (releaseRepoToken.equals('GITHUB_API_TOKEN')) {
@@ -119,30 +122,34 @@ task setupRelease() << {
   println("UNCOMMITTED STAGED CHANGES: "+status.staged)
   println("UNCOMMITTED UNSTAGED CHANGES: "+status.unstaged)
   println("----------------------------------------------")
+
+  def tagName = "$System.env.tagName";
+
+  println("Dry-Run Git Push to ${releaseRepoRemoteName}:")
+  grgit.push(dryRun: true, remote: releaseRepoRemoteName);
+  println("----------------------------------------------")
+  println("Check the above git push dry run to ensure that your push will succeed!");
+  ant.input(message: "Press <return> to continue...")
+
+  if (tagname == null) {
+    ant.input(message: "Enter the tag to create for this release > ", addproperty: "tagName")
+    tagName = ant.tagName
+  }
+
+  github.tagName = tagName;
+  grgit.tag.add(name: tagName);
+}
+
+task releaseDist (dependsOn: ['dist']) << {
   github.assets = fileTree('.').include("*.zip") as List;
   if (github.assets.size() < 1) {
     throw new GradleException("There are no zip files to release in the project directory.")
   }
-
-
-  def tagName = "$System.env.tagName";
-  if (tagName == "${null}") {
-	  def console = System.console()
-	  if (console) {
-	    console.printf("\n\n");
-	    println("Releasing the following files: "+github.assets);
-	    tagName = console.readLine('\nEnter the tag to create for this release > ');
-	  } else {
-	    throw new GradleException('Cannot create console to get user input')
-	  }
-  }
-
-  github.tagName = tagName;
-
-  grgit.tag.add(name: tagName, force: true);
-  grgit.push(tags: true, remote: releaseRepoRemoteName);
 }
 
+task fullRelease(dependsOn: ['setupRelease', 'githubRelease']) << {
+  grgit.push(tags: true, remote: releaseRepoRemoteName);
+}
 
 clean.doFirst {
   // Additions to the built-in clean
@@ -152,7 +159,8 @@ clean.doFirst {
 
 // PROJECT POST-SETUP SCRIPT
 // -------------------------
-githubRelease.dependsOn setupRelease
+githubRelease.dependsOn releaseDist
+dist.mustRunAfter setupRelease
 compileTestJava.dependsOn build
 BuildCWH.mustRunAfter preDist
 
