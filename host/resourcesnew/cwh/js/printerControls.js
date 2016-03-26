@@ -83,7 +83,7 @@
         this.calibrate = function calibrate() {
         	if (controller.calibration.startedCalibration) {
         		controller.calibration.startedCalibration = false;
-    			$http.get("services/printers/calibrate/" + printerName + "/" + (controller.calibration.xPixels/controller.calibration.xMM) + "/" + (controller.calibration.yPixels/controller.calibration.xMM)).then(gCodeSuccess, errorFunction);
+    			$http.get("services/printers/calibrate/" + printerName + "/" + (controller.calibration.xPixels/controller.calibration.xMM) + "/" + (controller.calibration.yPixels/controller.calibration.yMM)).then(gCodeSuccess, errorFunction);
     			controller.showBlankScreen();
         	} else {
         		controller.calibration.startedCalibration = true;
