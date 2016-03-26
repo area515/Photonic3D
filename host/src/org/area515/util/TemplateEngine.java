@@ -170,7 +170,7 @@ public class TemplateEngine {
 			}
 		}
 		
-		CompiledScript compiledScript = job.buildCompiledScript(scriptName, scriptName, engine);
+		CompiledScript compiledScript = job.buildCompiledScript(scriptName, script, engine);
 		if (compiledScript != null) {
 			return compiledScript.eval(bindings);
 		}
