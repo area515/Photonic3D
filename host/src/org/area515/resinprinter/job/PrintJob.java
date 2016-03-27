@@ -46,7 +46,7 @@ public class PrintJob {
 	private Printer printer;
 	private Future<JobStatus> futureJobStatus;
 	private CountDownLatch futureJobStatusAssigned = new CountDownLatch(1);
-	private static Map<String, CompiledScript> SCRIPTS_BY_NAME = new HashMap<>();
+	private Map<String, CompiledScript> scriptsByName = new HashMap<>();
 
 	public PrintJob(File jobFile) {
 		this.jobFile = jobFile;
@@ -214,10 +214,10 @@ public class PrintJob {
 	}
 
 	public CompiledScript buildCompiledScript(String scriptName, String script, ScriptEngine engine) throws ScriptException {
-		CompiledScript compiledScript = SCRIPTS_BY_NAME.get(scriptName);
+		CompiledScript compiledScript = scriptsByName.get(scriptName);
 		if (engine instanceof Compilable && compiledScript == null) {
 			compiledScript = ((Compilable)engine).compile(script);
-			SCRIPTS_BY_NAME.put(scriptName, compiledScript);
+			scriptsByName.put(scriptName, compiledScript);
 		}
 		
 		return compiledScript;

@@ -39,11 +39,22 @@
 		</div>
 		<div class="list-group-item">
 			<label>Machine Configuration</label>
-			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.MachineConfigurationName}}</h4>
-		</div>
+			<select name="type" class="form-control"
+				ng-model="printersController.currentPrinter.configuration.machineConfig" 
+				ng-options="item as item.name for item in printersController.machineConfigurations track by item.name"
+				ng-change="printersController.currentPrinter.configuration.MachineConfigurationName=printersController.currentPrinter.configuration.machineConfig.name"
+				required>
+			  <option value="">{{printersController.loadingMachineConfigMessage}}</option>
+			</select>		</div>
 		<div class="list-group-item">
 			<label>Slicing Profile</label>
-			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.SlicingProfileName}}</h4>
+			<select name="type" class="form-control"
+				ng-model="printersController.currentPrinter.configuration.slicingProfile" 
+				ng-options="item as item.name for item in printersController.slicingProfiles track by item.name"
+				ng-change="printersController.currentPrinter.configuration.SlicingProfileName=printersController.currentPrinter.configuration.slicingProfile.name"
+				required>
+			  <option value="">{{printersController.loadingProfilesMessage}}</option>
+			</select>
 		</div>
 		<div class="list-group-item">
 			<label>Ink Configuration</label>

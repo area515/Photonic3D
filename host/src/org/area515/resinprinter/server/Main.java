@@ -18,7 +18,7 @@ import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.plugin.FeatureManager;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.security.JettySecurityUtils;
-import org.area515.resinprinter.services.MachineService;
+import org.area515.resinprinter.services.PrinterService;
 import org.area515.resinprinter.stream.ProgressiveDownloadServlet;
 import org.area515.util.RedirectRegexRule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
@@ -178,7 +178,7 @@ public class Main {
 		List<PrinterConfiguration> configurations = HostProperties.Instance().getPrinterConfigurations();
 		for (PrinterConfiguration configuration : configurations) {
 			if (configuration.isAutoStart()) {
-				MachineService.INSTANCE.startPrinter(configuration.getName());
+				PrinterService.INSTANCE.startPrinter(configuration.getName());
 			}
 		}
 
