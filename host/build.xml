@@ -4,7 +4,7 @@
   <import file="BuildCWH.xml"/>
 
   <property name="build" location="srcbin"/>
-  <property name="testbuild" location="testbin"/>
+  <!-- <property name="testbuild" location="testbin"/> -->
   <property name="src" location="src" />
   <property name="testsrc" location="tests" />
 
@@ -58,11 +58,13 @@
     <echo>System = ${os.name} ${os.arch}</echo>
   </target>
 
+<!-- Deprecated by Gradle
   <target name="testclean">
     <delete dir="${testbuild}"/>
   </target>
+-->
 
-  <target name="clean">
+  <target name="localclean">
     <delete dir="${build}"/>
     <delete>
       <fileset dir="." includes="*.zip"/>
@@ -71,7 +73,7 @@
 
   <target name="setup" depends="init">
     <mkdir dir="${build}"/>
-    <mkdir dir="${testbuild}"/>
+    <!-- <mkdir dir="${testbuild}"/> -->
   </target>
 
   <target name="compile" depends="setup">
@@ -82,11 +84,13 @@
     </javac>
   </target>
 
+<!-- Deprecated by Gradle
   <target name="testcompile" depends="setup">
     <javac srcdir="${testsrc}" destdir="${testbuild}"
            classpathref="run.classpath" source="1.8"
            includeantruntime="false" debug="true"/>
   </target>
+-->
 
   <target name="build" depends="compile">
     <copy todir="${build}">
@@ -97,6 +101,7 @@
 
   </target>
 
+<!-- Deprecated by Gradle
   <target name="testbuild" depends="testcompile">
     <copy todir="${testbuild}">
       <fileset dir="${testsrc}">
@@ -104,6 +109,7 @@
       </fileset>
     </copy>
   </target>
+-->
 
   <!-- Moved to Gradle
   <target name="dist" depends="build,BuildCWH">
@@ -119,6 +125,7 @@
     </java>
   </target>
 
+<!-- Moved to Gradle
   <target name="test" depends="build,testbuild,os">
     <junit haltonerror="false" haltonfailure="false" filtertrace="true"
       fork="true" failureproperty="test.failed">
@@ -128,12 +135,13 @@
         <path refid="run.classpath"/>
         <pathelement location="${testbuild}"/>
       </classpath>
-      <batchtest skipNonTests="true">
+      <batchtest>
         <fileset dir="${testsrc}" includes="**/*TestSuite.java"
           excludes="**/*Hardware*"/>
-        <formatter type="plain" usefile="false"/>
+        <formatter type="plain"/>
       </batchtest>
     </junit>
     <fail message="Test failure detected, check test results." if="test.failed" />
   </target>
+-->
 </project>

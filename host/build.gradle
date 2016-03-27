@@ -1,10 +1,34 @@
-// Configuration:
+// PROJECT CONFIG
+// --------------
 plugins {
+  id "java"
   id "co.riiid.gradle" version "0.4.2"
   id 'org.ajoberstar.grgit' version '1.4.2'
+  id 'com.google.osdetector' version '1.4.0'
 }
-repositories {
 
+repositories {
+  mavenCentral()
+}
+
+configurations {
+
+}
+
+sourceSets {
+  test {
+    java {
+      srcDir 'tests'
+    }
+    resources {
+      srcDir 'tests'
+    }
+    compileClasspath += (
+      fileTree(dir: 'libs', include: '**/*.jar')
+      + files('srcbin')
+    )
+    runtimeClasspath += compileClasspath
+  }
 }
 
 dependencies {
@@ -12,10 +36,10 @@ dependencies {
 }
 
 github {
-  // owner and repo will be determined from the origin 
+  // owner and repo will be determined from the origin
   // owner = releaseRepoOwner
   // repo = releaseRepoName
-  
+
   // Set token in gradle.properties
   token = releaseRepoToken;
   // tagName = 'd001'
@@ -23,14 +47,25 @@ github {
   // assets = ant.path {fileset(dir: '.', includes: '*.zip')} . list()
 };
 
-// Setup:
+// PROJECT SETUP SCRIPT
+// --------------------
 import org.ajoberstar.grgit.*;
+import org.gradle.internal.os.OperatingSystem;
 
 ant.importBuild 'build.xml';
+
 grgit = Grgit.open(project.file('..'));
 def commitVersion = "unknown";
 
-// Tasks:
+// TASK CONFIG
+// -----------
+test {
+  systemProperty "java.library.path", osLibDir()
+  includes = ['**/*FullTestSuite*']
+}
+
+// TASK EXECUTION DEFS
+// -------------------
 task repoVersion() << {
   commitVersion = grgit.describe()
 
@@ -44,11 +79,15 @@ task repoVersion() << {
   println("Git Commit Description: "+commitVersion)
 };
 
-task dist(dependsOn: ['build', 'BuildCWH', 'repoVersion']) {
+task preDist(dependsOn: ['build', 'compileTestJava', 'processTestResources', 'repoVersion']) {
+
+}
+
+task dist(dependsOn: ['preDist', 'BuildCWH']) {
 
 };
 
-task setupRelease() << {
+task setupRemote << {
   def matchingRemotes = grgit.remote.list().findAll({it.name==releaseRepoRemoteName});
   if (matchingRemotes.size < 1) {
     throw new GradleException("No configured remotes match the the remote named: ${releaseRepoRemoteName}");
@@ -59,18 +98,21 @@ task setupRelease() << {
   def releaseUrl = remote.url;
   println("Releasing to: "+releaseUrl);
 
-  def repoMatch = (releaseUrl =~ /github\.com\/([^\/]+)\/([^\/]*?)(\.git)?.?$/);
-  
+  def repoMatch = (releaseUrl =~ /github\.com[\/\:]([^\/]+)\/([^\/]*?)(\.git)?.?$/);
+
   def repoOwner = repoMatch[0][1];
   def repoName = repoMatch[0][2];
-  
+
   println("Repo Owner: ${repoOwner} / Repo Name: ${repoName}");
-  
+
   github.owner = repoOwner;
   github.repo = repoName;
-  
+}
+
+
+task setupRelease(dependsOn: ['setupRemote']) << {
   grgit = Grgit.open(project.file('..'), new Credentials(username: github.owner, password: github.token));
-   
+
   if (releaseRepoToken.equals('GITHUB_API_TOKEN')) {
     throw new GradleException("Please setup your gradle.properties for GitHub Releases")
   }
@@ -80,31 +122,65 @@ task setupRelease() << {
   println("UNCOMMITTED STAGED CHANGES: "+status.staged)
   println("UNCOMMITTED UNSTAGED CHANGES: "+status.unstaged)
   println("----------------------------------------------")
+
+  def tagName = "$System.env.tagName";
+
+  println("Dry-Run Git Push to ${releaseRepoRemoteName}:")
+  grgit.push(dryRun: true, remote: releaseRepoRemoteName);
+  println("----------------------------------------------")
+  println("Check the above git push dry run to ensure that your push will succeed!");
+  ant.input(message: "Press <return> to continue...")
+
+  if (tagName == "${null}") {
+    ant.input(message: "Enter the tag to create for this release > ", addproperty: "tagName")
+    tagName = ant.tagName
+  }
+
+  github.tagName = tagName;
+  grgit.tag.add(name: tagName);
+  println("Added tag: ${tagName}");
+}
+
+task releaseDist (dependsOn: ['dist']) << {
   github.assets = fileTree('.').include("*.zip") as List;
   if (github.assets.size() < 1) {
     throw new GradleException("There are no zip files to release in the project directory.")
   }
+  println("Releasing the following files: "+github.assets);
+}
 
-
-  def tagName = "$System.env.tagName";
-  if (tagName == "${null}") {
-	  def console = System.console()
-	  if (console) {
-	    console.printf("\n\n");
-	    println("Releasing the following files: "+github.assets);
-	    tagName = console.readLine('\nEnter the tag to create for this release > ');
-	  } else {
-	    throw new GradleException('Cannot create console to get user input')
-	  }
-  }	
-
-  github.tagName = tagName;
-
-  grgit.tag.add(name: tagName, force: true);
+task fullRelease(dependsOn: ['setupRelease', 'githubRelease']) << {
   grgit.push(tags: true, remote: releaseRepoRemoteName);
 }
 
-// Post-setup
-githubRelease.dependsOn setupRelease
-BuildCWH.mustRunAfter build
-BuildCWH.mustRunAfter repoVersion
+clean.doFirst {
+  // Additions to the built-in clean
+  delete "srcbin", "testbin", "cwh.log"
+  delete fileTree(dir: '.', include: '*.zip')
+}
+
+// PROJECT POST-SETUP SCRIPT
+// -------------------------
+githubRelease.dependsOn releaseDist
+dist.mustRunAfter setupRelease
+compileTestJava.dependsOn build
+BuildCWH.mustRunAfter preDist
+
+// UTILITY FUNCTIONS
+// -----------------
+String osLibDir() {
+  switch (osdetector.classifier) {
+    case "windows-x86_64":
+      return 'os/win64'
+    case "windows-x86_32":
+      return 'os/win32'
+    case "linux-x86_64":
+      return 'os/Linux/x86_64'
+    case "linux-x86_32":
+      return 'os/Linux/i686'
+    case "linux-arm_32":
+      return 'os/Linux/armv61'
+    default:
+      return 'unknown'
+  }
+}
