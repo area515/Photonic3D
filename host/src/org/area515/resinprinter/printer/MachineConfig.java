@@ -9,9 +9,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @XmlRootElement(name="MachineConfig")
-public class MachineConfig {
+public class MachineConfig implements Named {
 	public static final String NOT_CAPABLE = "Your printer configuration isn't capable of this feature";
 	
 	public static class DisplayedControls {
@@ -123,6 +124,7 @@ public class MachineConfig {
 	private String name;
 
 	@XmlTransient
+	@JsonProperty
 	public String getName() {
 		return name;
 	}
@@ -215,10 +217,6 @@ public class MachineConfig {
 		monitorDriverConfig.osMonitorID = name;
 	}
 	
-	public String toString() {
-		return name;
-	}
-	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -242,5 +240,9 @@ public class MachineConfig {
 		} else if (!name.equals(other.name))
 			return false;
 		return true;
+	}
+	
+	public String toString() {
+		return getName();
 	}
 }

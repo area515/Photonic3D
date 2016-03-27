@@ -34,7 +34,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
-import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.network.LinuxNetworkManager;
@@ -43,14 +42,13 @@ import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.notification.Notifier;
 import org.area515.resinprinter.plugin.Feature;
 import org.area515.resinprinter.printer.MachineConfig;
+import org.area515.resinprinter.printer.Named;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.projector.HexCodeBasedProjector;
 import org.area515.resinprinter.projector.ProjectorModel;
 import org.area515.resinprinter.serial.RXTXSynchronousReadBasedCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
-import org.area515.resinprinter.serial.SerialManager;
-import org.area515.resinprinter.services.MachineService;
 import org.area515.util.IOUtilities;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -61,9 +59,9 @@ public class HostProperties {
     private static final Logger logger = LogManager.getLogger();
 	public static String FULL_RIGHTS = "adminRole";
 
-	private static String PROFILES_EXTENSION = ".slicing";
+	public static String PROFILES_EXTENSION = ".slicing";
 	public File PROFILES_DIR = new File(System.getProperty("user.home"), "Profiles");
-	private static String MACHINE_EXTENSION = ".machine";
+	public static String MACHINE_EXTENSION = ".machine";
 	public File MACHINE_DIR = new File(System.getProperty("user.home"), "Machines");
 	private static String PRINTER_EXTENSION = ".printer";
 	private File printerDir = new File(System.getProperty("user.home"), "3dPrinters");
@@ -565,6 +563,38 @@ public class HostProperties {
 		}
 	}
 	
+	public <T extends Named> List<T> getConfigurations(File searchDirectory, String extension, Class<T> clazz) {
+		List<T> configurations = new ArrayList<T>();
+		
+		File files[] = searchDirectory.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				if (name.endsWith(extension)) {
+					return true;
+				}
+				
+				return false;
+			}
+		});
+		
+		for (File currentFile : files) {
+			JAXBContext jaxbContext;
+			try {
+				jaxbContext = JAXBContext.newInstance(clazz);
+				Unmarshaller jaxbUnMarshaller = jaxbContext.createUnmarshaller();
+				
+				T machine = (T)jaxbUnMarshaller.unmarshal(currentFile);
+				machine.setName(currentFile.getName().substring(0, currentFile.getName().length() - extension.length()));
+				configurations.add(machine);
+				logger.info("Created {} for:{}", extension, machine);
+			} catch (JAXBException e) {
+				logger.error("Problem marshalling " + extension + " configuration from:" + currentFile, e);
+			}
+		}
+		
+		return configurations;
+	}
+	
 	public List<PrinterConfiguration> getPrinterConfigurations() {
 		if (configurations != null) {
 			return new ArrayList<PrinterConfiguration>(configurations.values());
@@ -577,10 +607,10 @@ public class HostProperties {
 				throw new IllegalArgumentException("Couldn't create printer directory:" + printerDir);
 			}
 			
-			MachineService.INSTANCE.createPrinter("Autodetected Printer", DisplayManager.LAST_AVAILABLE_DISPLAY, SerialManager.FIRST_AVAILABLE_PORT);
+			//PrinterService.INSTANCE.createPrinter("Autodetected Printer", DisplayManager.LAST_AVAILABLE_DISPLAY, SerialManager.FIRST_AVAILABLE_PORT);
 		}
 		
-		File machineFiles[] = printerDir.listFiles(new FilenameFilter() {
+		File printerFiles[] = printerDir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
 				if (name.endsWith(PRINTER_EXTENSION)) {
@@ -591,7 +621,7 @@ public class HostProperties {
 			}
 		});
 		
-		for (File currentFile : machineFiles) {
+		for (File currentFile : printerFiles) {
 			JAXBContext jaxbContext;
 			try {
 				jaxbContext = JAXBContext.newInstance(PrinterConfiguration.class, MachineConfig.class, SlicingProfile.class);
@@ -600,8 +630,15 @@ public class HostProperties {
 				PrinterConfiguration configuration = (PrinterConfiguration)jaxbUnMarshaller.unmarshal(currentFile);
 				configuration.setName(currentFile.getName().replace(PRINTER_EXTENSION, ""));
 	
-				configuration.setMachineConfig((MachineConfig)jaxbUnMarshaller.unmarshal(new File(MACHINE_DIR, configuration.getMachineConfigName() + MACHINE_EXTENSION)));
-				configuration.setSlicingProfile((SlicingProfile)jaxbUnMarshaller.unmarshal(new File(PROFILES_DIR, configuration.getSlicingProfileName() + PROFILES_EXTENSION)));
+				File machineFile = new File(MACHINE_DIR, configuration.getMachineConfigName() + MACHINE_EXTENSION);
+				MachineConfig machineConfig = (MachineConfig)jaxbUnMarshaller.unmarshal(machineFile);
+				machineConfig.setName(machineFile.getName().substring(0, machineFile.getName().length() - MACHINE_EXTENSION.length()));
+				configuration.setMachineConfig(machineConfig);
+				
+				File profileFile = new File(PROFILES_DIR, configuration.getSlicingProfileName() + PROFILES_EXTENSION);
+				SlicingProfile profile = (SlicingProfile)jaxbUnMarshaller.unmarshal(profileFile);
+				profile.setName(profileFile.getName().substring(0, profileFile.getName().length() - PROFILES_EXTENSION.length()));
+				configuration.setSlicingProfile(profile);
 				
 				//We do not want to start the printer here
 				configurations.put(configuration.getName(), configuration);
@@ -639,6 +676,7 @@ public class HostProperties {
 				MachineConfig machineConfig = currentConfiguration.getMachineConfig();
 				if (focusedSave != null && currentConfiguration.getMachineConfigName().equals(focusedSave.getMachineConfigName())) {
 					machineConfig = deepCopyJAXB(focusedSave.getMachineConfig(), MachineConfig.class);
+					machineConfig.setName(currentConfiguration.getMachineConfigName());
 					currentConfiguration.setMachineConfig(machineConfig);
 				}
 				
@@ -648,6 +686,7 @@ public class HostProperties {
 				SlicingProfile slicingProfile = currentConfiguration.getSlicingProfile();
 				if (focusedSave != null && currentConfiguration.getSlicingProfileName().equals(focusedSave.getSlicingProfileName())) {
 					slicingProfile = deepCopyJAXB(focusedSave.getSlicingProfile(), SlicingProfile.class);
+					slicingProfile.setName(focusedSave.getSlicingProfileName());
 					currentConfiguration.setSlicingProfile(slicingProfile);
 				}
 

@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @XmlRootElement(name="SliceBuildConfig")
-public class SlicingProfile {
+public class SlicingProfile implements Named {
     private static final Logger logger = LogManager.getLogger();
 
     public static class TwoDimensionalSettings {
@@ -267,7 +267,17 @@ public class SlicingProfile {
 	private List<InkConfig> inkConfig;
     @XmlElement(name="TwoDimensionalSettings")
     private TwoDimensionalSettings twoDimensionalSettings;
+    private String name;
     
+	@XmlTransient
+	@JsonProperty
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	
 	@XmlTransient
 	public int getSlideTiltValue() {
 		return slideTiltValue;
@@ -485,5 +495,9 @@ public class SlicingProfile {
 	}
 	public void setExposureTimeCalculator(String exposureTimeCalculator) {
 		this.exposureTimeCalculator = exposureTimeCalculator;
+	}
+	
+	public String toString() {
+		return getName();
 	}
 }
