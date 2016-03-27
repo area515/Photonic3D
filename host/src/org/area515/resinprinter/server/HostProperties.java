@@ -586,7 +586,7 @@ public class HostProperties {
 				T machine = (T)jaxbUnMarshaller.unmarshal(currentFile);
 				machine.setName(currentFile.getName().substring(0, currentFile.getName().length() - extension.length()));
 				configurations.add(machine);
-				logger.info("Created {} for:{}", extension, machine);
+				logger.info("Created {} for:{}", extension, currentFile);
 			} catch (JAXBException e) {
 				logger.error("Problem marshalling " + extension + " configuration from:" + currentFile, e);
 			}
