@@ -11,11 +11,24 @@ repositories {
   mavenCentral()
 }
 
+dependencies {
+  compile group: 'io.swagger', name: 'swagger-jaxrs', version: '1.5.8'
+  compile fileTree(dir: 'libs', include: '**/*.jar')
+}
+
 configurations {
 
 }
 
 sourceSets {
+  main {
+    java {
+      srcDir 'src'
+    }
+    resources {
+      srcDir 'src'
+    }
+  }
   test {
     java {
       srcDir 'tests'
@@ -23,16 +36,13 @@ sourceSets {
     resources {
       srcDir 'tests'
     }
-    compileClasspath += (
-      fileTree(dir: 'libs', include: '**/*.jar')
-      + files('srcbin')
-    )
-    runtimeClasspath += compileClasspath
   }
 }
 
-dependencies {
-
+compileJava {
+  options.compilerArgs << '-XDignore.symbol.file'
+  options.fork = true
+  options.forkOptions.executable = 'javac'
 }
 
 github {
@@ -163,7 +173,7 @@ clean.doFirst {
 // -------------------------
 githubRelease.dependsOn releaseDist
 dist.mustRunAfter setupRelease
-compileTestJava.dependsOn build
+//compileTestJava.dependsOn build
 BuildCWH.mustRunAfter preDist
 
 // UTILITY FUNCTIONS
