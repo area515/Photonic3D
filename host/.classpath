@@ -52,5 +52,6 @@
 	<classpathentry kind="lib" path="libs/log4j/log4j-core-2.5.jar"/>
 	<classpathentry kind="lib" path="libs/alphanumeric-comparator/alphanumeric-comparator-1.4.1.jar"/>
 	<classpathentry kind="lib" path="libs/pdf/PDFRenderer-0.9.0.jar"/>
+	<classpathentry kind="lib" path="swagger/swagger-annotations-1.5.3-M1.jar"/>
 	<classpathentry kind="output" path="srcbin"/>
 </classpath>

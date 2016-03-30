@@ -51,6 +51,7 @@ import javax.ws.rs.core.StreamingOutput;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.api.SwaggerStrings;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.network.NetInterface;
@@ -70,7 +71,15 @@ import org.area515.util.MailUtilities;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import com.sun.mail.smtp.SMTPSendFailedException;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
+@Api(value="machine", description="This service allows you to perform operations unique to the Host itself. "
+		+ "The category of operations include serial port enumeration, wifi management, support diagnostics, "
+		+ "display enumeration, slicing profile enumeration, printable file type enumeration, machine configuration enumeration, "
+		+ "network enumeration, staging automatic updates, supported font enumeration and font uploads.")
 @Path("machine")
 public class MachineService {
     private static final Logger logger = LogManager.getLogger();
@@ -93,6 +102,11 @@ public class MachineService {
 		return request.getRemoteAddr();
 	}
 	
+    @ApiOperation(value="Cancels the network restart operation that could be in progress. "
+    		+ "This assumes that there is already a startNetworkRestartProcess that is currently in progress")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@POST
 	@Path("cancelNetworkRestartProcess")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -115,29 +129,6 @@ public class MachineService {
 	}
 	
 	/**
-	 * This process ensures that the user unplugs the network cable in order to complete the network reconfiguration process.
-	 * Since it's not immediately obvious how to notify a client after the only network link to that client has been torn down, I
-	 * described that process below:
-	 * 
-	 * 1. The Restful client should first reconfigure the WIFI AP of their choice with the connectToWifiSSID() method.
-	 * 2. The Restful client opens a websocket connection to /hostNotification url.
-	 * 3. Once that step is successful, this method should be called immediately afterwards.
-	 * 4. If this method returns false, the NetworkInterface was not found and the configuration process ENDS HERE.
-	 * 5. If this method is able to return true, it means this method found the proper NetworkInterface managing this HTTP socket
-	 * 	connection.
-	 * 6. The NetworkInterface will be monitored for a disruption in network connectivity and Websocket ping events will start being 
-	 * 	produced from this host at the interval of "millisecondsBetweenPings".
-	 * 7. Once the Restful client receives it's first ping event, it should ask the user to unplug the ethernet cable.
-	 * 8. The user should then either cancel the operation, or unplug the ethernet cable.
-	 * 9. If the user cancels the operation, the Restful client needs to call cancel
-	 * RestartOperation() to notify the server that it should should
-	 * 	not continue to wait for the user to unplug the cable.
-	 * 10. If the user unplugs the ethernet cable, the proper NetworkInterface(discovered in step 4) is found to be down and this 
-	 * 	Host(and it's network) are restarted.
-	 * 11. Since this Host is now in the middle of restarting, it isn't able to send WebSocket ping events any longer.
-	 * 12. The Restful client then discovers that ping events are no longer coming and it's timeout period hasn't been exhausted, 
-	 * 	so it let's the user know that they should shut down the Restful client(probably a browser) and restart the printer with the Multicast client.
-	 * 13. The Multicast client eventually finds the Raspberry Pi on the new Wifi IP address and we are back in business...
 	 * 
 	 * @param request
 	 * @param timeoutMilliseconds
@@ -145,6 +136,32 @@ public class MachineService {
 	 * @param maxUnmatchedPings
 	 * @return true if the proper network interface is found and the caller should start expecting shutdown pings
 	 */
+    @ApiOperation(value="This process ensures that the user unplugs the network cable in order to complete the network reconfiguration process." +
+	 "Since it's not immediately obvious how to notify a client after the only network link to that client has been torn down, I" + 
+     "described that process below:" + 
+	 "" + 
+	 "1. The Restful client should first reconfigure the WIFI AP of their choice with the connectToWifiSSID() method." + 
+	 "2. The Restful client opens a websocket connection to /hostNotification url." + 
+	 "3. Once that step is successful, this method should be called immediately afterwards." + 
+	 "4. If this method returns false, the NetworkInterface was not found and the configuration process ENDS HERE." + 
+	 "5. If this method is able to return true, it means this method found the proper NetworkInterface managing this HTTP socket" + 
+	 "	connection." + 
+	 "6. The NetworkInterface will be monitored for a disruption in network connectivity and Websocket ping events will start being " + 
+	 "	produced from this host at the interval of \"millisecondsBetweenPings\"." + 
+	 "7. Once the Restful client receives it's first ping event, it should ask the user to unplug the ethernet cable." + 
+	 "8. The user should then either cancel the operation, or unplug the ethernet cable." + 
+	 "9. If the user cancels the operation, the Restful client needs to call cancel" + 
+	 "RestartOperation() to notify the server that it should should" + 
+	 "	not continue to wait for the user to unplug the cable." + 
+	 "10. If the user unplugs the ethernet cable, the proper NetworkInterface(discovered in step 4) is found to be down and this " + 
+	 "	Host(and it's network) are restarted." + 
+	 "11. Since this Host is now in the middle of restarting, it isn't able to send WebSocket ping events any longer." + 
+	 "12. The Restful client then discovers that ping events are no longer coming and it's timeout period hasn't been exhausted, " + 
+	 "	so it let's the user know that they should shut down the Restful client(probably a browser) and restart the printer with the Multicast client." + 
+	 "13. The Multicast client eventually finds the Raspberry Pi on the new Wifi IP address and we are back in business...")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@POST
 	@Path("startNetworkRestartProcess/{timeoutMilliseconds}/{millisecondsBetweenPings}/{maxUnmatchedPings}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -193,6 +210,11 @@ public class MachineService {
 		}
 	}
 	
+    @ApiOperation(value="Retrieves all of the supported file types that are returned from the each of the org.area515.resinprinter.job.PrintFileProcessor.getFileExtensions()."
+    		+ SwaggerStrings.PRINT_FILE_PROCESSOR)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("supportedFileTypes")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -204,6 +226,10 @@ public class MachineService {
 		return fileTypes;
 	}
 	
+    @ApiOperation(value="Upload TrueType fonts to be used with 2D file processing settings.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@POST
 	@Path("/uploadFont")
 	@Consumes("application/octet-stream")
@@ -230,6 +256,10 @@ public class MachineService {
 		}
 	}
 	
+    @ApiOperation(value="Upload TrueType fonts to be used with 2D file processing.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("supportedFontNames")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -271,6 +301,10 @@ public class MachineService {
 		}
 	}
 	
+    @ApiOperation(value = SwaggerStrings.DIAGNOSTIC_DUMP_PREFIX + " then perform a file download of the zip file.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("downloadDiagnostic/{zipName}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
@@ -291,6 +325,10 @@ public class MachineService {
 	    };
 	}
 	
+    @ApiOperation(value = SwaggerStrings.DIAGNOSTIC_DUMP_PREFIX + " then perform an email of the zip file.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("executeDiagnostic")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -332,6 +370,10 @@ public class MachineService {
 		}
 	}
 	
+    @ApiOperation(value = "Upload a zip file that contains a Photonic 3d upgrade. The next time Phontonic 3d is restarted, this upgrade will be performed..")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@POST
 	@Path("/stageOfflineInstall")
 	@Consumes("multipart/form-data")
@@ -339,6 +381,10 @@ public class MachineService {
 		return PrintableService.uploadFile(input, HostProperties.Instance().getUpgradeDir());
 	}
 
+    @ApiOperation(value = "Enumerates the list of WirelessNetworks that are currently in range for each network interface available on the host.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	 @GET
 	 @Path("wirelessNetworks/list")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -362,6 +408,10 @@ public class MachineService {
 		}
 	 }
 	 
+    @ApiOperation(value = "Connects to the supplied wireless SSID using the provided passphrase and Wireless settings.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	 @PUT
 	 @Path("wirelessConnect")
 	 @Consumes(MediaType.APPLICATION_JSON)
@@ -374,7 +424,11 @@ public class MachineService {
 			logger.error("Error connecting to WifiSSID:" + network.getSsid(), e);
 		}
 	 }
-	 
+	
+    @ApiOperation(value = "Enumerates the list of serial ports available on the Photonic 3D host.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	 @GET
 	 @Path("serialPorts/list")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -388,6 +442,10 @@ public class MachineService {
 		 return identifierStrings;
 	 }
 	 
+    @ApiOperation(value = "Enumerates the list of graphics displays that are available on the Photonic 3D host.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	 @GET
 	 @Path("graphicsDisplays/list")
 	 @Produces(MediaType.APPLICATION_JSON)
@@ -401,12 +459,20 @@ public class MachineService {
 		 return deviceStrings;
 	 }
 	 
+    @ApiOperation(value = "Enumerates the list of machine configurations that are available on the Photonic 3D host.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	 @GET
 	 @Path("machineConfigurations/list")
 	 public List<MachineConfig> getMachineConfigurations() {
 		 return HostProperties.Instance().getConfigurations(HostProperties.Instance().MACHINE_DIR, HostProperties.MACHINE_EXTENSION, MachineConfig.class);
 	 }
 	 
+    @ApiOperation(value = "Enumerates the list of slicing profiles that are available on the Photonic 3D host.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	 @GET
 	 @Path("slicingProfiles/list")
 	 public List<SlicingProfile> getSlicingProfiles() {
