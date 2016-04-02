@@ -56,6 +56,7 @@
 			<zipfileset dir="libs/guava" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/log4j" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/alphanumeric-comparator" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/swagger" prefix="lib" includes="**/*"/>
 		</zip>
 		<zip destfile="${deployedTestZipFile}">
 			<zipfileset dir="srcbin" includes="**/build.number"/>
@@ -82,6 +83,7 @@
 			<zipfileset dir="libs/guava" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/log4j" prefix="lib" includes="**/*"/>
 			<zipfileset dir="libs/alphanumeric-comparator" prefix="lib" includes="**/*"/>
+			<zipfileset dir="libs/swagger" prefix="lib" includes="**/*"/>
 		</zip>
 		<zip destfile="${deployedClientZipFile}">
 			<zipfileset dir="srcbin" includes="**/build.number"/>

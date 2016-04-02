@@ -32,6 +32,7 @@ import javax.ws.rs.core.StreamingOutput;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.api.SwaggerStrings;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 import org.area515.util.Log4jTimer;
@@ -42,7 +43,14 @@ import com.googlecode.mp4parser.FileDataSourceImpl;
 import com.googlecode.mp4parser.authoring.Movie;
 import com.googlecode.mp4parser.authoring.builder.FragmentedMp4Builder;
 import com.googlecode.mp4parser.authoring.tracks.H264TrackImpl;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
+@Api(value="media", description="This service performs all media based activities related to imaging, live streaming and video. "
+		+ "Currently progressive download of video is performed in the org.area515.resinprinter.stream.ProgressiveDownloadServlet. "
+		+ "Eventually those capabilities will be moved to this service as well.")
 @Path("media")
 public class MediaService {
     private static final Logger logger = LogManager.getLogger();
@@ -264,6 +272,10 @@ public class MediaService {
 		
 	}
 	
+    @ApiOperation(value = "Starts recording video with the supplied(width:x, height:y) for the printer specified using the settings specified in the config.properties streamingCommand=[jsonFormattedNativeOSCommand]")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
 	@GET
 	@Path("startrecordvideo/{printerName}/x/{x}/y/{y}")
@@ -311,6 +323,10 @@ public class MediaService {
 		}
 	}
 
+    @ApiOperation(value = "Stops recording video for the printer specified.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("stoprecordvideo/{printerName}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -375,6 +391,10 @@ public class MediaService {
 		}
 	}
 	
+    @ApiOperation(value = "Starts a live mjpeg stream using the settings available in config.properties for key imagingCommand=[jsonFormattedNativeOSCommand]")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
 	@GET
 	@Path("startlivemjpegstream/{printerName}/clientid/{clientId}/x/{x}/y/{y}")
@@ -400,6 +420,10 @@ public class MediaService {
 		return Response.ok().entity(stream).build();
 	}
 	
+    @ApiOperation(value = "Stops a live mjpeg stream. The clientId that was used to start the original stream should be used to stop this stream.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
 	@GET
 	@Path("stoplivemjpegstream/{printerName}/clientid/{clientId}")
@@ -418,6 +442,10 @@ public class MediaService {
 		return new MachineResponse("stoplivemjpegstream", true, "Live stream stopped");
 	}
 
+    @ApiOperation(value = "Takes a snapshot of the current build setup in config.properties for imagingCommand=[jsonFormattedNativeOSCommand]")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	//TODO: We need to actually get the printer by printername and then get the commandLineParameters from the MachineConfig not the HostProperties!!
 	@GET
 	@Path("takesnapshot/{printerName}/x/{x}/y/{y}")
