@@ -41,6 +41,7 @@
 			<zipfileset dir="resourcesnew" prefix="resourcesnew" includes="**/*"/>
 			<zipfileset dir="build/install/photonic3d/lib" prefix="lib" includes="**/*.jar"/>
 		</zip>
+		<!--
 		<zip destfile="${deployedTestZipFile}">
 			<zipfileset dir="build" includes="**/build.number"/>
 			<zipfileset dir="build/install/photonic3d/lib" includes="**/*.properties"/>
@@ -63,5 +64,6 @@
 			<zipfileset dir="bin" includes="**/browseprinter.*"/>
 			<zipfileset dir="bin" includes="**/slicebrowser.*"/>
 		</zip>
+		-->
 	</target>
 </project>
