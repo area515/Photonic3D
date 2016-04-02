@@ -71,10 +71,10 @@ import org.area515.util.MailUtilities;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import com.sun.mail.smtp.SMTPSendFailedException;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 @Api(value="machine", description="This service allows you to perform operations unique to the Host itself. "
 		+ "The category of operations include serial port enumeration, wifi management, support diagnostics, "
