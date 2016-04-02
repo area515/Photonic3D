@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
+import io.swagger.jaxrs.config.BeanConfig;
+
 public class ApplicationConfig extends Application{
 
 //	private static Set services = new HashSet(); 
@@ -36,9 +38,19 @@ public class ApplicationConfig extends Application{
 //	 } 
 	
 	private Set<Object> singletons = new HashSet<Object>();
-    private Set<Class<?>> classes = new HashSet<Class<?>>();
+    //private Set<Class<?>> classes = new HashSet<Class<?>>();
 
     public ApplicationConfig() {
+    	BeanConfig beanConfig = new BeanConfig();
+    	beanConfig.setTitle("Photonic3D REST API");
+        beanConfig.setVersion("0.0.1");
+        beanConfig.setSchemes(new String[]{"http"});
+        //beanConfig.setHost("localhost:9091");
+        beanConfig.setBasePath("/services");
+        beanConfig.setResourcePackage("org.area515.resinprinter.services");
+        beanConfig.setScan(true);
+        beanConfig.setPrettyPrint(true);
+
     	singletons.add(buildJacksonJaxbJsonProvider());
     	singletons.add(new ExceptionMarshaller());
     	singletons.add(PrintableService.INSTANCE);
@@ -66,7 +78,15 @@ public class ApplicationConfig extends Application{
     
     @Override
     public Set<Class<?>> getClasses() {
-        return classes;
+        HashSet<Class<?>> resources = new HashSet<Class<?>>();
+        
+        resources.add(io.swagger.jaxrs.listing.ApiListingResource.class);
+        resources.add(io.swagger.jaxrs.listing.AcceptHeaderApiListingResource.class);
+        resources.add(io.swagger.jaxrs.listing.SwaggerSerializers.class);
+        //resources.add(io.swagger.jaxrs.listing.ApiDeclarationProvider.class);
+        //resources.add(io.swagger.jaxrs.listing.ApiListingResourceJSON.class);
+        //resources.add(io.swagger.jaxrs.listing.ResourceListingProvider.class);
+        return resources;
     }
 
     @Override
