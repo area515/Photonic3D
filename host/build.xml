@@ -76,13 +76,14 @@
     <!-- <mkdir dir="${testbuild}"/> -->
   </target>
 
+<!--
   <target name="compile" depends="setup">
     <javac srcdir="${src}" destdir="${build}" classpathref="libs" source="1.8"
            includeantruntime="false" debug="true">
       <compilerarg value="-XDignore.symbol.file" />
-      <!-- <compilerarg value="-Xlint:deprecation,unchecked" /> -->
     </javac>
   </target>
+-->
 
 <!-- Deprecated by Gradle
   <target name="testcompile" depends="setup">
@@ -92,6 +93,7 @@
   </target>
 -->
 
+<!--
   <target name="build" depends="compile">
     <copy todir="${build}">
       <fileset dir="${src}">
@@ -100,6 +102,7 @@
     </copy>
 
   </target>
+-->
 
 <!-- Deprecated by Gradle
   <target name="testbuild" depends="testcompile">
@@ -116,6 +119,7 @@
   </target>
   -->
 
+<!--
   <target name="run" depends="build,os">
     <java classname="org.area515.resinprinter.server.Main"
           classpathref="run.classpath"
@@ -124,6 +128,7 @@
       <sysproperty key="log4j.configurationFile" path="${log4jconf}"/>
     </java>
   </target>
+-->
 
 <!-- Moved to Gradle
   <target name="test" depends="build,testbuild,os">

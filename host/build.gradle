@@ -1,14 +1,70 @@
 // PROJECT CONFIG
 // --------------
 plugins {
-  id "java"
+  id "application"
   id "co.riiid.gradle" version "0.4.2"
   id 'org.ajoberstar.grgit' version '1.4.2'
   id 'com.google.osdetector' version '1.4.0'
 }
 
 repositories {
+  maven {
+    url 'http://4thline.org/m2'
+  }
   mavenCentral()
+}
+
+dependencies {
+  compile(group: 'io.swagger', name: 'swagger-jaxrs', version: '1.5.8') {
+    exclude module: 'jsr311-api'
+  }
+
+  compile 'se.sawano.java:alphanumeric-comparator:1.4.1'
+	compile 'org.fourthline.cling:cling-core:2.0.1'
+	compile 'org.fourthline.cling:cling-support:2.0.1'
+	compile 'org.apache.httpcomponents:httpclient:4.3.3'
+	compile 'org.apache.httpcomponents:httpcore:4.3.2'
+	
+	compile 'commons-cli:commons-cli:1.2'
+	compile 'commons-codec:commons-codec:1.5'
+	compile 'commons-io:commons-io:2.4'
+	compile 'commons-logging:commons-logging:1.2'
+	
+	compile 'org.freemarker:freemarker:2.3.23'
+	
+	compile 'com.google.guava:guava:19.0'
+	
+	//compile 'org.eclipse.jetty.aggregate:jetty-all:9.3.7.v20160115'
+	compile 'org.eclipse.jetty:jetty-server:9.3.7.v20160115'
+	compile 'org.eclipse.jetty:jetty-servlet:9.3.7.v20160115'
+	compile 'org.eclipse.jetty:jetty-rewrite:9.3.7.v20160115'
+	compile 'org.eclipse.jetty.websocket:javax-websocket-server-impl:9.3.7.v20160115'
+	
+	compile 'com.jcraft:jsch:0.1.53'
+	compile 'org.scream3r:jssc:2.8.0'
+	compile 'org.apache.logging.log4j:log4j-api:2.5'
+	compile 'org.apache.logging.log4j:log4j-core:2.5'
+	
+	compile 'org.apache.james:apache-mime4j:0.6.1'
+
+	compile 'org.jboss.resteasy:jaxrs-api:3.0.9.Final'
+	compile 'org.jboss.resteasy:resteasy-jaxrs:3.0.9.Final'
+	compile 'org.jboss.resteasy:resteasy-jackson2-provider:3.0.9.Final'
+	compile 'org.jboss.resteasy:resteasy-multipart-provider:3.0.9.Final'
+
+	compile 'com.fasterxml.jackson.core:jackson-core:2.4.5'
+	compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.5'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.4.5'
+	
+	compile 'org.rxtx:rxtx:2.1.7'
+	
+	compile 'org.powermock:powermock-module-junit4:1.6.4'
+	compile 'org.powermock:powermock-api-mockito:1.6.4'
+	
+	compile 'junit:junit:4.12'
+
+  compile fileTree(dir: 'libs', include: '**/*.jar')
+  compile files('conf')
 }
 
 configurations {
@@ -16,6 +72,15 @@ configurations {
 }
 
 sourceSets {
+  main {
+    java {
+      srcDir 'src'
+    }
+    resources {
+      srcDir 'src'
+      exclude '*.properties'
+    }
+  }
   test {
     java {
       srcDir 'tests'
@@ -23,16 +88,13 @@ sourceSets {
     resources {
       srcDir 'tests'
     }
-    compileClasspath += (
-      fileTree(dir: 'libs', include: '**/*.jar')
-      + files('srcbin')
-    )
-    runtimeClasspath += compileClasspath
   }
 }
 
-dependencies {
-
+compileJava {
+  options.compilerArgs << '-XDignore.symbol.file'
+  options.fork = true
+  options.forkOptions.executable = 'javac'
 }
 
 github {
@@ -46,6 +108,23 @@ github {
   // Must compute assets in task, otherwise you can't release with dist
   // assets = ant.path {fileset(dir: '.', includes: '*.zip')} . list()
 };
+
+/*
+distributions {
+  main {
+    contents {
+      from("conf") {
+        into "lib/conf"
+      }
+    }
+  }
+}
+*/
+
+mainClassName = "org.area515.resinprinter.server.Main"
+applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=log4j2.properties"]
+applicationName = 'photonic3d'
+jar.archiveName = 'photonic3d.jar'
 
 // PROJECT SETUP SCRIPT
 // --------------------
@@ -64,6 +143,10 @@ test {
   includes = ['**/*FullTestSuite*']
 }
 
+run {
+  systemProperty "java.library.path", osLibDir()
+}
+
 // TASK EXECUTION DEFS
 // -------------------
 task repoVersion() << {
@@ -79,7 +162,7 @@ task repoVersion() << {
   println("Git Commit Description: "+commitVersion)
 };
 
-task preDist(dependsOn: ['build', 'compileTestJava', 'processTestResources', 'repoVersion']) {
+task preDist(dependsOn: ['installDist', 'repoVersion']) {
 
 }
 
@@ -163,7 +246,7 @@ clean.doFirst {
 // -------------------------
 githubRelease.dependsOn releaseDist
 dist.mustRunAfter setupRelease
-compileTestJava.dependsOn build
+//compileTestJava.dependsOn build
 BuildCWH.mustRunAfter preDist
 
 // UTILITY FUNCTIONS
