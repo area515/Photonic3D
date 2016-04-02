@@ -2,6 +2,7 @@
 // --------------
 plugins {
   id "application"
+  id "eclipse"
   id "co.riiid.gradle" version "0.4.2"
   id 'org.ajoberstar.grgit' version '1.4.2'
   id 'com.google.osdetector' version '1.4.0'
@@ -18,50 +19,51 @@ dependencies {
   compile(group: 'io.swagger', name: 'swagger-jaxrs', version: '1.5.8') {
     exclude module: 'jsr311-api'
   }
-
+  
+  compile 'com.sun.mail:javax.mail:1.5.5'
   compile 'se.sawano.java:alphanumeric-comparator:1.4.1'
-	compile 'org.fourthline.cling:cling-core:2.0.1'
-	compile 'org.fourthline.cling:cling-support:2.0.1'
-	compile 'org.apache.httpcomponents:httpclient:4.3.3'
-	compile 'org.apache.httpcomponents:httpcore:4.3.2'
+  compile 'org.fourthline.cling:cling-core:2.0.1'
+  compile 'org.fourthline.cling:cling-support:2.0.1'
+  compile 'org.apache.httpcomponents:httpclient:4.3.3'
 	
-	compile 'commons-cli:commons-cli:1.2'
-	compile 'commons-codec:commons-codec:1.5'
-	compile 'commons-io:commons-io:2.4'
-	compile 'commons-logging:commons-logging:1.2'
+  compile 'commons-cli:commons-cli:1.2'
+  compile 'commons-codec:commons-codec:1.5'
+  compile 'commons-io:commons-io:2.4'
+  compile 'commons-logging:commons-logging:1.2'
 	
-	compile 'org.freemarker:freemarker:2.3.23'
+  compile 'org.freemarker:freemarker:2.3.23'
 	
-	compile 'com.google.guava:guava:19.0'
+  compile 'com.google.guava:guava:19.0'
 	
-	//compile 'org.eclipse.jetty.aggregate:jetty-all:9.3.7.v20160115'
-	compile 'org.eclipse.jetty:jetty-server:9.3.7.v20160115'
-	compile 'org.eclipse.jetty:jetty-servlet:9.3.7.v20160115'
-	compile 'org.eclipse.jetty:jetty-rewrite:9.3.7.v20160115'
-	compile 'org.eclipse.jetty.websocket:javax-websocket-server-impl:9.3.7.v20160115'
+  compile 'org.eclipse.jetty:jetty-server:9.3.7.v20160115'
+  compile 'org.eclipse.jetty:jetty-servlet:9.3.7.v20160115'
+  compile 'org.eclipse.jetty:jetty-rewrite:9.3.7.v20160115'
+  compile 'org.eclipse.jetty.websocket:javax-websocket-server-impl:9.3.7.v20160115'
 	
-	compile 'com.jcraft:jsch:0.1.53'
-	compile 'org.scream3r:jssc:2.8.0'
-	compile 'org.apache.logging.log4j:log4j-api:2.5'
-	compile 'org.apache.logging.log4j:log4j-core:2.5'
+  compile 'com.jcraft:jsch:0.1.53'
+  compile 'org.scream3r:jssc:2.8.0'
+  compile 'org.apache.logging.log4j:log4j-api:2.5'
+  compile 'org.apache.logging.log4j:log4j-core:2.5'
 	
-	compile 'org.apache.james:apache-mime4j:0.6.1'
+  compile 'org.apache.james:apache-mime4j:0.6.1'
 
-	compile 'org.jboss.resteasy:jaxrs-api:3.0.9.Final'
-	compile 'org.jboss.resteasy:resteasy-jaxrs:3.0.9.Final'
-	compile 'org.jboss.resteasy:resteasy-jackson2-provider:3.0.9.Final'
-	compile 'org.jboss.resteasy:resteasy-multipart-provider:3.0.9.Final'
+  compile 'org.jboss.resteasy:jaxrs-api:3.0.9.Final'
+  compile 'org.jboss.resteasy:resteasy-jaxrs:3.0.9.Final'
+  compile 'org.jboss.resteasy:resteasy-jackson2-provider:3.0.9.Final'
+  compile('org.jboss.resteasy:resteasy-multipart-provider:3.0.9.Final') {
+    exclude module: 'mail'
+  }
 
-	compile 'com.fasterxml.jackson.core:jackson-core:2.4.5'
-	compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.5'
-	compile 'com.fasterxml.jackson.core:jackson-databind:2.4.5'
+  compile 'com.fasterxml.jackson.core:jackson-core:2.4.5'
+  compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.5'
+  compile 'com.fasterxml.jackson.core:jackson-databind:2.4.5'
 	
-	compile 'org.rxtx:rxtx:2.1.7'
+  compile 'org.rxtx:rxtx:2.1.7'
 	
-	compile 'org.powermock:powermock-module-junit4:1.6.4'
-	compile 'org.powermock:powermock-api-mockito:1.6.4'
+  compile 'org.powermock:powermock-module-junit4:1.6.4'
+  compile 'org.powermock:powermock-api-mockito:1.6.4'
 	
-	compile 'junit:junit:4.12'
+  compile 'junit:junit:4.12'
 
   compile fileTree(dir: 'libs', include: '**/*.jar')
   compile files('conf')
@@ -109,17 +111,11 @@ github {
   // assets = ant.path {fileset(dir: '.', includes: '*.zip')} . list()
 };
 
-/*
-distributions {
-  main {
-    contents {
-      from("conf") {
-        into "lib/conf"
-      }
-    }
+eclipse {
+  classpath {
+    defaultOutputDir = file('srcbin')
   }
 }
-*/
 
 mainClassName = "org.area515.resinprinter.server.Main"
 applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=log4j2.properties"]

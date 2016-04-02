@@ -1,3 +1,6 @@
 /srcbin/
 /testbin/
 /.gradle/
+.settings/
+.classpath
+.project
