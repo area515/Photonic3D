@@ -34,6 +34,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.api.SwaggerStrings;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
@@ -47,6 +48,12 @@ import org.area515.util.PrintFileFilter;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
+
+@Api(value="printables", description="This service allows you to manage all printable files in Phontonic3d.")
 @Path("printables")
 public class PrintableService {
     private static final Logger logger = LogManager.getLogger();
@@ -117,6 +124,12 @@ public class PrintableService {
 		return Response.status(Status.OK).entity(output).build();
 	}
 
+    @ApiOperation(value="Upload a printable file using multipart/form-data. "
+    		+ "After the upload is complete, the file will be checked against all known print processors to determine if it is sutable for printing.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 400, message = SwaggerStrings.USER_UNDERSTANDABLE_ERROR),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@POST
 	@Path("/uploadPrintableFile")
 	@Consumes("multipart/form-data")
@@ -124,6 +137,11 @@ public class PrintableService {
 		return uploadFile(input, HostProperties.Instance().getUploadDir());
 	}
 	
+    @ApiOperation(value="Attempt to start a print by specifying the name of the printable file. "
+    		+ "For this operation to be successful, there must be exactly one Printer started.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@POST
 	@Path("/print/{filename}")
 	public PrintJob print(@PathParam("filename")String fileName) {
@@ -149,6 +167,12 @@ public class PrintableService {
 		throw new IllegalArgumentException("There aren't any printers started that aren't already processing other jobs");
 	}
 	
+    @ApiOperation(value="Upload a printable file using application/octet-stream. "
+    		+ "After the upload is complete, the file will be checked against all known print processors to determine if it is sutable for printing.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 400, message = SwaggerStrings.USER_UNDERSTANDABLE_ERROR),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@POST
 	@Path("/uploadPrintableFile/{filename}")
 	@Consumes("application/octet-stream")
@@ -205,6 +229,10 @@ public class PrintableService {
 		}
 	}
 	
+    @ApiOperation(value="Lists the printable files that have been previously uploaded and are available to be printed on the Host.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("list")
 	public List<Printable> getPrintables() {
@@ -218,37 +246,11 @@ public class PrintableService {
 		
 		return printables;
 	}
-	
-    /**
-     * Method handling HTTP GET requests. The returned object will be sent
-     * to the client as "text/plain" media type.
-     *
-     * @return String that will be returned as a text/plain response.
-     * @throws IOException 
-     */
-	@Deprecated
-    @GET
-    @Path("listFiles")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<String> getProjects() throws IOException {
-    	File dir = HostProperties.Instance().getUploadDir();
-		File[] acceptedFiles = dir.listFiles(PrintFileFilter.INSTANCE);
-		ArrayList<String> names = new ArrayList<String>();
-		for(File file : acceptedFiles){
-			names.add(file.getName());
-		}
-		
-        return names;
-    }
-	
     
-	 /**
-	  * Method handling HTTP GET requests. The returned object will be sent
-	  * to the client as "text/plain" media type.
-	  * 
-	  * @return String that will be returned as a text/plain response.
-	  * @throws IOException
-	  */
+    @ApiOperation(value="Deletes the specificed Printable file.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	 @GET
 	 @DELETE
 	 @Path("delete/{filename}")
@@ -279,9 +281,14 @@ public class PrintableService {
 		
 		return new MachineResponse("delete", true, "I couldn't figure out how to clean up:" + fileName);
 	 }
-	 
-	 
-	 //Example: https://www.thingiverse.com/download:1851486
+	
+    @ApiOperation(value="Initiates a download from the internet to this host using the specified filename and uri. "
+    		+ "This method will return immediately to let the user know whether the the download was scheduled. "
+    		+ "After the file is uploaded, the file will be checked to determine if a org.area515.resinprinter.job.PrintFileProcessor is willing to take responsibility for the file. "
+    		+ "If the file upload is successful and PrintFileProcessor assignment is complete" + SwaggerStrings.NOTIFICATION_MANAGER_SUFFIX)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	 @POST
 	 @Path("uploadviaurl/{filename}/{uri}")
 	 @Produces(MediaType.APPLICATION_JSON)
