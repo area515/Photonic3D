@@ -1,7 +1,7 @@
 // PROJECT CONFIG
 // --------------
 plugins {
-  id "java"
+  id "application"
   id "co.riiid.gradle" version "0.4.2"
   id 'org.ajoberstar.grgit' version '1.4.2'
   id 'com.google.osdetector' version '1.4.0'
@@ -14,6 +14,7 @@ repositories {
 dependencies {
   compile group: 'io.swagger', name: 'swagger-jaxrs', version: '1.5.8'
   compile fileTree(dir: 'libs', include: '**/*.jar')
+  compile files('conf')
 }
 
 configurations {
@@ -27,6 +28,7 @@ sourceSets {
     }
     resources {
       srcDir 'src'
+      exclude '*.properties'
     }
   }
   test {
@@ -57,6 +59,23 @@ github {
   // assets = ant.path {fileset(dir: '.', includes: '*.zip')} . list()
 };
 
+/*
+distributions {
+  main {
+    contents {
+      from("conf") {
+        into "lib/conf"
+      }
+    }
+  }
+}
+*/
+
+mainClassName = "org.area515.resinprinter.server.Main"
+applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=log4j2.properties"]
+applicationName = 'photonic3d'
+jar.archiveName = 'photonic3d.jar'
+
 // PROJECT SETUP SCRIPT
 // --------------------
 import org.ajoberstar.grgit.*;
@@ -74,6 +93,10 @@ test {
   includes = ['**/*FullTestSuite*']
 }
 
+run {
+  systemProperty "java.library.path", osLibDir()
+}
+
 // TASK EXECUTION DEFS
 // -------------------
 task repoVersion() << {
@@ -89,7 +112,7 @@ task repoVersion() << {
   println("Git Commit Description: "+commitVersion)
 };
 
-task preDist(dependsOn: ['build', 'compileTestJava', 'processTestResources', 'repoVersion']) {
+task preDist(dependsOn: ['installDist', 'repoVersion']) {
 
 }
 

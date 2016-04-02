@@ -119,6 +119,7 @@
   </target>
   -->
 
+<!--
   <target name="run" depends="build,os">
     <java classname="org.area515.resinprinter.server.Main"
           classpathref="run.classpath"
@@ -127,6 +128,7 @@
       <sysproperty key="log4j.configurationFile" path="${log4jconf}"/>
     </java>
   </target>
+-->
 
 <!-- Moved to Gradle
   <target name="test" depends="build,testbuild,os">
