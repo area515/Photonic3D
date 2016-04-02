@@ -56,6 +56,7 @@
 			<zipfileset dir="libs/cling" prefix="lib" includes="**/*.jar"/>
 			<zipfileset dir="libs/jsch" prefix="lib" includes="**/*.jar"/>
 			<zipfileset dir="libs/commons-logging" prefix="lib" includes="**/*.jar"/>
+			<zipfileset dir="libs/log4j" prefix="lib" includes="**/*.jar"/>
 			<zipfileset dir="libs/resteasy" prefix="lib" includes="**/jackson-annotations*.jar"/>
 			<zipfileset dir="libs/resteasy" prefix="lib" includes="**/jackson-core*.jar"/>
 			<zipfileset dir="libs/resteasy" prefix="lib" includes="**/jackson-databind*.jar"/>
