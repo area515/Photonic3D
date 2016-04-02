@@ -20,6 +20,7 @@ import javax.ws.rs.core.StreamingOutput;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.api.SwaggerStrings;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
@@ -30,7 +31,12 @@ import org.area515.resinprinter.printer.Printer;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
+@Api(value="printJobs", description="This service allows you to view the progress of all currently printing jobs and all printjobs that have already been attempted.")
 @Path("printJobs")
 public class PrintJobService {
     private static final Logger logger = LogManager.getLogger();
@@ -38,6 +44,10 @@ public class PrintJobService {
 	
 	private PrintJobService() {}
 		
+    @ApiOperation(value="Returns a list of all active and inactive printjobs on Phontonic 3D.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("list")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -45,6 +55,10 @@ public class PrintJobService {
 		return PrintJobManager.Instance().getPrintJobs();
 	}	 
 
+    @ApiOperation(value="Returns the specific printjob designated by it's internal job id.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("get/{jobId}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -66,6 +80,10 @@ public class PrintJobService {
 	 }	 
 	 
 	
+    @ApiOperation(value="Returns the specific PrintJob that is currently active for the specified printer name.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("getByPrinterName/{printerName}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -77,16 +95,13 @@ public class PrintJobService {
 		return PrintJobManager.Instance().getPrintJobByPrinterName(printerName);
 	}
 	
+    @ApiOperation(value="Returns the image that is currently being exposed for the PrintJob designated by the specified job id.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
     @Path("currentSliceImage/{jobId}")
     @Produces("image/png")
-    /**
-     * Another way to stream:
-     * http://stackoverflow.com/questions/9204287/how-to-return-a-png-image-from-jersey-rest-service-method-to-the-browser
-     * 
-     * @param jobId
-     * @return
-     */
     public StreamingOutput getImage(@PathParam("jobId") final String jobId) {		
 	    return new StreamingOutput() {
 			@Override
@@ -121,6 +136,10 @@ public class PrintJobService {
 	    };
     }
 	 
+    @ApiOperation(value="Stops/cancels the PrintJob designated by the specified job id.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@POST
 	@GET
 	@Path("stopJob/{jobId}")
@@ -146,6 +165,10 @@ public class PrintJobService {
 		return new MachineResponse("stop", true, "Stopped:" + jobId);
 	}
 	
+    @ApiOperation(value="Deletes the PrintJob designated by the specified job id.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@DELETE
 	@POST
@@ -169,6 +192,10 @@ public class PrintJobService {
 	 	return new MachineResponse("delete", found, found?"Job deleted": "Job not found (concurrent)");
 	}
 	
+    @ApiOperation(value="Pause/resumes the PrintJob designated by the specified job id.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("togglePause/{jobId}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -193,6 +220,10 @@ public class PrintJobService {
 		return new MachineResponse("togglepause", true, "Job:" + job.getJobFile().getName() + " " + status);
 	}
 	 
+    @ApiOperation(value="Overrides the lift distance variable for the PrintJob designated by the specified job id.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("overrideZLiftDistance/{jobId}/{distance}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -218,6 +249,10 @@ public class PrintJobService {
 		return new MachineResponse("LiftDistance", true, "Set lift distance to:" + liftDistance);
 	}
 	 
+    @ApiOperation(value="Overrides the lift speed variable for the PrintJob designated by the specified job id.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("overrideZLiftSpeed/{jobId}/{speed}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -243,6 +278,10 @@ public class PrintJobService {
 		return new MachineResponse("zliftspeed", true, "Set lift speed to:" + speed);
 	}
 	 
+    @ApiOperation(value="Overrides the exposure time variable for the PrintJob designated by the specified job id.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("overrideExposuretime/{jobId}/{exposureTime}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -263,6 +302,11 @@ public class PrintJobService {
 		return new MachineResponse("exposureTime", true, "Exposure time set");
 	}
 		 
+    @ApiOperation(value="Retrieves the geometry data associated with the PrintJob designated by the specified job id. "
+    		+ "The geometry data returned by this method is highly dependant upon the org.area515.resinprinter.job.PrintFileProcessor<G> that took responsibility for the printable file that this PrintJob is printing. ")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
 	@GET
 	@Path("geometry/{jobId}")
 	@Produces(MediaType.APPLICATION_JSON)
