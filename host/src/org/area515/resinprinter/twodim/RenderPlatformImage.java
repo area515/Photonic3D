@@ -6,7 +6,6 @@ import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;

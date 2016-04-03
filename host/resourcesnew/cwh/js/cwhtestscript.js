@@ -6,7 +6,7 @@ angular.module('cwh.testscript', []).directive('cwhTestscript', ['$window', '$an
 			'</span>' +
 			'<textarea rows="1" cols="50" class="form-control" ng-keyup="setModel()" ng-focus="onFocus()" ng-blur="onBlur()" placeholder="none"></textarea>' +
 			'<span class="input-group-addon input-large btn btn-success" ng-click="helpClick()" ng-show="helpURL">Help</span>',
-        scope: { },
+        scope: {},
         require: 'ngModel',
         link: function(scope, iElement, iAttrs, ngModelController) {//TODO: should be using formatters and parsers for this.
         	scope.helpURL = iAttrs.helpurl;
