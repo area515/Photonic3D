@@ -11,5 +11,5 @@
 <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.area515.resinprinter.server.Main"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="host"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dlog4j.configurationFile=${workspace_loc:host/src/eclipselog4j2.properties} -Djava.library.path=${workspace_loc:host/os/Linux/x86_64} -XX:+UnlockCommercialFeatures -XX:+FlightRecorder"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dlog4j.configurationFile=${workspace_loc:host/conf/eclipselog4j2.properties} -Djava.library.path=${workspace_loc:host/os/Linux/x86_64} -XX:+UnlockCommercialFeatures -XX:+FlightRecorder"/>
 </launchConfiguration>
