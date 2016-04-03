@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.script.Bindings;
-import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
@@ -161,7 +160,7 @@ public class TemplateEngine {
 		bindings.put("job", job);
 		bindings.put("printer", printer);
 		bindings.put(ScriptEngine.FILENAME, scriptName);
-		
+
 		if (overrides != null) {
 			Iterator<Map.Entry<String, Object>> entries = overrides.entrySet().iterator();
 			while (entries.hasNext()) {

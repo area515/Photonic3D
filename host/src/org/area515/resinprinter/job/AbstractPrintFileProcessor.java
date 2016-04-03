@@ -36,6 +36,7 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		public double sliceHeight;
 		public InkDetector inkDetector;
 		public long currentSliceTime;
+		public Paint maskPaint;
 		
 		public DataAid(PrintJob printJob) throws InappropriateDeviceException {
 			this.printJob = printJob;
@@ -228,16 +229,23 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
-
-		if (aid.slicingProfile.getProjectorGradientCalculator() != null && aid.slicingProfile.getProjectorGradientCalculator().length() > 0) {
-			Paint maskPaint;
-			try {
-				maskPaint = (Paint)TemplateEngine.runScript(aid.printJob, aid.printer, aid.scriptEngine, aid.slicingProfile.getProjectorGradientCalculator(), "projector gradient script", null);
-				g2.setPaint(maskPaint);
-				g2.fillRect(0, 0, width, height);
-			} catch (ClassCastException e) {
-				throw new IllegalArgumentException("The result of your bulb mask script needs to evaluate to an instance of java.awt.Paint");
+		
+		if (aid.slicingProfile.getProjectorGradientCalculator() == null || aid.slicingProfile.getProjectorGradientCalculator().trim().length() == 0) {
+			return;
+		}
+		
+		if (!aid.configuration.getMachineConfig().getMonitorDriverConfig().isUseMask()) {
+			return;
+		}
+		
+		try {
+			if (aid.maskPaint == null) {
+				aid.maskPaint = (Paint)TemplateEngine.runScript(aid.printJob, aid.printer, aid.scriptEngine, aid.slicingProfile.getProjectorGradientCalculator(), "projector gradient script", null);
 			}
+			g2.setPaint(aid.maskPaint);
+			g2.fillRect(0, 0, width, height);
+		} catch (ClassCastException e) {
+			throw new IllegalArgumentException("The result of your bulb mask script needs to evaluate to an instance of java.awt.Paint");
 		}
 	}
 }

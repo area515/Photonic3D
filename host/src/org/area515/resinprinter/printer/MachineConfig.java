@@ -69,6 +69,14 @@ public class MachineConfig implements Named {
 		private boolean useMask;
 		
 		@XmlTransient
+		public boolean isUseMask() {
+			return useMask;
+		}
+		public void setUseMask(boolean useMask) {
+			this.useMask = useMask;
+		}
+		
+		@XmlTransient
 		public double getDLP_X_Res() {
 			return dLP_X_Res;
 		}

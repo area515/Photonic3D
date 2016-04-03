@@ -240,6 +240,7 @@ public class PrintableService {
 		File[] acceptedFiles = dir.listFiles();
 		ArrayList<Printable> printables = new ArrayList<Printable>();
 		for(File file : acceptedFiles) {
+			logger.info("Loaded printable file: {}", file);
 			PrintFileProcessor<?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
 			printables.add(new Printable(file, processor));
 		}
