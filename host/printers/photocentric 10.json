@@ -83,11 +83,7 @@
                "NumberofBottomLayers":10,
                "ResinPriceL":65.0
             }
-         ],
-         "Font":{  
-            "Name":"Dialog",
-            "Size":20
-         }
+         ]
       },
       "MachineConfigurationName":"Photocentric 10",
       "SlicingProfileName":"Hard daylight red 0.1",
