@@ -9,8 +9,8 @@
          "MaxXFeedRate":0,
          "MaxYFeedRate":0,
          "MaxZFeedRate":0,
-         "XRenderSize":1366,
-         "YRenderSize":768,
+         "XRenderSize":1400,
+         "YRenderSize":600,
          "MotorsDriverConfig":{  
             "DriverType":"Photocentric",
             "ComPortSettings":{  
@@ -23,8 +23,8 @@
             }
          },
          "MonitorDriverConfig":{  
-            "DLP_X_Res":1366.0,
-            "DLP_Y_Res":768.0,
+            "DLP_X_Res":1400,
+            "DLP_Y_Res":600,
             "OSMonitorID":":0.0",
             "DisplayCommEnabled":false,
             "ComPortSettings":{  
