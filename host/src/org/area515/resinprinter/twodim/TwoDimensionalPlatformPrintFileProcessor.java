@@ -73,12 +73,13 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T> extends Abstra
 			
 			TwoDimensionalPrintState printState = twoDimensionalPrintDataByJob.get(printJob);
 			int platformSlices = getSuggestedPlatformLayerCount(dataAid);
+			int totalPlatformSlices = platformSlices;
 			int extrusionSlices = getSuggested2DExtrusionLayerCount(dataAid);
 			printJob.setTotalSlices(platformSlices + extrusionSlices);
 			
 			printState.cacheExtrusionImage(dataAid);
 			Object nextRenderingPointer = printState.getCurrentRenderingPointer();
-			Future<BufferedImage> currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution, platformSlices));
+			Future<BufferedImage> currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution, totalPlatformSlices));
 			while (platformSlices > 0 || extrusionSlices > 0) {
 				
 				//Performs all of the duties that are common to most print files
@@ -101,7 +102,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T> extends Abstra
 				
 				//Render the next image while we are waiting for the current image to cure
 				if (platformSlices > 0) {
-					currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution, platformSlices));
+					currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution, totalPlatformSlices));
 				} else if (extrusionSlices > 1) {
 					currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderExtrusionImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
 				}
