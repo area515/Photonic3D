@@ -83,11 +83,7 @@
                "NumberofBottomLayers":10,
                "ResinPriceL":65.0
             }
-         ],
-         "Font":{  
-            "Name":"Dialog",
-            "Size":20
-         }
+         ]
       },
       "MachineConfigurationName":"mUVe 1",
       "SlicingProfileName":"Maker Juice SF",
