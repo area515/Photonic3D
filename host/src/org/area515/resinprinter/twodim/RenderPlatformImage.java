@@ -18,8 +18,11 @@ import org.area515.resinprinter.twodim.TwoDimensionalPlatformPrintFileProcessor.
 import org.area515.util.TemplateEngine;
 
 public class RenderPlatformImage extends CurrentImageRenderer {
-	public RenderPlatformImage(DataAid aid, AbstractPrintFileProcessor<?> processor, RenderingFileData data, Object imageIndexToBuild, int width, int height, int slicesLeft) {
+	private int totalPlatformSlices;
+	
+	public RenderPlatformImage(DataAid aid, AbstractPrintFileProcessor<?> processor, RenderingFileData data, Object imageIndexToBuild, int width, int height, int totalPlatformSlices) {
 		super(aid, processor, data, imageIndexToBuild, width, height);
+		this.totalPlatformSlices = totalPlatformSlices;
 	}
 	
 	@Override
@@ -41,6 +44,7 @@ public class RenderPlatformImage extends CurrentImageRenderer {
 		overrides.put("extrusionY", extrusionY);
 		overrides.put("centerX", centerX);
 		overrides.put("centerY", centerY);
+		overrides.put("totalPlatformSlices", totalPlatformSlices);
 		
 		TwoDimensionalSettings settings = aid.slicingProfile.getTwoDimensionalSettings();
 		if (settings == null) {

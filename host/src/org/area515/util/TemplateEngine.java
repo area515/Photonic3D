@@ -17,6 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.server.HostProperties;
 
 import freemarker.cache.StringTemplateLoader;
 import freemarker.core.Environment;
@@ -103,6 +104,7 @@ public class TemplateEngine {
 		root.put("SlideTiltVal", printer.getConfiguration().getSlicingProfile().getSlideTiltValue());
 		root.put("buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
 		root.put("buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
+		root.put("hostProperties", HostProperties.Instance());
 		root.put("job", job);
 		root.put("printer", printer);
 		
@@ -157,6 +159,7 @@ public class TemplateEngine {
 		bindings.put("$SlideTiltVal", printer.getConfiguration().getSlicingProfile().getSlideTiltValue());
 		bindings.put("$buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
 		bindings.put("$buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
+		bindings.put("hostProperties", HostProperties.Instance());
 		bindings.put("job", job);
 		bindings.put("printer", printer);
 		bindings.put(ScriptEngine.FILENAME, scriptName);
