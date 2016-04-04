@@ -28,7 +28,7 @@
             "OSMonitorID":":0.0",
             "DisplayCommEnabled":false,
             "ComPortSettings":{  
-               "PortName":"Select a Serial Port...",
+               "PortName":null,
                "Handshake":"None"
             },
             "MonitorTop":12.65,
@@ -49,8 +49,8 @@
          "selectedInkConfigIndex":0,
          "DotsPermmX":6.133261494252874,
          "DotsPermmY":6.130268199233716,
-         "XResolution":1366,
-         "YResolution":768,
+         "XResolution":1400,
+         "YResolution":600,
          "BlankTime":0,
          "PlatformTemp":0,
          "ExportSVG":0,
@@ -59,9 +59,9 @@
          "Direction":"Bottom_Up",
          "LiftDistance":5.0,
          "SlideTiltValue":0,
-         "AntiAliasing":false,
+         "AntiAliasing":true,
          "UseMainLiftGCode":false,
-         "AntiAliasingValue":0.0,
+         "AntiAliasingValue":10.0,
          "LiftFeedRate":50.0,
          "LiftRetractRate":0.0,
          "FlipX":false,
@@ -80,7 +80,7 @@
                "SliceHeight":0.1,
                "LayerTime":26000,
                "FirstLayerTime":140000,
-               "NumberofBottomLayers":10,
+               "NumberofBottomLayers":4,
                "ResinPriceL":65.0
             }
          ]
