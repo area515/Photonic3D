@@ -1,7 +1,5 @@
 package org.area515.resinprinter.projector;
 
-import gnu.io.CommPortIdentifier;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,11 +25,11 @@ public class DetectProjector {
 
 		boolean hasFound = false;
 		ComPortSettings newComPortSettings = new ComPortSettings();
-		ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
-		for (CommPortIdentifier currentIdentifier : identifiers) {
-			newComPortSettings.setPortName(currentIdentifier.getName());
+		String[] identifiers = SerialManager.Instance().getPortNames();
+		for (String currentIdentifier : identifiers) {
+			newComPortSettings.setPortName(currentIdentifier);
 			
-			logger.info("Attempting detection on port:{}", currentIdentifier.getName());
+			logger.info("Attempting detection on port:{}", currentIdentifier);
 			SerialCommunicationsPort port = new JSSCCommPort();
 			DetectedResources resources = SerialManager.Instance().getProjectorModel(port, newComPortSettings);
 			if (resources != null) {

@@ -1,7 +1,5 @@
 package org.area515.resinprinter.serial;
 
-import gnu.io.CommPortIdentifier;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +7,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import jssc.SerialPortList;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -172,13 +172,13 @@ public class SerialManager {
 			identifierName.equals(AUTO_DETECT_3D_FIRMWARE) || 
 			identifierName.equals(AUTO_DETECT_PROJECTOR)) {
 			identifier = null;
-			ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
-			for (CommPortIdentifier currentIdentifier : identifiers) {
-				logger.debug("Autodetection trying against serial device:{}", currentIdentifier.getName());
+			String[] identifiers = SerialManager.Instance().getPortNames();
+			for (String currentIdentifier : identifiers) {
+				logger.debug("Autodetection trying against serial device:{}", currentIdentifier);
 				
 				//Auto detection will continue to override settings that haven't been set on the command line
 				currentlyOverridenSettings = new ComPortSettings(printerOverriddenComPortSettings);
-				SerialCommunicationsPort check = getSerialDevice(currentIdentifier.getName());
+				SerialCommunicationsPort check = getSerialDevice(currentIdentifier);
 				currentlyOverridenSettings.setPortName(check.getName());
 				
 				if (!printersBySerialPort.containsKey(check)) {
@@ -319,19 +319,16 @@ public class SerialManager {
 	
 	public List<SerialCommunicationsPort> getSerialDevices() {
 		List<SerialCommunicationsPort> idents = new ArrayList<SerialCommunicationsPort>();
-		Enumeration<CommPortIdentifier> identifiers = CommPortIdentifier.getPortIdentifiers();
-		while (identifiers.hasMoreElements()) {
-			CommPortIdentifier identifier = identifiers.nextElement();
-			if (identifier.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-				Class<SerialCommunicationsPort> communicationsClass = HostProperties.Instance().getSerialCommunicationsClass();
-				SerialCommunicationsPort comPortInstance;
-				try {
-					comPortInstance = communicationsClass.newInstance();
-					comPortInstance.setName(identifier.getName());
-					idents.add(comPortInstance);
-				} catch (InstantiationException | IllegalAccessException e) {
-					logger.error("Error assembling serial ports", e);
-				}
+		String[] identifiers = SerialManager.Instance().getPortNames();
+		for (String identifier : identifiers) {
+			Class<SerialCommunicationsPort> communicationsClass = HostProperties.Instance().getSerialCommunicationsClass();
+			SerialCommunicationsPort comPortInstance;
+			try {
+				comPortInstance = communicationsClass.newInstance();
+				comPortInstance.setName(identifier);
+				idents.add(comPortInstance);
+			} catch (InstantiationException | IllegalAccessException e) {
+				logger.error("Error assembling serial ports", e);
 			}
 		}
 		
@@ -373,5 +370,9 @@ public class SerialManager {
 		
 		logger.info("Clearing up projector model from printer:{}", printer);
 		printer.setProjectorModel(null);
+	}
+	
+	public String[] getPortNames() {
+		return SerialPortList.getPortNames();
 	}
 }

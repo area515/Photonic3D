@@ -1,7 +1,5 @@
 package org.area515.resinprinter.printer;
 
-import gnu.io.CommPortIdentifier;
-
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -29,11 +27,11 @@ public class DetectFirmware {
 			newComPortSettings.setParity("NONE");
 			newComPortSettings.setStopbits("1");
 			
-			ArrayList<CommPortIdentifier> identifiers = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
-			for (CommPortIdentifier currentIdentifier : identifiers) {
-				newComPortSettings.setPortName(currentIdentifier.getName());
+			String[] identifiers = SerialManager.Instance().getPortNames();
+			for (String currentIdentifier : identifiers) {
+				newComPortSettings.setPortName(currentIdentifier);
 				
-				logger.info("Port:{} Baud:{}", currentIdentifier.getName(), speed);
+				logger.info("Port:{} Baud:{}", currentIdentifier, speed);
 				
 				SerialCommunicationsPort port = new JSSCCommPort();
 				Boolean lastValue = null;
