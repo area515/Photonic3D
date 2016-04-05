@@ -1,7 +1,5 @@
 package org.area515.resinprinter.projector;
 
-import gnu.io.CommPortIdentifier;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -86,9 +84,9 @@ public class ProjectorOutput {
 		//System.out.println(getCustomString(reader));
 		System.out.println("Projector Output Test.");
 		int portIndex = 0;
-		List<CommPortIdentifier> ports = new ArrayList<CommPortIdentifier>(Collections.list(CommPortIdentifier.getPortIdentifiers()));
-		for (CommPortIdentifier port : ports) {
-			System.out.println(portIndex++ + ". " + port.getName());
+		String[] identifiers = SerialManager.Instance().getPortNames();
+		for (String port : identifiers) {
+			System.out.println(portIndex++ + ". " + port);
 		}
 		System.out.println("Type the number of the Serial Port that you would like to test (then press enter):");
 		portIndex = Integer.parseInt(reader.readLine());
@@ -100,7 +98,7 @@ public class ProjectorOutput {
 		}
 		System.out.println("Type the number of the projector that you would like to test (then press enter):");
 		HexCodeBasedProjector projector = (HexCodeBasedProjector)models.get(Integer.parseInt(reader.readLine()));
-		projector.getDefaultComPortSettings().setPortName(ports.get(portIndex).getName());
+		projector.getDefaultComPortSettings().setPortName(identifiers[portIndex]);
 		
 		SerialCommunicationsPort port = new JSSCCommPort();
 		port.open("ProjectorOutputTest", SerialManager.TIME_OUT, projector.getDefaultComPortSettings());
