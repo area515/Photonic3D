@@ -23,10 +23,11 @@ public class SliceTester {
 				 true);
 		 slicer.loadFile(null, null);
 		 
-		 for (int z = 780/*slicer.getZMin()*/; z < slicer.getZMax(); z++) {
+		 //Using 780
+		 for (int z = slicer.getZMin(); z < slicer.getZMax(); z++) {
 			 slicer.setZ(z);
 			 System.out.println("Testing Z:" + z);
-			 slicer.colorizePolygons();
+			 slicer.colorizePolygons(null);
 			 if (slicer.getStlErrors().size() > 0) {
 				 for (StlError error : slicer.getStlErrors()) {
 					 System.out.println(error);

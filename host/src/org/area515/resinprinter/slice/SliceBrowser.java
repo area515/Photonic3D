@@ -2,20 +2,15 @@ package org.area515.resinprinter.slice;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.MultipleGradientPaint.CycleMethod;
-import java.awt.RadialGradientPaint;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -25,37 +20,36 @@ import java.util.List;
 import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
-import javax.swing.JSlider;
 import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
-import javax.swing.SwingConstants;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
-import org.area515.resinprinter.inkdetection.visual.ImageDetectionPanel;
+import org.area515.resinprinter.slice.StlError.ErrorType;
 import org.area515.resinprinter.stl.Face3d;
 import org.area515.resinprinter.stl.Line3d;
 import org.area515.resinprinter.stl.Shape3d;
+import org.area515.resinprinter.stl.Triangle3d;
 
-public class SliceBrowser extends JFrame {
-	private int firstSlice = 54;
+public class SliceBrowser extends JSplitPane {
+	private PrinterTools tools;
+	
+	private int firstSlice = 140;
 	//78;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";
 	//321;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl"; good
 	//781;//"C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"; good
 	
-	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureBottom.stl";
-//	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureBottom.stl";
+	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";
+//	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureBottom.stl"; 54
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";//78 & 54
 	/*
 C:\Users\wgilster\Documents\Olaf_set3_whole.stl
@@ -65,8 +59,12 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 "C:\\Users\\wgilster\\Documents\\ArduinoMega.stl",
 "C:\\Users\\wgilster\\Documents\\Olaf_set3_whole.stl",
 //http://www.thingiverse.com/download:888699
+
+
 	 */
 	
+	//C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl
+	//0,10,30,140,148,205
 	
  	private boolean useRender = false;
 	private JTextField loadStlText = new JTextField(30);
@@ -75,25 +73,12 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	private LineSliceModel lineSliceModel = new LineSliceModel();
 	private SliceBrowserSelectionListener sliceBrowserListener = new SliceBrowserSelectionListener();
 	private JScrollBar zSliceBar = new JScrollBar(JScrollBar.VERTICAL);
-	private JSplitPane mainSplitter;
 	private JTree sliceTree;
 	private int mmPerStlUnit = 1;
 	private double pixelsPerMMX = 5;
 	private double pixelsPerMMY = 5;
 	private double sliceResolution = 0.1;
-	private double buildPlatformX = 1024;
-	private double buildPlatformY = 500;
 	private JPanel browserPanel;
-	
-	//This is for the ProjectorShowcase
-	private int focusX = (int)buildPlatformX / 2;
-	private int focusY = (int)buildPlatformY / 2;
-	private int centerX = (int)buildPlatformX / 2;
-	private int centerY = (int)buildPlatformY / 2;
-	private JPanel showcasePanel;
-	private DefaultBoundedRangeModel opacityLevelModel;
-	private DefaultBoundedRangeModel bulbSizeModel;
-	private ImageDetectionPanel imageDetectionPanel;
 	
 	//TODO: maybe we should do this instead: private class SliceBrowserSelectionModel extends DefaultTreeSelectionModel {
 	private class SliceBrowserSelectionListener implements TreeSelectionListener {
@@ -129,6 +114,15 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		public void clearChildren() {
 			selectedLines.clear();
 			getSliceTree().clearSelection();
+		}
+		
+		public List<Triangle3d> getSelectedTriangles() {
+			List<Triangle3d> triangles = new ArrayList<Triangle3d>();
+			for (Line3d line : selectedLines) {
+				triangles.add((Triangle3d)line.getOriginatingFace());
+			}
+			
+			return triangles;
 		}
 	}
 	
@@ -169,7 +163,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode)root;
 				rootNode.removeAllChildren();
 				try {
-					 List<List<Line3d>> coloredLines = slicer.colorizePolygons();
+					 List<List<Line3d>> coloredLines = slicer.colorizePolygons(null);
 					 int t = 0;
 					 for (List<Line3d> loops : coloredLines) {
 						 SliceBrowserTreeNode parent = new SliceBrowserTreeNode("Slice:" + slicer.getZ() + " #" + t++ + " :(" + loops.size() + ")");
@@ -192,11 +186,6 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		}
 	}
 	
-	private void drawBuildPlatform(Graphics2D g2) {
-		g2.setColor(Color.black);
-		g2.drawRect(1, 1, (int)buildPlatformX, (int)buildPlatformY);
-	}
-	
 	private JTree getSliceTree() {
 		if (sliceTree == null) {
 			sliceTree = new JTree(lineSliceModel);
@@ -208,93 +197,6 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		return sliceTree;
 	}
 	
-	private JSplitPane getMainSplitter() throws Exception {
-		if (mainSplitter == null) {
-			mainSplitter = new JSplitPane();
-			mainSplitter.setTopComponent(getSliceBrowser());
-			JScrollPane scroller = new JScrollPane(getSliceTree());
-			mainSplitter.setBottomComponent(scroller);
-		}
-		
-		return mainSplitter;
-	}
-	
-	private float[] getFractions(int count, float start, float end) {
-		/*float incrementAmount = (end - start) / (float)count;
-		float fractions[] = new float[count];
-		for (int t = 0; t < count; t++) {
-			fractions[t] = start + incrementAmount * t;
-		}
-		return fractions;
-		*/
-		return new float[]{0, 1};
-	}
-	
-	private Color[] getColors(float[] fractions, float start, float stop) {
-		/*Color colors[] = new Color[fractions.length];
-		float colorRange = stop - start;
-		float atanDivergencePoint = (float)Math.PI / 2;
-		for (int t = 0; t < fractions.length; t++) {
-			colors[t] = new Color(0, 0, 0, (float)(Math.atan(fractions[t] * atanDivergencePoint)) * colorRange + start);
-		}
-		return colors;*/
-		return new Color[]{new Color(0, 0, 0, (float)opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum()), new Color(0, 0, 0, 0)};
-	}
-	
-	private void applyProjectorMask(Graphics2D g2) {
-		g2.setPaintMode();
-		Rectangle r = this.getBounds();//g2.getDeviceConfiguration().getBounds();
-		
-		Point2D bulbCenter = new Point2D.Double(centerX, centerY);
-		Point2D bulbFocus = new Point2D.Double(focusX > 0?focusX:(r.width / 2), focusY > 0?focusY:(r.height / 2));
-		float[] fractions = getFractions(bulbSizeModel.getValue(), 0, 1);
-		Color[] colors = getColors(fractions, (float)opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum(), 0);
-		final RadialGradientPaint paint = new RadialGradientPaint(
-				bulbCenter, 
-				bulbSizeModel.getValue(), 
-				bulbFocus, 
-				fractions, 
-				colors, 
-				CycleMethod.NO_CYCLE);
-		g2.setPaint(paint);
-		g2.fillRect(r.x, r.y, r.width, r.height);
-		
-		System.out.println("Bulb Mask Properties");
-		System.out.println("====================");
-		System.out.println("var bulbCenter = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels * " + ((float)centerX / (float)r.width) + ", $buildPlatformYPixels * " + ((float)centerY / (float)r.height) + ")");
-		System.out.println("var bulbFocus = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels * " + (bulbFocus.getX() / r.width) + ", $buildPlatformYPixels * " + (bulbFocus.getY() / r.height) + ")");
-		System.out.println("var colors = [new Packages.java.awt.Color(0.0, 0.0, 0.0, " + ((float)opacityLevelModel.getValue()/(float)opacityLevelModel.getMaximum()) + "), new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.0)];");
-		System.out.println("var fractions = [0.0, 1.0];");
-		System.out.println("var totalSizeOfGradient = $buildPlatformXPixels > $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;");
-		int totalSizeOfGradient = r.width > r.height? r.width: r.height;
-		System.out.println("new Packages.java.awt.RadialGradientPaint(bulbCenter, totalSizeOfGradient * " + ((float)bulbSizeModel.getValue()/(float)totalSizeOfGradient) + ", bulbFocus, fractions, colors, java.awt.MultipleGradientPaint.CycleMethod.NO_CYCLE);");
-		System.out.println("====================");
-	}
-	
-	private class ShowcaseUpdaterModel extends DefaultBoundedRangeModel {
-		public ShowcaseUpdaterModel(int value, int extent, int min, int max) {
-			super(value, extent, min, max);
-		}
-
-		@Override
-		public void setValue(int n) {
-			super.setValue(n);
-			showcasePanel.repaint();
-		}
-	}
-	
-	private class ProjectorMaskCreatorPanel extends JPanel {
-		private static final long serialVersionUID = 5363505068904537189L;
-
-		@Override
-		protected void paintComponent(Graphics g) {
-			super.paintComponent(g);
-			
-			applyProjectorMask((Graphics2D)g);
-			drawBuildPlatform((Graphics2D)g);
-		}
-	}
-	
 	private void loadStl(Integer firstSlice) {
 		 ZSlicer newSlicer = new ZSlicer(
 			 new File(loadStlText.getText()),
@@ -304,7 +206,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			 sliceResolution,
 			 true);
 		try {
-			newSlicer.loadFile(buildPlatformX, buildPlatformY);
+			newSlicer.loadFile(tools.getBuildPlatformX(), tools.getBuildPlatformY());
 			slicer = newSlicer;
 		} catch (FileNotFoundException e) {
 			JOptionPane.showMessageDialog(null, "File not found:" + loadStlText.getText());
@@ -321,199 +223,199 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		slicer.setZ(firstSlice);
 	}
 	
+	public JComponent getSliceBrowser() throws Exception {
+		if (firstFile != null) {
+			loadStlText.setText(firstFile);
+			loadStl(firstSlice);
+		}
 
-	
-	  public JComponent getSliceBrowser() throws Exception {
-		  if (firstFile != null) {
-				loadStlText.setText(firstFile);
-				loadStl(firstSlice);
-		  }
-			 
-			 final JButton loadStlButton = new JButton("Load");
-			 
-				final JLabel mouseLabel = new JLabel("X:" + " Y:" + "Z:");
-				final JPanel window = new JPanel();
-				window.setLayout(new BorderLayout());
-				browserPanel = new JPanel() {
-				    public void paintComponent(Graphics g) {
-				    	super.paintComponent(g);
-				    	if (slicer == null) {
-				    		return;
-				    	}
-				    	
-				    	if (useRender) {
-				    		slicer.paintSlice((Graphics2D)g);
-				    		applyProjectorMask((Graphics2D)g);
-				    	} else {
-				    		slicer.debugPaintSlice((Graphics2D)g);
-				    		
-				    		sliceBrowserListener.drawSelectedLines(g);
+		final JButton loadStlButton = new JButton("Load");
 
-							drawBuildPlatform((Graphics2D)g);
-				    	}
-				    }
-				};
-				
-				browserPanel.addMouseMotionListener(new MouseAdapter() {
-					@Override
-					public void mouseMoved(MouseEvent e) {
-						if (slicer == null) {
-							return;
-						}
-						mouseLabel.setText("X:" + e.getX() + " Y:" + e.getY() + " Z:" + slicer.getZ() + " Area:" + slicer.getBuildArea());
-					}
-				});
-				browserPanel.addMouseListener(new MouseAdapter() {
-					@Override
-					public void mouseClicked(MouseEvent e) {
-						List<Shape3d> shapes = slicer.getTrianglesAt(e.getX(), e.getY());
-						for (Shape3d shape : shapes) {
-							Line3d line = (Line3d)shape;
-							Face3d face = line.getOriginatingFace();
-							
-							System.out.println(slicer.translateLineToString(line));
-							System.out.println("stltriangle: "+ face + " Hash:" + face.hashCode());
-						}					
-						
-						List<TreePath> selectedPaths = new ArrayList<TreePath>();
-						Enumeration depth = ((SliceBrowserTreeNode)lineSliceModel.getRoot()).depthFirstEnumeration();
-						while (depth.hasMoreElements()) {
-							SliceBrowserTreeNode currentNode = (SliceBrowserTreeNode)depth.nextElement();
-							System.out.println(currentNode);
-							for (Shape3d shape : shapes) {
-								Line3d line = slicer.translateLine(((Line3d)shape));
-								
-								if (line.pointsEqual(currentNode.getUserObject())) {
-									selectedPaths.add(new TreePath(currentNode.getPath()));
-								}
-							}
-						}
-						
-						if (e.isShiftDown() || e.isControlDown()) {
-							getSliceTree().addSelectionPaths(selectedPaths.toArray(new TreePath[selectedPaths.size()]));
-						} else {
-							getSliceTree().setSelectionPaths(selectedPaths.toArray(new TreePath[selectedPaths.size()]));
-						}
-					}
-				});
-				
-				final JPanel bottomPanel = new JPanel(new FlowLayout());
-				final JButton colorize = new JButton("Alpha Colorize");
-				final JButton render = new JButton("Render");
-				zSliceBar.setModel(zSliceModel);
-				zSliceBar.addAdjustmentListener(new AdjustmentListener() {
-					@Override
-					public void adjustmentValueChanged(AdjustmentEvent e) {
-						slicer.setZ(e.getValue());
-						mouseLabel.setText("Z:" + slicer.getZ());
-						useRender = false;
-						sliceBrowserListener.clearChildren();
-						lineSliceModel.clearChildren();
-						lineSliceModel.refreshGui(mouseLabel, false);
-					}
-				});
-				
-				colorize.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						useRender = false;
-						lineSliceModel.refreshGui(mouseLabel, true);
-					}
-				});
-				
-				render.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						useRender = true;
-						lineSliceModel.refreshGui(mouseLabel, true);
-					}
-				});
-				
-				loadStlButton.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						loadStl(null);
-						sliceBrowserListener.clearChildren();
-						lineSliceModel.refreshGui(null, false);
-					}
-				});
-				
-				bottomPanel.add(mouseLabel);
-				bottomPanel.add(colorize);
-				bottomPanel.add(render);
-				bottomPanel.add(loadStlText);
-				bottomPanel.add(loadStlButton);
-				window.add(zSliceBar, BorderLayout.EAST);
-				window.add(browserPanel, BorderLayout.CENTER);
-				window.add(bottomPanel, BorderLayout.SOUTH);
+		final JLabel mouseLabel = new JLabel("X:" + " Y:" + "Z:");
+		final JPanel window = new JPanel();
+		window.setLayout(new BorderLayout());
+		browserPanel = new JPanel() {
+			public void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				if (slicer == null) {
+					return;
+				}
 
-				return window;
-	  }
-	  
-	  public JComponent getProjectorMaskCreator() {
-			opacityLevelModel = new ShowcaseUpdaterModel(20, 0, 0, 100);
-			bulbSizeModel = new ShowcaseUpdaterModel(200, 0, 0, 2048);
-			
-			final JPanel masterPanel = new JPanel();
-			showcasePanel = new ProjectorMaskCreatorPanel();
-			showcasePanel.addMouseMotionListener(new MouseAdapter() {
-				@Override
-				public void mouseDragged(MouseEvent e) {
-					if ((e.getModifiers() & MouseEvent.BUTTON1_MASK) == MouseEvent.BUTTON1_MASK) {
-						focusX = e.getX();
-						focusY = e.getY();
-						showcasePanel.repaint();
+				if (useRender) {
+					slicer.paintSlice((Graphics2D) g);
+					try {
+						tools.getProjectorMaskCreator().applyProjectorMask((Graphics2D) g);
+					} catch (Exception e) {
+						//Since this is already initialized, this can't happen
+					}
+				} else {
+					slicer.debugPaintSlice((Graphics2D) g);
+
+					sliceBrowserListener.drawSelectedLines(g);
+
+					tools.drawBuildPlatform((Graphics2D) g);
+				}
+			}
+		};
+
+		browserPanel.addMouseMotionListener(new MouseAdapter() {
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				if (slicer == null) {
+					return;
+				}
+				mouseLabel.setText("X:" + e.getX() + " Y:" + e.getY() + " Z:" + slicer.getZ() + " Area:"
+						+ slicer.getBuildArea());
+			}
+		});
+		browserPanel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				List<Shape3d> shapes = slicer.getTrianglesAt(e.getX(), e.getY());
+				for (Shape3d shape : shapes) {
+					Line3d line = (Line3d) shape;
+					Face3d face = line.getOriginatingFace();
+
+					System.out.println(slicer.translateLineToString(line));
+					System.out.println("stltriangle: " + face + " Hash:" + face.hashCode());
+				}
+
+				List<TreePath> selectedPaths = new ArrayList<TreePath>();
+				Enumeration depth = ((SliceBrowserTreeNode) lineSliceModel.getRoot()).depthFirstEnumeration();
+				while (depth.hasMoreElements()) {
+					SliceBrowserTreeNode currentNode = (SliceBrowserTreeNode) depth.nextElement();
+					System.out.println(currentNode);
+					for (Shape3d shape : shapes) {
+						Line3d line = slicer.translateLine(((Line3d) shape));
+
+						if (line.pointsEqual(currentNode.getUserObject())) {
+							selectedPaths.add(new TreePath(currentNode.getPath()));
+						}
 					}
 				}
-			});
-			
-			showcasePanel.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseClicked(MouseEvent e) {
-					centerX = e.getX();
-					centerY = e.getY();
-					showcasePanel.repaint();
+
+				if (e.isShiftDown() || e.isControlDown()) {
+					getSliceTree().addSelectionPaths(selectedPaths.toArray(new TreePath[selectedPaths.size()]));
+				} else {
+					getSliceTree().setSelectionPaths(selectedPaths.toArray(new TreePath[selectedPaths.size()]));
 				}
-			});
-			
-			JSlider transparencySlider = new JSlider(SwingConstants.VERTICAL);
-			transparencySlider.setModel(opacityLevelModel);
-			
-			JSlider bulbSizeSlider = new JSlider(SwingConstants.VERTICAL);
-			bulbSizeSlider.setModel(bulbSizeModel);
-			
-			masterPanel.setLayout(new BorderLayout());
-			masterPanel.add(showcasePanel, BorderLayout.CENTER);
-			masterPanel.add(transparencySlider, BorderLayout.WEST);
-			masterPanel.add(bulbSizeSlider, BorderLayout.EAST);
-			return masterPanel;
-	  }
-	  
-	  public JComponent getImageDetector() throws Exception {
-		  if (imageDetectionPanel == null) {
-			  imageDetectionPanel = new ImageDetectionPanel();
-		  }
-		  
-		  return imageDetectionPanel;
-	  }
-	  
-	  public SliceBrowser() throws Exception {
-		  JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP);
-		  tabs.addTab("Slice Browser", getMainSplitter());
-		  tabs.addTab("Projector Mask Creator", getProjectorMaskCreator());
-		  tabs.addTab("Image Detector", getImageDetector());
-		  add(tabs);
-		  
-		  setTitle("Printer Simulation");
-//window.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		  setMinimumSize(new Dimension(500, 500));
-		  setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	  }
-	  
-	  public static void main(String[] args) throws Exception {
-		  SliceBrowser browser = new SliceBrowser();
-		  browser.setVisible(true);
-		  //browser.getColors(browser.getFractions(1600, .0f, 1f), .2f, .0f);
-	  }
+			}
+		});
+
+		final JPanel bottomPanel = new JPanel(new FlowLayout());
+		final JButton colorize = new JButton("Alpha Colorize");
+		final JButton render = new JButton("Render");
+		zSliceBar.setModel(zSliceModel);
+		zSliceBar.addAdjustmentListener(new AdjustmentListener() {
+			@Override
+			public void adjustmentValueChanged(AdjustmentEvent e) {
+				slicer.setZ(e.getValue());
+				mouseLabel.setText("Z:" + slicer.getZ());
+				useRender = false;
+				sliceBrowserListener.clearChildren();
+				lineSliceModel.clearChildren();
+				lineSliceModel.refreshGui(mouseLabel, false);
+			}
+		});
+
+		colorize.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				useRender = false;
+				lineSliceModel.refreshGui(mouseLabel, true);
+			}
+		});
+
+		render.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				useRender = true;
+				lineSliceModel.refreshGui(mouseLabel, true);
+			}
+		});
+
+		loadStlButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				loadStl(null);
+				sliceBrowserListener.clearChildren();
+				lineSliceModel.refreshGui(null, false);
+			}
+		});
+
+		/*final JButton findNextError = new JButton("Next Error");
+		findNextError.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				 for (int z = slicer.getZ() + 1; z < slicer.getZMax(); z++) {
+					 slicer.setZ(z);
+					 System.out.println("Testing Z:" + z);
+					 slicer.colorizePolygons();
+					 if (slicer.getStlErrors().size() > 0) {
+						 boolean hasBadError = false;
+						 for (StlError error : slicer.getStlErrors()) {
+							 if (error.getType() == ErrorType.NonManifold) {
+								 System.out.println(error);
+								 hasBadError = true;
+							 }
+						 }
+						 if (hasBadError) {
+							 slicer.setZ(z);
+							 zSliceModel.setValue(z);
+							 lineSliceModel.refreshGui(mouseLabel, false);
+							 return;
+						 }
+					 }
+				 }
+			}
+		});*/
+		
+		final JButton findNextTriangle = new JButton("FTONS");
+		findNextTriangle.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int z = slicer.getZ() + 1;
+				slicer.setZ(z);
+				System.out.println("Testing Z:" + z);
+				slicer.colorizePolygons(sliceBrowserListener.getSelectedTriangles());
+				if (slicer.getStlErrors().size() > 0) {
+					for (StlError error : slicer.getStlErrors()) {
+						if (error.getType() == ErrorType.NonManifold) {
+							System.out.println(error);
+						}
+					}
+					slicer.setZ(z);
+					zSliceModel.setValue(z);
+					lineSliceModel.refreshGui(mouseLabel, false);
+				}
+			}
+		});
+		
+		//bottomPanel.add(findNextError);
+		bottomPanel.add(mouseLabel);
+		bottomPanel.add(colorize);
+		bottomPanel.add(render);
+		bottomPanel.add(loadStlText);
+		bottomPanel.add(loadStlButton);
+		bottomPanel.add(findNextTriangle);
+		window.add(zSliceBar, BorderLayout.EAST);
+		window.add(browserPanel, BorderLayout.CENTER);
+		window.add(bottomPanel, BorderLayout.SOUTH);
+
+		return window;
+	}
+
+	public SliceBrowser(PrinterTools tools) throws Exception {
+		this.tools = tools;
+		setTopComponent(getSliceBrowser());
+		JScrollPane scroller = new JScrollPane(getSliceTree());
+		setBottomComponent(scroller);
+	}
+
+	public static void main(String[] args) throws Exception {
+		PrinterTools browser = new PrinterTools();
+		browser.setVisible(true);
+		// browser.getColors(browser.getFractions(1600, .0f, 1f), .2f, .0f);
+	}
 }
 
