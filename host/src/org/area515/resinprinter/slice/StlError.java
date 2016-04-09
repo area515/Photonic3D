@@ -46,6 +46,6 @@ public class StlError {
 	}
 	
 	public String toString() {
-		return type + " triangle:" + triangle + nonManifoldEdge != null?(" edge:" + nonManifoldEdge):"";
+		return type + " triangle:" + triangle + (nonManifoldEdge != null?(" edge:" + nonManifoldEdge):"");
 	}
 }

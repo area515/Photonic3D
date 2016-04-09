@@ -31,6 +31,7 @@ import org.area515.resinprinter.stl.Point3d;
 import org.area515.resinprinter.stl.Shape3d;
 import org.area515.resinprinter.stl.Triangle3d;
 import org.area515.resinprinter.stl.XYComparatord;
+import org.area515.util.Log4jTimer;
 
 public class ZSlicer {
     private static final Logger logger = LogManager.getLogger();
@@ -391,6 +392,7 @@ public class ZSlicer {
 		 return (y / (precisionScaler) * pixelsPerMMY + imageOffsetY);
 	 }
 	 
+	 //NOT used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
 	 private List<Shape3d> getPolygonsOnSlice() {
 		 List<Shape3d> shapes = new ArrayList<Shape3d>();
 		  for (Triangle3d triangle : stlFile.getTriangles()) {
@@ -403,6 +405,7 @@ public class ZSlicer {
 		  return shapes;
 	 }
 	 
+	 //used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
 	 public void debugPaintSlice(Graphics2D g) {
 		  for (Shape3d shape : getPolygonsOnSlice()) {
 				  if (shape instanceof Triangle3d) {
@@ -544,7 +547,8 @@ public class ZSlicer {
 		 return findPathThroughTrianglesAndBrokenLoops(beginning, ending, path, brokenFaceMaze, usedFaces, currentTriangleIndex + 1);
 	 }
 	 
-	 public List<List<Line3d>> colorizePolygons() {
+	 //used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
+	 public List<List<Line3d>> colorizePolygons(List<Triangle3d> watchedTriangles) {
 		  sliceMaxX = -Integer.MAX_VALUE;
 		  sliceMaxY = -Integer.MAX_VALUE;
 		  sliceMinX = Integer.MAX_VALUE;
@@ -560,6 +564,9 @@ public class ZSlicer {
 		  //Effectively, this loop is log n due to the sort into XYComparator
 		  Set<Line3d> zIntersectionsBySortedX = new TreeSet<Line3d>(new XYComparatord());
 		  for (Triangle3d triangle : stlFile.getTriangles()) {
+			  if (watchedTriangles != null && watchedTriangles.contains(triangle)) {
+				  logger.debug("Watched triangle:{}", triangle);
+			  }
 			  if (triangle.intersectsZ(z)) {
 				  Shape3d shape = triangle.getZIntersection(z);
 				  if (shape instanceof Triangle3d) {
@@ -568,8 +575,14 @@ public class ZSlicer {
 					  logger.debug("Triangle:{}", shape);
 				  } else if (shape instanceof Line3d) {
 					  zIntersectionsBySortedX.add((Line3d)shape);
+					  logger.debug("Line:{}", ()-> translateLine((Line3d)shape));
+				  } else if (shape != null) {
+					  logger.debug("Ignored Point:{}", shape);
+				  }	 else {
+					  logger.debug("No geometrical intersection");
 				  }
-				  //Ignore nulls and points(they don't print well...) :)
+			  } else {
+				  logger.debug("Intersection was optimized out");
 			  }
 		  }
 		  
@@ -860,11 +873,19 @@ public class ZSlicer {
 	 public void loadFile(Double buildPlatformXPixels, Double buildPlatformYPixels) throws FileNotFoundException {
 		 stlFile.load(stlFileToSlice);
 		 
-		 if (imageOffsetX == null && buildPlatformXPixels != null) {
-			 imageOffsetX = (buildPlatformXPixels / 2) - (stlFile.getWidth() / precisionScaler * pixelsPerMMX / 2) - (stlFile.getXmin() / precisionScaler * pixelsPerMMX); 
+		 if (imageOffsetX == null) {
+			 if (buildPlatformXPixels != null) {
+				 imageOffsetX = (buildPlatformXPixels / 2) - (stlFile.getWidth() / precisionScaler * pixelsPerMMX / 2) - (stlFile.getXmin() / precisionScaler * pixelsPerMMX); 
+			 } else {
+				 imageOffsetX = 0.0;
+			 }
 		 }
-		 if (imageOffsetY == null && buildPlatformYPixels != null) {
-			 imageOffsetY = (buildPlatformYPixels / 2) - (stlFile.getHeight() / precisionScaler * pixelsPerMMY / 2) - (stlFile.getYmin() / precisionScaler * pixelsPerMMY); 
+		 if (imageOffsetY == null) {
+			 if (buildPlatformYPixels != null) {
+				 imageOffsetY = (buildPlatformYPixels / 2) - (stlFile.getHeight() / precisionScaler * pixelsPerMMY / 2) - (stlFile.getYmin() / precisionScaler * pixelsPerMMY); 
+			 } else {
+				 imageOffsetY = 0.0;
+			 }
 		 }
 	 }
 	 

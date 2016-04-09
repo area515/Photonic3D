@@ -100,7 +100,7 @@ public class Triangle3d implements Shape3d, Face3d {
 		for (int t = 0; t < 3; t++) {
 			if (Double.isInfinite(xSlopes[t]) || Double.isNaN(xSlopes[t])) {
 				if (z != verticies[t].z) {
-					logger.warn("Could this situation happen and be a proper intersection?");
+					logger.debug("Could this situation happen and be a proper intersection?");
 				} else {
 					line[currentPoint++] = new Point3d(verticies[t].x, verticies[t].y, verticies[t].z);
 				}
@@ -141,16 +141,20 @@ public class Triangle3d implements Shape3d, Face3d {
 		//TODO: I'm concerned of the rounding, but I added it to collapse sloppy triangles from tools like blender
 		//if (line[0].y == line[1].y || line[1].y == line[2].y || line[0].y == line[2].y) {
 		if (Math.round(line[0].y) == Math.round(line[1].y) || Math.round(line[1].y) == Math.round(line[2].y) || Math.round(line[0].y) == Math.round(line[2].y)) {
-			line[0].x = Math.min(line[0].x, Math.min(line[1].x, line[2].x));
-			line[1].x = Math.max(line[0].x, Math.max(line[1].x, line[2].x));
+			double minx = Math.min(line[0].x, Math.min(line[1].x, line[2].x));
+			double maxx = Math.max(line[0].x, Math.max(line[1].x, line[2].x));
+			line[0].x = minx;
+			line[1].x = maxx;
 			return new Line3d(line[0], line[1], normal, this, true);
 		}
 		
 		//TODO: I'm concerned of the rounding, but I added it to collapse sloppy triangles from tools like blender		
 		//if (line[0].x == line[1].x || line[1].x == line[2].x || line[0].x == line[2].x) {
 		if (Math.round(line[0].x) == Math.round(line[1].x) || Math.round(line[1].x) == Math.round(line[2].x) || Math.round(line[0].x) == Math.round(line[2].x)) {
-			line[0].y = Math.min(line[0].y, Math.min(line[1].y, line[2].y));
-			line[1].y = Math.max(line[0].y, Math.max(line[1].y, line[2].y));
+			double miny = Math.min(line[0].y, Math.min(line[1].y, line[2].y));
+			double maxy = Math.max(line[0].y, Math.max(line[1].y, line[2].y));
+			line[0].y = miny;
+			line[1].y = maxy;
 			//TODO: return a point if these two points are the same
 			return new Line3d(line[0], line[1], normal, this, true);
 		}		
