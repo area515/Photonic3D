@@ -1,42 +1,35 @@
-Creation-Workshop-Host
+![Photonic3D](https://raw.githubusercontent.com/jmkao/Creation-Workshop-Host/master/host/resourcesnew/cwh/img/photonic3d-icon-sign-black.png)
 ======================
 
-What does CWH look like?
--------------------------------------------------------------------------------  
-Old Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/images/cwh.png).  
-The New Version Looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/images/cwhNew.png).  
-Another GUI looks like [this](https://github.com/area515/Creation-Workshop-Host/blob/master/host/images/anotherGui.png).  
-And yet another GUI is in the works if you don't like the above three.  
+Photonic3D is a control server for DLP resin 3D printers with a web-based user interface. It has been designed to run well on a Raspberry Pi, but is cross-platform and the install distribution will also run on Linux, Windows, and MacOS.
 
-Where are the instructions for installing on the Raspberry Pi?  
--------------------------------------------------------------------------------  
-[Here](https://github.com/area515/Creation-Workshop-Host/wiki/Raspberry-Pi-Manual-Setup-Instructions).
+The server is capable of printing a variety of formats, including:
+ - `.cws` files created by Creation Workshop
+ - STL files, which Photonic3D will slice incrementally
+ - Zip of PNG images, which Photonic3D will scan recursively and print based on alphanumeric ordering (meaning both zero-padded and non-padded numbered PNG files will work correctly)
+ - Single GIF, JPEG, or PNG image, which Photonic3D will extrude and print a 3D relief
 
-Where is a video of how to use CWH with CWS and Zip files?  
--------------------------------------------------------------------------------  
-[Here](https://www.youtube.com/watch?v=J3HTCkxlKcw).
 
-Where is a video of how to setup CWH from scratch on the Raspberry Pi?
+Raspberry Pi Usage
 -------------------------------------------------------------------------------  
-[Here](https://www.youtube.com/watch?v=ng1Sj2ktWhU).
+If you have a brand new dedicated Raspberry Pi, there is a flashable Jessie Lite based image that you can use to quickly get started. Take a look at the [area515/OctoPi repo on Github](https://github.com/area515/OctoPi) for more the download link and installation instructions.
 
-How do I use this new version of the GUI you've started?  
+If you have an existing running Raspberry Pi with Raspbian, you can add Photonic3D to it with an easy bootstrap script that will download and install everything you need. This path is [documented in our wiki](https://github.com/area515/Creation-Workshop-Host/wiki/Raspberry-Pi-Manual-Setup-Instructions), and there is a [YouTube video that demonstrates it](https://www.youtube.com/watch?v=ng1Sj2ktWhU).
+
+
+User Interface Examples
 -------------------------------------------------------------------------------  
-Change the following line:  
-```
-hostGUI=resources
-```  
-in this file:  
-```
-[LocationWhereCWHIsInstalled]/config.properties
-```  
-to this:  
-```
-hostGUI=resourcesnew
-```  
-Once the new GUI has all of the functionality of the current version, we'll use this version automatically.
+![image](https://cloud.githubusercontent.com/assets/2078819/14433486/58291f82-ffc3-11e5-8bc3-f7b8313dbc18.png)
+![image](https://cloud.githubusercontent.com/assets/2078819/14433580/a984246c-ffc3-11e5-94ff-7214f6bd0635.png)
 
-What features does CWH have?
+
+Use with Creation Workshop
+-------------------------------------------------------------------------------  
+Photonic3D can run `.cws` scene files saved from Creation Workshop which contain PNG files. When printed, these files will obey the GCode and imaging commands inside of the files instead of the slicing profiles configured within Photonic3D. This process is 
+[depicted in this YouTube video](https://www.youtube.com/watch?v=J3HTCkxlKcw).
+
+
+Feature List
 -------------------------------------------------------------------------------  
 1. Print STL files without performing pre-slice stage.
 2. Load STL files directly from thingiverse or the internet.
@@ -66,43 +59,39 @@ What features does CWH have?
 26. Supports Windows, OSX and Linux OSs. (Service support on Linux)
 27. Supports dynamic direct slice-on-the-fly 3d printing of (.mazecube, .stl, .jpg/.png/.gif, .cws/.zip) files.
 
-Do you want to install the latest stable build?
+Installation on Linux Quickstart
 -------------------------------------------------------------------------------
+If you are experienced with Linux, you can quickly install Photonic3D with the following commands:
+
+Latest stable:
 ```
 sudo wget https://github.com/area515/Creation-Workshop-Host/raw/master/host/bin/start.sh
 sudo chmod 777 start.sh
 sudo ./start.sh
 ```
 
-Do you want to install the latest unstable daily development build?
--------------------------------------------------------------------------------
+Latest development:
 ```
-sudo wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/bin/start.sh
-sudo chmod 777 start.sh
-sudo ./start.sh WesGilster/Creation-Workshop-Host
+sudo wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/bin/newstart.sh
+sudo chmod 777 newstart.sh
+sudo ./newstart.sh WesGilster
 ```
 
-Do you want to install under Windows?
+Windows Installation Quickstart
 ------------------------------------------
-* Download the latest version from: 
-* [https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwh-X.XX.zip](https://github.com/area515/Creation-Workshop-Host/blob/master/host/)  
- or
-* [https://github.com/WesGilster/Creation-Workshop-Host/blob/master/host/cwh-X.XX.zip](https://github.com/area515/Creation-Workshop-Host/blob/master/host/)  
+* Download the latest stable or development version: 
+ * [Stable repo Github Releases](https://github.com/area515/Creation-Workshop-Host/releases) or [Development repo Github Releases](https://github.com/WesGilster/Creation-Workshop-Host/releases)  
 * Unzip the zip file into the directory of your choice.
 * Double click on start.bat.
 
-Do you want to use your web browser to automatically navigate to the running printer host without knowing anything about how your network is setup?
+Client Tools
 ----------------------------------------------------------------------
-* Download the latest version from:
-* [https://github.com/area515/Creation-Workshop-Host/blob/master/host/cwhClient-X.XX.zip](https://github.com/area515/Creation-Workshop-Host/blob/master/host/)  
- or
-* [https://github.com/WesGilster/Creation-Workshop-Host/blob/master/host/cwhClient-X.XX.zip](https://github.com/area515/Creation-Workshop-Host/blob/master/host/)  
+There are also a number of tools designed to run on your client desktop that are bundled with the installation.
+
+* Download the latest stable or development version: 
+ * [Stable repo Github Releases](https://github.com/area515/Creation-Workshop-Host/releases) or [Development repo Github Releases](https://github.com/WesGilster/Creation-Workshop-Host/releases)  
 * Unzip the zip file into the directory of your choice.
-* If you are in Linux run this:
-````````
-	sudo browseprinter.sh
-````````
-If you are in windows double click this:
-````````
-	browseprinter.bat
-````````
+
+The _browserprinter_ tool will help you find the Photonic3D server on your network, in case you have it installed a machine with a dynamic IP address and you don't know what what is.
+* Linux: Run `sudo browseprinter.sh` at the command line
+* Windows: Run `browseprinter.bat`
