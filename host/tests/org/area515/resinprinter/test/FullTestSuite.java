@@ -1,6 +1,7 @@
 package org.area515.resinprinter.test;
 
 import org.area515.resinprinter.gcode.FirmwareResponseSimulation;
+import org.area515.resinprinter.image.ConvertCWMaskToTransparencyMask;
 import org.area515.resinprinter.inkdetection.visual.CircleTest;
 import org.area515.resinprinter.inkdetection.visual.LineTest;
 import org.area515.resinprinter.inkdetection.visual.TestVisualPrintMaterialDetector;
@@ -25,6 +26,7 @@ import org.junit.runners.Suite;
 	HexCodeBasedProjectorTesting.class,
 	DetectFirmwareMock.class,
 	FirmwareResponseSimulation.class,
+	ConvertCWMaskToTransparencyMask.class
 })
 
 public class FullTestSuite {
