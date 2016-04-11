@@ -12,7 +12,7 @@ The server is capable of printing a variety of formats, including:
 
 Raspberry Pi Usage
 -------------------------------------------------------------------------------  
-If you have a brand new dedicated Raspberry Pi, there is a flashable Jessie Lite based image that you can use to quickly get started. Take a look at the [area515/OctoPi repo on Github](https://github.com/area515/OctoPi) for more the download link and installation instructions.
+If you have a brand new dedicated Raspberry Pi, there is a flashable Jessie Lite based image that you can use to quickly get started. Take a look at the [area515/OctoPi repo on Github](https://github.com/area515/OctoPi) for the download link and installation instructions.
 
 If you have an existing running Raspberry Pi with Raspbian, you can add Photonic3D to it with an easy bootstrap script that will download and install everything you need. This path is [documented in our wiki](https://github.com/area515/Creation-Workshop-Host/wiki/Raspberry-Pi-Manual-Setup-Instructions), and there is a [YouTube video that demonstrates it](https://www.youtube.com/watch?v=ng1Sj2ktWhU).
 
@@ -59,7 +59,7 @@ Feature List
 26. Supports Windows, OSX and Linux OSs. (Service support on Linux)
 27. Supports dynamic direct slice-on-the-fly 3d printing of (.mazecube, .stl, .jpg/.png/.gif, .cws/.zip) files.
 
-Installation on Linux Quickstart
+Linux Installation Quickstart
 -------------------------------------------------------------------------------
 If you are experienced with Linux, you can quickly install Photonic3D with the following commands:
 
@@ -77,12 +77,14 @@ sudo chmod 777 newstart.sh
 sudo ./newstart.sh WesGilster
 ```
 
+Photonic3D will be installed into `/opt/cwh` and an init script will be added to `/etc/init.d` to launch the server on boot.
+
 Windows Installation Quickstart
 ------------------------------------------
 * Download the latest stable or development version: 
  * [Stable repo Github Releases](https://github.com/area515/Creation-Workshop-Host/releases) or [Development repo Github Releases](https://github.com/WesGilster/Creation-Workshop-Host/releases)  
 * Unzip the zip file into the directory of your choice.
-* Double click on start.bat.
+* Double click on `start.bat`.
 
 Client Tools
 ----------------------------------------------------------------------
@@ -92,6 +94,6 @@ There are also a number of tools designed to run on your client desktop that are
  * [Stable repo Github Releases](https://github.com/area515/Creation-Workshop-Host/releases) or [Development repo Github Releases](https://github.com/WesGilster/Creation-Workshop-Host/releases)  
 * Unzip the zip file into the directory of your choice.
 
-The _browserprinter_ tool will help you find the Photonic3D server on your network, in case you have it installed a machine with a dynamic IP address and you don't know what what is.
+The *browseprinter* tool will help you find the Photonic3D server on your network, in case you have it installed a machine with a dynamic IP address and you don't know what what is.
 * Linux: Run `sudo browseprinter.sh` at the command line
 * Windows: Run `browseprinter.bat`
