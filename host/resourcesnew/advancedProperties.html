@@ -1,0 +1,23 @@
+		<div class="panel panel-default">
+			<div class="panel-heading clearfix">
+				<i class="fa pull-left fa-2x fa-graduation-cap"></i>
+				<h4 class="pull-left">Advanced Properties: {{printersController.currentPrinter.configuration.name}} </h4>
+				<div class="btn-group pull-right" >
+					<button class="btn btn-primary" ng-disabled="printersController.currentPrinter.started" ng-click="savePrinter(printersController.currentPrinter)" >
+						<i class="fa fa-pencil"></i>
+						<span>Save</span>
+					</button>
+				</div>
+			</div>
+			<div class="list-group">
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-pause pull-left"></i>
+					<h4>Pause on Printer Response (regex)</h4>
+					<input type="text" class="form-control" placeholder="regex" ng-model="printersController.currentPrinter.configuration.machineConfig.PauseOnPrinterResponseRegEx"></input>
+				</div>
+			</div>
+			
+			<div class="panel-footer">
+				<span ng-include="'cardFooter.html'"></span>
+			</div>
+		</div>

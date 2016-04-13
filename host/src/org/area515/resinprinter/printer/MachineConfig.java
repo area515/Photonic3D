@@ -129,6 +129,8 @@ public class MachineConfig implements Named {
 	private MotorsDriverConfig motorsDriverConfig;
 	@XmlElement(name="MonitorDriverConfig")
 	private MonitorDriverConfig monitorDriverConfig;
+	@XmlElement(name="PauseOnPrinterResponseRegEx")
+	private String pauseOnPrinterResponseRegEx;
 	private String name;
 
 	@XmlTransient
@@ -138,6 +140,14 @@ public class MachineConfig implements Named {
 	}
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	@XmlTransient
+	public String getPauseOnPrinterResponseRegEx() {
+		return pauseOnPrinterResponseRegEx;
+	}
+	public void setPauseOnPrinterResponseRegEx(String pauseOnPrinterResponseRegEx) {
+		this.pauseOnPrinterResponseRegEx = pauseOnPrinterResponseRegEx;
 	}
 	
 	@XmlTransient
