@@ -56,7 +56,16 @@ public abstract class GCodeControl {
 		} while (matcher != null && !matcher.matches());
 		return matcher;
 	}
-
+	
+	private boolean isPausableError(Matcher matcher, PrintJob printJob) {
+		if (matcher.group(1) == null || !matcher.group(1).toLowerCase().endsWith("rror:")) {
+			return false;
+		}
+		
+		String responseRegEx = printJob.getPrinter().getConfiguration().getMachineConfig().getPauseOnPrinterResponseRegEx();
+		return responseRegEx != null && responseRegEx.trim().length() > 0 && matcher.group(2) != null && matcher.group(2).matches(responseRegEx);
+	}
+	
     public String sendGcodeAndRespectPrinter(PrintJob printJob, String cmd) throws IOException {
 		gCodeLock.lock();
         try {
@@ -74,18 +83,18 @@ public abstract class GCodeControl {
 	        		return "";//I think this should be null, but I'm preserving backwards compatibility
 	        	}
 	        	
-	        	if (matcher.group(1) != null && matcher.group(1).toLowerCase().endsWith("rror:")) {
+	        	if (isPausableError(matcher, printJob)) {
 	        		attempt++;
 	        		printJob.setErrorDescription(matcher.group(2));
 	        		printer.setStatus(JobStatus.PausedWithWarning);
 	        		NotificationManager.jobChanged(printer, printJob);
 	        		
 	        		//Allow the user to manipulate the printer while paused
-	        		gCodeLock.lock();
+	        		gCodeLock.unlock();
 	        		try {
 	        			mustAttempt = printer.waitForPauseIfRequired();
 	        		} finally {
-	        			gCodeLock.unlock();
+	        			gCodeLock.lock();
 	        		}
 	        	} else {
 	        		mustAttempt = false;
