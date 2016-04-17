@@ -8,6 +8,8 @@ import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.gcode.eGENERICGCodeControl;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.printer.BuildDirection;
+import org.area515.resinprinter.printer.MachineConfig;
+import org.area515.resinprinter.printer.MachineConfig.MonitorDriverConfig;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
@@ -19,8 +21,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 @PowerMockIgnore("javax.management.*")
 @RunWith(PowerMockRunner.class)
@@ -65,7 +67,9 @@ public class AbstractPrintFileProcessorTest {
 		InkConfig inkConfiguration = Mockito.mock(InkConfig.class);
 		eGENERICGCodeControl gCode = Mockito.mock(eGENERICGCodeControl.class);
 		SerialCommunicationsPort serialPort = Mockito.mock(SerialCommunicationsPort.class);
-
+		MonitorDriverConfig monitorConfig = Mockito.mock(MonitorDriverConfig.class);
+		MachineConfig machine = Mockito.mock(MachineConfig.class);
+		
 		Mockito.when(printJob.getPrinter()).thenReturn(printer);
 		Mockito.when(printer.getPrinterFirmwareSerialPort()).thenReturn(serialPort);
 		Mockito.when(printJob.getPrintFileProcessor()).thenReturn(processor);
@@ -77,7 +81,8 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printer.getGCodeControl()).thenReturn(gCode);
 		Mockito.when(slicingProfile.getgCodeLift()).thenReturn("Lift z");
 		Mockito.doCallRealMethod().when(gCode).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString());
-		//PowerMockito.when(gCode, PowerMockito.method(GCodeControl.class, "getPrinter")).withNoArguments().thenReturn(printer);
+		Mockito.when(printer.getConfiguration().getMachineConfig()).thenReturn(machine);
+		Mockito.when(printer.getConfiguration().getMachineConfig().getMonitorDriverConfig()).thenReturn(monitorConfig);
 		return printJob;
 	}
 

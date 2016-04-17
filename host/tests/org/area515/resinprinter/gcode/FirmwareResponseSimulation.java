@@ -3,7 +3,9 @@ package org.area515.resinprinter.gcode;
 import java.io.IOException;
 
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,6 +28,11 @@ public class FirmwareResponseSimulation {
 		PrintJob printJob = Mockito.mock(PrintJob.class);
 		GCodeControl control = new eGENERICGCodeControl(printer);
 		SerialCommunicationsPort serial = org.mockito.Mockito.mock(SerialCommunicationsPort.class);
+		MachineConfig machine = org.mockito.Mockito.mock(MachineConfig.class);
+		PrinterConfiguration configuration = org.mockito.Mockito.mock(PrinterConfiguration.class);
+		
+		Mockito.when(printer.getConfiguration()).thenReturn(configuration);
+		Mockito.when(printer.getConfiguration().getMachineConfig()).thenReturn(machine);
 		Mockito.when(printer.getPrinterFirmwareSerialPort()).thenReturn(serial);
 		Mockito.when(printJob.getPrinter()).thenReturn(printer);
 		if (data == null) {
