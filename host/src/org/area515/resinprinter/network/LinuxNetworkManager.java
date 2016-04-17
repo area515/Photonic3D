@@ -114,7 +114,7 @@ public class LinuxNetworkManager implements NetworkManager {
 		parseActions.add(new ParseAction(new String[]{"wpa_cli", "-i", "{0}"}, ">", SearchStyle.RepeatUntilMatch));
 		parseActions.add(new ParseAction(new String[]{"add_network\n"}, "\\s*>", "\\s*(\\d+)\\s*", SearchStyle.RepeatUntilMatch));
 		parseActions.add(new ParseAction(new String[]{"set_network {4} ssid \"{1}\"\n"}, "\\s*>", SearchStyle.RepeatUntilMatch));
-		parseActions.add(new ParseAction(new String[]{"set_network {4} id_str \"ManagedByCWH\"\n"}, "\\s*>", SearchStyle.RepeatUntilMatch));
+		parseActions.add(new ParseAction(new String[]{"set_network {4} id_str \"ManagedByPhotonic3D\"\n"}, "\\s*>", SearchStyle.RepeatUntilMatch));
 		switch (encryption.getEncryptionClass() == null?EncryptionClass.Open:encryption.getEncryptionClass()) {
 			case WEP:
 				parseActions.add(new ParseAction(new String[]{"set_network {4} key_mgmt NONE\n"}, "\\s*>", SearchStyle.RepeatUntilMatch));
