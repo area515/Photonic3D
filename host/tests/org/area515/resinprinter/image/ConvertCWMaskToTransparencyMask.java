@@ -10,9 +10,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class ConvertCWMaskToTransparencyMask {
-
 	@Test
-	public static void main(String[] args) throws Exception {
+	public void testMaskConversion() throws Exception {
         BufferedImage sourceImage = javax.imageio.ImageIO.read(ConvertCWMaskToTransparencyMask.class.getResourceAsStream("WorkingCWMask.png"));
         BufferedImage convertedImage = new java.awt.image.BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
         convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
@@ -21,5 +20,9 @@ public class ConvertCWMaskToTransparencyMask {
         //new java.awt.TexturePaint(convertedImage, rect);
 
         Assert.assertTrue(ImageIO.write(convertedImage, "png", new File("images/sanePhotonicMask.png")));
+	}
+	
+	public static void main(String[] args) throws Exception {
+		new ConvertCWMaskToTransparencyMask().testMaskConversion();
 	}
 }
