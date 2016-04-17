@@ -31,7 +31,6 @@ import org.area515.resinprinter.stl.Point3d;
 import org.area515.resinprinter.stl.Shape3d;
 import org.area515.resinprinter.stl.Triangle3d;
 import org.area515.resinprinter.stl.XYComparatord;
-import org.area515.util.Log4jTimer;
 
 public class ZSlicer {
     private static final Logger logger = LogManager.getLogger();
@@ -47,9 +46,11 @@ public class ZSlicer {
 	 private Double imageOffsetX = null;
 	 private Double imageOffsetY = null;
 	 private double sliceResolution = 0.1;
+	 private double zOffset = .05;
 	 private StlFile<Triangle3d> stlFile;
 	 private File stlFileToSlice;
 	 private boolean keepTrackOfErrors = false;
+	 private boolean fixBrokenLoops = false;
 	 
 	 //These are the variables per z
 	 private List<StlError> errors = new ArrayList<StlError>();
@@ -63,13 +64,15 @@ public class ZSlicer {
 	 private int buildArea;
 	 
 	 //TODO: Need to add in super sampling
-	 public ZSlicer(File stlFileToSlice, double stlScale, double pixelsPerMMX, double pixelsPerMMY, double sliceResolution, boolean keepTrackOfErrors) {
+	 public ZSlicer(File stlFileToSlice, double stlScale, double pixelsPerMMX, double pixelsPerMMY, double zSliceResolution, double zSliceOffset, boolean keepTrackOfErrors, boolean fixBrokenLoops) {
 		 this.stlScale = stlScale;
 		 this.pixelsPerMMX = pixelsPerMMX;
 		 this.pixelsPerMMY = pixelsPerMMY;
-		 this.sliceResolution = sliceResolution;
+		 this.sliceResolution = zSliceResolution;
+		 this.zOffset = zSliceOffset;
 		 this.stlFileToSlice = stlFileToSlice;
 		 this.keepTrackOfErrors = keepTrackOfErrors;
+		 this.fixBrokenLoops = fixBrokenLoops;
 		 
 		 stlFile = new StlFile<Triangle3d>() {
 			  public void readFacetB(ByteBuffer in, int index) throws IOException {
@@ -396,8 +399,8 @@ public class ZSlicer {
 	 private List<Shape3d> getPolygonsOnSlice() {
 		 List<Shape3d> shapes = new ArrayList<Shape3d>();
 		  for (Triangle3d triangle : stlFile.getTriangles()) {
-			  if (triangle.intersectsZ(z)) {
-				  Shape3d shape = triangle.getZIntersection(z);
+			  if (triangle.intersectsZ(z + zOffset)) {
+				  Shape3d shape = triangle.getZIntersection(z + zOffset);
 				  shapes.add(shape);
 			  }
 		  }
@@ -445,6 +448,7 @@ public class ZSlicer {
 				  }
 		  }
 		  
+		  //Green alpha
 		  if (fillInPolygons != null) {
 			  g.setColor(new Color(0, 0xff, 0, 50));
 			  g.setBackground(new Color(0, 0xff, 0, 50));
@@ -454,6 +458,7 @@ public class ZSlicer {
 			  }
 		  }
 		  
+		  //Red alpha
 		  if (fillInScanLines != null) {
 			  g.setColor(new Color(0xff, 0xff/2, 0xff/2, 75));
 			  g.setBackground(new Color(0xff, 0xff/2, 0xff/2, 75));
@@ -548,7 +553,7 @@ public class ZSlicer {
 	 }
 	 
 	 //used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
-	 public List<List<Line3d>> colorizePolygons(List<Triangle3d> watchedTriangles) {
+	 public List<List<Line3d>> colorizePolygons(List<Triangle3d> watchedTriangles, List<Integer> watchedYs) {
 		  sliceMaxX = -Integer.MAX_VALUE;
 		  sliceMaxY = -Integer.MAX_VALUE;
 		  sliceMinX = Integer.MAX_VALUE;
@@ -567,8 +572,8 @@ public class ZSlicer {
 			  if (watchedTriangles != null && watchedTriangles.contains(triangle)) {
 				  logger.debug("Watched triangle:{}", triangle);
 			  }
-			  if (triangle.intersectsZ(z)) {
-				  Shape3d shape = triangle.getZIntersection(z);
+			  if (triangle.intersectsZ(z + zOffset)) {
+				  Shape3d shape = triangle.getZIntersection(z + zOffset);
 				  if (shape instanceof Triangle3d) {
 					  placeIntoCompletedLoopList(triangle.getLines(), completedFillInLoops);
 					  trianglesAndBrokenFacesForMazeTraversal.add((Triangle3d)shape);
@@ -583,7 +588,7 @@ public class ZSlicer {
 				  }
 			  } else {
 				  logger.debug("Intersection was optimized out");
-			  }
+			  }//*/
 		  }
 		  
 		  logger.debug("===================");
@@ -776,16 +781,18 @@ public class ZSlicer {
 		  }
 
 		  //close loops manually since we couldn't find a solution for these broken loops
-		  for (List<Line3d> currentBrokenLoop : brokenLoops) {
-			  if (currentBrokenLoop.size() > 1) {
-				  Line3d line1 = currentBrokenLoop.get(0);
-				  Line3d line2 = currentBrokenLoop.get(currentBrokenLoop.size() - 1);
-				  Point3d normal = new Point3d(line1.getNormal().x + line2.getNormal().x, line1.getNormal().y + line2.getNormal().y, line1.getNormal().z + line2.getNormal().z);
-				  Line3d line = new Line3d(line2.getPointTwo(), line1.getPointOne(), normal, null, false);
-				  currentBrokenLoop.add(line);
+		  if (fixBrokenLoops) {
+			  for (List<Line3d> currentBrokenLoop : brokenLoops) {
+				  if (currentBrokenLoop.size() > 1) {
+					  Line3d line1 = currentBrokenLoop.get(0);
+					  Line3d line2 = currentBrokenLoop.get(currentBrokenLoop.size() - 1);
+					  //Point3d normal = new Point3d(line1.getNormal().x + line2.getNormal().x, line1.getNormal().y + line2.getNormal().y, line1.getNormal().z + line2.getNormal().z);
+					  Line3d line = new Line3d(line2.getPointTwo(), line1.getPointOne(), null, null, false);
+					  currentBrokenLoop.add(line);
+				  }
+				  
+				  placeIntoCompletedLoopList(currentBrokenLoop, completedFillInLoops);
 			  }
-			  
-			  placeIntoCompletedLoopList(currentBrokenLoop, completedFillInLoops);
 		  }
 		  
 		  //Preperation work for the Scanline algorithm
@@ -822,9 +829,11 @@ public class ZSlicer {
 			  
 			  ScanlineFillPolygonWork work = new ScanlineFillPolygonWork(
 					  inRange, 
+					  watchedTriangles,
+					  watchedYs,
 					  y * ScanlineFillPolygonWork.SMALLEST_UNIT_OF_WORK + sliceMinY,
 					  (y + 1) * ScanlineFillPolygonWork.SMALLEST_UNIT_OF_WORK + sliceMinY - 1,
-					  z);
+					  z + zOffset);
 			  completedWork.add(pool.submit(work));
 		  }
 		  
@@ -904,11 +913,23 @@ public class ZSlicer {
 		return buildArea;
 	}
 
+	public double getSliceResolution() {
+		return sliceResolution;
+	}
+
+	public double getzOffset() {
+		return zOffset;
+	}
+
+	public double getStlScale() {
+		return stlScale;
+	}
+
 	public int getZMin() {
 		return (int)Math.ceil(stlFile.getZmin());
-	 }
+	}
 	
-	 public int getZMax() {
+	public int getZMax() {
 		return (int)Math.floor(stlFile.getZmax());
-	 }
+	}
 }

@@ -20,6 +20,8 @@ public class SliceTester {
 				 pixelsPerMMX, 
 				 pixelsPerMMY, 
 				 sliceResolution,
+				 sliceResolution / 2,
+				 false,
 				 true);
 		 slicer.loadFile(null, null);
 		 
@@ -27,7 +29,7 @@ public class SliceTester {
 		 for (int z = slicer.getZMin(); z < slicer.getZMax(); z++) {
 			 slicer.setZ(z);
 			 System.out.println("Testing Z:" + z);
-			 slicer.colorizePolygons(null);
+			 slicer.colorizePolygons(null, null);
 			 if (slicer.getStlErrors().size() > 0) {
 				 for (StlError error : slicer.getStlErrors()) {
 					 System.out.println(error);

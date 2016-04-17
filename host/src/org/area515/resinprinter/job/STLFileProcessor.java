@@ -65,7 +65,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>
 		RenderingFileData stlData = new RenderingFileData();
 		dataByPrintJob.put(printJob, stlData);
 		
-		stlData.slicer = new ZSlicer(printJob.getJobFile(), 1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, true);
+		stlData.slicer = new ZSlicer(printJob.getJobFile(), 1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, true);
 		stlData.slicer.loadFile(new Double(dataAid.xResolution), new Double(dataAid.yResolution));
 		printJob.setTotalSlices(stlData.slicer.getZMax() - stlData.slicer.getZMin());
 		
