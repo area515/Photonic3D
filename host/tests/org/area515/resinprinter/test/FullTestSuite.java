@@ -10,6 +10,7 @@ import org.area515.resinprinter.network.LinuxNetworkManagerTest;
 import org.area515.resinprinter.printer.DetectFirmwareMock;
 import org.area515.resinprinter.projector.HexCodeBasedProjectorTesting;
 import org.area515.resinprinter.services.TestScriptAndTemplating;
+import org.area515.resinprinter.stl.CheckSlicePoints;
 import org.area515.util.IOUtilitiesTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -26,7 +27,8 @@ import org.junit.runners.Suite;
 	HexCodeBasedProjectorTesting.class,
 	DetectFirmwareMock.class,
 	FirmwareResponseSimulation.class,
-	ConvertCWMaskToTransparencyMask.class
+	ConvertCWMaskToTransparencyMask.class,
+	CheckSlicePoints.class
 })
 
 public class FullTestSuite {

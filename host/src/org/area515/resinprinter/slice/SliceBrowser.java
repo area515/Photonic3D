@@ -39,15 +39,10 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
 import org.area515.resinprinter.slice.StlError.ErrorType;
-import org.area515.resinprinter.stl.CheckSlicePoints;
 import org.area515.resinprinter.stl.Face3d;
-import org.area515.resinprinter.stl.FillFile;
-import org.area515.resinprinter.stl.FillPoint;
 import org.area515.resinprinter.stl.Line3d;
 import org.area515.resinprinter.stl.Shape3d;
 import org.area515.resinprinter.stl.Triangle3d;
-
-import com.google.common.io.Files;
 
 public class SliceBrowser extends JSplitPane {
 	private PrinterTools tools;
@@ -318,7 +313,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				if (SwingUtilities.isRightMouseButton(e)) {
 					Map<String, FillFile> points;
 					try {
-						points = CheckSlicePoints.loadPoints();
+						points = SlicePointUtils.loadPoints();
 						File currentFile = new File(loadStlText.getText());
 						FillFile file = points.get(currentFile.getName());
 						if (file == null) {
@@ -331,14 +326,14 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 							file.setzSliceOffset(slicer.getzOffset());
 							file.setzSliceResolution(slicer.getSliceResolution());
 							points.put(currentFile.getName(), file);
-							CheckSlicePoints.copyFileToPackage(currentFile);
+							SlicePointUtils.copyFileToPackage(currentFile);
 						}
 						FillPoint newPoint = new FillPoint();
 						newPoint.setSliceNumber(slicer.getZ());
 						newPoint.setY(e.getY());
 						newPoint.setX(e.getX());
 						file.getPoints().add(newPoint);
-						CheckSlicePoints.savePoints(points);
+						SlicePointUtils.savePoints(points);
 					} catch (IOException | URISyntaxException e1) {
 						e1.printStackTrace();
 					}

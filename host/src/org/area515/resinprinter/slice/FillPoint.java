@@ -1,4 +1,4 @@
-package org.area515.resinprinter.stl;
+package org.area515.resinprinter.slice;
 
 public class FillPoint {
 	private int x;
