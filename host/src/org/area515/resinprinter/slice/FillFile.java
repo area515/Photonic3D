@@ -1,4 +1,4 @@
-package org.area515.resinprinter.stl;
+package org.area515.resinprinter.slice;
 
 import java.util.List;
 
