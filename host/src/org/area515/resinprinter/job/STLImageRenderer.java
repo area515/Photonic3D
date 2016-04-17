@@ -15,7 +15,7 @@ public class STLImageRenderer extends CurrentImageRenderer {
 
 	@Override
 	public void renderImage(BufferedImage image, Graphics2D g2, ImageData imageData) {
-		data.slicer.colorizePolygons(null);
+		data.slicer.colorizePolygons(null, null);
 		data.slicer.paintSlice(g2);
 		imageData.setArea((double)data.slicer.getBuildArea());
 	}

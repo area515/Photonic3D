@@ -21,7 +21,7 @@ public class Line3d implements Shape3d {
 		}
 
 		this.originatingFace = originatingFace;
-		this.normal = normal;//TODO: if the normal is null we probably need to compute it.
+		this.normal = normal != null?normal:new Point3d(one.y - two.y, one.x - two.x, two.z - one.z);
 		this.slope = (one.x - two.x) / (one.y - two.y);
 		this.xintercept = -(slope * one.y - one.x);
 	}

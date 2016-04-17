@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.RecursiveAction;
-import java.util.concurrent.RecursiveTask;
 
 import org.area515.resinprinter.stl.Face3d;
 import org.area515.resinprinter.stl.Line3d;
@@ -100,7 +99,7 @@ public class SelfContainedScanlineFillPolygonWork extends RecursiveAction {
 	         insideOutPolygons.addAll(tempInsideOutPolygons);
 	     } else {
 	         int mid = (start + stop) >>> 1;
-	                   
+	         
 	         SelfContainedScanlineFillPolygonWork firstWork = new SelfContainedScanlineFillPolygonWork(polygons, start, mid, z);
 	         firstWork.fork();
 	         SelfContainedScanlineFillPolygonWork secondWork = new SelfContainedScanlineFillPolygonWork(polygons, mid + 1, stop, z);

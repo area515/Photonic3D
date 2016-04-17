@@ -13,9 +13,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.JButton;
@@ -28,6 +31,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -35,22 +39,27 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
 import org.area515.resinprinter.slice.StlError.ErrorType;
+import org.area515.resinprinter.stl.CheckSlicePoints;
 import org.area515.resinprinter.stl.Face3d;
+import org.area515.resinprinter.stl.FillFile;
+import org.area515.resinprinter.stl.FillPoint;
 import org.area515.resinprinter.stl.Line3d;
 import org.area515.resinprinter.stl.Shape3d;
 import org.area515.resinprinter.stl.Triangle3d;
 
+import com.google.common.io.Files;
+
 public class SliceBrowser extends JSplitPane {
 	private PrinterTools tools;
 	
-	private int firstSlice = 140;
+	private int firstSlice = 187;
 	//78;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";
 	//321;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl"; good
 	//781;//"C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"; good
 	
-	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";
+	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";//122, 187
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureBottom.stl"; 54
-//	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";//78 & 54
+//	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";//78, 54
 	/*
 C:\Users\wgilster\Documents\Olaf_set3_whole.stl
 C:\Users\wgilster\Documents\Fat_Guy_Statue.stl
@@ -79,6 +88,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	private double pixelsPerMMY = 5;
 	private double sliceResolution = 0.1;
 	private JPanel browserPanel;
+	private List<Integer> watchYs = null;
 	
 	//TODO: maybe we should do this instead: private class SliceBrowserSelectionModel extends DefaultTreeSelectionModel {
 	private class SliceBrowserSelectionListener implements TreeSelectionListener {
@@ -163,7 +173,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode)root;
 				rootNode.removeAllChildren();
 				try {
-					 List<List<Line3d>> coloredLines = slicer.colorizePolygons(null);
+					 List<List<Line3d>> coloredLines = slicer.colorizePolygons(null, null);
 					 int t = 0;
 					 for (List<Line3d> loops : coloredLines) {
 						 SliceBrowserTreeNode parent = new SliceBrowserTreeNode("Slice:" + slicer.getZ() + " #" + t++ + " :(" + loops.size() + ")");
@@ -204,6 +214,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			 pixelsPerMMX,
 			 pixelsPerMMY,
 			 sliceResolution,
+			 sliceResolution / 2,
+			 false,
 			 true);
 		try {
 			newSlicer.loadFile(tools.getBuildPlatformX(), tools.getBuildPlatformY());
@@ -221,6 +233,22 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		firstSlice = Math.min(Math.max(firstSlice, slicer.getZMin()), slicer.getZMax());
 		zSliceModel.setValue(firstSlice);
 		slicer.setZ(firstSlice);
+	}
+	
+	public void runWatch(int z, JLabel mouseLabel) {
+		slicer.setZ(z);
+		System.out.println("Testing Z:" + z);
+		slicer.colorizePolygons(sliceBrowserListener.getSelectedTriangles(), watchYs);
+		if (slicer.getStlErrors().size() > 0) {
+			for (StlError error : slicer.getStlErrors()) {
+				if (error.getType() == ErrorType.NonManifold) {
+					System.out.println(error);
+				}
+			}
+			slicer.setZ(z);
+			zSliceModel.setValue(z);
+			lineSliceModel.refreshGui(mouseLabel, false);
+		}
 	}
 	
 	public JComponent getSliceBrowser() throws Exception {
@@ -278,6 +306,42 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 
 					System.out.println(slicer.translateLineToString(line));
 					System.out.println("stltriangle: " + face + " Hash:" + face.hashCode());
+				}
+				
+				if (watchYs == null) {
+					watchYs = new ArrayList<Integer>();
+				}
+				System.out.println("Added y watch for:" + e.getY());
+				watchYs.add(e.getY());
+				
+				//Right click to save point into json file for persistant testing
+				if (SwingUtilities.isRightMouseButton(e)) {
+					Map<String, FillFile> points;
+					try {
+						points = CheckSlicePoints.loadPoints();
+						File currentFile = new File(loadStlText.getText());
+						FillFile file = points.get(currentFile.getName());
+						if (file == null) {
+							file = new FillFile();
+							file.setFileName(currentFile.getName());
+							file.setPixelsPerMMX(pixelsPerMMX);
+							file.setPixelsPerMMY(pixelsPerMMY);
+							file.setPoints(new ArrayList<FillPoint>());
+							file.setStlScale(slicer.getStlScale());
+							file.setzSliceOffset(slicer.getzOffset());
+							file.setzSliceResolution(slicer.getSliceResolution());
+							points.put(currentFile.getName(), file);
+							CheckSlicePoints.copyFileToPackage(currentFile);
+						}
+						FillPoint newPoint = new FillPoint();
+						newPoint.setSliceNumber(slicer.getZ());
+						newPoint.setY(e.getY());
+						newPoint.setX(e.getX());
+						file.getPoints().add(newPoint);
+						CheckSlicePoints.savePoints(points);
+					} catch (IOException | URISyntaxException e1) {
+						e1.printStackTrace();
+					}
 				}
 
 				List<TreePath> selectedPaths = new ArrayList<TreePath>();
@@ -370,34 +434,50 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			}
 		});*/
 		
-		final JButton findNextTriangle = new JButton("FTONS");
+		final JButton findNextTriangle = new JButton("FTONS");//Find triangles on next slice
 		findNextTriangle.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int z = slicer.getZ() + 1;
 				slicer.setZ(z);
-				System.out.println("Testing Z:" + z);
-				slicer.colorizePolygons(sliceBrowserListener.getSelectedTriangles());
-				if (slicer.getStlErrors().size() > 0) {
-					for (StlError error : slicer.getStlErrors()) {
-						if (error.getType() == ErrorType.NonManifold) {
-							System.out.println(error);
-						}
-					}
-					slicer.setZ(z);
-					zSliceModel.setValue(z);
-					lineSliceModel.refreshGui(mouseLabel, false);
-				}
+				runWatch(z, mouseLabel);
 			}
 		});
 		
-		//bottomPanel.add(findNextError);
+		final JButton findPreviousTriangle = new JButton("FTOPS");//Find triangles on previous slice
+		findPreviousTriangle.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int z = slicer.getZ() - 1;
+				runWatch(z, mouseLabel);
+			}
+		});
+		
+		final JButton clearYWatches = new JButton("Clear Y watches");//Find triangles on previous slice
+		clearYWatches.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				watchYs = null;
+			}
+		});
+
+		final JButton runWatches = new JButton("Run watch");//Find triangles on previous slice
+		runWatches.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				runWatch(slicer.getZ(), mouseLabel);
+			}
+		});
+
 		bottomPanel.add(mouseLabel);
 		bottomPanel.add(colorize);
 		bottomPanel.add(render);
 		bottomPanel.add(loadStlText);
 		bottomPanel.add(loadStlButton);
 		bottomPanel.add(findNextTriangle);
+		bottomPanel.add(findPreviousTriangle);
+		bottomPanel.add(clearYWatches);
+		bottomPanel.add(runWatches);
 		window.add(zSliceBar, BorderLayout.EAST);
 		window.add(browserPanel, BorderLayout.CENTER);
 		window.add(bottomPanel, BorderLayout.SOUTH);

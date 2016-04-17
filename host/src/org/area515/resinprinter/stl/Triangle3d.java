@@ -139,8 +139,8 @@ public class Triangle3d implements Shape3d, Face3d {
 		}		
 		
 		//TODO: I'm concerned of the rounding, but I added it to collapse sloppy triangles from tools like blender
-		//if (line[0].y == line[1].y || line[1].y == line[2].y || line[0].y == line[2].y) {
-		if (Math.round(line[0].y) == Math.round(line[1].y) || Math.round(line[1].y) == Math.round(line[2].y) || Math.round(line[0].y) == Math.round(line[2].y)) {
+		if (line[0].y == line[1].y || line[1].y == line[2].y || line[0].y == line[2].y) {
+		//if (Math.round(line[0].y) == Math.round(line[1].y) || Math.round(line[1].y) == Math.round(line[2].y) || Math.round(line[0].y) == Math.round(line[2].y)) {
 			double minx = Math.min(line[0].x, Math.min(line[1].x, line[2].x));
 			double maxx = Math.max(line[0].x, Math.max(line[1].x, line[2].x));
 			line[0].x = minx;
@@ -149,8 +149,8 @@ public class Triangle3d implements Shape3d, Face3d {
 		}
 		
 		//TODO: I'm concerned of the rounding, but I added it to collapse sloppy triangles from tools like blender		
-		//if (line[0].x == line[1].x || line[1].x == line[2].x || line[0].x == line[2].x) {
-		if (Math.round(line[0].x) == Math.round(line[1].x) || Math.round(line[1].x) == Math.round(line[2].x) || Math.round(line[0].x) == Math.round(line[2].x)) {
+		if (line[0].x == line[1].x || line[1].x == line[2].x || line[0].x == line[2].x) {
+		//if (Math.round(line[0].x) == Math.round(line[1].x) || Math.round(line[1].x) == Math.round(line[2].x) || Math.round(line[0].x) == Math.round(line[2].x)) {
 			double miny = Math.min(line[0].y, Math.min(line[1].y, line[2].y));
 			double maxy = Math.max(line[0].y, Math.max(line[1].y, line[2].y));
 			line[0].y = miny;
