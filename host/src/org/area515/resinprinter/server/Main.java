@@ -54,7 +54,7 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		logger.info("=================================================================");
 		logger.info("=================================================================");
-		logger.info("CWH started");
+		logger.info("Photonic3D started");
 		logger.info("=================================================================");
 		logger.info("=================================================================");
 
@@ -145,7 +145,7 @@ public class Main {
 		try {
 			server.start();
 		} catch (Exception e) {
-			logger.error("Error starting CWH http server", e);
+			logger.error("Error starting Photonic3D http server", e);
 		}
 		   
 		//Start broadcasting server
@@ -166,7 +166,7 @@ public class Main {
 				try {
 					server.stop();
 				} catch (Exception e) {
-					logger.error("Error stopping CWH http server", e);
+					logger.error("Error stopping Photonic3D http server", e);
 				} finally {
 					server.destroy();
 					logger.info("Shutdown Complete");
