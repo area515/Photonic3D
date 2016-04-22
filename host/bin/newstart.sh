@@ -85,7 +85,7 @@ fi
 #Determine if a new install is available
 echo Checking for new version from Github Repo: ${repo}
 cd ${installDirectory}
-LOCAL_TAG=$(grep repo.version build.number | cut -d = -f 2)
+LOCAL_TAG=$(grep repo.version build.number | cut -d = -f 2 | tr -d '\r')
 NETWORK_TAG=$(curl -s https://api.github.com/repos/${repo}/releases/latest | grep 'tag_name' | cut -d\" -f4)
 
 echo Local Tag: ${LOCAL_TAG}
@@ -108,6 +108,7 @@ elif [ "${NETWORK_TAG}" != "${LOCAL_TAG}" -o "$2" == "force" ]; then
 
 	DL_URL=$(curl -s https://api.github.com/repos/${repo}/releases/latest | grep 'browser_' | cut -d\" -f4 | grep ${downloadPrefix})
 	DL_FILE=${DL_URL##*/}
+	rm -f "/tmp/${DL_FILE}"
 	wget -P /tmp "${DL_URL}"
   if [ $? -ne 0 ]; then
 		echo "wget of ${DL_FILE} failed. Aborting update."
