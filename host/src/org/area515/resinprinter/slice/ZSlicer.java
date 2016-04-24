@@ -112,7 +112,13 @@ public class ZSlicer {
 					normal.y = (p3[0] - p2[0]) * (p2[2] - p1[2]) - (p3[2] - p2[2]) * (p2[0] - p1[0]);
 					normal.z = (p3[1] - p2[1]) * (p2[0] - p1[0]) - (p3[0] - p2[0]) * (p2[1] - p1[1]);
 				}
-			    triangles.add(new Triangle3d(triangle, normal));
+				
+				Triangle3d newTriangle = new Triangle3d(triangle, normal);
+				/*if (tri.onZeroZ()) {
+					triangles.getClass();
+				}*/
+
+			    triangles.add(newTriangle);
 			    
 			    zmin = Math.min(triangle[0].z, Math.min(triangle[1].z, Math.min(triangle[2].z, zmin)));
 			    zmax = Math.max(triangle[0].z, Math.max(triangle[1].z, Math.max(triangle[2].z, zmax)));
@@ -348,12 +354,13 @@ public class ZSlicer {
 		 return stlFile.getTriangles();
 	 }
 	 
+	 //Not used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
 	 public List<Shape3d> getTrianglesAt(int x, int y) {
 		 List<Shape3d> intersections = new ArrayList<Shape3d>();
 		 logger.debug("x:{} y:{}",x, y);
 		  for (Shape3d shape : getPolygonsOnSlice()) {
 			  if (shape instanceof Triangle3d) {
-				  
+				  logger.debug("Found instanceof Triangle:{}", shape);
 			  } else if (shape instanceof Line3d) {
 				  Line3d line = (Line3d)shape;
 				  double translatedX1 = (x - 1 - imageOffsetX) * precisionScaler / pixelsPerMMX;
@@ -364,6 +371,8 @@ public class ZSlicer {
 				  if (line.intersects(translatedX1, translatedY1, translatedX2, translatedY2)) {
 					  intersections.add(line);
 				  }
+			  } else {
+				  logger.debug("Found unknown instance:{}", shape);
 			  }
 		  }
 		  
@@ -383,6 +392,11 @@ public class ZSlicer {
 		 return new Line3d(translatePoint(line.getPointOne()), translatePoint(line.getPointTwo()), translatePoint(line.getNormal()), line.getOriginatingFace(), false);
 	 }
 	 
+	 public Triangle3d translateTriangle(Triangle3d triangle) {
+		 List<Point3d> points = triangle.getPoints();
+		 return new Triangle3d(new Point3d[]{translatePoint(points.get(0)), translatePoint(points.get(1)), translatePoint(points.get(2))}, triangle.getNormal());
+	 }
+	 
 	 public Point3d translatePoint(Point3d point) {
 		 return new Point3d(translateX(point.x), translateY(point.y), point.z * sliceResolution);
 	 }
@@ -399,16 +413,18 @@ public class ZSlicer {
 	 private List<Shape3d> getPolygonsOnSlice() {
 		 List<Shape3d> shapes = new ArrayList<Shape3d>();
 		  for (Triangle3d triangle : stlFile.getTriangles()) {
-			  if (triangle.intersectsZ(z + zOffset)) {
+			  //if (triangle.intersectsZ(z + zOffset)) {
 				  Shape3d shape = triangle.getZIntersection(z + zOffset);
-				  shapes.add(shape);
-			  }
+				  if (shape != null) {
+					  shapes.add(shape);
+				  }
+			  //}
 		  }
 		  
 		  return shapes;
 	 }
 	 
-	 //used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
+	 //Not used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
 	 public void debugPaintSlice(Graphics2D g) {
 		  for (Shape3d shape : getPolygonsOnSlice()) {
 				  if (shape instanceof Triangle3d) {
@@ -570,14 +586,17 @@ public class ZSlicer {
 		  Set<Line3d> zIntersectionsBySortedX = new TreeSet<Line3d>(new XYComparatord());
 		  for (Triangle3d triangle : stlFile.getTriangles()) {
 			  if (watchedTriangles != null && watchedTriangles.contains(triangle)) {
-				  logger.debug("Watched triangle:{}", triangle);
+				  logger.debug("Watched triangle:{}", ()-> translateTriangle(triangle));
 			  }
+			  /*if (triangle.onZeroZ())  {
+				  logger.debug("on z");//123456
+			  }*/
 			  if (triangle.intersectsZ(z + zOffset)) {
 				  Shape3d shape = triangle.getZIntersection(z + zOffset);
 				  if (shape instanceof Triangle3d) {
 					  placeIntoCompletedLoopList(triangle.getLines(), completedFillInLoops);
 					  trianglesAndBrokenFacesForMazeTraversal.add((Triangle3d)shape);
-					  logger.debug("Triangle:{}", shape);
+					  logger.debug("Triangle:{}", ()-> translateTriangle((Triangle3d)shape));
 				  } else if (shape instanceof Line3d) {
 					  zIntersectionsBySortedX.add((Line3d)shape);
 					  logger.debug("Line:{}", ()-> translateLine((Line3d)shape));
