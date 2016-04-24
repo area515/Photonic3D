@@ -101,11 +101,6 @@ eclipse {
   }
 }
 
-mainClassName = "org.area515.resinprinter.server.Main"
-applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=log4j2.properties"]
-applicationName = 'photonic3d'
-jar.archiveName = 'photonic3d.jar'
-
 // PROJECT SETUP SCRIPT
 // --------------------
 import org.ajoberstar.grgit.*;
@@ -115,6 +110,11 @@ ant.importBuild 'build.xml';
 
 grgit = Grgit.open(project.file('..'));
 def commitVersion = "unknown";
+
+mainClassName = "org.area515.resinprinter.server.Main"
+applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=log4j2.properties"]
+applicationName = 'photonic3d'
+jar.archiveName = 'photonic3d.jar'
 
 // TASK CONFIG
 // -----------
@@ -141,6 +141,12 @@ task repoVersion() << {
 
   println("Git Commit Description: "+commitVersion)
 };
+
+task testJar(type: Jar) {
+  baseName = "photonic3d"
+  classifier = "tests"
+  from sourceSets.test.output
+}
 
 task preDist(dependsOn: ['installDist', 'repoVersion']) {
 
@@ -228,6 +234,10 @@ githubRelease.dependsOn releaseDist
 dist.mustRunAfter setupRelease
 //compileTestJava.dependsOn build
 BuildCWH.mustRunAfter preDist
+
+applicationDistribution.from(testJar) {
+  into "lib"
+}
 
 // UTILITY FUNCTIONS
 // -----------------
