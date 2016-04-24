@@ -40,7 +40,8 @@ public abstract class GCodeControl {
     	return printer;
     }
     
-	private Matcher readUntilOkOrStoppedPrinting(Printer printer) throws IOException {
+	private PrinterResponse readUntilOkOrStoppedPrinting(Printer printer) throws IOException {
+		PrinterResponse line = null;
 		StringBuilder responseBuilder = new StringBuilder();
 		ParseState state = null;
 		Matcher matcher = null;
@@ -48,13 +49,18 @@ public abstract class GCodeControl {
 			state = IOUtilities.readLine(printer, getPrinter().getPrinterFirmwareSerialPort(), builder, parseLocation, SUGGESTED_TIMEOUT_FOR_ONE_GCODE, IOUtilities.CPU_LIMITING_DELAY);
 			parseLocation = state.parseLocation;
 			if (state.currentLine != null) {
+				if (line == null) {
+					line = new PrinterResponse();
+					line.setFullResponse(responseBuilder);
+				}
 				responseBuilder.append(state.currentLine);
 				matcher = GCODE_RESPONSE_PATTERN.matcher(state.currentLine);
+				line.setLastLineMatcher(matcher);
 			}
 			
 			logger.info("lineRead: {}", state.currentLine);
 		} while (matcher != null && !matcher.matches());
-		return matcher;
+		return line;
 	}
 	
 	private boolean isPausableError(Matcher matcher, PrintJob printJob) {
@@ -78,14 +84,14 @@ public abstract class GCodeControl {
         	for (int attempt = 0; mustAttempt; attempt++) {
 	        	logger.info("Write {}: {}", attempt, cmd);
 	        	getPrinter().getPrinterFirmwareSerialPort().write(cmd.getBytes());
-	        	Matcher matcher = readUntilOkOrStoppedPrinting(printer);
-	        	if (matcher == null) {
+	        	PrinterResponse response = readUntilOkOrStoppedPrinting(printer);
+	        	if (response == null) {
 	        		return "";//I think this should be null, but I'm preserving backwards compatibility
 	        	}
 	        	
-	        	if (isPausableError(matcher, printJob)) {
+	        	if (isPausableError(response.getLastLineMatcher(), printJob)) {
 	        		attempt++;
-	        		printJob.setErrorDescription(matcher.group(2));
+	        		printJob.setErrorDescription(response.getLastLineMatcher().group(2));
 	        		printer.setStatus(JobStatus.PausedWithWarning);
 	        		NotificationManager.jobChanged(printer, printJob);
 	        		
@@ -100,7 +106,7 @@ public abstract class GCodeControl {
 	        		mustAttempt = false;
 	        	}
 	        	
-	        	builder.append(matcher.group(0));
+	        	builder.append(response.getFullResponse().toString());
         	}
         	
         	return builder.toString();
@@ -118,11 +124,12 @@ public abstract class GCodeControl {
         	
         	logger.info("Write: {}", cmd);
         	getPrinter().getPrinterFirmwareSerialPort().write(cmd.getBytes());
-        	Matcher matcher = readUntilOkOrStoppedPrinting(null);
-        	if (matcher == null) {
+        	PrinterResponse response = readUntilOkOrStoppedPrinting(null);
+        	if (response == null) {
         		return "";
         	}
-        	return matcher.group(0);
+        	
+        	return response.getFullResponse().toString();
         } catch (IOException ex) {
         	logger.error("Couldn't send:" + cmd, ex);
         	return "IO Problem!";

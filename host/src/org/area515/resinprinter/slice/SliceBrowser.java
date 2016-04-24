@@ -2,6 +2,7 @@ package org.area515.resinprinter.slice;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.JButton;
@@ -32,9 +34,11 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.ToolTipManager;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
@@ -52,7 +56,7 @@ public class SliceBrowser extends JSplitPane {
 	//321;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl"; good
 	//781;//"C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"; good
 	
-	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";//122, 187
+	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";//122, 151, 187
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureBottom.stl"; 54
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";//78, 54
 	/*
@@ -145,6 +149,29 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		}
 	}
 	
+	private class ToolTipRenderer extends DefaultTreeCellRenderer {
+		public Component getTreeCellRendererComponent(
+		                        JTree tree,
+		                        Object value,
+		                        boolean sel,
+		                        boolean expanded,
+		                        boolean leaf,
+		                        int row,
+		                        boolean hasFocus) {
+		     super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+		     if (leaf) {
+		    	 Object newValue = ((SliceBrowserTreeNode)value).getUserObject();
+		    	 if (newValue instanceof Line3d) {
+		    		 setToolTipText(((Line3d)newValue).getNormal() + "");
+		    	 }
+		     } else {
+		    	 setToolTipText(null);
+		     }
+		     
+		     return this;
+		}
+	}
+	
 	private class LineSliceModel extends DefaultTreeModel {
 		private static final long serialVersionUID = 179974567762541369L;
 		
@@ -196,7 +223,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			sliceTree = new JTree(lineSliceModel);
 			sliceTree.setExpandsSelectedPaths(true);
 			sliceTree.addTreeSelectionListener(sliceBrowserListener);
-			//sliceTree.setSelectionModel(selectionModel);
+			sliceTree.setCellRenderer(new ToolTipRenderer());
+			ToolTipManager.sharedInstance().registerComponent(sliceTree);
 		}
 
 		return sliceTree;
@@ -209,7 +237,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			 pixelsPerMMX,
 			 pixelsPerMMY,
 			 sliceResolution,
-			 sliceResolution / 2,
+			 0d,
 			 false,
 			 true);
 		try {
@@ -234,16 +262,13 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		slicer.setZ(z);
 		System.out.println("Testing Z:" + z);
 		slicer.colorizePolygons(sliceBrowserListener.getSelectedTriangles(), watchYs);
-		if (slicer.getStlErrors().size() > 0) {
-			for (StlError error : slicer.getStlErrors()) {
-				if (error.getType() == ErrorType.NonManifold) {
-					System.out.println(error);
-				}
+		for (StlError error : slicer.getStlErrors()) {
+			if (error.getType() == ErrorType.NonManifold) {
+				System.out.println(error);
 			}
-			slicer.setZ(z);
-			zSliceModel.setValue(z);
-			lineSliceModel.refreshGui(mouseLabel, false);
 		}
+		zSliceModel.setValue(z);
+		lineSliceModel.refreshGui(mouseLabel, false);
 	}
 	
 	public JComponent getSliceBrowser() throws Exception {
@@ -311,28 +336,39 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				
 				//Right click to save point into json file for persistant testing
 				if (SwingUtilities.isRightMouseButton(e)) {
-					Map<String, FillFile> points;
+					Map<FillFile, FillFile> points;
 					try {
 						points = SlicePointUtils.loadPoints();
 						File currentFile = new File(loadStlText.getText());
-						FillFile file = points.get(currentFile.getName());
-						if (file == null) {
-							file = new FillFile();
-							file.setFileName(currentFile.getName());
-							file.setPixelsPerMMX(pixelsPerMMX);
-							file.setPixelsPerMMY(pixelsPerMMY);
-							file.setPoints(new ArrayList<FillPoint>());
-							file.setStlScale(slicer.getStlScale());
-							file.setzSliceOffset(slicer.getzOffset());
-							file.setzSliceResolution(slicer.getSliceResolution());
-							points.put(currentFile.getName(), file);
-							SlicePointUtils.copyFileToPackage(currentFile);
+						FillFile checkFile = new FillFile();
+						checkFile.setFileName(currentFile.getName());
+						checkFile.setPixelsPerMMX(pixelsPerMMX);
+						checkFile.setPixelsPerMMY(pixelsPerMMY);
+						checkFile.setPoints(new ArrayList<FillPoint>());
+						checkFile.setStlScale(slicer.getStlScale());
+						checkFile.setzSliceOffset(slicer.getzOffset());
+						checkFile.setzSliceResolution(slicer.getSliceResolution());
+
+						FillFile joinFile = points.get(checkFile);
+						if (joinFile == null) {
+							boolean foundFile = false;
+							for (FillFile current : points.values()) {
+								if (current.getFileName().equals(checkFile.getFileName())) {
+									foundFile = true;
+									break;
+								}
+							}
+							if (!foundFile) {
+								SlicePointUtils.copyFileToPackage(currentFile);
+							}
+							points.put(checkFile, checkFile);
+							joinFile = checkFile;
 						}
 						FillPoint newPoint = new FillPoint();
 						newPoint.setSliceNumber(slicer.getZ());
 						newPoint.setY(e.getY());
 						newPoint.setX(e.getX());
-						file.getPoints().add(newPoint);
+						joinFile.getPoints().add(newPoint);
 						SlicePointUtils.savePoints(points);
 					} catch (IOException | URISyntaxException e1) {
 						e1.printStackTrace();
