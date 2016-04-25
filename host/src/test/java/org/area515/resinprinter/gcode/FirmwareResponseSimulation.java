@@ -22,11 +22,9 @@ public class FirmwareResponseSimulation {
 		this.data = data;
 	}
 	
-	@Test
-	public void GRBLTest() throws IOException {
+	public static PrintJob buildTestPrintJob() {
 		Printer printer = Mockito.mock(Printer.class);
 		PrintJob printJob = Mockito.mock(PrintJob.class);
-		GCodeControl control = new eGENERICGCodeControl(printer);
 		SerialCommunicationsPort serial = org.mockito.Mockito.mock(SerialCommunicationsPort.class);
 		MachineConfig machine = org.mockito.Mockito.mock(MachineConfig.class);
 		PrinterConfiguration configuration = org.mockito.Mockito.mock(PrinterConfiguration.class);
@@ -35,10 +33,18 @@ public class FirmwareResponseSimulation {
 		Mockito.when(printer.getConfiguration().getMachineConfig()).thenReturn(machine);
 		Mockito.when(printer.getPrinterFirmwareSerialPort()).thenReturn(serial);
 		Mockito.when(printJob.getPrinter()).thenReturn(printer);
+		return printJob;
+	}
+	
+	@Test
+	public void GRBLTest() throws IOException {
+		PrintJob printJob = buildTestPrintJob();
+		Printer printer = printJob.getPrinter();
+		GCodeControl control = new eGENERICGCodeControl(printer);
 		if (data == null) {
-			Mockito.when(serial.read()).thenReturn(null).thenReturn(null);
+			Mockito.when(printer.getPrinterFirmwareSerialPort().read()).thenReturn(null).thenReturn(null);
 		} else {
-			Mockito.when(serial.read()).thenReturn(data.getBytes()).thenReturn(null);
+			Mockito.when(printer.getPrinterFirmwareSerialPort().read()).thenReturn(data.getBytes()).thenReturn(null);
 		}
 		Assert.assertEquals(data==null?"":data, control.sendGcodeAndRespectPrinter(printJob, "G21"));
 	}
@@ -67,6 +73,7 @@ public class FirmwareResponseSimulation {
 				{"status report>\r\n"},
 				{"<status report>\n"},
 				{"<status report>\r\n"},
+				{"X:0.000 Y:3.000 Z:196.000 E:0.000 Count X: 0.000 Y:2.997 Z:196.000\nok\n"},
 				};
 	}
 }
