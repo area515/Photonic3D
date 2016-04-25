@@ -64,13 +64,15 @@ public class Triangle3d implements Shape3d, Face3d {
 	
 	public List<Line3d> getLines() {
 		List<Line3d> lines = new ArrayList<Line3d>();
-		lines.add(new Line3d(verticies[0], verticies[1], normal, this, false));//!Not the right normal!
-		lines.add(new Line3d(verticies[1], verticies[2], normal, this, false));//!Not the right normal!
-		lines.add(new Line3d(verticies[2], verticies[0], normal, this, false));//!Not the right normal!
+		lines.add(new Line3d(verticies[0], verticies[1], null, this, false));//!Not the right normal!
+		lines.add(new Line3d(verticies[1], verticies[2], null, this, false));//!Not the right normal!
+		lines.add(new Line3d(verticies[2], verticies[0], null, this, false));//!Not the right normal!
 		//stop the swap here!!
 		return lines;
 	}
-	
+	public List<Point3d> getPoints() {
+		return Arrays.asList(verticies);
+	}
 	public double getMinZ() {
 		return min[2];
 	}	
@@ -136,10 +138,10 @@ public class Triangle3d implements Shape3d, Face3d {
 		
 		if (line[0].x == line[1].x && line[1].x == line[2].x) {
 			return new Line3d(line[0], line[1], normal, this, true);
-		}		
+		}
 		
-		//TODO: I'm concerned of the rounding, but I added it to collapse sloppy triangles from tools like blender
-		if (line[0].y == line[1].y || line[1].y == line[2].y || line[0].y == line[2].y) {
+		//TODO: We can't collapse these triangles because we my have to depend on the the points that we collapse
+		if (line[0].y == line[1].y && line[1].y == line[2].y) {
 		//if (Math.round(line[0].y) == Math.round(line[1].y) || Math.round(line[1].y) == Math.round(line[2].y) || Math.round(line[0].y) == Math.round(line[2].y)) {
 			double minx = Math.min(line[0].x, Math.min(line[1].x, line[2].x));
 			double maxx = Math.max(line[0].x, Math.max(line[1].x, line[2].x));
@@ -148,8 +150,8 @@ public class Triangle3d implements Shape3d, Face3d {
 			return new Line3d(line[0], line[1], normal, this, true);
 		}
 		
-		//TODO: I'm concerned of the rounding, but I added it to collapse sloppy triangles from tools like blender		
-		if (line[0].x == line[1].x || line[1].x == line[2].x || line[0].x == line[2].x) {
+		//TODO: We can't collapse these triangles because we my have to depend on the the points that we collapse
+		if (line[0].x == line[1].x && line[1].x == line[2].x) {
 		//if (Math.round(line[0].x) == Math.round(line[1].x) || Math.round(line[1].x) == Math.round(line[2].x) || Math.round(line[0].x) == Math.round(line[2].x)) {
 			double miny = Math.min(line[0].y, Math.min(line[1].y, line[2].y));
 			double maxy = Math.max(line[0].y, Math.max(line[1].y, line[2].y));
@@ -189,6 +191,10 @@ public class Triangle3d implements Shape3d, Face3d {
 		return true;
 	}
 
+	/*public boolean onZeroZ() {
+		return verticies[0].z == 0 && verticies[1].z == 0 && verticies[2].z == 0;
+	}*/
+	
 	public String toString() {
 		return Arrays.toString(verticies) + "@" + normal;
 	}
