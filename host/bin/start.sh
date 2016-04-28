@@ -5,23 +5,27 @@ cpu=`uname -m`
 if [ -z "$1" ]; then
 	repo="area515/Creation-Workshop-Host"
 else
-	repo=$1
+	if [[ $1 =~ .*Creation-Workshop-Host.* ]]; then
+		repo=$1
+	else
+		repo="$1/Creation-Workshop-Host"
+	fi;
 fi;
 
-if [ "$2" == "TestKit" ]; then 
-	downloadPrefix=cwh$2-0
+if [ "$2" == "TestKit" ]; then
+	downloadPrefix=cwh$2-
 	installDirectory=/opt/cwh$2
 else
-	downloadPrefix=cwh-0
+	downloadPrefix=cwh-
 	installDirectory=/opt/cwh
 fi;
 
 #Its pretty hard to keep these updated, let me know when they get too old
-if [ "${cpu}" = "armv6l" -o "${cpu}" = "armv7l" ]; then 
+if [ "${cpu}" = "armv6l" -o "${cpu}" = "armv7l" ]; then
 	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-arm32-vfp-hflt.tar.gz"
-elif [ "${cpu}" = "i686" ]; then 
+elif [ "${cpu}" = "i686" ]; then
 	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-i586.tar.gz"
-elif [ "${cpu}" = "x86_64" ]; then 
+elif [ "${cpu}" = "x86_64" ]; then
 	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-x64.tar.gz"
 fi
 
@@ -60,74 +64,74 @@ if [ "$javaMinorVersion" -lt 8 -a "$javaMajorVersion" -le 1 ]; then
 	cd /usr/lib/jvm
 	rm ${downloadJavaFile}
 	wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "${javaURL}"
-	
+
 	firstSnapshot=`ls -1`
 	echo Unzipping and installing Java now
 	tar xzf ${downloadJavaFile}
 	secondSnapshot=`ls -1`
 	javaInstallFile=`echo "$firstSnapshot"$'\n'"$secondSnapshot" | sort | uniq -u`
-	
+
 	if [ -z "${javaInstallFile}" ]; then
 		echo "A new version of Java is available, please update this script with the proper download URLS from: http://www.oracle.com/technetwork/java/javase/downloads/index.html"
 		exit
 	fi
-	
+
 	ln -sf /usr/lib/jvm/${javaInstallFile}/bin/java /usr/bin/java
 	ln -sf /usr/lib/jvm/${javaInstallFile}/bin/javac /usr/bin/javac
-	ln -sf /usr/lib/jvm/${javaInstallFile}/bin/keytool /usr/bin/keytool		
+	ln -sf /usr/lib/jvm/${javaInstallFile}/bin/keytool /usr/bin/keytool
 	rm ${downloadJavaFile}
 fi
 
 #Determine if a new install is available
+echo Checking for new version from Github Repo: ${repo}
 cd ${installDirectory}
-cp build.number networkbuildnumber
-mv build.number currentbuildnumber
-wget -t 2 -T 20 https://github.com/${repo}/raw/master/host/build.number
-mv build.number networkbuildnumber
+LOCAL_TAG=$(grep repo.version build.number | cut -d = -f 2 | tr -d '\r')
+NETWORK_TAG=$(curl -s https://api.github.com/repos/${repo}/releases/latest | grep 'tag_name' | cut -d\" -f4)
 
-if [ -f currentbuildnumber ]; then
-	currentBuildNumber=`grep build.number currentbuildnumber | awk -F= '{print $2}' | tr -d '\r\n'`
-	(( currentBuildNumber-- ))
-else
-	currentBuildNumber=0
-fi
-networkBuildNumber=`grep build.number networkbuildnumber | awk -F= '{print $2}' | tr -d '\r\n'`
-
-#Network build.number is always 1 greater than it the current version
-(( networkBuildNumber-- ))
+echo Local Tag: ${LOCAL_TAG}
+echo Network Tag: ${NETWORK_TAG}
 
 if [ -f ${downloadPrefix}.*.zip ]; then
-	echo Performing offline install of ${downloadPrefix}: ${networkBuildNumber}
-	
-	mv ${downloadPrefix}.*.zip ~
+	OFFLINE_FILE=$(ls ${downloadPrefix}.*.zip)
+	echo Performing offline install of ${OFFLINE_FILE}
+
+	mv ${OFFLINE_FILE} ~
 	rm -r ${installDirectory}
 	mkdir -p ${installDirectory}
 	cd ${installDirectory}
-	mv ~/${downloadPrefix}.*.zip .
-	unzip ${downloadPrefix}.*.zip
+	mv ~/${OFFLINE_FILE} .
+	unzip ${OFFLINE_FILE}
 	chmod 777 *.sh
-	rm ${downloadPrefix}.*.zip
-elif [ "$networkBuildNumber" -gt "$currentBuildNumber" -o "$2" == "force" ]; then
-	echo Installing latest version of ${downloadPrefix}: ${networkBuildNumber}
-	
+	rm ${OFFLINE_FILE}
+elif [ "${NETWORK_TAG}" != "${LOCAL_TAG}" -o "$2" == "force" ]; then
+	echo Installing latest version of ${downloadPrefix}: ${NETWORK_TAG}
+
+	DL_URL=$(curl -s https://api.github.com/repos/${repo}/releases/latest | grep 'browser_' | cut -d\" -f4 | grep ${downloadPrefix})
+	DL_FILE=${DL_URL##*/}
+	rm -f "/tmp/${DL_FILE}"
+	wget -P /tmp "${DL_URL}"
+  if [ $? -ne 0 ]; then
+		echo "wget of ${DL_FILE} failed. Aborting update."
+		exit 1
+	fi
+
 	rm -r ${installDirectory}
 	mkdir -p ${installDirectory}
 	cd ${installDirectory}
-	wget https://github.com/${repo}/raw/master/host/${downloadPrefix}.${networkBuildNumber}.zip
-	unzip ${downloadPrefix}.${networkBuildNumber}.zip
+	mv "/tmp/${DL_FILE}" .
+
+	unzip ${DL_FILE}
 	chmod 777 *.sh
-	rm ${downloadPrefix}.${networkBuildNumber}.zip
+	rm ${DL_FILE}
 else
 	echo No install required
-	
-	rm networkbuildnumber
-	mv currentbuildnumber build.number
+
 fi
 
 echo Turning off screen saver and power saving
 xset s off         # don't activate screensaver
 xset -dpms         # disable DPMS (Energy Star) features
-xset s noblank     # don't blank the video device 
+xset s noblank     # don't blank the video device
 
 if [ ! -f "/etc/init.d/cwhservice" ]; then
 	echo Installing CWH as a service

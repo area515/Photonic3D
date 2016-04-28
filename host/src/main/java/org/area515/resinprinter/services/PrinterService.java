@@ -1,6 +1,12 @@
 
 package org.area515.resinprinter.services;
 
+import freemarker.template.TemplateException;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 import java.awt.GraphicsDevice;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -26,7 +32,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.api.SwaggerStrings;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
@@ -53,14 +58,7 @@ import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.services.TestingResult.ChartData;
 import org.area515.util.TemplateEngine;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-
-import freemarker.template.TemplateException;
-
-@Api(value="printers", description="This service allows you to manage all printers in Phontonic 3D.")
+@Api(value="printers")
 @Path("printers")
 public class PrinterService {
     private static final Logger logger = LogManager.getLogger();
@@ -87,8 +85,8 @@ public class PrinterService {
 	
     @ApiOperation(value="Opens the shutter(when supported) of the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("openshutter/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -96,10 +94,11 @@ public class PrinterService {
 		return openShutter(printerName, true);
 	}
 	
-    @ApiOperation(value="Closes the shutter(when supported) of the Printer specified by the printername.")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+    @ApiOperation(value="Closes the shutter(when supported) of the Printer specified by the <b class=\"code\">printername</b>.")
+    @ApiResponses(
+    		value = {
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message=SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("closeshutter/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -109,8 +108,8 @@ public class PrinterService {
 	
     @ApiOperation(value="Lists all of the printers that are managed by Photonic 3D.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, message = SwaggerMetadata.TODO),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("list")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -134,8 +133,8 @@ public class PrinterService {
  
     @ApiOperation(value="Returns the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, message = SwaggerMetadata.TODO),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("get/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -155,8 +154,8 @@ public class PrinterService {
 	
     @ApiOperation(value="Deletes the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@POST
 	@DELETE
@@ -185,8 +184,8 @@ public class PrinterService {
 	//TODO: We need to synchronize on this printer to make sure it isn't in use.
     @ApiOperation(value="Saves the Printer.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@POST
 	@Path("save")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -214,8 +213,8 @@ public class PrinterService {
 	
     @ApiOperation(value="Starts the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@POST
 	@Path("start/{printername}")
@@ -238,8 +237,8 @@ public class PrinterService {
 	 
     @ApiOperation(value="Stops the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@POST
 	@Path("stop/{printername}")
@@ -266,8 +265,8 @@ public class PrinterService {
  
     @ApiOperation(value="Creates and returns a Printer based off of a predefined template.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, message = SwaggerMetadata.TODO),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@POST
 	@Path("createTemplatePrinter")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -429,8 +428,8 @@ public class PrinterService {
 	
     @ApiOperation(value="Shows the grid screen on the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("showGridScreen/{printername}/{pixels}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -452,8 +451,8 @@ public class PrinterService {
     @ApiOperation(value="Shows the calibration screen on the Printer specified by the printername. "
     		+ "The calibration screen will show a crosshairs icon with xpixels and ypixels across.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("showCalibrationScreen/{printername}/{xpixels}/{ypixels}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -473,11 +472,11 @@ public class PrinterService {
 		}
 	}
 	
-    @ApiOperation(value="This method saves the Printer with the specified printername using xpixelspermm and ypixelspermm. "
+    @ApiOperation(value="This method calibrates the Printer with the specified printername using <b class=\"code\">xpixelspermm</b> and <b class=\"code\">ypixelspermm</b>. "
     		+ "This is the only service method that allows that saving of a Printer while it has already been started.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	//This is the only method that breaks the rules that says that you can't save a printer while it is started...
 	@GET
 	@Path("calibrate/{printername}/{xpixelspermm}/{ypixelspermm}")
@@ -507,8 +506,8 @@ public class PrinterService {
 	
     @ApiOperation(value="Shows a blank screen on the Printer with the specified printername using xpixelspermm and ypixelspermm.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("showBlankScreen/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -529,8 +528,8 @@ public class PrinterService {
 	
     @ApiOperation(value="Executes the specified device dependent code(generally gcode) on the Printer given by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("executeGCode/{printername}/{gcode}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -547,8 +546,8 @@ public class PrinterService {
 	//MachineControl.cmdMoveX()
     @ApiOperation(value="Executes an X based movement for the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("moveX/{printername}/{distance}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -566,8 +565,8 @@ public class PrinterService {
 	//MachineControl.cmdMoveY()
     @ApiOperation(value="Executes a Y based movement for the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("moveY/{printername}/{distance}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -591,8 +590,8 @@ public class PrinterService {
 	// (-10.0 large reverse)
     @ApiOperation(value="Executes a Z based movement for the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("moveZ/{printername}/{distance}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -609,8 +608,8 @@ public class PrinterService {
 	 
     @ApiOperation(value="Homes the Z axis for the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("homeZ/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -625,8 +624,8 @@ public class PrinterService {
 	 
     @ApiOperation(value="Homes the X axis for the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("homeX/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -642,8 +641,8 @@ public class PrinterService {
 	
     @ApiOperation(value="Homes the Y axis for the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("homeY/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -659,8 +658,8 @@ public class PrinterService {
 
     @ApiOperation(value="Turns off the motors so that they can be manually turned by hand.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("motorsOff/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -675,8 +674,8 @@ public class PrinterService {
 	 
     @ApiOperation(value="Turns on the motors so that they can't be manually turned by hand.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("motorsOn/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -691,8 +690,8 @@ public class PrinterService {
 
     @ApiOperation(value="Starts the projector(if it's supported) for the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("startProjector/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -713,8 +712,8 @@ public class PrinterService {
 	 
     @ApiOperation(value="Stops the projector(if it's supported) for the Printer specified by the printername.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("stopProjector/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -736,8 +735,8 @@ public class PrinterService {
     @ApiOperation(value="Starts a print with the specified Printable fileName and Printer name. "
     		+ "This method is only necessary if there is more than one printer running since you need to designate which Printer you would like to print to. ")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("startJob/{fileName}/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -811,7 +810,7 @@ public class PrinterService {
 		return overrides;
 	}
 	
-    @ApiOperation(value="Tests out a script using the scripting language(likely javascript) specified in the config.propperties via scriptEngineLanguage=[script language]"
+    @ApiOperation(value="Tests out a script using the scripting language(likely javascript) specified in the config.properties via scriptEngineLanguage=[script language]"
     		+ "The returnType parameter passed to this method must match a known Java type or the following format: "
     		+ "requestedJavaReturnTypeOfScript[printerVariableToShowInSeries(start,stop,increment),printerVariableToShowInRange(start,stop,increment)]"
     		+ "Here are some examples: "
@@ -820,8 +819,8 @@ public class PrinterService {
     		+ "If your script wants to return chart data in a json array that describes how 'bulbHours' and 'CURSLICE' affect exposureTime you could use: "
     		+ "java.lang.Double[CURSLICE(1,5,1)buildAreaMM(10000,20000,1000]")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, message = SwaggerMetadata.TODO),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@POST
 	@Path("testScript/{printername}/{scriptname}/{returnType}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -904,8 +903,8 @@ public class PrinterService {
     @ApiOperation(value="Computes the return value, but does not execute the template specified by the post parameters. "
     		+ "Generally the returned template is gcode, but could be any protocol that the user requires.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, message = SwaggerMetadata.TODO),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@POST
 	@Path("testTemplate/{printername}/{templatename}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -927,8 +926,8 @@ public class PrinterService {
 	
     @ApiOperation(value="Returns the remaining print material left in the printer using the org.area515.resinprinter.inkdetection.PrintMaterialDetector that is setup in the Printer specified by the printerName.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("remainingPrintMaterial/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)

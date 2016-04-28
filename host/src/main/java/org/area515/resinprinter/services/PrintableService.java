@@ -34,7 +34,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.api.SwaggerStrings;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
@@ -53,7 +52,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-@Api(value="printables", description="This service allows you to manage all printable files in Phontonic3d.")
+@Api(value="printables")
 @Path("printables")
 public class PrintableService {
     private static final Logger logger = LogManager.getLogger();
@@ -127,9 +126,9 @@ public class PrintableService {
     @ApiOperation(value="Upload a printable file using multipart/form-data. "
     		+ "After the upload is complete, the file will be checked against all known print processors to determine if it is sutable for printing.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 400, message = SwaggerStrings.USER_UNDERSTANDABLE_ERROR),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@POST
 	@Path("/uploadPrintableFile")
 	@Consumes("multipart/form-data")
@@ -140,8 +139,8 @@ public class PrintableService {
     @ApiOperation(value="Attempt to start a print by specifying the name of the printable file. "
     		+ "For this operation to be successful, there must be exactly one Printer started.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@POST
 	@Path("/print/{filename}")
 	public PrintJob print(@PathParam("filename")String fileName) {
@@ -154,7 +153,7 @@ public class PrintableService {
 			if (printer.isStarted() && !printer.isPrintInProgress()) {
 				MachineResponse response = PrinterService.INSTANCE.print(fileName, printer.getName());
 				if (response.getResponse()) {
-					return PrintJobService.INSTANCE.getById(response.message);
+					return PrintJobService.INSTANCE.getById(response.getMessage());
 				} else {
 					throw new IllegalArgumentException(response.getMessage());
 				}
@@ -170,9 +169,9 @@ public class PrintableService {
     @ApiOperation(value="Upload a printable file using application/octet-stream. "
     		+ "After the upload is complete, the file will be checked against all known print processors to determine if it is sutable for printing.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 400, message = SwaggerStrings.USER_UNDERSTANDABLE_ERROR),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@POST
 	@Path("/uploadPrintableFile/{filename}")
 	@Consumes("application/octet-stream")
@@ -231,8 +230,8 @@ public class PrintableService {
 	
     @ApiOperation(value="Lists the printable files that have been previously uploaded and are available to be printed on the Host.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("list")
 	public List<Printable> getPrintables() {
@@ -250,8 +249,8 @@ public class PrintableService {
     
     @ApiOperation(value="Deletes the specificed Printable file.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	 @GET
 	 @DELETE
 	 @Path("delete/{filename}")
@@ -286,10 +285,10 @@ public class PrintableService {
     @ApiOperation(value="Initiates a download from the internet to this host using the specified filename and uri. "
     		+ "This method will return immediately to let the user know whether the the download was scheduled. "
     		+ "After the file is uploaded, the file will be checked to determine if a org.area515.resinprinter.job.PrintFileProcessor is willing to take responsibility for the file. "
-    		+ "If the file upload is successful and PrintFileProcessor assignment is complete" + SwaggerStrings.NOTIFICATION_MANAGER_SUFFIX)
+    		+ "If the file upload is successful and PrintFileProcessor assignment is complete" + SwaggerMetadata.NOTIFICATION_MANAGER_SUFFIX)
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerStrings.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerStrings.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	 @POST
 	 @Path("uploadviaurl/{filename}/{uri}")
 	 @Produces(MediaType.APPLICATION_JSON)
