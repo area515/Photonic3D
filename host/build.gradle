@@ -227,6 +227,15 @@ task runSliceBrowser(type: JavaExec) {
   main = "org.area515.resinprinter.slice.SliceBrowser"
 }
 
+test {
+  testLogging {
+    events "failed"
+    showStackTraces true
+    showExceptions true
+    exceptionFormat "short"
+  }
+}
+
 clean.doFirst {
   // Additions to the built-in clean
   delete "srcbin", "testbin", "cwh.log"
