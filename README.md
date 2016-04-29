@@ -73,9 +73,9 @@ sudo ./start.sh
 
 Latest development:
 ```
-sudo wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/bin/newstart.sh
-sudo chmod 777 newstart.sh
-sudo ./newstart.sh WesGilster
+sudo wget https://github.com/WesGilster/Creation-Workshop-Host/raw/master/host/bin/start.sh
+sudo chmod 777 start.sh
+sudo ./start.sh WesGilster
 ```
 
 Photonic3D will be installed into `/opt/cwh` and an init script will be added to `/etc/init.d` to launch the server on boot.
