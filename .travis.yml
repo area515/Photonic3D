@@ -1,4 +1,5 @@
-sudo: false
+sudo: true
+dist: trusty
 git:
   depth: 3
 language: java
@@ -6,22 +7,28 @@ jdk:
 - oraclejdk8
 os:
 - linux
-script:
+addons:
+  apt:
+    packages:
+      - librxtx-java
+install:
+  - sudo apt-get install -y librxtx-java
   - chmod a+rx host/gradlew
-  - "(cd host ; ./gradlew clean dist)"
+script:
+  - "(cd host ; gradle clean dist)"
+  - "(cd host/bin ; sudo bash -x ./start.sh)"
 deploy:
   - provider: bintray
     file: ".bintray.yml"
-    user: jmkao
-    key:
-      secure: "wwJPSP5OLn5JISA8cZCgui7DcG15JwvUildF0BckSMZ1b6tLb6z/7gxb+wPQ7sDzauKjhQq3x777ej6h4KUrTNxpPS3fwNxjAPAvim1F96enrAY+8Q7hX4PdZYsdHdx/KZ1Q49B7l2eJ4wwEq0IlIOcSsg3u72hsUxjiMTSsmLGZOFPWj1qf/5Rc7ID8QhWaUNo7T8LWw/aaD0qPffNSTaMZw4xZOlhCmYFwXD9X28+aIUBWxHJtkFLjUNwhfKr5M35CrRdXZnj+zhgvABXHFhGdmmGtwAYaGpGBLz2AEoS18YF89nTg/jXqxpb6grsYF1f+vh73YTR9bbXfiNEhMCBM8B5YtECJGQgNZLCgQAC6YrtSozNNpojPihYwb0AHjzswPN02QdLxqLxC1IYjdmfj/2Exv6NHlbQ/qLi3g51GnlchAK4svQuKgHudlS2ZpAzqzzbMiK8Ih6HeQmrhIAa6X8dQgvnIjL9gLTJh8OqbpnO7CWClblKglaBXC0NpZEj+yTvBbFxjxVdjYdDW32miz+7NHvIOw6SCcXy7lxL48RS5gEXzU3JIf079620KgVJUMpYunP3rE9rBJimVXqmoDEoXoTc6Uog953l/ikbkPLAwYN5111m59SGeouEfVrO0fwjHdR0eMtKOp7CXSnJJpZXPd9yXwBHhxc0jHhY="
+    user: $BINTRAY_USER
+    key: $BINTRAY_API_KEY
+    dry-run: $SKIP_BINTRAY
     on:
       all_branches: true
   - provider: releases
     skip_cleanup: true
-    prerelease: true
-    api_key:
-      secure: "lt+86YtJtOUeUTdY2PDtIe0vzBEktq0YNGg7N/1xAp/QedzHThhGqORg3dCjZ4MH43WzD7Jq1hMiwU8VBWfdikY+Y1rsGzOSK5UFJmNKSH6Bxe5RoHC2NE8hcb6pwEQQr6aQsRRpwMSDPGWg3RfbA9lamXpT+WHTACZPIhGXjpL0mWLWPQsJqa6HaiZ4hJ6mhASHtGznANPbPDP6P2HnNbh0nvHAhVS/p58OJrXN0ICj9hALjOxcXZZQjxh0bY5VAhKBwAdfXDkJRpderw14qW1w+yuyr4qs3J0x9k4KV4FLCFEc4aWr5tsfEIC5AB2ztEzqYHXjXMWh1qpMSmwcdYM0ygUw0K4gTUKyvCJT7rWn6DQS6oYGgYiTufDR6alBKK04rPnSueg5BWILqLLUJLw9XFyjyi7M+u1nJF8YReVLE9kYeGzvy7iKRQZE58EyBC5mpo8LPqdqAPbjn20I5wUPOWA6zDUfrCCkNTXTAGKbdKqoKKSt1WYu5mT+ND2/i22XqJrSmvrGt1QYS+/JnAEPvNlEiLxMHJ0L0l8F5yUYqMJ5upul0Nlacds/oIRjNWbjsuFZ/adnTiNxOY+JQCWZfZdSwFMNs75seYS5DXYVbNDrtyTnD2aK9xg5EDPwgtvpYB0c9g1isAKRkfOzuUKZncrcVtDLstgwrDl68dg="
+    prerelease: false
+    api_key: $GITHUB_ACCESS_TOKEN
     file_glob: true
     file: "host/*.zip"
     on:

@@ -1,21 +1,93 @@
-// Configuration:
+// PROJECT CONFIG
+// --------------
 plugins {
+  id "application"
+  id "eclipse"
   id "co.riiid.gradle" version "0.4.2"
   id 'org.ajoberstar.grgit' version '1.4.2'
+  id 'com.google.osdetector' version '1.4.0'
 }
-repositories {
 
+repositories {
+  maven {
+    url 'http://4thline.org/m2'
+  }
+  mavenCentral()
 }
 
 dependencies {
+  compile(group: 'io.swagger', name: 'swagger-jaxrs', version: '1.5.8') {
+    exclude module: 'jsr311-api'
+  }
+
+  compile 'com.sun.mail:javax.mail:1.5.5'
+  compile 'se.sawano.java:alphanumeric-comparator:1.4.1'
+  compile 'org.fourthline.cling:cling-core:2.0.1'
+  compile 'org.fourthline.cling:cling-support:2.0.1'
+  compile 'org.apache.httpcomponents:httpclient:4.3.3'
+
+  compile 'commons-cli:commons-cli:1.2'
+  compile 'commons-codec:commons-codec:1.5'
+  compile 'commons-io:commons-io:2.4'
+  compile 'commons-logging:commons-logging:1.2'
+
+  compile 'org.freemarker:freemarker:2.3.23'
+
+  compile 'com.google.guava:guava:19.0'
+
+  compile 'org.eclipse.jetty:jetty-server:9.3.7.v20160115'
+  compile 'org.eclipse.jetty:jetty-servlet:9.3.7.v20160115'
+  compile 'org.eclipse.jetty:jetty-rewrite:9.3.7.v20160115'
+  compile 'org.eclipse.jetty.websocket:javax-websocket-server-impl:9.3.7.v20160115'
+
+  compile 'com.jcraft:jsch:0.1.53'
+  compile 'org.scream3r:jssc:2.8.0'
+  compile 'org.apache.logging.log4j:log4j-api:2.5'
+  compile 'org.apache.logging.log4j:log4j-core:2.5'
+
+  compile 'org.apache.james:apache-mime4j:0.6.1'
+
+  compile 'org.jboss.resteasy:jaxrs-api:3.0.9.Final'
+  compile 'org.jboss.resteasy:resteasy-jaxrs:3.0.9.Final'
+  compile 'org.jboss.resteasy:resteasy-jackson2-provider:3.0.9.Final'
+  compile('org.jboss.resteasy:resteasy-multipart-provider:3.0.9.Final') {
+    exclude module: 'mail'
+  }
+
+  compile 'com.fasterxml.jackson.core:jackson-core:2.4.5'
+  compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.5'
+  compile 'com.fasterxml.jackson.core:jackson-databind:2.4.5'
+
+  compile 'org.rxtx:rxtx:2.1.7'
+
+  compile 'org.powermock:powermock-module-junit4:1.6.4'
+  compile 'org.powermock:powermock-api-mockito:1.6.4'
+
+  compile 'junit:junit:4.12'
+
+  compile fileTree(dir: 'libs', include: '**/*.jar')
+  compile files('conf')
+}
+
+configurations {
 
 }
 
+sourceSets {
+  // Source and test files are in src/main and src/test per standard configuration
+}
+
+compileJava {
+  options.compilerArgs << '-XDignore.symbol.file'
+  options.fork = true
+  options.forkOptions.executable = 'javac'
+}
+
 github {
-  // owner and repo will be determined from the origin 
+  // owner and repo will be determined from the origin
   // owner = releaseRepoOwner
   // repo = releaseRepoName
-  
+
   // Set token in gradle.properties
   token = releaseRepoToken;
   // tagName = 'd001'
@@ -23,14 +95,40 @@ github {
   // assets = ant.path {fileset(dir: '.', includes: '*.zip')} . list()
 };
 
-// Setup:
+eclipse {
+  classpath {
+    defaultOutputDir = file('srcbin')
+  }
+}
+
+// PROJECT SETUP SCRIPT
+// --------------------
 import org.ajoberstar.grgit.*;
+import org.gradle.internal.os.OperatingSystem;
 
 ant.importBuild 'build.xml';
+
 grgit = Grgit.open(project.file('..'));
 def commitVersion = "unknown";
 
-// Tasks:
+mainClassName = "org.area515.resinprinter.server.Main"
+applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=log4j2.properties"]
+applicationName = 'photonic3d'
+jar.archiveName = 'photonic3d.jar'
+
+// TASK CONFIG
+// -----------
+test {
+  systemProperty "java.library.path", osLibDir()
+  includes = ['**/*FullTestSuite*']
+}
+
+run {
+  systemProperty "java.library.path", osLibDir()
+}
+
+// TASK EXECUTION DEFS
+// -------------------
 task repoVersion() << {
   commitVersion = grgit.describe()
 
@@ -44,11 +142,21 @@ task repoVersion() << {
   println("Git Commit Description: "+commitVersion)
 };
 
-task dist(dependsOn: ['build', 'BuildCWH', 'repoVersion']) {
+task testJar(type: Jar) {
+  baseName = "photonic3d"
+  classifier = "tests"
+  from sourceSets.test.output
+}
+
+task preDist(dependsOn: ['installDist', 'repoVersion']) {
+
+}
+
+task dist(dependsOn: ['preDist', 'BuildCWH']) {
 
 };
 
-task setupRelease() << {
+task setupRemote << {
   def matchingRemotes = grgit.remote.list().findAll({it.name==releaseRepoRemoteName});
   if (matchingRemotes.size < 1) {
     throw new GradleException("No configured remotes match the the remote named: ${releaseRepoRemoteName}");
@@ -59,18 +167,21 @@ task setupRelease() << {
   def releaseUrl = remote.url;
   println("Releasing to: "+releaseUrl);
 
-  def repoMatch = (releaseUrl =~ /github\.com\/([^\/]+)\/([^\/]*?)(\.git)?.?$/);
-  
+  def repoMatch = (releaseUrl =~ /github\.com[\/\:]([^\/]+)\/([^\/]*?)(\.git)?.?$/);
+
   def repoOwner = repoMatch[0][1];
   def repoName = repoMatch[0][2];
-  
+
   println("Repo Owner: ${repoOwner} / Repo Name: ${repoName}");
-  
+
   github.owner = repoOwner;
   github.repo = repoName;
-  
+}
+
+
+task setupRelease(dependsOn: ['setupRemote']) << {
   grgit = Grgit.open(project.file('..'), new Credentials(username: github.owner, password: github.token));
-   
+
   if (releaseRepoToken.equals('GITHUB_API_TOKEN')) {
     throw new GradleException("Please setup your gradle.properties for GitHub Releases")
   }
@@ -80,31 +191,82 @@ task setupRelease() << {
   println("UNCOMMITTED STAGED CHANGES: "+status.staged)
   println("UNCOMMITTED UNSTAGED CHANGES: "+status.unstaged)
   println("----------------------------------------------")
+
+  def tagName = "$System.env.tagName";
+
+  println("Dry-Run Git Push to ${releaseRepoRemoteName}:")
+  grgit.push(dryRun: true, remote: releaseRepoRemoteName);
+  println("----------------------------------------------")
+  println("Check the above git push dry run to ensure that your push will succeed!");
+  ant.input(message: "Press <return> to continue...")
+
+  if (tagName == "${null}") {
+    ant.input(message: "Enter the tag to create for this release > ", addproperty: "tagName")
+    tagName = ant.tagName
+  }
+
+  github.tagName = tagName;
+  grgit.tag.add(name: tagName);
+  println("Added tag: ${tagName}");
+}
+
+task releaseDist (dependsOn: ['dist']) << {
   github.assets = fileTree('.').include("*.zip") as List;
   if (github.assets.size() < 1) {
     throw new GradleException("There are no zip files to release in the project directory.")
   }
+  println("Releasing the following files: "+github.assets);
+}
 
-
-  def tagName = "$System.env.tagName";
-  if (tagName == "${null}") {
-	  def console = System.console()
-	  if (console) {
-	    console.printf("\n\n");
-	    println("Releasing the following files: "+github.assets);
-	    tagName = console.readLine('\nEnter the tag to create for this release > ');
-	  } else {
-	    throw new GradleException('Cannot create console to get user input')
-	  }
-  }	
-
-  github.tagName = tagName;
-
-  grgit.tag.add(name: tagName, force: true);
+task fullRelease(dependsOn: ['setupRelease', 'githubRelease']) << {
   grgit.push(tags: true, remote: releaseRepoRemoteName);
 }
 
-// Post-setup
-githubRelease.dependsOn setupRelease
-BuildCWH.mustRunAfter build
-BuildCWH.mustRunAfter repoVersion
+task runSliceBrowser(type: JavaExec) {
+  classpath = sourceSets.main.runtimeClasspath
+  main = "org.area515.resinprinter.slice.SliceBrowser"
+}
+
+test {
+  testLogging {
+    events "failed"
+    showStackTraces true
+    showExceptions true
+    exceptionFormat "short"
+  }
+}
+
+clean.doFirst {
+  // Additions to the built-in clean
+  delete "srcbin", "testbin", "cwh.log"
+  delete fileTree(dir: '.', include: '*.zip')
+}
+
+// PROJECT POST-SETUP SCRIPT
+// -------------------------
+githubRelease.dependsOn releaseDist
+dist.mustRunAfter setupRelease
+BuildCWH.mustRunAfter preDist
+
+applicationDistribution.from(testJar) {
+  into "lib"
+}
+
+// UTILITY FUNCTIONS
+// -----------------
+String osLibDir() {
+  switch (osdetector.classifier) {
+    case "windows-x86_64":
+      return 'os/win64'
+    case "windows-x86_32":
+      return 'os/win32'
+    case "linux-x86_64":
+      return 'os/Linux/x86_64'
+    case "linux-x86_32":
+      return 'os/Linux/i686'
+    case "linux-arm_32":
+      return 'os/Linux/armv61'
+    default:
+      return 'unknown'
+  }
+}

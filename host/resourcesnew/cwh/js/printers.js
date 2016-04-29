@@ -9,11 +9,13 @@
 		$scope.repo = REPO;
 		
 		this.loadingFontsMessage = "--- Loading fonts from server ---"
+		this.loadingProfilesMessage = "--- Loading slicing profiles from server ---"
+		this.loadingMachineConfigMessage = "--- Loading machine configurations from server ---"
 		function refreshSelectedPrinter(printerList) {
         	var foundPrinter = false;
         	
         	for (printer of printerList) {
-        		if (controller.currentPrinter != null && printer.name === controller.currentPrinter.name) {
+        		if (controller.currentPrinter != null && printer.configuration.name === controller.currentPrinter.configuration.name) {
         			controller.currentPrinter = printer;
         			foundPrinter = true;
         		}
@@ -211,6 +213,18 @@
 				function (data) {
 					controller.fontNames = data;
 					controller.loadingFontsMessage = "Select a font...";
+				});
+		
+		$http.get('/services/machine/slicingProfiles/list').success(
+				function (data) {
+					controller.slicingProfiles = data;
+					controller.loadingProfilesMessage = "Select a slicing profile...";
+				});
+		
+		$http.get('/services/machine/machineConfigurations/list').success(
+				function (data) {
+					controller.machineConfigurations = data;
+					controller.loadingMachineConfigMessage = "Select a machine configuration...";
 				});
 		
 		$http.get("https://api.github.com/repos/" + REPO + "/Creation-Workshop-Host/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(

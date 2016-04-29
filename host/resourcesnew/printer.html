@@ -40,14 +40,34 @@
 		<div class="list-group-item">
 			<label>Machine Configuration</label>
 			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.MachineConfigurationName}}</h4>
+			<select name="type" class="form-control"
+				ng-model="printersController.currentPrinter.configuration.machineConfig" 
+				ng-options="item as item.name for item in printersController.machineConfigurations track by item.name"
+				ng-change="printersController.currentPrinter.configuration.MachineConfigurationName=printersController.currentPrinter.configuration.machineConfig.name"
+				required>
+			  <option value="">{{printersController.loadingMachineConfigMessage}}</option>
+			</select>		
 		</div>
 		<div class="list-group-item">
 			<label>Slicing Profile</label>
 			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.SlicingProfileName}}</h4>
+			<select name="type" class="form-control"
+				ng-model="printersController.currentPrinter.configuration.slicingProfile" 
+				ng-options="item as item.name for item in printersController.slicingProfiles track by item.name"
+				ng-change="printersController.currentPrinter.configuration.SlicingProfileName=printersController.currentPrinter.configuration.slicingProfile.name"
+				required>
+			  <option value="">{{printersController.loadingProfilesMessage}}</option>
+			</select>
 		</div>
 		<div class="list-group-item">
 			<label>Ink Configuration</label>
 			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.slicingProfile.SelectedInk}}</h4>
+			<select name="type" class="form-control"
+				ng-model="printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex"
+				ng-options="index*1 as item.Name for (index, item) in printersController.currentPrinter.configuration.slicingProfile.InkConfig track by index"
+				ng-change="printersController.currentPrinter.configuration.slicingProfile.SelectedInk=printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].Name">
+			  <option value="">Select an ink configuration...</option>
+			</select>
 		</div>
 	</div>
 			

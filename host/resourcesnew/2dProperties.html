@@ -1,11 +1,11 @@
 		<div class="panel panel-default">
 			<div class="panel-heading clearfix">
-				<i class="fa pull-left fa-2x fa-bold"></i>
-				<h4 class="pull-left">Font Properties</h4>
+				<i class="fa pull-left fa-2x fa-hand-peace-o"></i>
+				<h4 class="pull-left">2D File Settings</h4>
 				<div class="btn-group pull-right" >
 					<button class="btn btn-primary" ng-click="showFontUpload()">
 						<i class="fa fa-upload"></i> 
-						<span>Upload</span>
+						<span>Upload Font</span>
 					</button>
 					<button class="btn btn-primary" ng-disabled="printersController.currentPrinter.started" ng-click="savePrinter(printersController.currentPrinter, null)" >
 						<i class="fa fa-pencil"></i>
@@ -20,7 +20,7 @@
 						<h4 class="pull-left">Font Name</h4>
 					</div>
 					<select name="type" class="form-control"
-						ng-model="printersController.currentPrinter.configuration.slicingProfile.Font.Name" 
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.TwoDimensionalSettings.Font.Name" 
 						ng-options="item for item in printersController.fontNames"
 						required>
 					  <option value="">{{printersController.loadingFontsMessage}}</option>
@@ -28,8 +28,29 @@
 				</div>
 				<div class="list-group-item">
 					<i class="fa fa-2x fa-text-height pull-left"></i>
-					<h4>Size</h4>
-					<input type="text" class="form-control" placeholder="pt" ng-model="printersController.currentPrinter.configuration.slicingProfile.Font.Size">
+					<h4>Font Size</h4>
+					<input type="number" class="form-control" placeholder="pt" ng-model="printersController.currentPrinter.configuration.slicingProfile.TwoDimensionalSettings.Font.Size">
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-ellipsis-v pull-left"></i>
+					<h4>2D Extrusion Height (mm)</h4>
+					<input type="number" class="form-control" placeholder="mm" ng-model="printersController.currentPrinter.configuration.slicingProfile.TwoDimensionalSettings.ExtrusionHeightMM">
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-indent pull-left"></i>
+					<h4>Platform Height (mm)</h4>
+					<input type="number" class="form-control" placeholder="mm" ng-model="printersController.currentPrinter.configuration.slicingProfile.TwoDimensionalSettings.PlatformHeightMM">
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-edit pull-left"></i>
+					<h4>Platform Calculator</h4>
+					<div class="input-group"
+						cwh-testscript
+						placeholder="(no return value required yet)"
+						helpURL="https://docs.oracle.com/javase/8/docs/api/java/awt/Graphics.html"
+						testClick="printersController.testScript('2D Platform rendering script', 'java.lang.Void', printersController.currentPrinter.configuration.slicingProfile.TwoDimensionalSettings.PlatformCalculator)"
+						ng-model="printersController.currentPrinter.configuration.slicingProfile.TwoDimensionalSettings.PlatformCalculator">
+					</div>
 				</div>
 			</div>
 			
