@@ -3,26 +3,18 @@
 	<property environment="env"/>
 
 	<target name="BuildCWH" description="build server and client">
-		<buildnumber/>
+		<!-- Don't update build number anymore -->
+		<!-- <buildnumber/> -->
 
 		<condition property="repo.version" value="${repo.version}" else="unknown">
 			<isset property="repo.version" />
 		</condition>
 
-		<condition property="deployedServerZipFile" value="cwh-${repo.version}.zip"
-			else="cwh-0.${build.number}.zip">
-			<istrue value="${env.CI}"/>
-		</condition>
+		<property name="deployedServerZipFile" value="cwh-${repo.version}.zip" />
 
-		<condition property="deployedTestZipFile" value="cwhTestKit-${repo.version}.zip"
-			else="cwhTestKit-0.${build.number}.zip">
-			<istrue value="${env.CI}"/>
-		</condition>
+		<property name="deployedTestZipFile" value="cwhTestKit-${repo.version}.zip" />
 
-		<condition property="deployedClientZipFile" value="cwhClient-${repo.version}.zip"
-			else="cwhClient-0.${build.number}.zip">
-			<istrue value="${env.CI}"/>
-		</condition>
+		<property name="deployedClientZipFile" value="cwhClient-${repo.version}.zip"/>
 
 		<copy file="build.number" tofile="build/build.number" overwrite="yes">
 			<filterchain>
