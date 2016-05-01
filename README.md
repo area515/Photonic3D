@@ -59,6 +59,7 @@ Feature List
 25. Print material detection framework implemented with a computer vision inspection portal.
 26. Supports Windows, OSX and Linux OSs. (Service support on Linux)
 27. Supports dynamic direct slice-on-the-fly 3d printing of (.mazecube, .stl, .jpg/.png/.gif, .cws/.zip) files.
+28. Automatic uploading of files from removable drives. (USB sticks)
 
 Linux Installation Quickstart
 -------------------------------------------------------------------------------
