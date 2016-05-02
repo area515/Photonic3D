@@ -8,6 +8,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -97,14 +98,15 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 	}
 	
 	GenericHoughDetection<Circle> buildCircleDetection(int width, int height) {
-		CircleDetector circleDector = new CircleDetector(8, 5, 50, 1);//TODO: these need to be based off of the image size
-		GenericHoughDetection<Circle> houghCircleDetection = new GenericHoughDetection<Circle>(new Rectangle(0,  0, width, height), circleDector, 0.6f, 0, false);
+		float imageSize = (float)Math.sqrt(width * height);//8, 5, 50, 1
+		CircleDetector circleDector = new CircleDetector(.4f * imageSize, (int)(.15 * imageSize), (int)(.5 * imageSize), 1);
+		GenericHoughDetection<Circle> houghCircleDetection = new GenericHoughDetection<Circle>(new Rectangle(0,  0, width, height), circleDector, 0.55f, 0, false);
 		return houghCircleDetection;
 	}
 	
 	GenericHoughDetection<Line> buildLineDetection(int width, int height) {
-		LineDetector lineDetector = new LineDetector(.001d);
-		GenericHoughDetection<Line> houghLineDetection = new GenericHoughDetection<Line>(new Rectangle(0,  0, width, height), lineDetector, 0.4f, 0, false);
+		LineDetector lineDetector = new LineDetector(.01d);                                                                                
+		GenericHoughDetection<Line> houghLineDetection = new GenericHoughDetection<Line>(new Rectangle(0,  0, width, height), lineDetector, 0.29f, 0, false);
 		return houghLineDetection;
 	}
 	
@@ -120,6 +122,16 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 		List<Line> lines = houghLineDetection.getShapes();
 		//logger.info(lines);
 		
+		//Remove vertical lines
+		Iterator<Line> lineIter = lines.iterator();
+		while (lineIter.hasNext()) {
+			Line line = lineIter.next();
+			double slope = Math.abs(line.getSlope());
+			if (Double.isNaN(slope) || slope > 1) {
+				lineIter.remove();
+			}
+		}
+		
 		//This assumes the camera is oriented such that +y = direction that gravity pulls objects
 		List<Float> percentages = new ArrayList<Float>();
 		for (Circle currentCircle : circles) {
@@ -131,7 +143,7 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 				}
 			}
 		}
-
+		
 		float total = 0;
 		for (Float aFloat : percentages) {
 			total += aFloat;

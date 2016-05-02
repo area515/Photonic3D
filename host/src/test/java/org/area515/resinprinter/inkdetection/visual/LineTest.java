@@ -28,9 +28,9 @@ public class LineTest {
 		Graphics g = output.getGraphics();
 		g.drawImage(input, 0, 0, null);
 		g.setColor(Color.RED);
-		for (Line line : centers) {
+		/*for (Line line : centers) {
 			g.drawLine(line.getX1(), line.getY1(), line.getX2(), line.getY2());
-		}
+		}*/
 		//BufferedImage mask = houghDetection.generateWatchOverlayInImageSpace(input.getWidth(), input.getHeight(), 0);
 		//g.drawImage(mask, 0, 0, null);
 		ImageIO.write(output, "png", new File("images/outputline.png"));
