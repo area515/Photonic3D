@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.buildship.core.launch.runconfiguration">
 <listAttribute key="arguments"/>
-<stringAttribute key="bad_container_name" value="\host\launchers\Phot"/>
 <stringAttribute key="gradle_distribution" value="GRADLE_DISTRIBUTION(WRAPPER)"/>
 <stringAttribute key="java_home" value="${ee_home:JavaSE-1.8}"/>
 <listAttribute key="jvm_arguments">
@@ -12,5 +11,5 @@
 <listAttribute key="tasks">
 <listEntry value="fullRelease"/>
 </listAttribute>
-<stringAttribute key="working_dir" value="${workspace_loc:/host}"/>
+<stringAttribute key="working_dir" value="${workspace_loc:/photonic3d}"/>
 </launchConfiguration>
