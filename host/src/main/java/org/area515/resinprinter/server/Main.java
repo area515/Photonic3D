@@ -59,6 +59,9 @@ public class Main {
 		logger.info("=================================================================");
 
 		int port = HostProperties.Instance().getPrinterHostPort();
+		if (System.getProperty("overrideHostPort") != null) {
+			port = Integer.parseInt(System.getProperty("overrideHostPort"));
+		}
 		/*
 		 * Sequence
 		 * Setup ResourceHandler for html files
