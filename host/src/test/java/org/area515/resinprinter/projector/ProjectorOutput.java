@@ -73,7 +73,7 @@ public class ProjectorOutput {
 			if (System.currentTimeMillis() - start >= HexCodeBasedProjector.PROJECTOR_TIMEOUT) {
 				return "No Match\n"
 						+ " Hex:" + DatatypeConverter.printHexBinary(builder.toString().getBytes()) + "\n"
-						+ " ASCII:" + builder.toString().getBytes() + "\n"
+						+ " ASCII:" + builder.toString() + "\n"
 						+ "Against:" + (pattern != null?pattern.pattern():null);
 			}
 		}

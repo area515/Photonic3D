@@ -198,7 +198,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 					 List<List<Line3d>> coloredLines = slicer.colorizePolygons(null, null);
 					 int t = 0;
 					 for (List<Line3d> loops : coloredLines) {
-						 SliceBrowserTreeNode parent = new SliceBrowserTreeNode("Slice:" + slicer.getZ() + " #" + t++ + " :(" + loops.size() + ")");
+						 SliceBrowserTreeNode parent = new SliceBrowserTreeNode("Slice:" + slicer.getZIndex() + " #" + t++ + " :(" + loops.size() + ")");
 						 rootNode.add(parent);
 						 for (Line3d line : loops) {
 							 parent.add(new SliceBrowserTreeNode(line));
@@ -212,7 +212,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			}
 			
 			if (mouseLabel != null) {
-				mouseLabel.setText("Z:" + slicer.getZ() + " Area:" + slicer.getBuildArea());
+				mouseLabel.setText("Z:" + slicer.getZIndex() + " Area:" + slicer.getBuildArea());
 			}
 			browserPanel.repaint();
 		}
@@ -247,19 +247,19 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			JOptionPane.showMessageDialog(null, "File not found:" + loadStlText.getText());
 			return;
 		}
-		zSliceModel.setMaximum(slicer.getZMax());
-		zSliceModel.setMinimum(slicer.getZMin());
+		zSliceModel.setMaximum(slicer.getZMaxIndex());
+		zSliceModel.setMinimum(slicer.getZMinIndex());
 		if (firstSlice == null) {
-			firstSlice = slicer.getZMin();
+			firstSlice = slicer.getZMinIndex();
 		}
 		
-		firstSlice = Math.min(Math.max(firstSlice, slicer.getZMin()), slicer.getZMax());
+		firstSlice = Math.min(Math.max(firstSlice, slicer.getZMinIndex()), slicer.getZMaxIndex());
 		zSliceModel.setValue(firstSlice);
-		slicer.setZ(firstSlice);
+		slicer.setZIndex(firstSlice);
 	}
 	
 	public void runWatch(int z, JLabel mouseLabel) {
-		slicer.setZ(z);
+		slicer.setZIndex(z);
 		System.out.println("Testing Z:" + z);
 		slicer.colorizePolygons(sliceBrowserListener.getSelectedTriangles(), watchYs);
 		for (StlError error : slicer.getStlErrors()) {
@@ -312,15 +312,15 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				if (slicer == null) {
 					return;
 				}
-				mouseLabel.setText("X:" + e.getX() + " Y:" + e.getY() + " Z:" + slicer.getZ() + " Area:"
+				mouseLabel.setText("X:" + e.getX() + " Y:" + e.getY() + " Z:" + slicer.getZIndex() + " Area:"
 						+ slicer.getBuildArea());
 			}
 		});
 		browserPanel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				List<Shape3d> shapes = slicer.getTrianglesAt(e.getX(), e.getY());
-				for (Shape3d shape : shapes) {
+				List<Shape3d> clickedShapes = slicer.getTrianglesAt(e.getX(), e.getY());
+				for (Shape3d shape : clickedShapes) {
 					Line3d line = (Line3d) shape;
 					Face3d face = line.getOriginatingFace();
 
@@ -365,7 +365,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 							joinFile = checkFile;
 						}
 						FillPoint newPoint = new FillPoint();
-						newPoint.setSliceNumber(slicer.getZ());
+						newPoint.setSliceNumber(slicer.getZIndex());
 						newPoint.setY(e.getY());
 						newPoint.setX(e.getX());
 						joinFile.getPoints().add(newPoint);
@@ -380,8 +380,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				while (depth.hasMoreElements()) {
 					SliceBrowserTreeNode currentNode = (SliceBrowserTreeNode) depth.nextElement();
 					System.out.println(currentNode);
-					for (Shape3d shape : shapes) {
-						Line3d line = slicer.translateLine(((Line3d) shape));
+					for (Shape3d clickedShape : clickedShapes) {
+						Line3d line = slicer.translateLine(((Line3d) clickedShape));
 
 						if (line.pointsEqual(currentNode.getUserObject())) {
 							selectedPaths.add(new TreePath(currentNode.getPath()));
@@ -404,8 +404,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		zSliceBar.addAdjustmentListener(new AdjustmentListener() {
 			@Override
 			public void adjustmentValueChanged(AdjustmentEvent e) {
-				slicer.setZ(e.getValue());
-				mouseLabel.setText("Z:" + slicer.getZ());
+				slicer.setZIndex(e.getValue());
+				mouseLabel.setText("Z:" + slicer.getZIndex());
 				useRender = false;
 				sliceBrowserListener.clearChildren();
 				lineSliceModel.clearChildren();
@@ -469,8 +469,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		findNextTriangle.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int z = slicer.getZ() + 1;
-				slicer.setZ(z);
+				int z = slicer.getZIndex() + 1;
+				slicer.setZIndex(z);
 				runWatch(z, mouseLabel);
 			}
 		});
@@ -479,7 +479,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		findPreviousTriangle.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int z = slicer.getZ() - 1;
+				int z = slicer.getZIndex() - 1;
 				runWatch(z, mouseLabel);
 			}
 		});
@@ -496,7 +496,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		runWatches.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				runWatch(slicer.getZ(), mouseLabel);
+				runWatch(slicer.getZIndex(), mouseLabel);
 			}
 		});
 

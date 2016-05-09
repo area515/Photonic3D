@@ -59,8 +59,10 @@ public class ZSlicer {
 	 private int z = 0;
 	 private int sliceMaxX;
 	 private int sliceMaxY;
+	 private int sliceMaxZ;
 	 private int sliceMinX;
 	 private int sliceMinY;
+	 private int sliceMinZ;
 	 private int buildArea;
 	 
 	 //TODO: Need to add in super sampling
@@ -80,7 +82,7 @@ public class ZSlicer {
 				Point3d normal = new Point3d(
 					in.getFloat(), 
 					in.getFloat(), 
-					in.getFloat() / ZSlicer.this.sliceResolution);
+					in.getFloat());// / ZSlicer.this.sliceResolution);
 
 			    // Read vertex1
 				double p1[] = new double[]{in.getFloat(), in.getFloat(), in.getFloat()};
@@ -90,19 +92,19 @@ public class ZSlicer {
 				triangle[0] = new Point3d(
 					p1[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
 					p1[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
-					p1[2] / ZSlicer.this.sliceResolution);
+					p1[2] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale));
 
 			    // Read vertex2
 				triangle[1] = new Point3d(
 					p2[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
 					p2[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
-					p2[2] / ZSlicer.this.sliceResolution);
+					p2[2] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale));
 
 			    // Read vertex3
 				triangle[2] = new Point3d(
 					p3[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
 					p3[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
-					p3[2] / ZSlicer.this.sliceResolution);
+					p3[2] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale));
 				
 				if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
 					/*normal.x = (p3[1] - p2[1]) * (p2[2] - p1[2]) - (p3[2] - p2[2]) * (p2[1] - p1[1]);
@@ -142,16 +144,20 @@ public class ZSlicer {
 	 private void placeIntoCompletedLoopList(List<Line3d> completedLoop, List<List<Line3d>> completedFillInLoops) {
 		 List<Line3d> lines = new ArrayList<Line3d>();
 		 for (Line3d line : completedLoop) {
-			 double x1 = line.getPointOne().x / (precisionScaler) * pixelsPerMMX + imageOffsetX;
-			 double y1 = line.getPointOne().y / (precisionScaler) * pixelsPerMMY + imageOffsetY;
-			 double x2 = line.getPointTwo().x / (precisionScaler) * pixelsPerMMX + imageOffsetX;
-			 double y2 = line.getPointTwo().y / (precisionScaler) * pixelsPerMMY + imageOffsetY;
+			 double x1 = line.getPointOne().x / precisionScaler * pixelsPerMMX + imageOffsetX;
+			 double y1 = line.getPointOne().y / precisionScaler * pixelsPerMMY + imageOffsetY;
+			 double z1 = line.getPointOne().z / precisionScaler;// / sliceResolution;
+			 double x2 = line.getPointTwo().x / precisionScaler * pixelsPerMMX + imageOffsetX;
+			 double y2 = line.getPointTwo().y / precisionScaler * pixelsPerMMY + imageOffsetY;
+			 double z2 = line.getPointTwo().z / precisionScaler;// / sliceResolution;
 			 sliceMinX = (int)Math.min(sliceMinX, Math.min(Math.floor(x1), Math.floor(x2)));
 			 sliceMaxX = (int)Math.max(sliceMaxX, Math.max(Math.ceil(x1), Math.ceil(x2)));
 			 sliceMinY = (int)Math.min(sliceMinY, Math.min(Math.floor(y1), Math.floor(y2)));
 			 sliceMaxY = (int)Math.max(sliceMaxY, Math.max(Math.ceil(y1), Math.ceil(y2)));
-			 lines.add(new Line3d(new Point3d(x1, y1, line.getPointOne().z * sliceResolution),
-					 			  new Point3d(x2, y2, line.getPointTwo().z * sliceResolution),
+			 sliceMinZ = (int)Math.min(sliceMinZ, Math.min(Math.floor(z1), Math.floor(z2)));
+			 sliceMaxZ = (int)Math.max(sliceMaxZ, Math.max(Math.ceil(z1), Math.ceil(z2)));
+			 lines.add(new Line3d(new Point3d(x1, y1, z1),
+					 			  new Point3d(x2, y2, z2),
 							 	  line.getNormal(), line.getOriginatingFace(), false));
 			
 		 }
@@ -398,15 +404,19 @@ public class ZSlicer {
 	 }
 	 
 	 public Point3d translatePoint(Point3d point) {
-		 return new Point3d(translateX(point.x), translateY(point.y), point.z * sliceResolution);
+		 return new Point3d(translateX(point.x), translateY(point.y), translateZ(point.z));
 	 }
 	 
 	 public double translateX(double x) {
-		 return (x / (precisionScaler) * pixelsPerMMX + imageOffsetX);
+		 return (x / precisionScaler * pixelsPerMMX + imageOffsetX);
 	 }
 	 
 	 public double translateY(double y) {
-		 return (y / (precisionScaler) * pixelsPerMMY + imageOffsetY);
+		 return (y / precisionScaler * pixelsPerMMY + imageOffsetY);
+	 }
+	 
+	 public double translateZ(double z) {
+		 return z / precisionScaler;// / sliceResolution;
 	 }
 	 
 	 //NOT used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
@@ -414,7 +424,7 @@ public class ZSlicer {
 		 List<Shape3d> shapes = new ArrayList<Shape3d>();
 		  for (Triangle3d triangle : stlFile.getTriangles()) {
 			  //if (triangle.intersectsZ(z + zOffset)) {
-				  Shape3d shape = triangle.getZIntersection(z + zOffset);
+				  Shape3d shape = triangle.getZIntersection(z * precisionScaler * sliceResolution + zOffset);
 				  if (shape != null) {
 					  shapes.add(shape);
 				  }
@@ -591,10 +601,11 @@ public class ZSlicer {
 			  /*if (triangle.onZeroZ())  {
 				  logger.debug("on z");//123456
 			  }*/
-			  if (triangle.intersectsZ(z + zOffset)) {
-				  Shape3d shape = triangle.getZIntersection(z + zOffset);
+			  double actualZ = (double)z * precisionScaler * sliceResolution + zOffset;
+			  if (triangle.intersectsZ(actualZ)) {
+				  Shape3d shape = triangle.getZIntersection(actualZ);
 				  if (shape instanceof Triangle3d) {
-					  placeIntoCompletedLoopList(triangle.getLines(), completedFillInLoops);
+					  placeIntoCompletedLoopList(((Triangle3d)shape).getLines(), completedFillInLoops);
 					  trianglesAndBrokenFacesForMazeTraversal.add((Triangle3d)shape);
 					  logger.debug("Triangle:{}", ()-> translateTriangle((Triangle3d)shape));
 				  } else if (shape instanceof Line3d) {
@@ -852,7 +863,7 @@ public class ZSlicer {
 					  watchedYs,
 					  y * ScanlineFillPolygonWork.SMALLEST_UNIT_OF_WORK + sliceMinY,
 					  (y + 1) * ScanlineFillPolygonWork.SMALLEST_UNIT_OF_WORK + sliceMinY - 1,
-					  z + zOffset);
+					  z);
 			  completedWork.add(pool.submit(work));
 		  }
 		  
@@ -917,11 +928,11 @@ public class ZSlicer {
 		 }
 	 }
 	 
-	 public int getZ() {
+	 public int getZIndex() {
  		return z; 
 	 }
 	
-     public void setZ(int z) {
+     public void setZIndex(int z) {
  		this.z = z;
 		fillInPolygons = null;
 		fillInScanLines = null;
@@ -944,11 +955,11 @@ public class ZSlicer {
 		return stlScale;
 	}
 
-	public int getZMin() {
-		return (int)Math.ceil(stlFile.getZmin());
+	public int getZMinIndex() {
+		return (int)Math.ceil(stlFile.getZmin() / precisionScaler / sliceResolution - zOffset);
 	}
 	
-	public int getZMax() {
-		return (int)Math.floor(stlFile.getZmax());
+	public int getZMaxIndex() {
+		return (int)Math.floor(stlFile.getZmax() / precisionScaler / sliceResolution - zOffset);
 	}
 }

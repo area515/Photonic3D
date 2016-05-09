@@ -42,7 +42,7 @@ public class ImageDetectionPanel extends JSplitPane {
 	private ImagePanel imagePanel;
 	private JTree shapeTree;
 	private ShapeTreeModel shapeTreeModel = new ShapeTreeModel();
-	private String firstFile = "C:\\Users\\wgilster\\git\\Creation-Workshop-Host\\host\\tests\\org\\area515\\resinprinter\\inkdetection\\visual\\ToughSituation.png";
+	private String firstFile = "C:\\Users\\wgilster\\git\\Creation-Workshop-Host\\host\\src\\test\\resources\\org\\area515\\resinprinter\\inkdetection\\visual\\ToughSituation.png";
 	private JTextField loadImageText = new JTextField(30);
 	private VisualPrintMaterialDetector printMaterialDetector = new VisualPrintMaterialDetector();
 	private BufferedImage originalImage;

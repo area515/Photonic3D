@@ -26,10 +26,10 @@ public class ScanlineFillPolygonWork extends RecursiveTask<ScanlineFillPolygonWo
 	private int buildArea;
 	private int start;
 	private int stop;
-	private double z;
+	private int z;
 	private List<Integer> watchedYs;
 	
-	public ScanlineFillPolygonWork(List<Line3d> potentialLinesInRange, List<Triangle3d> watchedTriangles, List<Integer> watchedYs, int start, int stop, double z) {
+	public ScanlineFillPolygonWork(List<Line3d> potentialLinesInRange, List<Triangle3d> watchedTriangles, List<Integer> watchedYs, int start, int stop, int z) {
 		this.potentialLinesInRange = potentialLinesInRange;
 		this.watchedTriangles = watchedTriangles;
 		this.watchedYs = watchedYs;
