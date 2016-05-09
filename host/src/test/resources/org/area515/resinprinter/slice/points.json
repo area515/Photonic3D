@@ -23,6 +23,62 @@
     "x" : 526,
     "y" : 162,
     "sliceNumber" : 0
+  }, {
+    "x" : 425,
+    "y" : 270,
+    "sliceNumber" : 95
+  }, {
+    "x" : 531,
+    "y" : 161,
+    "sliceNumber" : 95
+  }, {
+    "x" : 431,
+    "y" : 172,
+    "sliceNumber" : 125
+  }, {
+    "x" : 530,
+    "y" : 161,
+    "sliceNumber" : 125
+  }, {
+    "x" : 421,
+    "y" : 271,
+    "sliceNumber" : 125
+  }, {
+    "x" : 602,
+    "y" : 162,
+    "sliceNumber" : 125
+  }, {
+    "x" : 436,
+    "y" : 162,
+    "sliceNumber" : 140
+  }, {
+    "x" : 538,
+    "y" : 159,
+    "sliceNumber" : 140
+  }, {
+    "x" : 600,
+    "y" : 163,
+    "sliceNumber" : 140
+  }, {
+    "x" : 429,
+    "y" : 337,
+    "sliceNumber" : 220
+  }, {
+    "x" : 606,
+    "y" : 164,
+    "sliceNumber" : 220
+  }, {
+    "x" : 419,
+    "y" : 264,
+    "sliceNumber" : 250
+  }, {
+    "x" : 513,
+    "y" : 155,
+    "sliceNumber" : 250
+  }, {
+    "x" : 435,
+    "y" : 175,
+    "sliceNumber" : 250
   } ],
   "fileName" : "CornerBracket_2.stl",
   "stlScale" : 1.0,
