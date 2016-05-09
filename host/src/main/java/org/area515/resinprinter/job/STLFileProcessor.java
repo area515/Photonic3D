@@ -67,18 +67,18 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>
 		
 		stlData.slicer = new ZSlicer(printJob.getJobFile(), 1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, true);
 		stlData.slicer.loadFile(new Double(dataAid.xResolution), new Double(dataAid.yResolution));
-		printJob.setTotalSlices(stlData.slicer.getZMax() - stlData.slicer.getZMin());
+		printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
 		
 		//Get the slicer queued up for the first image;
-		stlData.slicer.setZ(stlData.slicer.getZMin());
+		stlData.slicer.setZIndex(stlData.slicer.getZMinIndex());
 		Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
 		Future<BufferedImage> currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
 		
 		//Everything needs to be setup in the dataByPrintJob before we start the header
 		performHeader(dataAid);
 		
-		int startPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(stlData.slicer.getZMin() + 1): (stlData.slicer.getZMax() + 1);
-		int endPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(stlData.slicer.getZMax() + 1): (stlData.slicer.getZMin() + 1);
+		int startPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(stlData.slicer.getZMinIndex() + 1): (stlData.slicer.getZMaxIndex() + 1);
+		int endPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(stlData.slicer.getZMaxIndex() + 1): (stlData.slicer.getZMinIndex() + 1);
 		for (int z = startPoint; z <= endPoint && dataAid.printer.isPrintActive(); z += dataAid.slicingProfile.getDirection().getVector()) {
 			
 			//Performs all of the duties that are common to most print files
@@ -100,8 +100,8 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>
 			nextRenderingPointer = stlData.getNextRenderingPointer();
 			
 			//Render the next image while we are waiting for the current image to cure
-			if (z < stlData.slicer.getZMax() + 1) {
-				stlData.slicer.setZ(z);
+			if (z < stlData.slicer.getZMaxIndex() + 1) {
+				stlData.slicer.setZIndex(z);
 				currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
 			}
 			
