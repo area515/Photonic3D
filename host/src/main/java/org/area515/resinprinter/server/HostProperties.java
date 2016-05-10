@@ -217,6 +217,9 @@ public class HostProperties {
 		}
 		useSSL = new Boolean(configurationProperties.getProperty("useSSL", "false"));
 		printerHostPort = new Integer(configurationProperties.getProperty("printerHostPort", useSSL?"443":"9091"));
+		if (System.getProperty("overrideHostPort") != null) {
+			printerHostPort = Integer.parseInt(System.getProperty("overrideHostPort"));
+		}
 		externallyAccessableName = configurationProperties.getProperty("externallyAccessableName");
 		keypairPassword = configurationProperties.getProperty("keypairPassword");
 		keystorePassword = configurationProperties.getProperty("keystorePassword");
