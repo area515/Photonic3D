@@ -33,7 +33,7 @@ public class PrinterTools extends JFrame {
 
 		setTitle("Printer Simulation");
 		// window.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		setMinimumSize(new Dimension(500, 500));
+		setMinimumSize(new Dimension(1000, 500));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 	}

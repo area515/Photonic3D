@@ -24,10 +24,12 @@ import java.util.Date;
 
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
+import org.eclipse.jetty.annotations.ServletSecurityAnnotationHandler;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.HashLoginService;
+import org.eclipse.jetty.security.authentication.FormAuthenticator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -208,11 +210,15 @@ public class JettySecurityUtils {
         		Credential.getCredential(HostProperties.Instance().getClientPassword()), new String[] { HostProperties.FULL_RIGHTS});
         loginService.setName(HostProperties.Instance().getSecurityRealmName());
         loginService.start();
-        
+        //OAuthLoginService OAuth2 AuthenticatorFactory ServletSecurityAnnotationHandler
+        //http://stackoverflow.com/questions/24591782/resteasy-support-for-jax-rs-rolesallowed
         ConstraintSecurityHandler csh = new ConstraintSecurityHandler();
         csh.setLoginService(loginService);
+        //FormAuthenticator d;
+        //csh.setAuthenticator(authenticator);
+        //csh.setAuthenticatorFactory(null);change above from BASIC to FORM and change this to a FormAuthenticator
         csh.setConstraintMappings( new ConstraintMapping[]{ mapping } );
-     
+
      	context.setSecurityHandler(csh);
 	}
 }

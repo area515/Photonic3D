@@ -28,7 +28,7 @@
     "y" : 270,
     "sliceNumber" : 95
   }, {
-    "x" : 531,
+    "x" : 529,
     "y" : 161,
     "sliceNumber" : 95
   }, {
@@ -79,6 +79,10 @@
     "x" : 435,
     "y" : 175,
     "sliceNumber" : 250
+  }, {
+    "x" : 433,
+    "y" : 236,
+    "sliceNumber" : 146
   } ],
   "fileName" : "CornerBracket_2.stl",
   "stlScale" : 1.0,

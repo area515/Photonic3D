@@ -10,6 +10,7 @@ import java.util.concurrent.RecursiveAction;
 import org.area515.resinprinter.stl.Face3d;
 import org.area515.resinprinter.stl.Line3d;
 import org.area515.resinprinter.stl.Point3d;
+import org.area515.resinprinter.stl.Triangle3d;
 import org.area515.resinprinter.stl.XYComparatord;
 
 public class SelfContainedScanlineFillPolygonWork extends RecursiveAction {
@@ -60,7 +61,7 @@ public class SelfContainedScanlineFillPolygonWork extends RecursiveAction {
 	     	 List<Line3d> tempScanLines = new ArrayList<Line3d>();
 	    	 List<Face3d> tempInsideOutPolygons = new ArrayList<Face3d>();
 	         for (int y = start; y <= stop; y++) {
-		    	 Set<Point3d> intersectedPoints = new TreeSet<Point3d>(new XYComparatord());
+		    	 Set<Point3d> intersectedPoints = new TreeSet<Point3d>(new XYComparatord(Triangle3d.EQUAL_TOLERANCE));
 	        	 for (Line3d currentLine : potentialLinesInRange) {
 	        		 double x = currentLine.getXIntersectionPoint(y);
 	        		 if (x >= currentLine.getMinX() && x <= currentLine.getMaxX()) {

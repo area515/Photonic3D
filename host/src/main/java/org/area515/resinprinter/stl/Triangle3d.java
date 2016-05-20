@@ -2,16 +2,18 @@ package org.area515.resinprinter.stl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
-import org.apache.commons.math3.exception.MathIllegalArgumentException;
 import org.apache.commons.math3.geometry.euclidean.threed.Line;
 import org.apache.commons.math3.geometry.euclidean.threed.Plane;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class Triangle3d implements Shape3d, Face3d {
+public class Triangle3d implements Shape3d, Face3d, Comparable<Triangle3d> {
     private static final Logger logger = LogManager.getLogger();
 
     public static final double EQUAL_TOLERANCE = 1.0e-10;
@@ -21,13 +23,15 @@ public class Triangle3d implements Shape3d, Face3d {
 	private Line[] lines = new Line[3];
 	private double min[] = new double[3];
 	private double max[] = new double[3];
+	private Face3d originatingShape;
 	
-	public Triangle3d(Point3d[] points, Point3d normal) {
+	public Triangle3d(Point3d[] points, Point3d normal, Face3d originatingShape) {
 		if (points.length != 3) {
 			throw new IllegalArgumentException("A triangle must have exactly three verticies");
 		}
 
 		this.normal = normal;
+		this.originatingShape = originatingShape;
 		
 		this.verticies[0] = new Vector3D(points[0].x, points[0].y, points[0].z);
 		this.verticies[1] = new Vector3D(points[1].x, points[1].y, points[1].z);
@@ -42,6 +46,10 @@ public class Triangle3d implements Shape3d, Face3d {
 		max[1] = Math.max(points[0].y, Math.max(points[1].y, points[2].y));
 		min[2] = Math.min(points[0].z, Math.min(points[1].z, points[2].z));
 		max[2] = Math.max(points[0].z, Math.max(points[1].z, points[2].z));
+	}
+	
+	public Face3d getOriginatingShape() {
+		return originatingShape;
 	}
 	
 	public Point3d getNormal() {
@@ -62,9 +70,10 @@ public class Triangle3d implements Shape3d, Face3d {
 	
 	public List<Line3d> getLines() {
 		List<Line3d> lines = new ArrayList<Line3d>();
-		lines.add(new Line3d(points[0], points[1], null, this, false));//!Not the right normal!
-		lines.add(new Line3d(points[1], points[2], null, this, false));//!Not the right normal!
-		lines.add(new Line3d(points[2], points[0], null, this, false));//!Not the right normal!
+		Face3d parentShape = originatingShape == null? this: originatingShape;
+		lines.add(new Line3d(points[0], points[1], parentShape.getNormal(), parentShape, false));
+		lines.add(new Line3d(points[1], points[2], parentShape.getNormal(), parentShape, false));
+		lines.add(new Line3d(points[2], points[0], parentShape.getNormal(), parentShape, false));
 		//stop the swap here!!
 		return lines;
 	}
@@ -96,40 +105,76 @@ public class Triangle3d implements Shape3d, Face3d {
 
 	public Shape3d getZIntersection(double z) {
 		Plane zPlane = new Plane(new Vector3D(0, 0, z), new Vector3D(0,0,1), EQUAL_TOLERANCE);
-		//Plane zPlane = new Plane(new Vector3D(100, 3, z), new Vector3D(200,4, z), new Vector3D(30, 100, z), EQUAL_TOLERANCE);
-		List<Point3d> intersectedPoints = new ArrayList<Point3d>();
+		//Plane zPlane = new Plane(new Vector3D(100, 3, z), new Vector3D(200,4, z), new Vector3D(30, 100, z),  EQUAL_TOLERANCE);
+		Set<Point3d> intersectedPoints = new LinkedHashSet<Point3d>();
 		for (int t = 0; t < 3; t++) {
 			if (lines[t] == null) {
 				continue;
 			}
-			
 			Vector3D point = zPlane.intersection(lines[t]);
+			
 			if (point != null) {
 				double ix = point.getX();
 				double iy = point.getY();
 				double iz = point.getZ();
 				
-				if ((ix <= points[t].x && ix >= points[t<2?t+1:0].x ||
-					 ix >= points[t].x && ix <= points[t<2?t+1:0].x) &&
-					(iy <= points[t].y && iy >= points[t<2?t+1:0].y ||
-					 iy >= points[t].y && iy <= points[t<2?t+1:0].y) &&
-					(iz <= points[t].z && iz >= points[t<2?t+1:0].z ||
-					 iz >= points[t].z && iz <= points[t<2?t+1:0].z)) {
-					intersectedPoints.add(new Point3d(ix, iy, z, normal, this));
+				if (((ix <= points[t].x + EQUAL_TOLERANCE && ix >= points[t<2?t+1:0].x - EQUAL_TOLERANCE) || (ix >= points[t].x - EQUAL_TOLERANCE && ix <= points[t<2?t+1:0].x + EQUAL_TOLERANCE)) &&
+					((iy <= points[t].y + EQUAL_TOLERANCE && iy >= points[t<2?t+1:0].y - EQUAL_TOLERANCE) || (iy >= points[t].y - EQUAL_TOLERANCE && iy <= points[t<2?t+1:0].y + EQUAL_TOLERANCE)) &&
+					((iz <= points[t].z + EQUAL_TOLERANCE && iz >= points[t<2?t+1:0].z - EQUAL_TOLERANCE) || (iz >= points[t].z - EQUAL_TOLERANCE && iz <= points[t<2?t+1:0].z + EQUAL_TOLERANCE))) {
+					intersectedPoints.add(new Point3d(ix, iy, z, null, this));
 				}
 			}
 		}
 		
 		switch (intersectedPoints.size()) {
 		case 3:
-			return new Triangle3d(intersectedPoints.toArray(new Point3d[3]), normal);
+			Face3d parentShape = originatingShape == null? this: originatingShape;
+			return new Triangle3d(intersectedPoints.toArray(new Point3d[3]), normal, parentShape);
 		case 2:
-			return new Line3d(intersectedPoints.get(0), intersectedPoints.get(1), normal, this, true);
+			Iterator<Point3d> iter = intersectedPoints.iterator();
+			return new Line3d(iter.next(), iter.next(), normal, this, true);
 		case 1:
-			return intersectedPoints.get(0);
+			return intersectedPoints.iterator().next();
 		}
 		
 		return null;
+	}
+	
+	@Override
+	public int compareTo(Triangle3d o) {
+		boolean equals = true;
+		for (int t = 0; t < 3; t++) {
+			if (!points[t].pointEquals(o.points[t])) {
+				equals = false;
+			}
+		}
+		
+		if (equals) {
+			return 0;
+		}
+		
+		for (int t = 0; t < 3; t++) {
+			double diff = points[t].x - o.points[t].x;
+			if (diff > 0) {
+				return 1;
+			} else if (diff < 0) {
+				return -1;
+			}
+			diff = points[t].y - o.points[t].y;
+			if (diff > 0) {
+				return 1;
+			} else if (diff < 0) {
+				return -1;
+			}
+			diff = points[t].z - o.points[t].z;
+			if (diff > 0) {
+				return 1;
+			} else if (diff < 0) {
+				return -1;
+			}
+		}
+		
+		return hashCode() - o.hashCode();
 	}
 	
 	@Override

@@ -3,7 +3,7 @@ package org.area515.resinprinter.slice;
 public class FillPoint {
 	private int x;
 	private int y;
-	private int sliceNumber;
+	private Integer sliceNumber;
 	
 	public int getX() {
 		return x;
@@ -19,10 +19,14 @@ public class FillPoint {
 		this.y = y;
 	}
 	
-	public int getSliceNumber() {
+	public Integer getSliceNumber() {
 		return sliceNumber;
 	}
-	public void setSliceNumber(int sliceNumber) {
+	public void setSliceNumber(Integer sliceNumber) {
 		this.sliceNumber = sliceNumber;
+	}
+	
+	public String toString() {
+		return "x:" + x + " y:" + y + " slice#:" + sliceNumber;
 	}
 }

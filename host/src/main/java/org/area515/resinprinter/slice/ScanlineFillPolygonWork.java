@@ -54,7 +54,7 @@ public class ScanlineFillPolygonWork extends RecursiveTask<ScanlineFillPolygonWo
 	protected ScanlineFillPolygonWork compute() {
 			 boolean watch = false;
 	         for (int y = start; y <= stop; y++) {
-		    	 Set<Point3d> intersectedPoints = new TreeSet<Point3d>(new XYComparatord());
+		    	 Set<Point3d> intersectedPoints = new TreeSet<Point3d>(new XYComparatord(Triangle3d.EQUAL_TOLERANCE));
 	        	 for (Line3d currentLine : potentialLinesInRange) {
 	        		 if (watchedTriangles != null) {
 	        			 Face3d face = currentLine.getOriginatingFace();
