@@ -212,7 +212,7 @@ task setupRelease(dependsOn: ['setupRemote']) << {
 }
 
 task releaseDist (dependsOn: ['dist']) << {
-  github.assets = fileTree('.').include("*.zip") as List;
+  github.assets = fileTree(dir: '.', include: '*.zip', exclude: 'cwh-0.298.zip') as List;
   if (github.assets.size() < 1) {
     throw new GradleException("There are no zip files to release in the project directory.")
   }

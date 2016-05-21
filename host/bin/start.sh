@@ -106,7 +106,7 @@ if [ -f ${downloadPrefix}.*.zip ]; then
 elif [ "${NETWORK_TAG}" != "${LOCAL_TAG}" -o "$2" == "force" ]; then
 	echo Installing latest version of ${downloadPrefix}: ${NETWORK_TAG}
 
-	DL_URL=$(curl -s https://api.github.com/repos/${repo}/releases/latest | grep 'browser_' | cut -d\" -f4 | grep ${downloadPrefix})
+	DL_URL=$(curl -s https://api.github.com/repos/${repo}/releases/latest | grep 'browser_' | cut -d\" -f4 | grep -- -${NETWORK_TAG})
 	DL_FILE=${DL_URL##*/}
 	rm -f "/tmp/${DL_FILE}"
 	wget -P /tmp "${DL_URL}"
