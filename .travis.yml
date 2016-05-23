@@ -17,6 +17,9 @@ install:
 script:
   - "(cd host ; gradle clean dist)"
   - "(cd host/bin ; sudo bash -x ./start.sh)"
+before_deploy:
+  - export RELEASE_PKG_FILE=$(ls host/*.zip | grep -v 298 | head -1)
+  - echo "deploying $RELEASE_PKG_FILE"
 deploy:
   - provider: bintray
     file: ".bintray.yml"
@@ -30,6 +33,6 @@ deploy:
     prerelease: false
     api_key: $GITHUB_ACCESS_TOKEN
     file_glob: true
-    file: "host/*.zip"
+    file: "${RELEASE_PKG_FILE}"
     on:
       tags: true
