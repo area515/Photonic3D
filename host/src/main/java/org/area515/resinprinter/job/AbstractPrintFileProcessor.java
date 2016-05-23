@@ -19,7 +19,12 @@ import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.TemplateEngine;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcessor<G>{
+	private static final Logger logger = LogManager.getLogger();
+
 	//TODO: Instead of having each implementation keep it's own state in it's own hashtable, we should be doing all of that work in here...
 	
 	public static class DataAid {
@@ -183,6 +188,11 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		
 		//Perform the lift gcode manipulation
 		aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeLift());
+		
+		// Log slice settings (in JSON for extraction and processing)
+		logger.info("{ 'layer': {}, 'exposureTime': {}, 'liftDistance': {}, 'liftSpeed': {} }",
+			aid.printJob.getCurrentSlice(), aid.printJob.getExposureTime(), aid.printJob.getZLiftDistance(),
+			aid.printJob.getZLiftSpeed());
 		
 		//Perform area and cost manipulations for current slice
 		aid.printJob.addNewSlice(System.currentTimeMillis() - aid.currentSliceTime, getBuildAreaMM(aid.printJob));
