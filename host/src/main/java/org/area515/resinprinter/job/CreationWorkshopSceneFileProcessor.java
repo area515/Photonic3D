@@ -221,6 +221,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 				BufferedImage image = currentlyDisplayedImage.get(printJob);
 				if (image != null) {
 					currentlyDisplayedImage.get(printJob).flush();
+					currentlyDisplayedImage.remove(printJob);
 				}
 			}
 		}

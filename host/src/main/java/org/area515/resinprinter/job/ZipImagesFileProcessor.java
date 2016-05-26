@@ -72,56 +72,60 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 
 	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
-		DataAid dataAid = initializeDataAid(printJob);
-
-		SortedMap<String, File> imageFiles = findImages(printJob.getJobFile());
-		
-		printJob.setTotalSlices(imageFiles.size());
-
-		performHeader(dataAid);
-
-		Iterator<File> imgIter = imageFiles.values().iterator();
-
-		// Preload first image then loop
-		if (imgIter.hasNext()) {
-			File imageFile = imgIter.next();
+		try {
+			DataAid dataAid = initializeDataAid(printJob);
+	
+			SortedMap<String, File> imageFiles = findImages(printJob.getJobFile());
 			
-			Future<StandaloneImageData> prepareImage =
-					Main.GLOBAL_EXECUTOR.submit(new StandaloneImageRenderer(dataAid, imageFile, this));
-			boolean slicePending = true;
+			printJob.setTotalSlices(imageFiles.size());
+	
+			performHeader(dataAid);
+	
+			Iterator<File> imgIter = imageFiles.values().iterator();
+	
+			// Preload first image then loop
+			if (imgIter.hasNext()) {
+				File imageFile = imgIter.next();
+				
+				Future<StandaloneImageData> prepareImage =
+						Main.GLOBAL_EXECUTOR.submit(new StandaloneImageRenderer(dataAid, imageFile, this));
+				boolean slicePending = true;
+				
+				do {
+	
+					JobStatus status = performPreSlice(dataAid, null);
+					if (status != null) {
+						return status;
+					}
+					
+					StandaloneImageData oldImage = currentImageByJob.get(printJob);
+					StandaloneImageData imageData = prepareImage.get();
+					currentImageByJob.put(printJob, imageData);
+					
+					dataAid.printer.showImage(imageData.getImage());
+					
+					if (oldImage != null) {
+						oldImage.getImage().flush();
+					}
+					
+					if (imgIter.hasNext()) {
+						imageFile = imgIter.next();
+						prepareImage = Main.GLOBAL_EXECUTOR.submit(new StandaloneImageRenderer(dataAid, imageFile, this));
+					} else {
+						slicePending = false;
+					}
+					
+					status = performPostSlice(dataAid);
+					if (status != null) {
+						return status;
+					}
+				} while (slicePending);
+			}
 			
-			do {
-
-				JobStatus status = performPreSlice(dataAid, null);
-				if (status != null) {
-					return status;
-				}
-				
-				StandaloneImageData oldImage = currentImageByJob.get(printJob);
-				StandaloneImageData imageData = prepareImage.get();
-				currentImageByJob.put(printJob, imageData);
-				
-				dataAid.printer.showImage(imageData.getImage());
-				
-				if (oldImage != null) {
-					oldImage.getImage().flush();
-				}
-				
-				if (imgIter.hasNext()) {
-					imageFile = imgIter.next();
-					prepareImage = Main.GLOBAL_EXECUTOR.submit(new StandaloneImageRenderer(dataAid, imageFile, this));
-				} else {
-					slicePending = false;
-				}
-				
-				status = performPostSlice(dataAid);
-				if (status != null) {
-					return status;
-				}
-			} while (slicePending);
+			return performFooter(dataAid);
+		} finally {
+			currentImageByJob.remove(printJob);
 		}
-		
-		return performFooter(dataAid);
 	}
 
 	@Override

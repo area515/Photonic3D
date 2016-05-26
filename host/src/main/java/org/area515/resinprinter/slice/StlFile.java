@@ -12,17 +12,14 @@ package org.area515.resinprinter.slice;
    limitations under the License.
 */
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PushbackInputStream;
 import java.io.Reader;
 import java.nio.ByteBuffer;
 // New from JDK 1.4 for endian related problems
 import java.nio.ByteOrder;
-import java.util.ArrayList;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -60,21 +57,10 @@ import org.area515.resinprinter.stl.Point3d;
 
 public abstract class StlFile<T> {
   private static final Logger logger = LogManager.getLogger();
-  // Maximum length (in chars) of basePath
-  private static final int MAX_PATH_LENGTH = 1024;
 
-  // Global variables
   private int flag;                         // Needed cause implements Loader
-
-  private File file;
-
-  private boolean fromUrl = false;          // Usefull for binary files
   private boolean Ascii = true;             // File type Ascii -> true o binary -> false
 
-  // Arrays with coordinates and normals
-  // Needed for reading ASCII files because its size is unknown until the end
-  private ArrayList<Point3d> coordList;		// Holds Point3f
-  //private ArrayList<Vector3f> normList;		// Holds Vector3f
   protected Set<T> triangles;
   protected double zmin = Double.MAX_VALUE;
   protected double zmax = -Double.MAX_VALUE;
@@ -82,16 +68,7 @@ public abstract class StlFile<T> {
   protected double xmax = -Double.MAX_VALUE;
   protected double ymin = Double.MAX_VALUE;
   protected double ymax = -Double.MAX_VALUE;
-
-  // GeometryInfo needs Arrays
-  //private Point3f[] coordArray;
-  //private Vector3f[] normArray;
-
-  // Needed because TRIANGLE_STRIP_ARRAY
-  // As the number of strips = the number of faces it's filled in objectToVectorArray
-  //private int[] stripCounts;
-
-  // Default = Not available
+  
   private String objectName = new String("Not available");
   
   /**
@@ -132,31 +109,30 @@ public abstract class StlFile<T> {
    *
    * @param parser The file parser. An instance of StlFileParser.
    */
-  private void readSolid(StlFileParser parser)
-  {
-    if(parser.sval == null || !parser.sval.equals("solid"))
-    {
-      logger.warn("Expecting solid on line:{}", parser.lineno());
-      // If the first word is not "solid" then we consider the file is binary
-      // Can give us problems if the comment of the binary file begins by "solid"
-      this.setAscii(false);
-    }
-    else { // It's an ASCII file
-      try {
-          	parser.nextToken();
-      } catch (IOException e) {
-	  	logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
-      }
-      if( parser.ttype != StlFileParser.TT_WORD) {
-	  	// Is the object name always provided???
-    	  logger.error("Format Error:expecting the object name on line " + parser.lineno());
-      } else { 
-	  	// Store the object Name
-        this.setObjectName(new String(parser.sval));
-        this.readEOL(parser);
-      }
-    }
-  }//End of readSolid
+	private void readSolid(StlFileParser parser) {
+		if (parser.sval == null || !parser.sval.equals("solid")) {
+			logger.warn("Expecting solid on line:{}", parser.lineno());
+			// If the first word is not "solid" then we consider the file is
+			// binary
+			// Can give us problems if the comment of the binary file begins by
+			// "solid"
+			this.setAscii(false);
+		} else { // It's an ASCII file
+			try {
+				parser.nextToken();
+			} catch (IOException e) {
+				logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
+			}
+			if (parser.ttype != StlFileParser.TT_WORD) {
+				// Is the object name always provided???
+				logger.error("Format Error:expecting the object name on line " + parser.lineno());
+			} else {
+				// Store the object Name
+				this.setObjectName(new String(parser.sval));
+				this.readEOL(parser);
+			}
+		}
+	}// End of readSolid
 
 
   /**
@@ -195,38 +171,32 @@ public abstract class StlFile<T> {
    * @param parseKey - string "normal", "vertex"
    * */
   
-  private void read3d(StlFileParser parser, String parseKey)
-  {
-	  //throw new IllegalArgumentException("Ascii file not supported");
-	  
-	  float x, y, z;
+  	private double[] read3d(StlFileParser parser, String parseKey, boolean buildPointForNormal) throws IOException {
+		double x, y, z;
 
-	    if(!(parser.ttype==StlFileParser.TT_WORD && parser.sval.equals(parseKey)))
-	    {
-	    	logger.error("Format Error:expecting '"+ parseKey +"' on line " + parser.lineno());
-	    }
-	    else
-	    {
-	      if (parser.getNumber())
-	      {
-		        x=(float)parser.nval;
-		        if (parser.getNumber())
-		        {
-			          y=(float)parser.nval;
-			          if (parser.getNumber())
-			          {
-			        	  z=(float)parser.nval;
-			        	  // We add that vertex to the array of vertex
-			        	  coordList.add(new Point3d(x, y, z));
-			        	  readEOL(parser);
-			          }
-			          else logger.error("Format Error: expecting coordinate on line " + parser.lineno());
-		        }
-		        else logger.error("Format Error: expecting coordinate on line " + parser.lineno());
-	      }
-	      else logger.error("Format Error: expecting coordinate on line " + parser.lineno());
-	    }
-  }
+		if (!(parser.ttype == StlFileParser.TT_WORD && parser.sval.equals(parseKey))) {
+			throw new IOException("Format Error:expecting '" + parseKey + "' on line " + parser.lineno());
+		}
+		
+		if (!parser.getNumber()) {
+			throw new IOException("Format Error: expecting coordinate on line " + parser.lineno());
+		}
+		x = parser.nval;
+		
+		if (!parser.getNumber()) {
+			throw new IOException("Format Error: expecting coordinate on line " + parser.lineno());
+		}
+		y = parser.nval;
+		
+		if (!parser.getNumber()) {
+			throw new IOException("Format Error: expecting coordinate on line " + parser.lineno());
+		}
+		z = parser.nval;
+		
+		readEOL(parser);
+		
+		return new double[]{x, y, z};
+	}
   
   /**
    * Method that reads a face of the object. 
@@ -234,41 +204,51 @@ public abstract class StlFile<T> {
    *
    * @param parser The file parser. An instance of StlFileParser.
    */
-  private void readFacet(StlFileParser parser)
-  {
-	    if(parser.ttype != StlFileParser.TT_WORD || !parser.sval.equals("facet"))
-	    {
-	      logger.error("Format Error:expecting 'facet' on line " + parser.lineno());
-	    }
-	    else
-	    {
-		      try
-		      {
-		          parser.nextToken();
-		          read3d(parser, "normal");
+  private void readFacet(StlFileParser parser) throws IOException {
+		if (parser.ttype != StlFileParser.TT_WORD || !parser.sval.equals("facet")) {
+			throw new IOException("Format Error:expecting 'facet' on line " + parser.lineno());
+		}
 		
-		          parser.nextToken();
-		          readToken(parser, "outer");
+		parser.nextToken();
+		double[] normal = read3d(parser, "normal", true);
+		Point3d normalPoint = new Point3d(normal[0], normal[1], normal[2]);
+		parser.nextToken();
+		readToken(parser, "outer");
 		
-		          for (int i = 0; i < 3; i++) //reads three vertices
-		          {
-			          parser.nextToken();
-			          read3d(parser, "vertex");
-		          }
+		double triangle[][] = new double[3][];
+		for (int i = 0; i < 3; i++) {
+			parser.nextToken();
+			triangle[i] = read3d(parser, "vertex", false);
+		}
+
+		parser.nextToken();
+		readToken(parser, "endloop");
+
+		parser.nextToken();
+		readToken(parser, "endfacet");
 		
-		          parser.nextToken();
-		          readToken(parser, "endloop");
-		
-		          parser.nextToken();
-		          readToken(parser, "endfacet");
-		      }
-		      catch (IOException e)
-		      {
-		        logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
-		      }
-	    }
+		fixNormalIfBadSTLFile(normalPoint, triangle[0], triangle[1], triangle[2]);
+		buildTriangle(new Point3d[]{
+				buildPoint(triangle[0][0], triangle[0][1], triangle[0][2]), 
+				buildPoint(triangle[1][0], triangle[1][1], triangle[1][2]), 
+				buildPoint(triangle[2][0], triangle[2][1], triangle[2][2])}, normalPoint);
   }// End of readFacet
 
+  protected abstract void buildTriangle(Point3d[] points, Point3d normal);
+  protected abstract Point3d buildPoint(double x, double y, double z);
+  protected abstract Set<T> createSet();
+
+  private void fixNormalIfBadSTLFile(Point3d normal, double[] p1, double[] p2, double[] p3) {
+		if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
+			/*normal.x = (p3[1] - p2[1]) * (p2[2] - p1[2]) - (p3[2] - p2[2]) * (p2[1] - p1[1]);
+			normal.y = (p3[2] - p2[2]) * (p2[0] - p1[0]) - (p3[0] - p2[0]) * (p2[2] - p1[2]);
+			normal.z = (p3[0] - p2[0]) * (p2[1] - p1[1]) - (p3[1] - p2[1]) * (p2[0] - p1[0]);*/
+			normal.x = (p3[2] - p2[2]) * (p2[1] - p1[1]) - (p3[1] - p2[1]) * (p2[2] - p1[2]);
+			normal.y = (p3[0] - p2[0]) * (p2[2] - p1[2]) - (p3[2] - p2[2]) * (p2[0] - p1[0]);
+			normal.z = (p3[1] - p2[1]) * (p2[0] - p1[0]) - (p3[0] - p2[0]) * (p2[1] - p1[1]);
+		}
+  }
+  
   /**
    * Method that reads a face in binary files
    * All binary versions of the methods end by 'B'
@@ -280,7 +260,31 @@ public abstract class StlFile<T> {
    *
    * @throws IOException
    */
-  public abstract void readFacetB(ByteBuffer in, int index) throws IOException;
+  public void readFacetB(ByteBuffer dataBuffer, int index) throws IOException {
+	    // Read the Normal
+		Point3d normal = new Point3d(
+			dataBuffer.getFloat(), 
+			dataBuffer.getFloat(), 
+			dataBuffer.getFloat());
+
+	    // Read vertex1
+		double p1[] = new double[]{dataBuffer.getFloat(), dataBuffer.getFloat(), dataBuffer.getFloat()};
+		double p2[] = new double[]{dataBuffer.getFloat(), dataBuffer.getFloat(), dataBuffer.getFloat()};
+		double p3[] = new double[]{dataBuffer.getFloat(), dataBuffer.getFloat(), dataBuffer.getFloat()};
+		
+		Point3d[] triangle = new Point3d[3];
+		triangle[0] = buildPoint(p1[0], p1[1], p1[2]);
+		triangle[1] = buildPoint(p2[0], p2[1], p2[2]);
+		triangle[2] = buildPoint(p3[0], p3[1], p3[2]);
+		
+		fixNormalIfBadSTLFile(normal, p1, p2, p3);
+		
+		buildTriangle(triangle, normal);
+		
+		//TODO: After each facet there are 2 bytes that can be used for color information, we should add those two bytes to the triangle.
+        dataBuffer.get();
+        dataBuffer.get();
+	  }
   
   /**
    * Method for reading binary files
@@ -297,9 +301,7 @@ public abstract class StlFile<T> {
    *
    * @throws IOException
    */
-  private void readBinaryFile(File file) throws IOException
-  {
-    FileInputStream data;                 // For reading the file
+  private void readBinaryFile(InputStream data) throws IOException {
     ByteBuffer dataBuffer;                // For reading in the correct endian
     byte[] Info=new byte[80];             // Header data
     byte[] Array_number= new byte[4];     // Holds the number of faces
@@ -307,24 +309,12 @@ public abstract class StlFile<T> {
 
     int Number_faces; // First info (after the header) on the file
 
-    // Get file's name
-    if(fromUrl)
-    {
-      // FileInputStream can only read local files!?
-      logger.error("This version doesn't support reading binary files from internet");
-    }
-    else
-    { // It's a local file
-      data = new FileInputStream(file);
 
       // First 80 bytes aren't important
-      if(80 != data.read(Info))
-      { // File is incorrect
+      if(80 != data.read(Info)) { // File is incorrect
     	logger.error("Format Error: 80 bytes expected");
         throw new IOException("STL Format Error: 80 bytes expected");
-      }
-      else
-      { // We must first read the number of faces -> 4 bytes int
+      } else { // We must first read the number of faces -> 4 bytes int
         // It depends on the endian so..
 
         data.read(Array_number);                      // We get the 4 bytes
@@ -344,334 +334,67 @@ public abstract class StlFile<T> {
         //normArray = new Vector3f[Number_faces];
         //stripCounts = new int[Number_faces];
 
-        for(int i=0;i<Number_faces;i++)
-        {
+        for(int i=0;i<Number_faces;i++) {
           //stripCounts[i]=3;
-          try
-          {
+          try {
             readFacetB(dataBuffer,i);
-            // After each facet there are 2 bytes without information
-            // In the last iteration we dont have to skip those bytes..
-            if(i != Number_faces - 1)
-            {
-              dataBuffer.get();
-              dataBuffer.get();
-            }
-          }
-          catch (IOException e)
-          {
+            
+          } catch (IOException e) {
             // Quitar
             logger.error("Format Error: iteration number " + i, e);
             throw new IOException("Format Error: iteration number " + i, e);
           }
         }//End for
       }// End file reading
-    }// End else
   }// End of readBinaryFile
 
-  /**
-   * Method that reads ASCII files
-   * Uses StlFileParser for correct reading and format checking
-   * The beggining of that method is common to binary and ASCII files
-   * We try to detect what king of file it is
-   *
-   * TO-DO:
-   *  1.- Find a best way to decide what kind of file it is
-   *  2.- Is that return (first catch) the best thing to do?
-   *
-   * @param parser The file parser. An instance of StlFileParser.
-   */
-  private void readFile(StlFileParser parser)
-  {
-    try{
-        parser.nextToken();
-        }
-    catch (IOException e)
-    {
-      logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
-      logger.error("File seems to be empty");
-      return;         // ????? Throw ?????
-    }
+  private void readASCIIFile(InputStream inputStream) throws IOException {
+		setAscii(true);
+		
+		Reader reader = new InputStreamReader(inputStream);
+		StlFileParser parser = new StlFileParser(reader);
+		
+		try {
+			parser.nextToken();
+		} catch (IOException e) {
+			throw new IOException("File seems to be empty. IO Error on line " + parser.lineno() + ": " + e.getMessage(), e);
+		}
+		
+		// Here we try to detect what kind of file it is (see readSolid)
+		readSolid(parser);
+		parser.nextToken();
 
-    // Here we try to detect what kind of file it is (see readSolid)
-    readSolid(parser);
+		// Read all the facets of the object
+		while (parser.ttype != StlFileParser.TT_EOF && !parser.sval.equals("endsolid")) {
+			readFacet(parser);
+				parser.nextToken();
+		}// End while
 
-    if(getAscii())
-    { // Ascii file
-      try
-      {
-          parser.nextToken();
-      }
-      catch (IOException e)
-      {
-       logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
-      }
-
-      // Read all the facets of the object
-      while (parser.ttype != StlFileParser.TT_EOF && !parser.sval.equals("endsolid"))
-      {
-        readFacet(parser);
-        try
-        {
-          parser.nextToken();
-        }
-        catch (IOException e)
-        {
-          logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
-        }
-      }// End while
-
-      // Why are we out of the while?: EOF or endsolid
-      if(parser.ttype == StlFileParser.TT_EOF)
-       logger.error("Format Error:expecting 'endsolid', line " + parser.lineno());
-    }//End of Ascii reading
-
-    else
-    { // Binary file
-      try{
-        readBinaryFile(file);
-      }
-      catch(IOException e)
-      {
-        logger.error("Format Error: reading the binary file");
-      }
-    }// End of binary file
-  }//End of readFile
-
-  /**
-   * The Stl File is loaded from the .stl file specified by
-   * the filename.
-   * To attach the model to your scene, call getSceneGroup() on
-   * the Scene object passed back, and attach the returned
-   * BranchGroup to your scene graph.  For an example, see
-   * $J3D/programs/examples/ObjLoad/ObjLoad.java.
-   *
-   * @param filename The name of the file with the object to load
-   *
-   * @return Scene The scene with the object loaded.
-   *
-   * @throws FileNotFoundException
-   * @throws IncorrectFormatException
-   * @throws ParsingErrorException
-   */
-  public void load(File file) throws FileNotFoundException
-  {
-    //setBasePathFromFilename(filename);
-    //setFileName(filename);     // For binary files
-    this.file = file;
-    Reader reader = new BufferedReader(new FileReader(file));
-    
-    load(reader);
-  } // End of load(String)
-
-   /**
-   * The Stl file is loaded off of the web.
-   * To attach the model to your scene, call getSceneGroup() on
-   * the Scene object passed back, and attach the returned
-   * BranchGroup to your scene graph.  For an example, see
-   * $J3D/programs/examples/ObjLoad/ObjLoad.java.
-   *
-   * @param url The url to load the onject from
-   *
-   * @return Scene The scene with the object loaded.
-   *
-   * @throws FileNotFoundException
-   * @throws IncorrectFormatException
-   * @throws ParsingErrorException
-   */
-  /*public void load(URL url) throws FileNotFoundException
-  {
-    BufferedReader reader = null;
-    setBaseUrlFromUrl(url);
-    try 
-    {
-		reader = new BufferedReader(new InputStreamReader(url.openStream()));
-	} 
-    catch (IOException e) 
-	{
-		logger.error("Error loading url:" + url + " from network", e);
-	}
-    
-    fromUrl = true;
-    load(reader);
-  } // End of load(URL)*/
-
-  public abstract Set<T> createSet();
-  /**
-   * The Stl File is loaded from the already opened file.
-   * To attach the model to your scene, call getSceneGroup() on
-   * the Scene object passed back, and attach the returned
-   * BranchGroup to your scene graph.  For an example, see
-   * $J3D/programs/examples/ObjLoad/ObjLoad.java.
-   *
-   * @param reader The reader to read the object from
-   *
-   * @return Scene The scene with the object loaded.
-   *
-   * @throws FileNotFoundException
-   * @throws IncorrectFormatException
-   * @throws ParsingErrorException
-   */
-  private void load(Reader reader) throws FileNotFoundException
-  {
-    // That method calls the method that loads the file for real..
-    // Even if the Stl format is not complicated I've decided to use
-    // a parser as in the Obj's loader included in Java3D
-
-    StlFileParser st = new StlFileParser(reader);
-
-    // Initialize data
-    coordList = new ArrayList<Point3d>();
-    //normList = new ArrayList<Vector3f>();
-    triangles = createSet();//
-    //triangles = new LinkedHashSet<Triangle3d>();//new TreeSet<Triangle3d>(new XYComparator());
-    
-    setAscii(true);      // Default ascii
-    readFile(st);
-    //makeScene();
+		// Why are we out of the while?: EOF or endsolid
+		if (parser.ttype == StlFileParser.TT_EOF) {
+			throw new IOException("Format Error:expecting 'endsolid', line " + parser.lineno());
+		}
   }
   
-  /**
-   * Method that creates the SceneBase with the stl file info
-   *
-   * @return SceneBase The scene
-   */
-  /*private void makeScene()
-  {
-    // Create Scene to pass back
-    //SceneBase scene = new SceneBase();
-    //BranchGroup group = new BranchGroup();
-    //scene.setSceneGroup(group);
-
-    // Store the scene info on a GeometryInfo
-    //GeometryInfo gi = new GeometryInfo(GeometryInfo.TRIANGLE_STRIP_ARRAY);
-
-    // Convert ArrayLists to arrays: only needed if file was not binary
-    if(this.Ascii)
-    {
-    	coordArray = new Point3f[coordList.size()];
-    	normArray = new Vector3f[normList.size()];
-    	coordList.toArray(coordArray);
-    	normList.toArray(normArray);
-    	
-    	//stripCounts = new int[coordArray.length / 3];
-    	for (int i = 0; i < stripCounts.length; i++)
-    	{
-    		 stripCounts[i] = 3; //stripCounts holds the number of sides of each shape
-    		 //since our stl file defines surfaces as a series of triangles, we're assigning it all as three.
-    	}
-    }
-
-    //gi.setCoordinates(coordArray);
-    //gi.setNormals(normArray);
-    //gi.setStripCounts(stripCounts);
- 
-
-    // Put geometry into Shape3d
-    //Shape3D shape = new Shape3D();
-    //shape.setGeometry(gi.getGeometryArray());
-
-    //group.addChild(shape);
-    //scene.addNamedObject(objectName, shape);
-
-    //return scene;
-  } // end of makeScene*/
-
-  
-  
- 
-  /******************** Accessors and Modifiers ***************************/
-
-  /*public URL getBaseUrl()
-  {
-    return baseUrl;
+  /** Entry point for all STL file types */
+  public void load(InputStream inputStream) throws IOException {
+		PushbackInputStream pushStream = new PushbackInputStream(inputStream, 80);
+		triangles = createSet();
+		
+		try {
+			byte stlHeader[] = new byte[80];
+			int bytesRead = pushStream.read(stlHeader);
+			pushStream.unread(stlHeader);
+			
+			if (bytesRead < 80 || new String(stlHeader).trim().startsWith("solid")) {
+				readASCIIFile(pushStream);
+			} else {
+				readBinaryFile(pushStream);
+			}
+		} finally {
+			pushStream.close();
+		}
   }
-
-  /**
-   * Modifier for baseUrl, if accessing internet.
-   *
-   * @param url The new url
-   */
-  /*public void setBaseUrl(URL url)
-  {
-    baseUrl = url;
-  }
-
- /* private void setBaseUrlFromUrl(URL url)
-  {
-    StringTokenizer stok =
-      new StringTokenizer(url.toString(), "/\\", true);
-    int tocount = stok.countTokens() - 1;
-    StringBuffer sb = new StringBuffer(MAX_PATH_LENGTH);
-    for(int i = 0; i < tocount ; i++) {
-	String a = stok.nextToken();
-	sb.append(a);*/
-// 	if((i == 0) && (!a.equals("file:"))) {
-// 	    sb.append(a);
-// 	    sb.append(java.io.File.separator);
-// 	    sb.append(java.io.File.separator);
-// 	} else {
-// 	    sb.append(a);
-// 	    sb.append( java.io.File.separator );
-// 	}
-    /*}
-    try {
-      baseUrl = new URL(sb.toString());
-    }
-    catch (MalformedURLException e) {
-      logger.error("Error setting base URL: " + e.getMessage());
-    }
-  } // End of setBaseUrlFromUrl*/
-
-  /*public String getBasePath()
-  {
-    return basePath;
-  }*/
-
-  /**
-   * Set the path where files associated with this .stl file are
-   * located.
-   * Only needs to be called to set it to a different directory
-   * from that containing the .stl file.
-   *
-   * @param pathName The new Path to the file
-   */
-  /*public void setBasePath(String pathName)
-  {
-    basePath = pathName;
-    if (basePath == null || basePath == "")
-	basePath = "." + java.io.File.separator;
-    basePath = basePath.replace('/', java.io.File.separatorChar);
-    basePath = basePath.replace('\\', java.io.File.separatorChar);
-    if (!basePath.endsWith(java.io.File.separator))
-	basePath = basePath + java.io.File.separator;
-  } // End of setBasePath
-
-  /**
-   * Takes a file name and sets the base path to the directory
-   * containing that file.
-   */
-  /*private void setBasePathFromFilename(String fileName)
-  {
-    // Get ready to parse the file name
-    StringTokenizer stok =
-      new StringTokenizer(fileName, java.io.File.separator);
-
-    //  Get memory in which to put the path
-    StringBuffer sb = new StringBuffer(MAX_PATH_LENGTH);
-
-    // Check for initial slash
-    if (fileName!= null && fileName.startsWith(java.io.File.separator))
-      sb.append(java.io.File.separator);
-
-    // Copy everything into path except the file name
-    for(int i = stok.countTokens() - 1 ; i > 0 ; i--) {
-      String a = stok.nextToken();
-      sb.append(a);
-      sb.append(java.io.File.separator);
-    }
-    setBasePath(sb.toString());
-  } // End of setBasePathFromFilename*/
 
   public int getFlags()
   {
@@ -692,16 +415,6 @@ public abstract class StlFile<T> {
   {
     this.Ascii = tipo;
   }
-
-  /*public String getFileName()
-  {
-    return this.fileName;
-  }
-
-  public void setFileName(String filename)
-  {
-    this.fileName=new String(filename);
-  }*/
 
   public String getObjectName()
   {

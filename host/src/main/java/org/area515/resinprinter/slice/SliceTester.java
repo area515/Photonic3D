@@ -1,10 +1,11 @@
 package org.area515.resinprinter.slice;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 public class SliceTester {
-	public static void main(String[] args) throws FileNotFoundException {
+	public static void main(String[] args) throws IOException {
 		 int precisionScaler = 100000;//We need to scale the whole stl large enough to have enough precision before the decimal point
 		 double pixelsPerMMX = 5;
 		 double pixelsPerMMY = 5;
@@ -13,7 +14,6 @@ public class SliceTester {
 		 double sliceResolution = 0.1;
 		 
 		 final ZSlicer slicer = new ZSlicer(
-				 new File("C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"),
 				 //"C:\\Users\\wgilster\\Documents\\ArduinoMega.stl",
 				 //"C:\\Users\\wgilster\\Documents\\Olaf_set3_whole.stl", 
 				 precisionScaler, 
@@ -23,7 +23,7 @@ public class SliceTester {
 				 sliceResolution / 2,
 				 false,
 				 true);
-		 slicer.loadFile(null, null);
+		 slicer.loadFile(new FileInputStream(new File("C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl")), null, null);
 		 
 		 //Using 780
 		 for (int z = slicer.getZMinIndex(); z < slicer.getZMaxIndex(); z++) {
