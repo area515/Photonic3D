@@ -21,7 +21,7 @@ public class Line3d implements Shape3d {
 		}
 
 		this.originatingFace = originatingFace;
-		this.normal = normal != null?normal:new Point3d(this.one.y - this.two.y, this.one.x - this.two.x, this.two.z - this.one.z);
+		this.normal = normal != null?normal:new Point3d(this.one.y - this.two.y, this.one.x - this.two.x, this.two.z - this.one.z);//Uses counterclockwise rule in coop with Triangle3d creation in ZSlicer constructor
 		this.slope = (this.one.x - this.two.x) / (this.one.y - this.two.y);
 		this.xintercept = -(slope * this.one.y - this.one.x);
 	}

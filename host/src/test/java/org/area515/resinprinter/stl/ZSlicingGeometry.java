@@ -2,13 +2,13 @@ package org.area515.resinprinter.stl;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.area515.resinprinter.slice.CheckSlicePoints;
 import org.area515.resinprinter.slice.FillFile;
 import org.area515.resinprinter.slice.FillPoint;
 import org.area515.resinprinter.slice.SlicePointUtils;
@@ -18,10 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-/*
-95 CornerBracket_2.stl
-C:\Users\wgilster\Desktop\fdhgg.stl
-*/
+
 @RunWith(Parameterized.class)
 public class ZSlicingGeometry {
 	private ZSlicer slicer;
@@ -30,9 +27,8 @@ public class ZSlicingGeometry {
 	private int x = 1024;
 	private int y = 500;
 	
-	public ZSlicingGeometry(FillFile fillFile) throws FileNotFoundException {
+	public ZSlicingGeometry(FillFile fillFile) throws IOException {
 		slicer = new ZSlicer(
-				new File(fillFile.getFileName()), 
 				fillFile.getStlScale(), 
 				fillFile.getPixelsPerMMX(), 
 				fillFile.getPixelsPerMMY(), 
@@ -40,7 +36,7 @@ public class ZSlicingGeometry {
 				fillFile.getzSliceOffset(),
 				true, true);
 		checkPoints = fillFile.getPoints();
-		slicer.loadFile((double)x, (double)y);
+		slicer.loadFile(CheckSlicePoints.class.getResourceAsStream(fillFile.getFileName()), (double)x, (double)y);
 		image = new BufferedImage(x, y, BufferedImage.TYPE_INT_ARGB);
 	}
 	
@@ -113,10 +109,6 @@ public class ZSlicingGeometry {
 	@Parameters
 	public static Object[] data() throws IOException {
 		Map<FillFile, FillFile> points = SlicePointUtils.loadPoints();
-		
-		for (FillFile fillFile : points.keySet()) {
-			fillFile.setFileName("srcbin/org/area515/resinprinter/slice/" + fillFile.getFileName());
-		}
 		return points.values().toArray();
 	}
 }

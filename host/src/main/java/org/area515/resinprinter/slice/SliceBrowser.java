@@ -3,7 +3,6 @@ package org.area515.resinprinter.slice;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -15,6 +14,7 @@ import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.JButton;
@@ -53,12 +52,17 @@ import org.area515.resinprinter.stl.Triangle3d;
 public class SliceBrowser extends JSplitPane {
 	private PrinterTools tools;
 	
-	private int firstSlice = 187;
+	private int firstSlice = 1;
+	//95 CornerBracket_2.stl
+	//C:\Users\wgilster\Desktop\fdhgg.stl
 	//78;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";
 	//321;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl"; good
 	//781;//"C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"; good
 	
-	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";//122, 151, 187
+	private String firstFile = "C:\\Users\\wgilster\\Documents\\fdhgg.stl";//1,200,670
+//	private String firstFile = "C:\\Users\\wgilster\\Documents\\NonManifoldBox.stl";//-19
+//	private String firstFile = "C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl";
+//	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";//95
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureBottom.stl"; 54
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";//78, 54
 	/*
@@ -69,7 +73,6 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 "C:\\Users\\wgilster\\Documents\\ArduinoMega.stl",
 "C:\\Users\\wgilster\\Documents\\Olaf_set3_whole.stl",
 //http://www.thingiverse.com/download:888699
-
 
 	 */
 	
@@ -234,7 +237,6 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	
 	private void loadStl(Integer firstSlice) {
 		 ZSlicer newSlicer = new ZSlicer(
-			 new File(loadStlText.getText()),
 			 mmPerStlUnit,
 			 pixelsPerMMX,
 			 pixelsPerMMY,
@@ -243,10 +245,13 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			 false,
 			 true);
 		try {
-			newSlicer.loadFile(tools.getBuildPlatformX(), tools.getBuildPlatformY());
+			newSlicer.loadFile(new FileInputStream(new File(loadStlText.getText())), tools.getBuildPlatformX(), tools.getBuildPlatformY());
 			slicer = newSlicer;
 		} catch (FileNotFoundException e) {
-			JOptionPane.showMessageDialog(null, "File not found:" + loadStlText.getText());
+			JOptionPane.showMessageDialog(null, "File not found? " + loadStlText.getText());
+			return;
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null, "Error loading stl file: " + loadStlText.getText() + ": " + e.getMessage());
 			return;
 		}
 		zSliceModel.setMaximum(slicer.getZMaxIndex());
