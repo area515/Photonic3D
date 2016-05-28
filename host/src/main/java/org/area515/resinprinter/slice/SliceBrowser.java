@@ -54,10 +54,11 @@ public class SliceBrowser extends JSplitPane {
 	
 	private int firstSlice = 1;
 	//95 CornerBracket_2.stl
-	//C:\Users\wgilster\Desktop\fdhgg.stl
+	//C:\\Users\\wgilster\\Desktop\\fdhgg.stl
 	//78;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";
 	//321;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl"; good
 	//781;//"C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"; good
+	//"C:\\Users\\wgilster\\git\\Creation-Workshop-Host\\host\\src\\test\\resources\\org\\area515\\resinprinter\\slice\\CornerBracket_2.stl"
 	
 	private String firstFile = "C:\\Users\\wgilster\\Documents\\fdhgg.stl";//1,200,670
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\NonManifoldBox.stl";//-19
@@ -206,7 +207,13 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 						 SliceBrowserTreeNode parent = new SliceBrowserTreeNode("Slice:" + slicer.getZIndex() + " #" + t++ + " :(" + loops.size() + ")");
 						 rootNode.add(parent);
 						 for (Line3d line : loops) {
-							 parent.add(new SliceBrowserTreeNode(line));
+							 SliceBrowserTreeNode lineNode = new SliceBrowserTreeNode(line);
+							 parent.add(lineNode);
+							 Face3d face3d = line.getOriginatingFace();
+							 
+							 if (face3d instanceof Triangle3d) {
+								 lineNode.add(new SliceBrowserTreeNode(slicer.translateTriangle((Triangle3d)face3d)));
+							 }
 						 }
 					 }
 					 nodeChanged(root);
@@ -243,7 +250,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			 sliceResolution,
 			 0d,
 			 false,
-			 true);
+			 new CloseOffMend());
 		try {
 			newSlicer.loadFile(new FileInputStream(new File(loadStlText.getText())), tools.getBuildPlatformX(), tools.getBuildPlatformY());
 			slicer = newSlicer;

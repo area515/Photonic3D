@@ -34,7 +34,7 @@ import org.area515.util.Log4jTimer;
 public class ZSlicer {
     private static final Logger logger = LogManager.getLogger();
 
-    //We need to scale the whole stl large enough to have enough precision in front of the decimal point
+     //We need to scale the whole stl large enough to have enough precision in front of the decimal point
 	 //Too little and you get points that won't match, too much and you end up beating a double's precision
 	 //This number is a balancing act.
 	 private double precisionScaler = 1;
@@ -48,7 +48,7 @@ public class ZSlicer {
 	 private double zOffset = .05;
 	 private StlFile<Triangle3d> stlFile;
 	 private boolean keepTrackOfErrors = false;
-	 private boolean fixBrokenLoops = false;
+	 private PolygonMendingMechanism fixBrokenLoops;
 	 
 	 //These are the variables per z
 	 private List<StlError> errors = new ArrayList<StlError>();
@@ -64,7 +64,7 @@ public class ZSlicer {
 	 private int buildArea;
 	 
 	 //TODO: Need to add in super sampling
-	 public ZSlicer(double stlScale, double pixelsPerMMX, double pixelsPerMMY, double zSliceResolution, double zSliceOffset, boolean keepTrackOfErrors, boolean fixBrokenLoops) {
+	 public ZSlicer(double stlScale, double pixelsPerMMX, double pixelsPerMMY, double zSliceResolution, double zSliceOffset, boolean keepTrackOfErrors, PolygonMendingMechanism fixBrokenLoops) {
 		 this.stlScale = stlScale;
 		 this.pixelsPerMMX = pixelsPerMMX;
 		 this.pixelsPerMMY = pixelsPerMMY;
@@ -107,7 +107,7 @@ public class ZSlicer {
 		 return errors;
 	 }
 	 
-	 private void placeIntoCompletedLoopList(List<Line3d> completedLoop, List<List<Line3d>> completedFillInLoops) {
+	 public void placeIntoCompletedLoopList(List<Line3d> completedLoop, List<List<Line3d>> completedFillInLoops) {
 		 List<Line3d> lines = new ArrayList<Line3d>();
 		 for (Line3d line : completedLoop) {
 			 double x1 = line.getPointOne().x / precisionScaler * pixelsPerMMX + imageOffsetX;
@@ -811,27 +811,8 @@ public class ZSlicer {
 		  }
 
 		  //close loops manually since we couldn't find a solution for these broken loops
-		  if (fixBrokenLoops) {
-			  for (List<Line3d> currentBrokenLoop : brokenLoops) {
-				  if (currentBrokenLoop.size() > 1) {
-					  Line3d line1 = currentBrokenLoop.get(0);
-					  Line3d line2 = currentBrokenLoop.get(currentBrokenLoop.size() - 1);
-					  Point3d point1 = line1.getPointOne();
-					  Point3d point2 = line2.getPointTwo();
-					  Point3d normal;
-					  if (point1.x < point2.x) {
-						  normal = new Point3d(point2.y - point1.y, point2.x - point1.x, line1.getNormal().z - line2.getNormal().z);
-					  } else {
-						  normal = new Point3d(point1.y - point2.y, point1.x - point2.x, line1.getNormal().z - line2.getNormal().z);
-					  }
-					  
-					  Line3d line = new Line3d(point2, point1, normal, null, false);
-					  currentBrokenLoop.add(line);
-				  }
-				  
-				  placeIntoCompletedLoopList(currentBrokenLoop, completedFillInLoops);
-			  }
-			  
+		  if (fixBrokenLoops != null && brokenLoops.size() > 0) {
+			  fixBrokenLoops.mendPolygon(this, brokenLoops, completedFillInLoops);
 			  logger.info("Broken loop mending:{}", ()->Log4jTimer.splitTimer("sliceTime"));
 		  }
 		  
