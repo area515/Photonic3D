@@ -2,13 +2,13 @@ package org.area515.resinprinter.stl;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.area515.resinprinter.slice.CheckSlicePoints;
+import org.area515.resinprinter.slice.CloseOffMend;
 import org.area515.resinprinter.slice.FillFile;
 import org.area515.resinprinter.slice.FillPoint;
 import org.area515.resinprinter.slice.SlicePointUtils;
@@ -34,7 +34,7 @@ public class ZSlicingGeometry {
 				fillFile.getPixelsPerMMY(), 
 				fillFile.getzSliceResolution(),
 				fillFile.getzSliceOffset(),
-				true, true);
+				true, new CloseOffMend());
 		checkPoints = fillFile.getPoints();
 		slicer.loadFile(CheckSlicePoints.class.getResourceAsStream(fillFile.getFileName()), (double)x, (double)y);
 		image = new BufferedImage(x, y, BufferedImage.TYPE_INT_ARGB);
