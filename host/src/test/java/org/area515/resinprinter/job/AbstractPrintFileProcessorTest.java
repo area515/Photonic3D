@@ -153,7 +153,7 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getZLiftDistanceGCode()).thenReturn("G99 ${1 + buildAreaMM * 2} ;dependent on buildArea");
 		try {
 			processor.performPostSlice(aid);
-			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(4)).getBuildAreaMM(Mockito.any(PrintJob.class));
+			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(5)).getBuildAreaMM(Mockito.any(PrintJob.class));
 		} catch (InappropriateDeviceException e) {
 			Assert.fail("Should not throw InappropriateDeviceException");
 		}

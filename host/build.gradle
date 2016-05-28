@@ -134,8 +134,7 @@ task repoVersion() << {
   commitVersion = grgit.describe()
 
   if (commitVersion == null) {
-    def history = grgit.log(maxCommits: 1)
-    commitVersion = history[0].id.take(5)
+    commitVersion = currentCommitHash();
   }
 
   ant.properties['repo.version'] = commitVersion
@@ -202,6 +201,7 @@ task setupRelease(dependsOn: ['setupRemote']) << {
   ant.input(message: "Press <return> to continue...")
 
   if (tagName == "${null}") {
+    println("Recommended development release tag: ${github.owner}-${currentCommitHash()}")
     ant.input(message: "Enter the tag to create for this release > ", addproperty: "tagName")
     tagName = ant.tagName
   }
@@ -279,4 +279,9 @@ String osLibDir() {
     default:
       return 'unknown'
   }
+}
+
+String currentCommitHash() {
+  def history = grgit.log(maxCommits: 1)
+  return history[0].id.take(7)
 }
