@@ -190,9 +190,9 @@ public abstract class AbstractPrintFileProcessor<G> implements PrintFileProcesso
 		aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeLift());
 		
 		// Log slice settings (in JSON for extraction and processing)
-		logger.info("{ \"layer\": {}, \"exposureTime\": {}, \"liftDistance\": {}, \"liftSpeed\": {} }",
+		logger.info("{ \"layer\": {}, \"exposureTime\": {}, \"liftDistance\": {}, \"liftSpeed\": {} , \"layerAreaMM2\": {} }",
 			aid.printJob.getCurrentSlice(), aid.printJob.getExposureTime(), aid.printJob.getZLiftDistance(),
-			aid.printJob.getZLiftSpeed());
+			aid.printJob.getZLiftSpeed(), getBuildAreaMM(aid.printJob));
 		
 		//Perform area and cost manipulations for current slice
 		aid.printJob.addNewSlice(System.currentTimeMillis() - aid.currentSliceTime, getBuildAreaMM(aid.printJob));
