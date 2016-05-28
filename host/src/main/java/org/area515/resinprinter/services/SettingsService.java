@@ -8,7 +8,9 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import org.area515.resinprinter.server.CwhEmailSettings;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
@@ -47,8 +49,30 @@ public class SettingsService {
 	public int getIntegerVersion() {
 		return HostProperties.Instance().getVersionNumber();
 	}
-	
-    @ApiOperation(value="Get the email settings that are setup for the NotificationManager and taking diagnostics.")
+
+	@ApiOperation(value="Returns the string release tag (repo.version) of Photonic3D found in the build.number file.")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+			@ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@GET
+	@Path("releaseTagName")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String getReleaseTagName() {
+		return "\"" + new String(JsonStringEncoder.getInstance().quoteAsString(HostProperties.Instance().getReleaseTagName())) + "\"";
+	}
+
+	@ApiOperation(value="Returns the GitHub repo name to load printer profiles from.")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+			@ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@GET
+	@Path("printerProfileRepo")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String getPrinterProfileRepo() {
+		return "\"" + new String(JsonStringEncoder.getInstance().quoteAsString(HostProperties.Instance().getPrinterProfileRepo())) + "\"";
+	}
+
+	@ApiOperation(value="Get the email settings that are setup for the NotificationManager and taking diagnostics.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})

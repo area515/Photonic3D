@@ -82,11 +82,13 @@ public class HostProperties {
 	private Class<SerialCommunicationsPort> serialPortClass;
 	private Class<NetworkManager> networkManagerClass;
 	private int versionNumber;
+	private String releaseTagName;
 	private List<String> visibleCards;
 	private String hexCodeBasedProjectorsJson;
 	private String forwardHeader;
 	private CountDownLatch hostReady = new CountDownLatch(1);
 	private String scriptEngineLanguage = null;
+	private String printerProfileRepo;
 	
 	//SSL settings:
 	private boolean useSSL;
@@ -231,6 +233,7 @@ public class HostProperties {
 		forceCalibrationOnFirstUse = new Boolean(configurationProperties.getProperty("forceCalibrationOnFirstUse", "false"));
 		limitLiveStreamToOneCPU = new Boolean(configurationProperties.getProperty("limitLiveStreamToOneCPU", "false"));
 		scriptEngineLanguage = configurationProperties.getProperty("scriptEngineLanguage", "js");
+		printerProfileRepo = configurationProperties.getProperty("printerProfileRepo", "WesGilster");
 		
 		streamingCommand = getJSonStringArray(configurationProperties, "streamingCommand");
 		imagingCommand = getJSonStringArray(configurationProperties, "imagingCommand");
@@ -256,6 +259,7 @@ public class HostProperties {
 			try {
 				newProperties.load(new FileInputStream(versionFile));
 				versionNumber = Integer.valueOf((String)newProperties.get("build.number")) - 1;
+				releaseTagName = (String)newProperties.get("repo.version");
 			} catch (IOException e) {
 				logger.error("Version file is missing:{}", versionFile);
 			}
@@ -373,6 +377,14 @@ public class HostProperties {
 
 	public int getVersionNumber() {
 		return versionNumber;
+	}
+
+	public String getReleaseTagName() {
+		return releaseTagName;
+	}
+
+	public String getPrinterProfileRepo() {
+		return printerProfileRepo;
 	}
 
 	public int getPrinterHostPort() {
