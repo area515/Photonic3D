@@ -97,7 +97,10 @@
     			$rootScope.currentError = {command:"Server Error " + args.status, message : customMessage};
     	    	$('#errorModal').modal();
     	    });
-			
+
+			$http.get('/services/settings/printerProfileRepo').success(function(data) {
+				$scope.repo = data;
+			});
 	        $http.get('/services/settings/visibleCards').success(function(data) {
             	$scope.visibleCards = data;
             });
@@ -106,9 +109,6 @@
             });
 			$http.get('/services/settings/releaseTagName').success(function(data) {
 				$scope.releaseTagName = data;
-			});
-			$http.get('/services/settings/printerProfileRepo').success(function(data) {
-				$scope.repo = data;
 			});
 
 	        this.currentPage = 'dashboard';

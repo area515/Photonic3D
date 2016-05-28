@@ -225,7 +225,7 @@
 					controller.loadingMachineConfigMessage = "Select a machine configuration...";
 				});
 		
-		$http.get("https://api.github.com/repos/" + $scope.repo + "/Creation-Workshop-Host/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(
+		$http.get("https://api.github.com/repos/" + $scope.repo + "/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(
 			function (data) {
 				$scope.communityPrinters = data;
 			}

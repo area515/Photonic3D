@@ -233,7 +233,7 @@ public class HostProperties {
 		forceCalibrationOnFirstUse = new Boolean(configurationProperties.getProperty("forceCalibrationOnFirstUse", "false"));
 		limitLiveStreamToOneCPU = new Boolean(configurationProperties.getProperty("limitLiveStreamToOneCPU", "false"));
 		scriptEngineLanguage = configurationProperties.getProperty("scriptEngineLanguage", "js");
-		printerProfileRepo = configurationProperties.getProperty("printerProfileRepo", "WesGilster");
+		printerProfileRepo = configurationProperties.getProperty("printerProfileRepo", "WesGilster/Creation-Workshop-Host");
 		
 		streamingCommand = getJSonStringArray(configurationProperties, "streamingCommand");
 		imagingCommand = getJSonStringArray(configurationProperties, "imagingCommand");
