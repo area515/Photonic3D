@@ -8,6 +8,7 @@ os:
 - linux
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -f $HOME/.gradle/caches/*/plugin-resolution/cache.properties.lock
 cache:
   directories:
     - $HOME/.gradle/caches/
@@ -15,11 +16,11 @@ cache:
 install:
   - chmod a+rx host/gradlew
   - mkdir -p ~/.gradle/
-  - echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
+#  - echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
   - cd host
   - ./gradlew assemble
 script:
-  - ./gradlew check
+  - ./gradlew --stacktrace check
 before_deploy:
   - ./gradlew dist
   - export RELEASE_PKG_FILE=$(ls host/*.zip | grep -v 298 | head -1)

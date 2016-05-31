@@ -229,11 +229,12 @@ task runSliceBrowser(type: JavaExec) {
 }
 
 test {
+  forkEvery = 5
   testLogging {
     events "failed"
     showStackTraces true
     showExceptions true
-    exceptionFormat "short"
+    exceptionFormat "full"
   }
 }
 
