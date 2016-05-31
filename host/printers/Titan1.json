@@ -1,0 +1,100 @@
+{
+  "configuration":{
+    "name":"Kudo3D Titan 1",
+    "machineConfig":{
+      "FileVersion":0,
+      "PlatformXSize":192.0,
+      "PlatformYSize":108.0,
+      "PlatformZSize":240.0,
+      "MaxXFeedRate":0,
+      "MaxYFeedRate":0,
+      "MaxZFeedRate":0,
+      "XRenderSize":1920,
+      "YRenderSize":1080,
+      "MotorsDriverConfig":{
+        "DriverType":"eGENERIC",
+        "ComPortSettings":{
+          "PortName":"Autodetect 3d printer firmware",
+          "Speed":115200,
+          "Databits":8,
+          "Parity":"None",
+          "Stopbits":"One",
+          "Handshake":"None"
+        }
+      },
+      "MonitorDriverConfig":{
+        "DLP_X_Res":1920.0,
+        "DLP_Y_Res":1080.0,
+        "OSMonitorID":":0.0",
+        "DisplayCommEnabled":false,
+        "ComPortSettings":{
+          "PortName":"Autodetect projector",
+          "Handshake":"None"
+        },
+        "MonitorTop":0,
+        "MonitorLeft":0,
+        "MonitorRight":0,
+        "MonitorBottom":0,
+        "UseMask":false
+      }
+    },
+    "slicingProfile":{
+      "name":"Titan1-PSP-General",
+      "gCodeHeader":"G21 ;Set units to be mm\r\nG91 ;Relative Positioning\r\nM17 ;Enable motors\r\n",
+      "gCodeFooter":"M18 ;Disable Motors",
+      "gCodePreslice":null,
+      "gCodeLift":"G1 Z${ZLiftDist} F${ZLiftRate} ; lift sequence distance and height\r\nG1 Z-${(ZLiftDist - LayerThickness)} F${ZLiftRate*3} ; lower, minus layer thickness, at triple the lift rate\r\nG4 S2 ; Dwell to make CWH wait until sequence is done until proceeding, plus 2 seconds for settling\r\n",
+      "gCodeShutter":null,
+      "zliftDistanceGCode":null,
+      "zliftSpeedGCode":null,
+      "selectedInkConfigIndex":0,
+      "DotsPermmX":10.00,
+      "DotsPermmY":10.00,
+      "XResolution":1920,
+      "YResolution":1080,
+      "BlankTime":0,
+      "PlatformTemp":0,
+      "ExportSVG":0,
+      "Export":false,
+      "ExportPNG":false,
+      "Direction":"Bottom_Up",
+      "LiftDistance":5.0,
+      "SlideTiltValue":0,
+      "AntiAliasing":false,
+      "UseMainLiftGCode":false,
+      "AntiAliasingValue":0.0,
+      "LiftFeedRate":50.0,
+      "LiftRetractRate":0.0,
+      "FlipX":false,
+      "FlipY":true,
+      "ZLiftDistanceCalculator":"var initialLift = 8.5;\r\nvar minLift = 3.5;\r\n\/\/ https:\/\/www.desmos.com\/calculator\/isonc2otxq for function info\r\n\r\nvar value = 8.5;\r\nvar height = $CURSLICE*$LayerThickness;\r\nif ($CURSLICE &gt; $NumFirstLayers) {\r\n  value = minLift + ((5.0 - 2.93)\/6250) * Math.pow($buildAreaMM,1);\r\n  value = +(Math.round(value + \"e+2\")  + \"e-2\");\r\n  if (height &lt; 4.0) {\r\n    value += (4 - height);\r\n  }\r\n}\r\nvalue\r\n",
+      "ZLiftSpeedCalculator":"var minSpeed = 15.0;\r\n\/\/ https:\/\/www.desmos.com\/calculator\/ptgqrfcklb for function info\r\n\r\nvar value = minSpeed;\r\nif ($CURSLICE &gt; $NumFirstLayers) {\r\n value = value + (50.0 - value) \/ (1.0 + Math.pow(2.718,-(2.0 - 0.001*$buildAreaMM)));\r\n}\r\nvalue\r\n",
+      "ProjectorGradientCalculator":"var bulbCenter = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels * 0.669938, $buildPlatformYPixels * 0.85)\r\nvar bulbFocus = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels * 0.547004132231405, $buildPlatformYPixels * 0.7514071294559099)\r\nvar colors = [new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.35), new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.0)];\r\nvar fractions = [0.0, 1.0];\r\nvar totalSizeOfGradient = $buildPlatformXPixels &gt; $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;\r\nnew Packages.java.awt.RadialGradientPaint(bulbCenter, totalSizeOfGradient * 0.62, bulbFocus, fractions, colors, java.awt.MultipleGradientPaint.CycleMethod.NO_CYCLE);\r\n",
+      "ExposureTimeCalculator":"var value = (($FirstLayerTime - $LayerTime)\/(1.5*$CURSLICE+1)) + $LayerTime\r\n\/\/ See https:\/\/www.desmos.com\/calculator\/x9vkagdj8q\r\n\r\n\/\/if ($CURSLICE &gt; $NumFirstLayers) {\r\n\/\/\tvalue = $LayerTime\r\n\/\/}\r\n\r\njava.lang.Math.toIntExact(java.lang.Math.round(value))\r\n",
+      "SelectedInk":"Default",
+      "MinTestExposure":0,
+      "TestExposureStep":0,
+      "InkConfig":[
+        {
+          "PercentageOfPrintMaterialConsideredEmpty":10.0,
+          "Name":"Default",
+          "SliceHeight":0.1,
+          "LayerTime":12000,
+          "FirstLayerTime":60000,
+          "NumberofBottomLayers":0,
+          "ResinPriceL":65.0
+        }
+      ]
+    },
+    "MachineConfigurationName":"Titan1",
+    "SlicingProfileName":"Titan1-PSP-General",
+    "AutoStart":true
+  },
+  "started":true,
+  "shutterOpen":false,
+  "displayDeviceID":":0.0",
+  "currentSlicePauseTime":0,
+  "status":"Ready",
+  "printInProgress":false,
+  "printPaused":false
+}
