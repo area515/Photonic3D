@@ -230,6 +230,7 @@ task runSliceBrowser(type: JavaExec) {
 
 test {
   forkEvery = 5
+  maxHeapSize = "1G"
   testLogging {
     events "failed"
     showStackTraces true
