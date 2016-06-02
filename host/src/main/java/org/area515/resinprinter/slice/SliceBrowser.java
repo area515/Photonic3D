@@ -104,7 +104,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			TreePath nodes[] = e.getPaths();
 			for (int t = 0; t < nodes.length; t++) {
 				SliceBrowserTreeNode treeNode = (SliceBrowserTreeNode)nodes[t].getLastPathComponent();
-				if (treeNode.isLeaf() && treeNode.getUserObject() instanceof Line3d) {
+				if (treeNode.getUserObject() instanceof Line3d) {
 					if (e.isAddedPath(t)) {
 						selectedLines.add((Line3d)treeNode.getUserObject());
 					} else {

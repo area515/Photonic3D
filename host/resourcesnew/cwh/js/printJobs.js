@@ -11,7 +11,7 @@
 		this.currentSliceImage = null;
 		this.currentBuildPhoto = {width: 500, height: 500, url: null};
 		this.currentBuildVideo = {width: 100, height: 100, url: null};
-		this.currentBuildLiveStream = {url: null, clientId: Math.random()};
+		this.currentBuildLiveStream = {url: null, clientId: Math.random()}
 		
 		function refreshSelectedPrintJob(printJobList) {
         	var foundPrintJob = false;
