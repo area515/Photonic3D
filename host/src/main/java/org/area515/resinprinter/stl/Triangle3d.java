@@ -204,10 +204,6 @@ public class Triangle3d implements Shape3d, Face3d, Comparable<Triangle3d> {
 			return false;
 		return true;
 	}
-
-	/*public boolean onZeroZ() {
-		return verticies[0].z == 0 && verticies[1].z == 0 && verticies[2].z == 0;
-	}*/
 	
 	public String toString() {
 		return Arrays.toString(verticies) + "@" + normal;
