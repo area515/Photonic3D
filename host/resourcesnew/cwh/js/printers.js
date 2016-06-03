@@ -4,9 +4,7 @@
 		controller = this;
 		var PRINTERS_DIRECTORY = "printers";
 		var BRANCH = "master";
-		var REPO = "WesGilster";
-		
-		$scope.repo = REPO;
+		var REPO = $scope.repo;
 		
 		this.loadingFontsMessage = "--- Loading fonts from server ---"
 		this.loadingProfilesMessage = "--- Loading slicing profiles from server ---"
@@ -227,7 +225,7 @@
 					controller.loadingMachineConfigMessage = "Select a machine configuration...";
 				});
 		
-		$http.get("https://api.github.com/repos/" + REPO + "/Creation-Workshop-Host/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(
+		$http.get("https://api.github.com/repos/" + $scope.repo + "/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(
 			function (data) {
 				$scope.communityPrinters = data;
 			}
