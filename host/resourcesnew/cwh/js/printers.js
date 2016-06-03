@@ -65,8 +65,8 @@
 			openSavePrinterDialog(editTitle, false);
 		}
 
-		$scope.savePrinter = function savePrinter(printer, isNewPrinter) {
-			if (isNewPrinter) {
+		$scope.savePrinter = function savePrinter(printer, renameProfiles) {
+			if (renameProfiles) {
 				controller.editPrinter.configuration.MachineConfigurationName = controller.editPrinter.configuration.name;
 				controller.editPrinter.configuration.SlicingProfileName = controller.editPrinter.configuration.name;
 			}
@@ -111,7 +111,7 @@
 	        $http.post(printer.download_url).success(
 	        		function (data) {
 	        			controller.editPrinter = data;
-	        			$scope.savePrinter(controller.editPrinter, true);
+	        			$scope.savePrinter(controller.editPrinter, false);
 	        		}).error(
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
