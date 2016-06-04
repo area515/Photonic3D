@@ -42,7 +42,7 @@
          "gCodeHeader":"G91;M17",
          "gCodeFooter":"G1 Z 5;M18",
          "gCodePreslice":null,
-         "gCodeLift":"G1{$SlideTiltVal != 0? X$SlideTiltVal:} Z($ZLiftDist * $ZDir) F{$CURSLICE &lt; $NumFirstLayers?$ZBottomLiftRate:$ZLiftRate}; G1{$SlideTiltVal != 0? X($SlideTiltVal * -1):} Z(($LayerThickness-$ZLiftDist) * $ZDir) F$ZRetractRate;&lt;Delay&gt; %d($ZLiftDist*60000/$ZRetractRate+200)",
+         "gCodeLift":"G1{$SlideTiltVal != 0? X$SlideTiltVal:} Z($ZLiftDist * $ZDir) F{$CURSLICE < $NumFirstLayers?$ZBottomLiftRate:$ZLiftRate}; G1{$SlideTiltVal != 0? X($SlideTiltVal * -1):} Z(($LayerThickness-$ZLiftDist) * $ZDir) F$ZRetractRate;<Delay> %d($ZLiftDist*60000/$ZRetractRate+200)",
          "gCodeShutter":null,
          "zliftDistanceGCode":"M650 D${ZLiftDist} S${ZLiftRate}",
          "zliftSpeedGCode":"M650 D${ZLiftDist} S${ZLiftRate}",
