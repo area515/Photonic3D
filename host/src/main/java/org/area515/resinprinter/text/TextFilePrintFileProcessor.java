@@ -18,7 +18,7 @@ import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.twodim.TwoDimensionalPlatformPrintFileProcessor;
 
-public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileProcessor<Object> {
+public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileProcessor<Object, Object> {
     private static final Logger logger = LogManager.getLogger();
 	
 	private class TextData extends TwoDimensionalPrintState {
@@ -89,7 +89,12 @@ public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileP
 
 	@Override
 	public Object getGeometry(PrintJob printJob) throws JobManagerException {
-		return null;
+		throw new JobManagerException("You can't get geometry from this type of file");
+	}
+
+	@Override
+	public Object getErrors(PrintJob printJob) throws JobManagerException {
+		throw new JobManagerException("You can't get error geometry from this type of file");
 	}
 
 	@Override

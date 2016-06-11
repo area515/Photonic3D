@@ -12,7 +12,7 @@ import org.area515.resinprinter.job.render.RenderingFileData.ImageData;
 import org.area515.resinprinter.twodim.TwoDimensionalPlatformPrintFileProcessor.TwoDimensionalPrintState;
 
 public class RenderExtrusionImage extends CurrentImageRenderer {
-	public RenderExtrusionImage(DataAid aid, AbstractPrintFileProcessor<?> processor, RenderingFileData data, Object imageIndexToBuild, int width, int height) {
+	public RenderExtrusionImage(DataAid aid, AbstractPrintFileProcessor<?,?> processor, RenderingFileData data, Object imageIndexToBuild, int width, int height) {
 		super(aid, processor, data, imageIndexToBuild, width, height);
 	}
 

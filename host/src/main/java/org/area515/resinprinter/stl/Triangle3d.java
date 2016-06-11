@@ -24,15 +24,16 @@ public class Triangle3d implements Shape3d, Face3d, Comparable<Triangle3d> {
 	private double min[] = new double[3];
 	private double max[] = new double[3];
 	private Face3d originatingShape;
+	private Integer originalIndex;
 	
-	public Triangle3d(Point3d[] points, Point3d normal, Face3d originatingShape) {
+	public Triangle3d(Point3d[] points, Point3d normal, Face3d originatingShape, Integer originalIndex) {
 		if (points.length != 3) {
 			throw new IllegalArgumentException("A triangle must have exactly three verticies");
 		}
 
 		this.normal = normal;
 		this.originatingShape = originatingShape;
-		
+		this.originalIndex = originalIndex;
 		this.verticies[0] = new Vector3D(points[0].x, points[0].y, points[0].z);
 		this.verticies[1] = new Vector3D(points[1].x, points[1].y, points[1].z);
 		this.verticies[2] = new Vector3D(points[2].x, points[2].y, points[2].z);
@@ -46,6 +47,10 @@ public class Triangle3d implements Shape3d, Face3d, Comparable<Triangle3d> {
 		max[1] = Math.max(points[0].y, Math.max(points[1].y, points[2].y));
 		min[2] = Math.min(points[0].z, Math.min(points[1].z, points[2].z));
 		max[2] = Math.max(points[0].z, Math.max(points[1].z, points[2].z));
+	}
+	
+	public Integer getOriginalIndex() {
+		return originalIndex;
 	}
 	
 	public Face3d getOriginatingShape() {
@@ -129,7 +134,7 @@ public class Triangle3d implements Shape3d, Face3d, Comparable<Triangle3d> {
 		switch (intersectedPoints.size()) {
 		case 3:
 			Face3d parentShape = originatingShape == null? this: originatingShape;
-			return new Triangle3d(intersectedPoints.toArray(new Point3d[3]), normal, parentShape);
+			return new Triangle3d(intersectedPoints.toArray(new Point3d[3]), normal, parentShape, parentShape instanceof Triangle3d?((Triangle3d)parentShape).getOriginalIndex():null);
 		case 2:
 			Iterator<Point3d> iter = intersectedPoints.iterator();
 			return new Line3d(iter.next(), iter.next(), normal, this, true);

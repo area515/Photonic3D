@@ -797,7 +797,7 @@ public class PrinterService {
 	
 	private static PrintJob buildStubJob(Printer printer) {
 		PrintJob job = new PrintJob(null);//Null job for testing...
-		StubPrintFileProcessor<Object> processor = new StubPrintFileProcessor<>();
+		StubPrintFileProcessor<Object,Object> processor = new StubPrintFileProcessor<>();
 		job.setPrintFileProcessor(processor);
 		job.setPrinter(printer);
 		return job;

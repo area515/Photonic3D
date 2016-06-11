@@ -20,7 +20,7 @@ import org.area515.util.TemplateEngine;
 public class RenderPlatformImage extends CurrentImageRenderer {
 	private int totalPlatformSlices;
 	
-	public RenderPlatformImage(DataAid aid, AbstractPrintFileProcessor<?> processor, RenderingFileData data, Object imageIndexToBuild, int width, int height, int totalPlatformSlices) {
+	public RenderPlatformImage(DataAid aid, AbstractPrintFileProcessor<?,?> processor, RenderingFileData data, Object imageIndexToBuild, int width, int height, int totalPlatformSlices) {
 		super(aid, processor, data, imageIndexToBuild, width, height);
 		this.totalPlatformSlices = totalPlatformSlices;
 	}

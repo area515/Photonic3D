@@ -13,7 +13,7 @@ public class PrintFileFilter implements FileFilter {
     private static final Logger logger = LogManager.getLogger();
 	
     public boolean accept(File pathname) {
-		for (PrintFileProcessor<?> currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
+		for (PrintFileProcessor<?,?> currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
 			try {
 				if (currentProcessor.acceptsFile(pathname)) {
 					return true;
@@ -26,8 +26,8 @@ public class PrintFileFilter implements FileFilter {
 		return false;
     }
     
-    public PrintFileProcessor<?> findAssociatedPrintProcessor(File pathname) {
- 		for (PrintFileProcessor<?> currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
+    public PrintFileProcessor<?,?> findAssociatedPrintProcessor(File pathname) {
+ 		for (PrintFileProcessor<?,?> currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
  			if (currentProcessor.acceptsFile(pathname)) {
  				return currentProcessor;
  			}

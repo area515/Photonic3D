@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,12 +85,13 @@ public class ZSlicer {
 
 			@Override
 			public Set<Triangle3d> createSet() {
-				return new TreeSet<Triangle3d>();
+				return new LinkedHashSet<Triangle3d>();
+				//return new TreeSet<Triangle3d>();
 			}
 
 			@Override
 			protected void buildTriangle(Point3d[] triangle, Point3d normal) {
-				Triangle3d newTriangle = new Triangle3d(triangle, normal, null);
+				Triangle3d newTriangle = new Triangle3d(triangle, normal, null, triangles.size());
 			    triangles.add(newTriangle);
 			    
 			    zmin = Math.min(triangle[0].z, Math.min(triangle[1].z, Math.min(triangle[2].z, zmin)));
@@ -376,7 +378,14 @@ public class ZSlicer {
 	 public Triangle3d translateTriangle(Triangle3d triangle) {
 		 List<Point3d> points = triangle.getPoints();
 		 Face3d parentShape = triangle.getOriginatingShape() == null? triangle: triangle.getOriginatingShape();
-		 return new Triangle3d(new Point3d[]{translatePoint(points.get(0)), translatePoint(points.get(1)), translatePoint(points.get(2))}, triangle.getNormal(), parentShape);
+		 return new Triangle3d(
+				 new Point3d[]{
+						 translatePoint(points.get(0)), 
+						 translatePoint(points.get(1)), 
+						 translatePoint(points.get(2))}, 
+				 triangle.getNormal(), 
+				 parentShape,
+				 parentShape instanceof Triangle3d?((Triangle3d)parentShape).getOriginalIndex():null);
 	 }
 	 
 	 public Point3d translatePoint(Point3d point) {
@@ -802,7 +811,7 @@ public class ZSlicer {
 				  Line3d side = currentBrokenLoop.get(0);
 				  errors.add(new StlError((Triangle3d)side.getOriginatingFace(), side));
 				  if (currentBrokenLoop.size() > 1) {
-					  side = currentBrokenLoop.get(0);
+					  side = currentBrokenLoop.get(currentBrokenLoop.size() - 1);
 					  errors.add(new StlError((Triangle3d)side.getOriginatingFace(), side));
 				  }
 			  }

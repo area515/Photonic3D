@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -14,10 +15,11 @@ import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.CloseOffMend;
+import org.area515.resinprinter.slice.StlError;
 import org.area515.resinprinter.slice.ZSlicer;
 import org.area515.resinprinter.stl.Triangle3d;
 
-public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>> {
+public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>, Set<StlError>> {
 	private Map<PrintJob, RenderingFileData> dataByPrintJob = new HashMap<PrintJob, RenderingFileData>();
 
 	@Override
@@ -142,5 +144,15 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>
 	@Override
 	public String getFriendlyName() {
 		return "STL 3D Model";
+	}
+
+	@Override
+	public Set<StlError> getErrors(PrintJob printJob) throws JobManagerException {
+		RenderingFileData data = dataByPrintJob.get(printJob);
+		if (data == null) {
+			return null;
+		}
+		
+		return new HashSet<>(data.slicer.getStlErrors());
 	}
 }

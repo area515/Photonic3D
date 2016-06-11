@@ -17,7 +17,7 @@ import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.twodim.TwoDimensionalPlatformPrintFileProcessor;
 
-public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProcessor<Object> {
+public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProcessor<Object,Object> {
 	private class PrintImage extends TwoDimensionalPrintState {
 		Future<BufferedImage> futureImage;
 
@@ -88,7 +88,12 @@ public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProc
 
 	@Override
 	public Object getGeometry(PrintJob printJob) throws JobManagerException {
-		return null;
+		throw new JobManagerException("You can't get geometry from this type of file");
+	}
+
+	@Override
+	public Object getErrors(PrintJob printJob) throws JobManagerException {
+		throw new JobManagerException("You can't get error geometry from this type of file");
 	}
 
 	@Override

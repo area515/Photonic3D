@@ -4,7 +4,7 @@
 		<h3 class="panel-title pull-left">3d Model: {{printJobsController.currentPrintJob.jobName}}</h3>
 	</div>
 	<div class="panel-body">
-		<tjs-model-viewer assimp-url="printJobsController.currentPrintJob"></tjs-model-viewer>
+		<print-job-model-viewer print-job="printJobsController.currentPrintJob"></print-job-model-viewer>
 	</div>
 	<div class="panel-footer">
 		<span ng-include="'cardFooter.html'"></span>

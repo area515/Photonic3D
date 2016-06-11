@@ -23,7 +23,7 @@ import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.server.Main;
 
-public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Object> {
+public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Object,Object> {
     private static final Logger logger = LogManager.getLogger();
 	private Map<PrintJob, PrintCube> minerCubesByPrintJob = new HashMap<PrintJob, PrintCube>();
 	
@@ -143,7 +143,12 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 
 	@Override
 	public Object getGeometry(PrintJob printJob) throws JobManagerException {
-		return null;
+		throw new JobManagerException("You can't get geometry from this type of file");
+	}
+
+	@Override
+	public Object getErrors(PrintJob printJob) throws JobManagerException {
+		throw new JobManagerException("You can't get error geometry from this type of file");
 	}
 
 	@Override

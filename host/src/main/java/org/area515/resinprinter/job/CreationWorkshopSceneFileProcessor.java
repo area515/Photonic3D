@@ -31,7 +31,7 @@ import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
 
-public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcessor<Object> {
+public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcessor<Object,Object> {
 	private static final Logger logger = LogManager.getLogger();
 	private HashMap<PrintJob, BufferedImage> currentlyDisplayedImage = new HashMap<PrintJob, BufferedImage>();
 	
@@ -362,6 +362,11 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	@Override
 	public Object getGeometry(PrintJob printJob) throws JobManagerException {
 		throw new JobManagerException("You can't get geometry from this type of file");
+	}
+
+	@Override
+	public Object getErrors(PrintJob printJob) throws JobManagerException {
+		throw new JobManagerException("You can't get error geometry from this type of file");
 	}
 
 	@Override

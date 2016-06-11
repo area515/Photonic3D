@@ -1,5 +1,5 @@
 (function() {
-		var cwhApp = angular.module('cwhApp', ['ui.bootstrap', 'ngRoute', 'cwh.comport', 'cwh.spinner', 'cwh.webSocket', 'cwh.testscript', 'ngFileUpload', 'ngAnimate', 'chart.js', 'tjsModelViewer']);
+		var cwhApp = angular.module('cwhApp', ['ui.bootstrap', 'ngRoute', 'cwh.comport', 'cwh.spinner', 'cwh.webSocket', 'cwh.testscript', 'ngFileUpload', 'ngAnimate', 'chart.js', 'printJobModelViewer']);
 		cwhApp.filter('secondsToDateTime', [function() {
 		    return function(milliseconds) {
 		        return new Date(1970, 0, 1).setMilliseconds(milliseconds);
