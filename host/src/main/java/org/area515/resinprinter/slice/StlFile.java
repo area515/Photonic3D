@@ -237,6 +237,7 @@ public abstract class StlFile<T> {
   protected abstract void buildTriangle(Point3d[] points, Point3d normal);
   protected abstract Point3d buildPoint(double x, double y, double z);
   protected abstract Set<T> createSet();
+  protected abstract T getFirstTriangle();
 
   private void fixNormalIfBadSTLFile(Point3d normal, double[] p1, double[] p2, double[] p3) {
 		if (normal.x == 0 && normal.y == 0 && normal.z == 0) {

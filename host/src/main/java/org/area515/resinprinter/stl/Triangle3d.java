@@ -25,12 +25,14 @@ public class Triangle3d implements Shape3d, Face3d, Comparable<Triangle3d> {
 	private double max[] = new double[3];
 	private Face3d originatingShape;
 	private Integer originalIndex;
+	private Triangle3d nextTriangle;
 	
-	public Triangle3d(Point3d[] points, Point3d normal, Face3d originatingShape, Integer originalIndex) {
+	public Triangle3d(Point3d[] points, Point3d normal, Face3d originatingShape, Triangle3d nextTriangle, Integer originalIndex) {
 		if (points.length != 3) {
 			throw new IllegalArgumentException("A triangle must have exactly three verticies");
 		}
 
+		this.nextTriangle = nextTriangle;
 		this.normal = normal;
 		this.originatingShape = originatingShape;
 		this.originalIndex = originalIndex;
@@ -57,6 +59,14 @@ public class Triangle3d implements Shape3d, Face3d, Comparable<Triangle3d> {
 		return originatingShape;
 	}
 	
+	public Triangle3d getNextTriangle() {
+		return nextTriangle;
+	}
+
+	public void setNextTriangle(Triangle3d nextTriangle) {
+		this.nextTriangle = nextTriangle;
+	}
+
 	public Point3d getNormal() {
 		return normal;
 	}
@@ -134,7 +144,7 @@ public class Triangle3d implements Shape3d, Face3d, Comparable<Triangle3d> {
 		switch (intersectedPoints.size()) {
 		case 3:
 			Face3d parentShape = originatingShape == null? this: originatingShape;
-			return new Triangle3d(intersectedPoints.toArray(new Point3d[3]), normal, parentShape, parentShape instanceof Triangle3d?((Triangle3d)parentShape).getOriginalIndex():null);
+			return new Triangle3d(intersectedPoints.toArray(new Point3d[3]), normal, parentShape, null, parentShape instanceof Triangle3d?((Triangle3d)parentShape).getOriginalIndex():null);
 		case 2:
 			Iterator<Point3d> iter = intersectedPoints.iterator();
 			return new Line3d(iter.next(), iter.next(), normal, this, true);
