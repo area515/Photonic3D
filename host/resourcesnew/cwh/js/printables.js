@@ -5,7 +5,19 @@
 		
 		this.currentPrintable = null;
 		this.supportedFileTypes = null;
-		
+		// Code added by Wilbur Shi
+		this.flipped = {
+			value: false
+		};
+
+		if (this.currentPrintable != null) {
+			// Do flipping stuff
+			this.testName = currentPrintable.name;
+		} else {
+			// Hide preview area in the html (checkbox and preview panel)
+			this.testName = null;
+		}
+		// End code added by Wilbur Shi
 		this.refreshPrintables = function refreshPrintables() {
 			$http.get("/services/printables/list").success(
         		function (data) {
