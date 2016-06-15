@@ -255,9 +255,11 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			newSlicer.loadFile(new FileInputStream(new File(loadStlText.getText())), tools.getBuildPlatformX(), tools.getBuildPlatformY());
 			slicer = newSlicer;
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "File not found? " + loadStlText.getText());
 			return;
 		} catch (IOException e) {
+			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "Error loading stl file: " + loadStlText.getText() + ": " + e.getMessage());
 			return;
 		}
