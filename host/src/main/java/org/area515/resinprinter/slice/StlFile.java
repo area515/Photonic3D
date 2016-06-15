@@ -393,7 +393,7 @@ public abstract class StlFile<T> {
 		}*/
 		
 		logger.warn("Falling back on determining 'solid' identifier to determine ASCII/Binary stl file type");
-		return new String(stlHeader, 0, 5).toLowerCase().startsWith("solid");
+		return new String(stlHeader, 0, 20).trim().toLowerCase().startsWith("solid");
   }
   /** Entry point for all STL file types */
   public void load(InputStream inputStream) throws IOException {
