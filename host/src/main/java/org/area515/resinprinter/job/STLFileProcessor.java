@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -19,7 +20,7 @@ import org.area515.resinprinter.slice.StlError;
 import org.area515.resinprinter.slice.ZSlicer;
 import org.area515.resinprinter.stl.Triangle3d;
 
-public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>, Set<StlError>> {
+public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> {
 	private Map<PrintJob, RenderingFileData> dataByPrintJob = new HashMap<PrintJob, RenderingFileData>();
 
 	@Override
@@ -132,13 +133,30 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Set<Triangle3d>
 	}
 
 	@Override
-	public Set<Triangle3d> getGeometry(PrintJob printJob) throws JobManagerException {
+	public Iterator<Triangle3d> getGeometry(PrintJob printJob) throws JobManagerException {
 		RenderingFileData data = dataByPrintJob.get(printJob);
 		if (data == null) {
 			return null;
 		}
 		
-		return data.slicer.getAllTriangles();
+		return new Iterator<Triangle3d>() {
+			private Triangle3d nextTriangle;
+			{
+				nextTriangle = data.slicer.getFirstTriangle();
+			}
+			
+			@Override
+			public boolean hasNext() {
+				return nextTriangle != null;
+			}
+
+			@Override
+			public Triangle3d next() {
+				Triangle3d t = nextTriangle;
+				nextTriangle = nextTriangle.getNextTriangle();
+				return t;
+			}
+		};
 	}
 
 	@Override
