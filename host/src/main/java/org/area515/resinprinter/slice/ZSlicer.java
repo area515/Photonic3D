@@ -75,6 +75,9 @@ public class ZSlicer {
 		 this.fixBrokenLoops = fixBrokenLoops;
 		 
 		 stlFile = new StlFile<Triangle3d>() {
+			private Triangle3d lastTriangle;
+			private Triangle3d firstTriangle;
+			
 			@Override
 			protected Point3d buildPoint(double x, double y, double z) {
 				return new Point3d(
@@ -82,16 +85,18 @@ public class ZSlicer {
 						y * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
 						z * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale));
 			}
-
+			
 			@Override
 			public Set<Triangle3d> createSet() {
-				return new LinkedHashSet<Triangle3d>();
-				//return new TreeSet<Triangle3d>();
+				return new TreeSet<Triangle3d>();
 			}
-
+			
 			@Override
 			protected void buildTriangle(Point3d[] triangle, Point3d normal) {
-				Triangle3d newTriangle = new Triangle3d(triangle, normal, null, triangles.size());
+				Triangle3d newTriangle = new Triangle3d(triangle, normal, null, null, triangles.size());
+				if (lastTriangle != null) {
+					lastTriangle.setNextTriangle(newTriangle);
+				}
 			    triangles.add(newTriangle);
 			    
 			    zmin = Math.min(triangle[0].z, Math.min(triangle[1].z, Math.min(triangle[2].z, zmin)));
@@ -100,8 +105,15 @@ public class ZSlicer {
 			    xmax = Math.max(triangle[0].x, Math.max(triangle[1].x, Math.max(triangle[2].x, xmax)));
 			    ymin = Math.min(triangle[0].y, Math.min(triangle[1].y, Math.min(triangle[2].y, ymin)));
 			    ymax = Math.max(triangle[0].y, Math.max(triangle[1].y, Math.max(triangle[2].y, ymax)));
+			    lastTriangle = newTriangle;
+			    if (firstTriangle == null) {
+			    	firstTriangle = newTriangle;
+			    }
 			}
 			
+			public Triangle3d getFirstTriangle() {
+				return firstTriangle;
+			}
 		  };
 	 }
 	 
@@ -324,6 +336,10 @@ public class ZSlicer {
 		  return polygons;
 	 }
 	 
+	 public Triangle3d getFirstTriangle() {
+		 return stlFile.getFirstTriangle();
+	 }
+	 
 	 public Set<Triangle3d> getAllTriangles() {
 		 return stlFile.getTriangles();
 	 }
@@ -385,6 +401,7 @@ public class ZSlicer {
 						 translatePoint(points.get(2))}, 
 				 triangle.getNormal(), 
 				 parentShape,
+				 null,
 				 parentShape instanceof Triangle3d?((Triangle3d)parentShape).getOriginalIndex():null);
 	 }
 	 
