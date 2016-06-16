@@ -151,11 +151,6 @@ run {
 
 githubPages {
 
-  credentials {
-    username = releaseRepoUser;
-    password = releaseRepoToken;
-  }
-
   pages {
     from file("${project.docsDir}")
 
@@ -289,6 +284,10 @@ clean.doFirst {
   delete "srcbin", "testbin", "cwh.log"
   delete fileTree(dir: '.', include: '*.zip', exclude: 'cwh-0.298.zip')
   delete fileTree(dir: '.', include: 'cwh*.log.gz')
+}
+
+prepareGhPages.doFirst {
+  githubPages.credentials = new org.ajoberstar.gradle.git.auth.BasicPasswordCredentials(releaseRepoUser, releaseRepoToken)
 }
 
 // PROJECT POST-SETUP SCRIPT
