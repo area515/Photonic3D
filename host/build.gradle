@@ -150,10 +150,14 @@ run {
 }
 
 githubPages {
+
+  credentials {
+    username = releaseRepoUser;
+    password = releaseRepoToken;
+  }
+
   pages {
-    from javadoc
-    //from file("${project.docsDir}/javadoc")
-    //from file("${project.docsDir}/apidoc")
+    from file("${project.docsDir}")
 
     into "docs"
   }
