@@ -370,30 +370,55 @@ public abstract class StlFile<T> {
   }
   
   private boolean isASCIIFile(PushbackInputStream pushStream, int determinantSize) throws IOException {
-		byte stlHeader[] = new byte[determinantSize];
-		int bytesRead = pushStream.read(stlHeader);
-		pushStream.unread(stlHeader);
+		byte sampleSize[] = new byte[determinantSize];
+		int bytesRead = pushStream.read(sampleSize);
+		pushStream.unread(sampleSize);
 		
 		//If less than 80 bytes, that breaks the binary spec
 		if (bytesRead < 80) {
 			return true;
 		}
+		
 		/*int faceBytes = ( 32 / 8 * 3 ) + ( ( 32 / 8 * 3 ) * 3 ) + ( 16 / 8 );
         ByteBuffer dataBuffer = ByteBuffer.wrap(stlHeader);
         dataBuffer.position(80);
         dataBuffer.order(ByteOrder.nativeOrder());    // Set the right order
         int expectedFaceCount = dataBuffer.getInt();
         int expectedByteCount = 80 + ( 32 / 8 ) + ( expectedFaceCount * faceBytes );
-		if (expectedByteCount == )
-		for (int t = 0; t < stlHeader.length; t++) {
-			int currentByte = stlHeader[t];
+		if (expectedByteCount == filesize)*/
+		
+		for (int t = 0; t < sampleSize.length; t++) {
+			int currentByte = sampleSize[t];
 			if (currentByte > 127) {
 				return false;
 			}
-		}*/
+			
+			if (currentByte == 10) {
+				String facet = "facet";
+				int letter = 0;
+				for (; t < sampleSize.length; t++) {
+					if (sampleSize[t] == 10) {
+						continue;
+					}
+					if (sampleSize[t] == 12) {
+						continue;
+					}
+					
+					if (facet.charAt(letter) == (char)sampleSize[t]) {
+						letter++;
+						if (letter == facet.length()) {
+							return true;
+						}
+						continue;
+					}
+					
+					return false;
+				}
+			}
+		}
 		
-		logger.warn("Falling back on determining 'solid' identifier to determine ASCII/Binary stl file type");
-		return new String(stlHeader, 0, 20).trim().toLowerCase().startsWith("solid");
+		logger.warn("Falling back on using 'solid' identifier to determine ASCII/Binary stl file type");
+		return new String(sampleSize, 0, 20).trim().toLowerCase().startsWith("solid");
   }
   /** Entry point for all STL file types */
   public void load(InputStream inputStream) throws IOException {
