@@ -46,14 +46,14 @@
 				<div class="preview-box"> 
 					<div class="panel panel-default">
 						<div class="panel-heading">Your STL Model</div>
-						<div style="height: 300px" class="panel-body">This is the preview box{{printablesController.currentPrintable.testName}}</div>
+						<div style="height: 300px" class="panel-body">This is the preview box for this printable: {{printablesController.currentPrintable.name}}. Changes are also reflected here: {{printablesController.changeMsg}}</div>
 					</div>
 				</div>
 				<form method="POST">
-					<input type="checkbox" ng-model="flipped.value"> Flip image
+					<input type="checkbox" ng-model="flip" ng-change="printablesController.changeFlip(flip)"> Flip image
 					<br>
 				</form>
-				<tt>value = {{flipped.value}}</tt><br>
+				<tt>Flipped = {{flip}}</tt><br>
 			</div>
 			<!-- End code added by Wilbur Shi -->
 		</div>
