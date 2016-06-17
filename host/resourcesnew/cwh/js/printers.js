@@ -4,9 +4,7 @@
 		controller = this;
 		var PRINTERS_DIRECTORY = "printers";
 		var BRANCH = "master";
-		var REPO = "WesGilster";
-		
-		$scope.repo = REPO;
+		var REPO = $scope.repo;
 		
 		this.loadingFontsMessage = "--- Loading fonts from server ---"
 		this.loadingProfilesMessage = "--- Loading slicing profiles from server ---"
@@ -65,8 +63,8 @@
 			openSavePrinterDialog(editTitle, false);
 		}
 
-		$scope.savePrinter = function savePrinter(printer, isNewPrinter) {
-			if (isNewPrinter) {
+		$scope.savePrinter = function savePrinter(printer, renameProfiles) {
+			if (renameProfiles) {
 				controller.editPrinter.configuration.MachineConfigurationName = controller.editPrinter.configuration.name;
 				controller.editPrinter.configuration.SlicingProfileName = controller.editPrinter.configuration.name;
 			}
@@ -108,10 +106,10 @@
 		}
 		
 		$scope.installCommunityPrinter = function installCommunityPrinter(printer) {
-	        $http.post(printer.download_url).success(
+	        $http.get(printer.url).success(
 	        		function (data) {
-	        			controller.editPrinter = data;
-	        			$scope.savePrinter(controller.editPrinter, true);
+	        			controller.editPrinter = JSON.parse(window.atob(data.content));
+	        			$scope.savePrinter(controller.editPrinter, false);
 	        		}).error(
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
@@ -226,8 +224,8 @@
 					controller.machineConfigurations = data;
 					controller.loadingMachineConfigMessage = "Select a machine configuration...";
 				});
-		
-		$http.get("https://api.github.com/repos/" + REPO + "/Creation-Workshop-Host/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(
+		//https://raw.githubusercontent.com/WesGilster/Creation-Workshop-Host/master/host/printers/mUVe%201.json
+		$http.get("https://api.github.com/repos/" + $scope.repo + "/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(
 			function (data) {
 				$scope.communityPrinters = data;
 			}

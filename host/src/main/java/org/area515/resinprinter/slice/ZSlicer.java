@@ -5,14 +5,13 @@ import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,14 +30,15 @@ import org.area515.resinprinter.stl.Point3d;
 import org.area515.resinprinter.stl.Shape3d;
 import org.area515.resinprinter.stl.Triangle3d;
 import org.area515.resinprinter.stl.XYComparatord;
+import org.area515.util.Log4jTimer;
 
 public class ZSlicer {
     private static final Logger logger = LogManager.getLogger();
 
-    //We need to scale the whole stl large enough to have enough precision in front of the decimal point
+     //We need to scale the whole stl large enough to have enough precision in front of the decimal point
 	 //Too little and you get points that won't match, too much and you end up beating a double's precision
 	 //This number is a balancing act.
-	 private double precisionScaler = 100000;
+	 private double precisionScaler = 1;
 	 private double pixelsPerMMX = 5;
 	 private double pixelsPerMMY = 5;
 	 private double stlScale = 1;
@@ -48,9 +48,8 @@ public class ZSlicer {
 	 private double sliceResolution = 0.1;
 	 private double zOffset = .05;
 	 private StlFile<Triangle3d> stlFile;
-	 private File stlFileToSlice;
 	 private boolean keepTrackOfErrors = false;
-	 private boolean fixBrokenLoops = false;
+	 private PolygonMendingMechanism fixBrokenLoops;
 	 
 	 //These are the variables per z
 	 private List<StlError> errors = new ArrayList<StlError>();
@@ -59,65 +58,45 @@ public class ZSlicer {
 	 private int z = 0;
 	 private int sliceMaxX;
 	 private int sliceMaxY;
+	 private int sliceMaxZ;
 	 private int sliceMinX;
 	 private int sliceMinY;
+	 private int sliceMinZ;
 	 private int buildArea;
 	 
 	 //TODO: Need to add in super sampling
-	 public ZSlicer(File stlFileToSlice, double stlScale, double pixelsPerMMX, double pixelsPerMMY, double zSliceResolution, double zSliceOffset, boolean keepTrackOfErrors, boolean fixBrokenLoops) {
+	 public ZSlicer(double stlScale, double pixelsPerMMX, double pixelsPerMMY, double zSliceResolution, double zSliceOffset, boolean keepTrackOfErrors, PolygonMendingMechanism fixBrokenLoops) {
 		 this.stlScale = stlScale;
 		 this.pixelsPerMMX = pixelsPerMMX;
 		 this.pixelsPerMMY = pixelsPerMMY;
 		 this.sliceResolution = zSliceResolution;
 		 this.zOffset = zSliceOffset;
-		 this.stlFileToSlice = stlFileToSlice;
 		 this.keepTrackOfErrors = keepTrackOfErrors;
 		 this.fixBrokenLoops = fixBrokenLoops;
 		 
 		 stlFile = new StlFile<Triangle3d>() {
-			  public void readFacetB(ByteBuffer in, int index) throws IOException {
-			    // Read the Normal
-				Point3d normal = new Point3d(
-					in.getFloat(), 
-					in.getFloat(), 
-					in.getFloat() / ZSlicer.this.sliceResolution);
-
-			    // Read vertex1
-				double p1[] = new double[]{in.getFloat(), in.getFloat(), in.getFloat()};
-				double p2[] = new double[]{in.getFloat(), in.getFloat(), in.getFloat()};
-				double p3[] = new double[]{in.getFloat(), in.getFloat(), in.getFloat()};
-				Point3d[] triangle = new Point3d[3];
-				triangle[0] = new Point3d(
-					p1[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
-					p1[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
-					p1[2] / ZSlicer.this.sliceResolution);
-
-			    // Read vertex2
-				triangle[1] = new Point3d(
-					p2[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
-					p2[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
-					p2[2] / ZSlicer.this.sliceResolution);
-
-			    // Read vertex3
-				triangle[2] = new Point3d(
-					p3[0] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
-					p3[1] * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
-					p3[2] / ZSlicer.this.sliceResolution);
-				
-				if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
-					/*normal.x = (p3[1] - p2[1]) * (p2[2] - p1[2]) - (p3[2] - p2[2]) * (p2[1] - p1[1]);
-					normal.y = (p3[2] - p2[2]) * (p2[0] - p1[0]) - (p3[0] - p2[0]) * (p2[2] - p1[2]);
-					normal.z = (p3[0] - p2[0]) * (p2[1] - p1[1]) - (p3[1] - p2[1]) * (p2[0] - p1[0]);*/
-					normal.x = (p3[2] - p2[2]) * (p2[1] - p1[1]) - (p3[1] - p2[1]) * (p2[2] - p1[2]);
-					normal.y = (p3[0] - p2[0]) * (p2[2] - p1[2]) - (p3[2] - p2[2]) * (p2[0] - p1[0]);
-					normal.z = (p3[1] - p2[1]) * (p2[0] - p1[0]) - (p3[0] - p2[0]) * (p2[1] - p1[1]);
+			private Triangle3d lastTriangle;
+			private Triangle3d firstTriangle;
+			
+			@Override
+			protected Point3d buildPoint(double x, double y, double z) {
+				return new Point3d(
+						x * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
+						y * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale), 
+						z * (ZSlicer.this.precisionScaler * ZSlicer.this.stlScale));
+			}
+			
+			@Override
+			public Set<Triangle3d> createSet() {
+				return new TreeSet<Triangle3d>();
+			}
+			
+			@Override
+			protected void buildTriangle(Point3d[] triangle, Point3d normal) {
+				Triangle3d newTriangle = new Triangle3d(triangle, normal, null, null, triangles.size());
+				if (lastTriangle != null) {
+					lastTriangle.setNextTriangle(newTriangle);
 				}
-				
-				Triangle3d newTriangle = new Triangle3d(triangle, normal);
-				/*if (tri.onZeroZ()) {
-					triangles.getClass();
-				}*/
-
 			    triangles.add(newTriangle);
 			    
 			    zmin = Math.min(triangle[0].z, Math.min(triangle[1].z, Math.min(triangle[2].z, zmin)));
@@ -126,11 +105,14 @@ public class ZSlicer {
 			    xmax = Math.max(triangle[0].x, Math.max(triangle[1].x, Math.max(triangle[2].x, xmax)));
 			    ymin = Math.min(triangle[0].y, Math.min(triangle[1].y, Math.min(triangle[2].y, ymin)));
 			    ymax = Math.max(triangle[0].y, Math.max(triangle[1].y, Math.max(triangle[2].y, ymax)));
-			  }// End of readFacetB
-
-			@Override
-			public Set<Triangle3d> createSet() {
-				return new TreeSet<Triangle3d>(new XYComparatord());
+			    lastTriangle = newTriangle;
+			    if (firstTriangle == null) {
+			    	firstTriangle = newTriangle;
+			    }
+			}
+			
+			public Triangle3d getFirstTriangle() {
+				return firstTriangle;
 			}
 		  };
 	 }
@@ -139,19 +121,23 @@ public class ZSlicer {
 		 return errors;
 	 }
 	 
-	 private void placeIntoCompletedLoopList(List<Line3d> completedLoop, List<List<Line3d>> completedFillInLoops) {
+	 public void placeIntoCompletedLoopList(List<Line3d> completedLoop, List<List<Line3d>> completedFillInLoops) {
 		 List<Line3d> lines = new ArrayList<Line3d>();
 		 for (Line3d line : completedLoop) {
-			 double x1 = line.getPointOne().x / (precisionScaler) * pixelsPerMMX + imageOffsetX;
-			 double y1 = line.getPointOne().y / (precisionScaler) * pixelsPerMMY + imageOffsetY;
-			 double x2 = line.getPointTwo().x / (precisionScaler) * pixelsPerMMX + imageOffsetX;
-			 double y2 = line.getPointTwo().y / (precisionScaler) * pixelsPerMMY + imageOffsetY;
+			 double x1 = line.getPointOne().x / precisionScaler * pixelsPerMMX + imageOffsetX;
+			 double y1 = line.getPointOne().y / precisionScaler * pixelsPerMMY + imageOffsetY;
+			 double z1 = line.getPointOne().z / precisionScaler;// / sliceResolution;
+			 double x2 = line.getPointTwo().x / precisionScaler * pixelsPerMMX + imageOffsetX;
+			 double y2 = line.getPointTwo().y / precisionScaler * pixelsPerMMY + imageOffsetY;
+			 double z2 = line.getPointTwo().z / precisionScaler;// / sliceResolution;
 			 sliceMinX = (int)Math.min(sliceMinX, Math.min(Math.floor(x1), Math.floor(x2)));
 			 sliceMaxX = (int)Math.max(sliceMaxX, Math.max(Math.ceil(x1), Math.ceil(x2)));
 			 sliceMinY = (int)Math.min(sliceMinY, Math.min(Math.floor(y1), Math.floor(y2)));
 			 sliceMaxY = (int)Math.max(sliceMaxY, Math.max(Math.ceil(y1), Math.ceil(y2)));
-			 lines.add(new Line3d(new Point3d(x1, y1, line.getPointOne().z * sliceResolution),
-					 			  new Point3d(x2, y2, line.getPointTwo().z * sliceResolution),
+			 sliceMinZ = (int)Math.min(sliceMinZ, Math.min(Math.floor(z1), Math.floor(z2)));
+			 sliceMaxZ = (int)Math.max(sliceMaxZ, Math.max(Math.ceil(z1), Math.ceil(z2)));
+			 lines.add(new Line3d(new Point3d(x1, y1, z1),
+					 			  new Point3d(x2, y2, z2),
 							 	  line.getNormal(), line.getOriginatingFace(), false));
 			
 		 }
@@ -206,9 +192,9 @@ public class ZSlicer {
 		  LinkageDiscovery completedLinkage = LinkageDiscovery.NoLinkFound;
 		  Line3d firstInCurrentWorkingLoop = currentWorkingLoop.get(0);
 		  Line3d lastInCurrentWorkingLoop = currentWorkingLoop.get(currentWorkingLoop.size() - 1);
-		  if (currentLine.getPointTwo().ceilingEquals(firstInCurrentWorkingLoop.getPointOne())) {
+		  if (currentLine.getPointTwo().pointEquals(firstInCurrentWorkingLoop.getPointOne())) {
 			  //Check to determine if this loop is closed
-			  if (currentLine.getPointOne().ceilingEquals(lastInCurrentWorkingLoop.getPointTwo())) {
+			  if (currentLine.getPointOne().pointEquals(lastInCurrentWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 1 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
@@ -216,9 +202,9 @@ public class ZSlicer {
 			  }
 			  
 			  currentWorkingLoop.add(0, currentLine);
-		  } else if (lastInCurrentWorkingLoop.getPointTwo().ceilingEquals(currentLine.getPointOne())) {
+		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointEquals(currentLine.getPointOne())) {
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(currentLine.getPointTwo())) {
+			  if (firstInCurrentWorkingLoop.getPointOne().pointEquals(currentLine.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 2 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
@@ -226,9 +212,9 @@ public class ZSlicer {
 			  }
 			  
 			  currentWorkingLoop.add(currentLine);
-		  } else if (lastInCurrentWorkingLoop.getPointTwo().ceilingEquals(currentLine.getPointTwo())) {
+		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointEquals(currentLine.getPointTwo())) {
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(currentLine.getPointOne())) {
+			  if (firstInCurrentWorkingLoop.getPointOne().pointEquals(currentLine.getPointOne())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 3 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
@@ -237,9 +223,9 @@ public class ZSlicer {
 			  
 			  currentLine.swap();
 			  currentWorkingLoop.add(currentLine);  
-		  } else if (currentLine.getPointOne().ceilingEquals(firstInCurrentWorkingLoop.getPointOne())) {
+		  } else if (currentLine.getPointOne().pointEquals(firstInCurrentWorkingLoop.getPointOne())) {
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointTwo().ceilingEquals(currentLine.getPointTwo())) {
+			  if (firstInCurrentWorkingLoop.getPointTwo().pointEquals(currentLine.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 4 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
@@ -259,10 +245,10 @@ public class ZSlicer {
 		  Line3d lastInCurrentWorkingLoop = currentWorkingLoop.get(currentWorkingLoop.size() - 1);
 		  Line3d firstInOtherWorkingLoop = otherWorkingLoop.get(0);
 		  Line3d lastInOtherWorkingLoop = otherWorkingLoop.get(otherWorkingLoop.size() - 1);
-		  if (lastInOtherWorkingLoop.getPointTwo().ceilingEquals(firstInCurrentWorkingLoop.getPointOne())) {
+		  if (lastInOtherWorkingLoop.getPointTwo().pointEquals(firstInCurrentWorkingLoop.getPointOne())) {
 			  logger.debug("Found Link: 1 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
-			  if (firstInOtherWorkingLoop.getPointOne().ceilingEquals(lastInCurrentWorkingLoop.getPointTwo())) {
+			  if (firstInOtherWorkingLoop.getPointOne().pointEquals(lastInCurrentWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 1 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
@@ -270,10 +256,10 @@ public class ZSlicer {
 			  }
 			  
 			  currentWorkingLoop.addAll(0, otherWorkingLoop);
-		  } else if (lastInCurrentWorkingLoop.getPointTwo().ceilingEquals(firstInOtherWorkingLoop.getPointOne())) {
+		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointEquals(firstInOtherWorkingLoop.getPointOne())) {
 			  logger.debug("Found Link: 2 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(lastInOtherWorkingLoop.getPointTwo())) {
+			  if (firstInCurrentWorkingLoop.getPointOne().pointEquals(lastInOtherWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 2 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
@@ -281,10 +267,10 @@ public class ZSlicer {
 			  }
 			  
 			  currentWorkingLoop.addAll(otherWorkingLoop);
-		  } else if (lastInCurrentWorkingLoop.getPointTwo().ceilingEquals(lastInOtherWorkingLoop.getPointTwo())) {
+		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointEquals(lastInOtherWorkingLoop.getPointTwo())) {
 			  logger.debug("Found Link: 3 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointOne().ceilingEquals(firstInOtherWorkingLoop.getPointOne())) {
+			  if (firstInCurrentWorkingLoop.getPointOne().pointEquals(firstInOtherWorkingLoop.getPointOne())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 3 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
@@ -296,10 +282,10 @@ public class ZSlicer {
 			  }
 			  Collections.reverse(otherWorkingLoop);
 			  currentWorkingLoop.addAll(otherWorkingLoop);					  
-		  } else if (firstInOtherWorkingLoop.getPointOne().ceilingEquals(firstInCurrentWorkingLoop.getPointOne())) {
+		  } else if (firstInOtherWorkingLoop.getPointOne().pointEquals(firstInCurrentWorkingLoop.getPointOne())) {
 			  logger.debug("Found Link: 4 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointTwo().ceilingEquals(lastInOtherWorkingLoop.getPointTwo())) {
+			  if (firstInCurrentWorkingLoop.getPointTwo().pointEquals(lastInOtherWorkingLoop.getPointTwo())) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 4 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
@@ -325,19 +311,19 @@ public class ZSlicer {
 			  int[] ypointsCheck = new int[lines.size()];
 			  logger.debug("Checking out[{}] element Count:{}", lines, lines.size());
 			  for (int t = 0; t < lines.size(); t++) {
-				  xpoints[t] = (int)(lines.get(t).getPointOne().x);
-				  ypoints[t] = (int)(lines.get(t).getPointOne().y);
-				  xpointsCheck[t] = (int)(lines.get(t).getPointTwo().x);
-				  ypointsCheck[t] = (int)(lines.get(t).getPointTwo().y);
+				  xpoints[t] = (int)Math.round(lines.get(t).getPointOne().x);
+				  ypoints[t] = (int)Math.round(lines.get(t).getPointOne().y);
+				  xpointsCheck[t] = (int)Math.round(lines.get(t).getPointTwo().x);
+				  ypointsCheck[t] = (int)Math.round(lines.get(t).getPointTwo().y);
 				  int prevPoint = t > 0? t - 1:lines.size() - 1;
 				  int nextPoint = t < lines.size() - 1? t + 1:0;
 				  
 				  //These are a double check for situations that should never happen other than if a single line(from a broken loop) was placed into the completedFillInLoops
 				  if (lines.size() > 1) {
-					  if (!lines.get(t).getPointTwo().ceilingEquals(lines.get(nextPoint).getPointOne())) {
+					  if (!lines.get(t).getPointTwo().pointEquals(lines.get(nextPoint).getPointOne())) {
 						  logger.warn("Compare second point[{}]:{} to first point[{}]:{}", t, lines.get(t), nextPoint, lines.get(nextPoint));
 					  }
-					  if (!lines.get(t).getPointOne().ceilingEquals(lines.get(prevPoint).getPointTwo())) {
+					  if (!lines.get(t).getPointOne().pointEquals(lines.get(prevPoint).getPointTwo())) {
 						  logger.warn("Compare first point[{}]:{} to second point[{}]:{}", t, lines.get(t), prevPoint, lines.get(prevPoint));
 					  }
 				  }
@@ -350,8 +336,21 @@ public class ZSlicer {
 		  return polygons;
 	 }
 	 
+	 public Triangle3d getFirstTriangle() {
+		 return stlFile.getFirstTriangle();
+	 }
+	 
 	 public Set<Triangle3d> getAllTriangles() {
 		 return stlFile.getTriangles();
+	 }
+	 
+	 private boolean isIntersecting(Line3d line, int x, int y) {
+		  double translatedX1 = (x - 1 - imageOffsetX) * precisionScaler / pixelsPerMMX;
+		  double translatedY1 = (y - 1 - imageOffsetY) * precisionScaler / pixelsPerMMY;
+		  double translatedX2 = (x + 1 - imageOffsetX) * precisionScaler / pixelsPerMMX;
+		  double translatedY2 = (y + 1 - imageOffsetY) * precisionScaler / pixelsPerMMY;
+
+		  return line.intersects(translatedX1, translatedY1, translatedX2, translatedY2);
 	 }
 	 
 	 //Not used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
@@ -360,20 +359,20 @@ public class ZSlicer {
 		 logger.debug("x:{} y:{}",x, y);
 		  for (Shape3d shape : getPolygonsOnSlice()) {
 			  if (shape instanceof Triangle3d) {
-				  logger.debug("Found instanceof Triangle:{}", shape);
+				  for (Line3d line : ((Triangle3d)shape).getLines()) {
+					  if (isIntersecting(line, x, y)) {
+						  intersections.add(line);
+					  }
+				  }
 			  } else if (shape instanceof Line3d) {
 				  Line3d line = (Line3d)shape;
-				  double translatedX1 = (x - 1 - imageOffsetX) * precisionScaler / pixelsPerMMX;
-				  double translatedY1 = (y - 1 - imageOffsetY) * precisionScaler / pixelsPerMMY;
-				  double translatedX2 = (x + 1 - imageOffsetX) * precisionScaler / pixelsPerMMX;
-				  double translatedY2 = (y + 1 - imageOffsetY) * precisionScaler / pixelsPerMMY;
-	
-				  if (line.intersects(translatedX1, translatedY1, translatedX2, translatedY2)) {
+				  if (isIntersecting(line, x, y)) {
 					  intersections.add(line);
 				  }
 			  } else {
 				  logger.debug("Found unknown instance:{}", shape);
 			  }
+			  
 		  }
 		  
 		  return intersections;
@@ -394,19 +393,32 @@ public class ZSlicer {
 	 
 	 public Triangle3d translateTriangle(Triangle3d triangle) {
 		 List<Point3d> points = triangle.getPoints();
-		 return new Triangle3d(new Point3d[]{translatePoint(points.get(0)), translatePoint(points.get(1)), translatePoint(points.get(2))}, triangle.getNormal());
+		 Face3d parentShape = triangle.getOriginatingShape() == null? triangle: triangle.getOriginatingShape();
+		 return new Triangle3d(
+				 new Point3d[]{
+						 translatePoint(points.get(0)), 
+						 translatePoint(points.get(1)), 
+						 translatePoint(points.get(2))}, 
+				 triangle.getNormal(), 
+				 parentShape,
+				 null,
+				 parentShape instanceof Triangle3d?((Triangle3d)parentShape).getOriginalIndex():null);
 	 }
 	 
 	 public Point3d translatePoint(Point3d point) {
-		 return new Point3d(translateX(point.x), translateY(point.y), point.z * sliceResolution);
+		 return new Point3d(translateX(point.x), translateY(point.y), translateZ(point.z));
 	 }
 	 
 	 public double translateX(double x) {
-		 return (x / (precisionScaler) * pixelsPerMMX + imageOffsetX);
+		 return (x / precisionScaler * pixelsPerMMX + imageOffsetX);
 	 }
 	 
 	 public double translateY(double y) {
-		 return (y / (precisionScaler) * pixelsPerMMY + imageOffsetY);
+		 return (y / precisionScaler * pixelsPerMMY + imageOffsetY);
+	 }
+	 
+	 public double translateZ(double z) {
+		 return z / precisionScaler;// / sliceResolution;
 	 }
 	 
 	 //NOT used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
@@ -414,7 +426,7 @@ public class ZSlicer {
 		 List<Shape3d> shapes = new ArrayList<Shape3d>();
 		  for (Triangle3d triangle : stlFile.getTriangles()) {
 			  //if (triangle.intersectsZ(z + zOffset)) {
-				  Shape3d shape = triangle.getZIntersection(z + zOffset);
+				  Shape3d shape = triangle.getZIntersection(z * precisionScaler * sliceResolution + zOffset);
 				  if (shape != null) {
 					  shapes.add(shape);
 				  }
@@ -424,13 +436,21 @@ public class ZSlicer {
 		  return shapes;
 	 }
 	 
+	 private int[] convertX(int[] x) {
+		 return new int[]{(int)translateX(x[0]), (int)translateX(x[1]), (int)translateX(x[2])};
+	 }
+	 
+	 private int[] convertY(int[] y) {
+		 return new int[]{(int)translateY(y[0]), (int)translateY(y[1]), (int)translateY(y[2])};
+	 }
+	 
 	 //Not used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
 	 public void debugPaintSlice(Graphics2D g) {
 		  for (Shape3d shape : getPolygonsOnSlice()) {
 				  if (shape instanceof Triangle3d) {
-					  g.setColor(Color.blue);
+					  g.setColor(Color.darkGray);
 					  Triangle3d tri = (Triangle3d)shape;
-					  Polygon poly = new Polygon(tri.getX(), tri.gety(), 3);
+					  Polygon poly = new Polygon(convertX(tri.getX()), convertY(tri.gety()), 3);
 					  g.drawPolygon(poly);
 				  } else if (shape instanceof Line3d) {
 					  Line3d line = (Line3d)shape;
@@ -500,9 +520,9 @@ public class ZSlicer {
 	    */
 		if (fillInScanLines != null) {
 			for (Line3d currentLine : fillInScanLines) {
-				int x1 = (int)Math.floor(currentLine.getPointOne().x);
+				int x1 = (int)Math.round(currentLine.getPointOne().x);
 				int y1 = (int)Math.round(currentLine.getPointOne().y);
-				int x2 = (int)Math.ceil(currentLine.getPointTwo().x);
+				int x2 = (int)Math.round(currentLine.getPointTwo().x);
 				int y2 = (int)Math.round(currentLine.getPointTwo().y);
 				
 				g.setColor(Color.white);
@@ -512,7 +532,7 @@ public class ZSlicer {
 				//g.drawLine(x2, y2, x2, y2);
 			}
 		}
-
+		
 		if (fillInPolygons != null) {
 			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 			g.setColor(Color.white);
@@ -536,16 +556,16 @@ public class ZSlicer {
 			 Point3d checkPoint = brokenEnds[t];
 			 Point3d previousPoint = brokenEnds[t == 0?brokenEnds.length - 1:t-1];
 			 Point3d nextPoint = brokenEnds[t == brokenEnds.length - 1?0:t+1];
-			 if (checkPoint.ceilingEquals(beginning)) {
+			 if (checkPoint.pointEquals(beginning)) {
 				 usedFaces.add(currentTriangleIndex);
 				 
 				 //First check if we can end this fiasco...
-				 if (nextPoint.ceilingEquals(ending)) {
-					 Line3d line = new Line3d(checkPoint, ending, null, currentBrokenFace, false);
+				 if (nextPoint.pointEquals(ending)) {
+					 Line3d line = new Line3d(checkPoint, ending, null, currentBrokenFace, false);//TODO: Use proper normal
 					 path.add(line);
 					 return path;
-				 } else if (previousPoint.ceilingEquals(ending)) {
-					 Line3d line = new Line3d(checkPoint, ending, null, currentBrokenFace, false);
+				 } else if (previousPoint.pointEquals(ending)) {
+					 Line3d line = new Line3d(checkPoint, ending, null, currentBrokenFace, false);//TODO: Use proper normal
 					 path.add(line);
 					 return path;
 				 }
@@ -567,9 +587,10 @@ public class ZSlicer {
 		 
 		 return findPathThroughTrianglesAndBrokenLoops(beginning, ending, path, brokenFaceMaze, usedFaces, currentTriangleIndex + 1);
 	 }
-	 
+
 	 //used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
 	 public List<List<Line3d>> colorizePolygons(List<Triangle3d> watchedTriangles, List<Integer> watchedYs) {
+		 
 		  sliceMaxX = -Integer.MAX_VALUE;
 		  sliceMaxY = -Integer.MAX_VALUE;
 		  sliceMinX = Integer.MAX_VALUE;
@@ -583,7 +604,10 @@ public class ZSlicer {
 		  //Find all intersections and put them into a sorted list.
 		  //We put them in a sorted list because the join algorithm can be executed in virtually constant time
 		  //Effectively, this loop is log n due to the sort into XYComparator
-		  Set<Line3d> zIntersectionsBySortedX = new TreeSet<Line3d>(new XYComparatord());
+		  
+		  logger.info("===================");
+		  logger.info("ZSlice started", ()->Log4jTimer.startTimer("sliceTime"));
+		  Set<Line3d> zIntersectionsBySortedX = new TreeSet<Line3d>(new XYComparatord(Triangle3d.EQUAL_TOLERANCE));
 		  for (Triangle3d triangle : stlFile.getTriangles()) {
 			  if (watchedTriangles != null && watchedTriangles.contains(triangle)) {
 				  logger.debug("Watched triangle:{}", ()-> translateTriangle(triangle));
@@ -591,17 +615,21 @@ public class ZSlicer {
 			  /*if (triangle.onZeroZ())  {
 				  logger.debug("on z");//123456
 			  }*/
-			  if (triangle.intersectsZ(z + zOffset)) {
-				  Shape3d shape = triangle.getZIntersection(z + zOffset);
+			  double actualZ = (double)z * precisionScaler * sliceResolution + zOffset;
+			  if (triangle.intersectsZ(actualZ)) {
+				  Shape3d shape = triangle.getZIntersection(actualZ);
 				  if (shape instanceof Triangle3d) {
-					  placeIntoCompletedLoopList(triangle.getLines(), completedFillInLoops);
-					  trianglesAndBrokenFacesForMazeTraversal.add((Triangle3d)shape);
+					  //TODO: This is experimental
+					  //placeIntoCompletedLoopList(((Triangle3d)shape).getLines(), completedFillInLoops);
+					  //trianglesAndBrokenFacesForMazeTraversal.add((Triangle3d)shape);
+					  //TODO: This is experimental
+					  zIntersectionsBySortedX.addAll(((Triangle3d)shape).getLines());
 					  logger.debug("Triangle:{}", ()-> translateTriangle((Triangle3d)shape));
 				  } else if (shape instanceof Line3d) {
 					  zIntersectionsBySortedX.add((Line3d)shape);
-					  logger.debug("Line:{}", ()-> translateLine((Line3d)shape));
+					  logger.debug("Line:" +  translateLine((Line3d)shape));
 				  } else if (shape != null) {
-					  logger.debug("Ignored Point:{}", shape);
+					  logger.debug("Ignored Point:{}", () -> translatePoint((Point3d)shape));
 				  }	 else {
 					  logger.debug("No geometrical intersection");
 				  }
@@ -610,6 +638,7 @@ public class ZSlicer {
 			  }//*/
 		  }
 		  
+		  logger.info("IntersectionTime:{}", ()->Log4jTimer.splitTimer("sliceTime"));
 		  logger.debug("===================");
 		  logger.debug("zIntersectionsBySortedX:{}", zIntersectionsBySortedX.size());
 		  logger.debug("completedFillInLoops:{}", completedFillInLoops.size());
@@ -641,6 +670,8 @@ public class ZSlicer {
 			  workingLoops.add(newLoop);
 		  }
 		  
+		  logger.info("Primary linkage search:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+
 		  if (logger.isDebugEnabled()) {
 			  logger.debug("===================");
 			  logger.debug("zIntersectionsBySortedX:{}", zIntersectionsBySortedX.size());
@@ -657,6 +688,7 @@ public class ZSlicer {
 			  }
 			  logger.debug("workingLoops lines:{}", value);
 			  logger.debug("===================");//*/
+			  logger.debug("Debug print time:{}", ()->Log4jTimer.splitTimer("sliceTime"));
 		  }
 		  
 		  //Empirically I've found that about half of all loops need to be joined with this method
@@ -685,6 +717,8 @@ public class ZSlicer {
 			  workingLoops.remove(0);
 		  }
 		  
+		  logger.info("Secondary linkage search:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+
 		  if (logger.isDebugEnabled()) {
 			  logger.debug("===================");
 			  logger.debug("zIntersectionsBySortedX:{}", zIntersectionsBySortedX.size());
@@ -707,6 +741,7 @@ public class ZSlicer {
 			  }
 			  logger.debug("brokenLoops lines:{}", value);
 			  logger.debug("===================");
+			  logger.debug("Print broken loops:{}", ()->Log4jTimer.splitTimer("sliceTime"));
 		  }
 		  
 		  //empirically I've found that this block of code will only execute 1 in 100 times.
@@ -721,7 +756,7 @@ public class ZSlicer {
 				  
 				  //TODO: Somehow we are allowing a lost single point to find it's way to this code. That is indicitive of a bug earlier in the above sections
 				  if (currentLoop.size() == 1 &&
-					  currentLoop.get(0).getPointOne().ceilingEquals(currentLoop.get(0).getPointTwo())) {
+					  currentLoop.get(0).getPointOne().pointEquals(currentLoop.get(0).getPointTwo())) {
 					  continue;
 				  }
 				  
@@ -742,7 +777,7 @@ public class ZSlicer {
 				  List<Integer> assembledFaces = new ArrayList<Integer>();
 				  
 				  //TODO: Technically this line was made from two originating faces, but we are only recording the first one for error reporting purposes
-				  Line3d line = new Line3d(currentBrokenLoop.get(0).getPointOne(), currentBrokenLoop.get(currentBrokenLoop.size() - 1).getPointTwo(), null, currentBrokenLoop.get(0).getOriginatingFace(), false);
+				  Line3d line = new Line3d(currentBrokenLoop.get(0).getPointOne(), currentBrokenLoop.get(currentBrokenLoop.size() - 1).getPointTwo(), null, currentBrokenLoop.get(0).getOriginatingFace(), false);//TODO: Proper normal
 				  path.add(line);
 				  assembledFaces.add(currentElementIndex);
 				  path = findPathThroughTrianglesAndBrokenLoops(currentBrokenLoop.get(0).getPointOne(), currentBrokenLoop.get(currentBrokenLoop.size() - 1).getPointTwo(), path, trianglesAndBrokenFacesForMazeTraversal, assembledFaces, 0);
@@ -793,25 +828,18 @@ public class ZSlicer {
 				  Line3d side = currentBrokenLoop.get(0);
 				  errors.add(new StlError((Triangle3d)side.getOriginatingFace(), side));
 				  if (currentBrokenLoop.size() > 1) {
-					  side = currentBrokenLoop.get(0);
+					  side = currentBrokenLoop.get(currentBrokenLoop.size() - 1);
 					  errors.add(new StlError((Triangle3d)side.getOriginatingFace(), side));
 				  }
 			  }
+			  
+			  logger.info("Stl error capturing:{}", ()->Log4jTimer.splitTimer("sliceTime"));
 		  }
 
 		  //close loops manually since we couldn't find a solution for these broken loops
-		  if (fixBrokenLoops) {
-			  for (List<Line3d> currentBrokenLoop : brokenLoops) {
-				  if (currentBrokenLoop.size() > 1) {
-					  Line3d line1 = currentBrokenLoop.get(0);
-					  Line3d line2 = currentBrokenLoop.get(currentBrokenLoop.size() - 1);
-					  //Point3d normal = new Point3d(line1.getNormal().x + line2.getNormal().x, line1.getNormal().y + line2.getNormal().y, line1.getNormal().z + line2.getNormal().z);
-					  Line3d line = new Line3d(line2.getPointTwo(), line1.getPointOne(), null, null, false);
-					  currentBrokenLoop.add(line);
-				  }
-				  
-				  placeIntoCompletedLoopList(currentBrokenLoop, completedFillInLoops);
-			  }
+		  if (fixBrokenLoops != null && brokenLoops.size() > 0) {
+			  fixBrokenLoops.mendPolygon(this, brokenLoops, completedFillInLoops);
+			  logger.info("Broken loop mending:{}", ()->Log4jTimer.splitTimer("sliceTime"));
 		  }
 		  
 		  //Preperation work for the Scanline algorithm
@@ -838,7 +866,8 @@ public class ZSlicer {
 				 }
 			 }
 		  }
-          
+		  logger.info("Break scanline up into pieces:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+
 		  List<Future<ScanlineFillPolygonWork>> completedWork = new ArrayList<Future<ScanlineFillPolygonWork>>();
 		  for (int y = 0; y < breakupSize; y++) {
 			  List<Line3d> inRange = inRangeLines.get(y);
@@ -852,9 +881,10 @@ public class ZSlicer {
 					  watchedYs,
 					  y * ScanlineFillPolygonWork.SMALLEST_UNIT_OF_WORK + sliceMinY,
 					  (y + 1) * ScanlineFillPolygonWork.SMALLEST_UNIT_OF_WORK + sliceMinY - 1,
-					  z + zOffset);
+					  z);
 			  completedWork.add(pool.submit(work));
 		  }
+		  logger.info("Submit scanline work:{}", ()->Log4jTimer.splitTimer("sliceTime"));
 		  
 		  fillInScanLines = new ArrayList<Line3d>();
 		  buildArea = 0;
@@ -874,11 +904,13 @@ public class ZSlicer {
 					logger.error("Error in executing polygon work", e);
 				}
 		  }
+		  logger.info("Wait for scanline work:{}", ()->Log4jTimer.splitTimer("sliceTime"));
 		  
 		  //I'm not sure I want to do this. It just traces the polygon but doesn't provide much value other than an edge blur.
 		  logger.debug("Polygons");
 		  logger.debug("======");
           fillInPolygons = compilePolygons(completedFillInLoops);
+		  logger.info("Compile polygons:{}", ()->Log4jTimer.splitTimer("sliceTime"));
 			  
 		  if (logger.isDebugEnabled()) {
 	          logger.debug("TOTALS");
@@ -893,35 +925,41 @@ public class ZSlicer {
 			  }
 			  logger.debug("Working Loops({}):{}",workingLoops.size(), workingLoops);
 			  logger.debug("======");//*/
+			  logger.debug("Print working loops:{}", ()->Log4jTimer.splitTimer("sliceTime"));
 		  }
 		  pool.shutdown();
+		  logger.info("ZSlice complete:{}", ()->Log4jTimer.completeTimer("sliceTime"));
 		  return completedFillInLoops;
 	 }
 	 
-	 public void loadFile(Double buildPlatformXPixels, Double buildPlatformYPixels) throws FileNotFoundException {
-		 stlFile.load(stlFileToSlice);
-		 
-		 if (imageOffsetX == null) {
-			 if (buildPlatformXPixels != null) {
-				 imageOffsetX = (buildPlatformXPixels / 2) - (stlFile.getWidth() / precisionScaler * pixelsPerMMX / 2) - (stlFile.getXmin() / precisionScaler * pixelsPerMMX); 
-			 } else {
-				 imageOffsetX = 0.0;
-			 }
-		 }
-		 if (imageOffsetY == null) {
-			 if (buildPlatformYPixels != null) {
-				 imageOffsetY = (buildPlatformYPixels / 2) - (stlFile.getHeight() / precisionScaler * pixelsPerMMY / 2) - (stlFile.getYmin() / precisionScaler * pixelsPerMMY); 
-			 } else {
-				 imageOffsetY = 0.0;
-			 }
-		 }
+	 public void loadFile(InputStream stream, Double buildPlatformXPixels, Double buildPlatformYPixels) throws IOException {
+		  logger.info("Load file start", ()->Log4jTimer.startTimer("fileLoadTime"));
+		  stlFile.load(stream);
+ 
+		if (imageOffsetX == null) {
+			if (buildPlatformXPixels != null) {
+				imageOffsetX = (buildPlatformXPixels / 2) - (stlFile.getWidth() / precisionScaler * pixelsPerMMX / 2)
+						- (stlFile.getXmin() / precisionScaler * pixelsPerMMX);
+			} else {
+				imageOffsetX = 0.0;
+			}
+		}
+		if (imageOffsetY == null) {
+			if (buildPlatformYPixels != null) {
+				imageOffsetY = (buildPlatformYPixels / 2) - (stlFile.getHeight() / precisionScaler * pixelsPerMMY / 2)
+						- (stlFile.getYmin() / precisionScaler * pixelsPerMMY);
+			} else {
+				imageOffsetY = 0.0;
+			}
+		}
+		logger.info("Load file stop:{}", ()->Log4jTimer.completeTimer("fileLoadTime"));
 	 }
 	 
-	 public int getZ() {
+	 public int getZIndex() {
  		return z; 
 	 }
 	
-     public void setZ(int z) {
+     public void setZIndex(int z) {
  		this.z = z;
 		fillInPolygons = null;
 		fillInScanLines = null;
@@ -944,11 +982,11 @@ public class ZSlicer {
 		return stlScale;
 	}
 
-	public int getZMin() {
-		return (int)Math.ceil(stlFile.getZmin());
+	public int getZMinIndex() {
+		return (int)Math.ceil(stlFile.getZmin() / precisionScaler / sliceResolution - zOffset);
 	}
 	
-	public int getZMax() {
-		return (int)Math.floor(stlFile.getZmax());
+	public int getZMaxIndex() {
+		return (int)Math.floor(stlFile.getZmax() / precisionScaler / sliceResolution - zOffset);
 	}
 }

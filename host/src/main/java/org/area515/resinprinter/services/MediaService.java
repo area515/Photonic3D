@@ -203,9 +203,9 @@ public class MediaService {
 						outputStream.close();
 					}
 				} catch (InterruptedException | ExecutionException e) {
-					logger.debug("Client destroyed");
+					logger.debug("Client destroyed with close status of:{}", closeNow);
 					
-					if (closeNow == CloseType.Normal) {
+					if (closeNow == null || closeNow == CloseType.Normal) {
 						liveStreamerModificationLock.lock();
 						try {
 							mjpegStreamerClients.remove(clientId);
@@ -389,7 +389,9 @@ public class MediaService {
 		}
 	}
 	
-    @ApiOperation(value = "Starts a live mjpeg stream using the settings available in config.properties for key imagingCommand=[jsonFormattedNativeOSCommand]")
+    @ApiOperation(value = "Starts a live mjpeg stream using the settings available in config.properties for key imagingCommand=[jsonFormattedNativeOSCommand]. "
+    		+ "clientId refers can any unique id that a client would like to create. "
+    		+ "This clientId is later sent to the stoplivemjpegstream when it wants to notify the host server that a stream is no longer needed.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})

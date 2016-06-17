@@ -18,7 +18,7 @@ import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.services.PrinterService;
 
-public abstract class TwoDimensionalPlatformPrintFileProcessor<T> extends AbstractPrintFileProcessor<T> {
+public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends AbstractPrintFileProcessor<T,E> {
 	private Map<PrintJob, TwoDimensionalPrintState> twoDimensionalPrintDataByJob = new HashMap<PrintJob, TwoDimensionalPrintState>();
 	
 	public static abstract class TwoDimensionalPrintState extends RenderingFileData {

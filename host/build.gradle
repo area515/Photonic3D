@@ -4,8 +4,13 @@ plugins {
   id "application"
   id "eclipse"
   id "co.riiid.gradle" version "0.4.2"
-  id 'org.ajoberstar.grgit' version '1.4.2'
+  id 'org.ajoberstar.grgit' version '1.5.0'
+  id 'org.ajoberstar.github-pages' version '1.5.0'
   id 'com.google.osdetector' version '1.4.0'
+}
+
+configurations {
+  doclet
 }
 
 repositories {
@@ -26,6 +31,7 @@ dependencies {
   compile 'org.fourthline.cling:cling-support:2.0.1'
   compile 'org.apache.httpcomponents:httpclient:4.3.3'
 
+  compile 'org.apache.commons:commons-math3:3.6.1'
   compile 'commons-cli:commons-cli:1.2'
   compile 'commons-codec:commons-codec:1.5'
   compile 'commons-io:commons-io:2.4'
@@ -67,10 +73,13 @@ dependencies {
 
   compile fileTree(dir: 'libs', include: '**/*.jar')
   compile files('conf')
-}
 
-configurations {
-
+  doclet 'com.tenxerconsulting:swagger-doclet:1.1.3'
+  doclet 'javax.ws.rs:javax.ws.rs-api:2.0'
+  //doclet(
+  //  [group: 'com.tenxerconsulting', name: 'swagger-doclet', version: '1.1.3'],
+  //  [group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0']
+  //)
 }
 
 sourceSets {
@@ -121,10 +130,32 @@ jar.archiveName = 'photonic3d.jar'
 test {
   systemProperty "java.library.path", osLibDir()
   includes = ['**/*FullTestSuite*']
+
+  forkEvery = 5
+  maxHeapSize = "1G"
+  testLogging {
+    events "failed"
+    showStackTraces true
+    showExceptions true
+    exceptionFormat "full"
+  }
+}
+
+javadoc {
+  failOnError = false
 }
 
 run {
   systemProperty "java.library.path", osLibDir()
+}
+
+githubPages {
+
+  pages {
+    from file("${project.docsDir}")
+
+    into "docs"
+  }
 }
 
 // TASK EXECUTION DEFS
@@ -133,8 +164,7 @@ task repoVersion() << {
   commitVersion = grgit.describe()
 
   if (commitVersion == null) {
-    def history = grgit.log(maxCommits: 1)
-    commitVersion = history[0].id.take(5)
+    commitVersion = currentCommitHash();
   }
 
   ant.properties['repo.version'] = commitVersion
@@ -201,6 +231,7 @@ task setupRelease(dependsOn: ['setupRemote']) << {
   ant.input(message: "Press <return> to continue...")
 
   if (tagName == "${null}") {
+    println("Recommended development release tag: ${github.owner}-${currentCommitHash()}")
     ant.input(message: "Enter the tag to create for this release > ", addproperty: "tagName")
     tagName = ant.tagName
   }
@@ -211,7 +242,7 @@ task setupRelease(dependsOn: ['setupRemote']) << {
 }
 
 task releaseDist (dependsOn: ['dist']) << {
-  github.assets = fileTree('.').include("*.zip") as List;
+  github.assets = fileTree(dir: '.', include: '*.zip', exclude: 'cwh-0.298.zip') as List;
   if (github.assets.size() < 1) {
     throw new GradleException("There are no zip files to release in the project directory.")
   }
@@ -227,12 +258,24 @@ task runSliceBrowser(type: JavaExec) {
   main = "org.area515.resinprinter.slice.SliceBrowser"
 }
 
-test {
-  testLogging {
-    events "failed"
-    showStackTraces true
-    showExceptions true
-    exceptionFormat "short"
+task apidoc(type: Javadoc) {
+  source = sourceSets.main.allJava
+  destinationDir = file("${project.docsDir}/apidoc")
+  options.classpath = configurations.doclet.files.asType(List)
+  options.docletpath = configurations.doclet.files.asType(List)
+  options.doclet = "com.tenxerconsulting.swagger.doclet.ServiceDoclet"
+  options.addStringOption("apiVersion", "1")
+  options.addStringOption("docBasePath", "/apidoc")
+  options.addStringOption("apiBasePath", "/services")
+  options.addStringOption("includeResourcePrefixes", "org.area515.resinprinter.services")
+}
+
+run.doFirst {
+  // c9.io only exposes some ports to forward to the browser, if this is set,
+  // override the listen port to use it
+  def c9Port = "$System.env.C9_PORT";
+  if (c9Port != "${null}") {
+    applicationDefaultJvmArgs += ["-DoverrideHostPort=${c9Port}"]
   }
 }
 
@@ -240,6 +283,11 @@ clean.doFirst {
   // Additions to the built-in clean
   delete "srcbin", "testbin", "cwh.log"
   delete fileTree(dir: '.', include: '*.zip', exclude: 'cwh-0.298.zip')
+  delete fileTree(dir: '.', include: 'cwh*.log.gz')
+}
+
+prepareGhPages.doFirst {
+  githubPages.credentials = new org.ajoberstar.gradle.git.auth.BasicPasswordCredentials(releaseRepoUser, releaseRepoToken)
 }
 
 // PROJECT POST-SETUP SCRIPT
@@ -247,6 +295,8 @@ clean.doFirst {
 githubRelease.dependsOn releaseDist
 dist.mustRunAfter setupRelease
 BuildCWH.mustRunAfter preDist
+publishGhPages.dependsOn javadoc
+publishGhPages.dependsOn apidoc
 
 applicationDistribution.from(testJar) {
   into "lib"
@@ -269,4 +319,9 @@ String osLibDir() {
     default:
       return 'unknown'
   }
+}
+
+String currentCommitHash() {
+  def history = grgit.log(maxCommits: 1)
+  return history[0].id.take(7)
 }

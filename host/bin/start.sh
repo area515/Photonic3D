@@ -86,7 +86,7 @@ fi
 echo Checking for new version from Github Repo: ${repo}
 cd ${installDirectory}
 LOCAL_TAG=$(grep repo.version build.number | cut -d = -f 2 | tr -d '\r')
-NETWORK_TAG=$(curl -s https://api.github.com/repos/${repo}/releases/latest | grep 'tag_name' | cut -d\" -f4)
+NETWORK_TAG=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'tag_name' | cut -d\" -f4)
 
 echo Local Tag: ${LOCAL_TAG}
 echo Network Tag: ${NETWORK_TAG}
@@ -103,10 +103,12 @@ if [ -f ${downloadPrefix}.*.zip ]; then
 	unzip ${OFFLINE_FILE}
 	chmod 777 *.sh
 	rm ${OFFLINE_FILE}
+elif [ -z "${NETWORK_TAG}" ]; then
+	echo "Couldn't fetch version from GitHub, launching existing install."
 elif [ "${NETWORK_TAG}" != "${LOCAL_TAG}" -o "$2" == "force" ]; then
 	echo Installing latest version of ${downloadPrefix}: ${NETWORK_TAG}
 
-	DL_URL=$(curl -s https://api.github.com/repos/${repo}/releases/latest | grep 'browser_' | cut -d\" -f4 | grep ${downloadPrefix})
+	DL_URL=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'browser_' | cut -d\" -f4 | grep -- -${NETWORK_TAG})
 	DL_FILE=${DL_URL##*/}
 	rm -f "/tmp/${DL_FILE}"
 	wget -P /tmp "${DL_URL}"

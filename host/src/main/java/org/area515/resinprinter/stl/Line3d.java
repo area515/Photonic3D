@@ -21,9 +21,9 @@ public class Line3d implements Shape3d {
 		}
 
 		this.originatingFace = originatingFace;
-		this.normal = normal != null?normal:new Point3d(one.y - two.y, one.x - two.x, two.z - one.z);
-		this.slope = (one.x - two.x) / (one.y - two.y);
-		this.xintercept = -(slope * one.y - one.x);
+		this.normal = normal != null?normal:new Point3d(this.one.y - this.two.y, this.one.x - this.two.x, this.two.z - this.one.z);//Uses counterclockwise rule in coop with Triangle3d creation in ZSlicer constructor
+		this.slope = (this.one.x - this.two.x) / (this.one.y - this.two.y);
+		this.xintercept = -(slope * this.one.y - this.one.x);
 	}
 	
 	public boolean intersects(double x1, double y1, double x2, double y2) {
@@ -92,12 +92,12 @@ public class Line3d implements Shape3d {
 		if (getClass() != obj.getClass())
 			return false;
 		Line3d other = (Line3d) obj;
-		if ((one == other.one || (one != null && one.equals(other.one))) &&
-			(two == other.two || (two != null && two.equals(other.two)))) {
+		if ((one == other.one || (one != null && one.pointEquals(other.one))) &&
+			(two == other.two || (two != null && two.pointEquals(other.two)))) {
 			return true;
 		}
-		if ((one == other.two || (two != null && two.equals(other.one))) &&
-			(two == other.one || (one != null && one.equals(other.two)))) {
+		if ((one == other.two || (two != null && two.pointEquals(other.one))) &&
+			(two == other.one || (one != null && one.pointEquals(other.two)))) {
 			return true;
 		}
 		return false;

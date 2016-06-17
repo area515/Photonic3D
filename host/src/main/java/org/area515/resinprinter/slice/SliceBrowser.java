@@ -3,9 +3,10 @@ package org.area515.resinprinter.slice;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
@@ -13,6 +14,7 @@ import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -20,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.JButton;
@@ -51,12 +52,18 @@ import org.area515.resinprinter.stl.Triangle3d;
 public class SliceBrowser extends JSplitPane {
 	private PrinterTools tools;
 	
-	private int firstSlice = 187;
+	private int firstSlice = 1;
+	//95 CornerBracket_2.stl
+	//C:\\Users\\wgilster\\Desktop\\fdhgg.stl
 	//78;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";
 	//321;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureTop.stl"; good
 	//781;//"C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"; good
+	//"C:\\Users\\wgilster\\git\\Creation-Workshop-Host\\host\\src\\test\\resources\\org\\area515\\resinprinter\\slice\\CornerBracket_2.stl"
 	
-	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";//122, 151, 187
+	private String firstFile = "C:\\Users\\wgilster\\Documents\\fdhgg.stl";//1,200,670
+//	private String firstFile = "C:\\Users\\wgilster\\Documents\\NonManifoldBox.stl";//-19
+//	private String firstFile = "C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl";
+//	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";//95
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosureBottom.stl"; 54
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";//78, 54
 	/*
@@ -67,7 +74,6 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 "C:\\Users\\wgilster\\Documents\\ArduinoMega.stl",
 "C:\\Users\\wgilster\\Documents\\Olaf_set3_whole.stl",
 //http://www.thingiverse.com/download:888699
-
 
 	 */
 	
@@ -98,7 +104,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			TreePath nodes[] = e.getPaths();
 			for (int t = 0; t < nodes.length; t++) {
 				SliceBrowserTreeNode treeNode = (SliceBrowserTreeNode)nodes[t].getLastPathComponent();
-				if (treeNode.isLeaf() && treeNode.getUserObject() instanceof Line3d) {
+				if (treeNode.getUserObject() instanceof Line3d) {
 					if (e.isAddedPath(t)) {
 						selectedLines.add((Line3d)treeNode.getUserObject());
 					} else {
@@ -198,10 +204,16 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 					 List<List<Line3d>> coloredLines = slicer.colorizePolygons(null, null);
 					 int t = 0;
 					 for (List<Line3d> loops : coloredLines) {
-						 SliceBrowserTreeNode parent = new SliceBrowserTreeNode("Slice:" + slicer.getZ() + " #" + t++ + " :(" + loops.size() + ")");
+						 SliceBrowserTreeNode parent = new SliceBrowserTreeNode("Slice:" + slicer.getZIndex() + " #" + t++ + " :(" + loops.size() + ")");
 						 rootNode.add(parent);
 						 for (Line3d line : loops) {
-							 parent.add(new SliceBrowserTreeNode(line));
+							 SliceBrowserTreeNode lineNode = new SliceBrowserTreeNode(line);
+							 parent.add(lineNode);
+							 Face3d face3d = line.getOriginatingFace();
+							 
+							 if (face3d instanceof Triangle3d) {
+								 lineNode.add(new SliceBrowserTreeNode(slicer.translateTriangle((Triangle3d)face3d)));
+							 }
 						 }
 					 }
 					 nodeChanged(root);
@@ -212,7 +224,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			}
 			
 			if (mouseLabel != null) {
-				mouseLabel.setText("Z:" + slicer.getZ() + " Area:" + slicer.getBuildArea());
+				mouseLabel.setText("Z:" + slicer.getZIndex() + " Area:" + slicer.getBuildArea());
 			}
 			browserPanel.repaint();
 		}
@@ -232,34 +244,38 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 	
 	private void loadStl(Integer firstSlice) {
 		 ZSlicer newSlicer = new ZSlicer(
-			 new File(loadStlText.getText()),
 			 mmPerStlUnit,
 			 pixelsPerMMX,
 			 pixelsPerMMY,
 			 sliceResolution,
 			 0d,
 			 false,
-			 true);
+			 new CloseOffMend());
 		try {
-			newSlicer.loadFile(tools.getBuildPlatformX(), tools.getBuildPlatformY());
+			newSlicer.loadFile(new FileInputStream(new File(loadStlText.getText())), tools.getBuildPlatformX(), tools.getBuildPlatformY());
 			slicer = newSlicer;
 		} catch (FileNotFoundException e) {
-			JOptionPane.showMessageDialog(null, "File not found:" + loadStlText.getText());
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "File not found? " + loadStlText.getText());
+			return;
+		} catch (IOException e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Error loading stl file: " + loadStlText.getText() + ": " + e.getMessage());
 			return;
 		}
-		zSliceModel.setMaximum(slicer.getZMax());
-		zSliceModel.setMinimum(slicer.getZMin());
+		zSliceModel.setMaximum(slicer.getZMaxIndex());
+		zSliceModel.setMinimum(slicer.getZMinIndex());
 		if (firstSlice == null) {
-			firstSlice = slicer.getZMin();
+			firstSlice = slicer.getZMinIndex();
 		}
 		
-		firstSlice = Math.min(Math.max(firstSlice, slicer.getZMin()), slicer.getZMax());
+		firstSlice = Math.min(Math.max(firstSlice, slicer.getZMinIndex()), slicer.getZMaxIndex());
 		zSliceModel.setValue(firstSlice);
-		slicer.setZ(firstSlice);
+		slicer.setZIndex(firstSlice);
 	}
 	
 	public void runWatch(int z, JLabel mouseLabel) {
-		slicer.setZ(z);
+		slicer.setZIndex(z);
 		System.out.println("Testing Z:" + z);
 		slicer.colorizePolygons(sliceBrowserListener.getSelectedTriangles(), watchYs);
 		for (StlError error : slicer.getStlErrors()) {
@@ -312,15 +328,15 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				if (slicer == null) {
 					return;
 				}
-				mouseLabel.setText("X:" + e.getX() + " Y:" + e.getY() + " Z:" + slicer.getZ() + " Area:"
+				mouseLabel.setText("X:" + e.getX() + " Y:" + e.getY() + " Z:" + slicer.getZIndex() + " Area:"
 						+ slicer.getBuildArea());
 			}
 		});
 		browserPanel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				List<Shape3d> shapes = slicer.getTrianglesAt(e.getX(), e.getY());
-				for (Shape3d shape : shapes) {
+				List<Shape3d> clickedShapes = slicer.getTrianglesAt(e.getX(), e.getY());
+				for (Shape3d shape : clickedShapes) {
 					Line3d line = (Line3d) shape;
 					Face3d face = line.getOriginatingFace();
 
@@ -365,7 +381,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 							joinFile = checkFile;
 						}
 						FillPoint newPoint = new FillPoint();
-						newPoint.setSliceNumber(slicer.getZ());
+						newPoint.setSliceNumber(slicer.getZIndex());
 						newPoint.setY(e.getY());
 						newPoint.setX(e.getX());
 						joinFile.getPoints().add(newPoint);
@@ -380,8 +396,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				while (depth.hasMoreElements()) {
 					SliceBrowserTreeNode currentNode = (SliceBrowserTreeNode) depth.nextElement();
 					System.out.println(currentNode);
-					for (Shape3d shape : shapes) {
-						Line3d line = slicer.translateLine(((Line3d) shape));
+					for (Shape3d clickedShape : clickedShapes) {
+						Line3d line = slicer.translateLine(((Line3d) clickedShape));
 
 						if (line.pointsEqual(currentNode.getUserObject())) {
 							selectedPaths.add(new TreePath(currentNode.getPath()));
@@ -397,15 +413,16 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			}
 		});
 
-		final JPanel bottomPanel = new JPanel(new FlowLayout());
+		GridBagLayout bottomLayout = new GridBagLayout();
+		final JPanel bottomPanel = new JPanel(bottomLayout);
 		final JButton colorize = new JButton("Alpha Colorize");
 		final JButton render = new JButton("Render");
 		zSliceBar.setModel(zSliceModel);
 		zSliceBar.addAdjustmentListener(new AdjustmentListener() {
 			@Override
 			public void adjustmentValueChanged(AdjustmentEvent e) {
-				slicer.setZ(e.getValue());
-				mouseLabel.setText("Z:" + slicer.getZ());
+				slicer.setZIndex(e.getValue());
+				mouseLabel.setText("Z:" + slicer.getZIndex());
 				useRender = false;
 				sliceBrowserListener.clearChildren();
 				lineSliceModel.clearChildren();
@@ -469,8 +486,8 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		findNextTriangle.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int z = slicer.getZ() + 1;
-				slicer.setZ(z);
+				int z = slicer.getZIndex() + 1;
+				slicer.setZIndex(z);
 				runWatch(z, mouseLabel);
 			}
 		});
@@ -479,7 +496,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		findPreviousTriangle.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int z = slicer.getZ() - 1;
+				int z = slicer.getZIndex() - 1;
 				runWatch(z, mouseLabel);
 			}
 		});
@@ -496,19 +513,47 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		runWatches.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				runWatch(slicer.getZ(), mouseLabel);
+				runWatch(slicer.getZIndex(), mouseLabel);
 			}
 		});
 
-		bottomPanel.add(mouseLabel);
-		bottomPanel.add(colorize);
-		bottomPanel.add(render);
-		bottomPanel.add(loadStlText);
-		bottomPanel.add(loadStlButton);
-		bottomPanel.add(findNextTriangle);
-		bottomPanel.add(findPreviousTriangle);
-		bottomPanel.add(clearYWatches);
-		bottomPanel.add(runWatches);
+		GridBagConstraints cons = new GridBagConstraints();
+		cons.gridx = 0;
+		cons.gridy = 0;
+		bottomPanel.add(mouseLabel, cons);
+		cons = new GridBagConstraints();
+		cons.gridx = 1;
+		cons.gridy = 0;	
+		bottomPanel.add(colorize, cons);
+		cons = new GridBagConstraints();
+		cons.gridx = 2;
+		cons.gridy = 0;		
+		bottomPanel.add(render, cons);
+		cons = new GridBagConstraints();
+		cons.gridx = 3;
+		cons.gridy = 0;
+		cons.gridwidth = 2;
+		bottomPanel.add(loadStlText, cons);
+		cons = new GridBagConstraints();
+		cons.gridx = 0;
+		cons.gridy = 1;		
+		bottomPanel.add(loadStlButton, cons);
+		cons = new GridBagConstraints();
+		cons.gridx = 1;
+		cons.gridy = 1;		
+		bottomPanel.add(findNextTriangle, cons);
+		cons = new GridBagConstraints();
+		cons.gridx = 2;
+		cons.gridy = 1;		
+		bottomPanel.add(findPreviousTriangle, cons);
+		cons = new GridBagConstraints();
+		cons.gridx = 3;
+		cons.gridy = 1;		
+		bottomPanel.add(clearYWatches, cons);
+		cons = new GridBagConstraints();
+		cons.gridx = 4;
+		cons.gridy = 1;		
+		bottomPanel.add(runWatches, cons);
 		window.add(zSliceBar, BorderLayout.EAST);
 		window.add(browserPanel, BorderLayout.CENTER);
 		window.add(bottomPanel, BorderLayout.SOUTH);

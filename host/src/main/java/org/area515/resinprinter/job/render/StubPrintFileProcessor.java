@@ -8,11 +8,11 @@ import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
 
-public class StubPrintFileProcessor<G> implements PrintFileProcessor<G> {
+public class StubPrintFileProcessor<G,E> implements PrintFileProcessor<G,E> {
 	private String[] fileExtensions;
 	private String friendlyName;
 
-	public StubPrintFileProcessor(PrintFileProcessor<G> processor) {
+	public StubPrintFileProcessor(PrintFileProcessor<G,E> processor) {
 		this.fileExtensions = processor.getFileExtensions();
 		this.friendlyName = processor.getFriendlyName();
 	}
@@ -60,6 +60,11 @@ public class StubPrintFileProcessor<G> implements PrintFileProcessor<G> {
 
 	@Override
 	public G getGeometry(PrintJob printJob) throws JobManagerException {
-		return null;
+		throw new JobManagerException("This job is no longer operational");
+	}
+
+	@Override
+	public E getErrors(PrintJob printJob) throws JobManagerException {
+		throw new JobManagerException("This job is no longer operational");
 	}
 }

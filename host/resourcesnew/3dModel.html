@@ -1,0 +1,12 @@
+<div class="panel panel-default bootcards-media" ng-show="printJobsController.currentPrintJob.printInProgress">
+	<div class="panel-heading clearfix">
+		<i class="fa fa-2x fa-object-ungroup pull-left"></i>
+		<h3 class="panel-title pull-left">3d Model: {{printJobsController.currentPrintJob.jobName}}</h3>
+	</div>
+	<div class="panel-body">
+		<print-job-model-viewer print-job="printJobsController.currentPrintJob"></print-job-model-viewer>
+	</div>
+	<div class="panel-footer">
+		<span ng-include="'cardFooter.html'"></span>
+	</div>
+</div>

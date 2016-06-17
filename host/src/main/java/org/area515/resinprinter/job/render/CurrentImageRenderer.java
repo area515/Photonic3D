@@ -15,10 +15,10 @@ public abstract class CurrentImageRenderer implements Callable<BufferedImage> {
 	private Object imageIndexToBuild;
 	protected int width;
 	protected int height;
-	protected AbstractPrintFileProcessor<?> processor;
+	protected AbstractPrintFileProcessor<?,?> processor;
 	protected DataAid aid;
 	
-	public CurrentImageRenderer(DataAid aid, AbstractPrintFileProcessor<?> processor, RenderingFileData data, Object imageIndexToBuild, int width, int height) {
+	public CurrentImageRenderer(DataAid aid, AbstractPrintFileProcessor<?,?> processor, RenderingFileData data, Object imageIndexToBuild, int width, int height) {
 		this.aid = aid;
 		this.data = data;
 		this.processor = processor;

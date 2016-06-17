@@ -20,10 +20,10 @@ public class StandaloneImageRenderer implements Callable<StandaloneImageData> {
 	private static final Logger logger = LogManager.getLogger();
 
 	private File imageFile;
-	private AbstractPrintFileProcessor<?> processor;
+	private AbstractPrintFileProcessor<?,?> processor;
 	private DataAid aid;
 	
-	public StandaloneImageRenderer(DataAid aid, File imageFile, AbstractPrintFileProcessor<?> processor) {
+	public StandaloneImageRenderer(DataAid aid, File imageFile, AbstractPrintFileProcessor<?,?> processor) {
 		this.imageFile = imageFile;
 		this.processor = processor;
 		this.aid = aid;

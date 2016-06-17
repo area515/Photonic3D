@@ -30,7 +30,7 @@ public class PrintJob {
 	private volatile long elapsedTime = 0;
 	private volatile double totalCost = 0;
 	private volatile double currentSliceCost = 0;
-	private volatile PrintFileProcessor<?> printFileProcessor;
+	private volatile PrintFileProcessor<?,?> printFileProcessor;
 	private volatile String errorDescription;
 	
 	//Overridables
@@ -179,10 +179,10 @@ public class PrintJob {
 		this.errorDescription = errorDescription;
 	}
 	
-	public PrintFileProcessor<?> getPrintFileProcessor() {
+	public PrintFileProcessor<?,?> getPrintFileProcessor() {
 		return printFileProcessor;
 	}
-	public void setPrintFileProcessor(PrintFileProcessor<?> printFileProcessor) {
+	public void setPrintFileProcessor(PrintFileProcessor<?,?> printFileProcessor) {
 		this.printFileProcessor = printFileProcessor;
 	}
 	

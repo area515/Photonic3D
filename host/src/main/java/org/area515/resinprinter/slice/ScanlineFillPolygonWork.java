@@ -26,10 +26,10 @@ public class ScanlineFillPolygonWork extends RecursiveTask<ScanlineFillPolygonWo
 	private int buildArea;
 	private int start;
 	private int stop;
-	private double z;
+	private int z;
 	private List<Integer> watchedYs;
 	
-	public ScanlineFillPolygonWork(List<Line3d> potentialLinesInRange, List<Triangle3d> watchedTriangles, List<Integer> watchedYs, int start, int stop, double z) {
+	public ScanlineFillPolygonWork(List<Line3d> potentialLinesInRange, List<Triangle3d> watchedTriangles, List<Integer> watchedYs, int start, int stop, int z) {
 		this.potentialLinesInRange = potentialLinesInRange;
 		this.watchedTriangles = watchedTriangles;
 		this.watchedYs = watchedYs;
@@ -54,7 +54,7 @@ public class ScanlineFillPolygonWork extends RecursiveTask<ScanlineFillPolygonWo
 	protected ScanlineFillPolygonWork compute() {
 			 boolean watch = false;
 	         for (int y = start; y <= stop; y++) {
-		    	 Set<Point3d> intersectedPoints = new TreeSet<Point3d>(new XYComparatord());
+		    	 Set<Point3d> intersectedPoints = new TreeSet<Point3d>(new XYComparatord(Triangle3d.EQUAL_TOLERANCE));
 	        	 for (Line3d currentLine : potentialLinesInRange) {
 	        		 if (watchedTriangles != null) {
 	        			 Face3d face = currentLine.getOriginatingFace();

@@ -382,9 +382,14 @@ public class PrinterService {
 		slicingProfile.setLiftFeedRate(50);
 		slicingProfile.setDirection(BuildDirection.Bottom_Up);
 		try {
-			GraphicsDevice device = DisplayManager.Instance().getDisplayDevice(DisplayManager.LAST_AVAILABLE_DISPLAY);
-			monitor.setDLP_X_Res(device.getDefaultConfiguration().getBounds().getWidth());
-			monitor.setDLP_Y_Res(device.getDefaultConfiguration().getBounds().getHeight());
+			if (DisplayManager.SIMULATED_DISPLAY.equals(displayId)) {
+				monitor.setDLP_X_Res(1920);
+				monitor.setDLP_Y_Res(1080);
+			} else {
+				GraphicsDevice device = DisplayManager.Instance().getDisplayDevice(DisplayManager.LAST_AVAILABLE_DISPLAY);
+				monitor.setDLP_X_Res(device.getDefaultConfiguration().getBounds().getWidth());
+				monitor.setDLP_Y_Res(device.getDefaultConfiguration().getBounds().getHeight());
+			}
 			machineConfig.setxRenderSize((int)monitor.getDLP_X_Res());
 			machineConfig.setyRenderSize((int)monitor.getDLP_Y_Res());
 			slicingProfile.setxResolution((int)monitor.getDLP_X_Res());
@@ -792,7 +797,7 @@ public class PrinterService {
 	
 	private static PrintJob buildStubJob(Printer printer) {
 		PrintJob job = new PrintJob(null);//Null job for testing...
-		StubPrintFileProcessor<Object> processor = new StubPrintFileProcessor<>();
+		StubPrintFileProcessor<Object,Object> processor = new StubPrintFileProcessor<>();
 		job.setPrintFileProcessor(processor);
 		job.setPrinter(printer);
 		return job;

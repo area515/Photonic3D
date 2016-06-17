@@ -11,11 +11,11 @@ public class Printable {
 	private String name;
 	private String extension;
 	private long size;
-	private PrintFileProcessor<?> printFileProcessor;
+	private PrintFileProcessor<?,?> printFileProcessor;
 	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm a z")
 	private Date modifiedDate;
 	
-	public Printable(File printable, PrintFileProcessor<?> processor) {
+	public Printable(File printable, PrintFileProcessor<?,?> processor) {
 		name = FilenameUtils.getBaseName(printable.getName());
 		extension = FilenameUtils.getExtension(printable.getName());
 		size = printable.length();
@@ -37,10 +37,10 @@ public class Printable {
 		this.size = size;
 	}
 
-	public PrintFileProcessor<?> getPrintFileProcessor() {
+	public PrintFileProcessor<?,?> getPrintFileProcessor() {
 		return printFileProcessor;
 	}
-	public void setPrintFileProcessor(PrintFileProcessor<?> printFileProcessor) {
+	public void setPrintFileProcessor(PrintFileProcessor<?,?> printFileProcessor) {
 		this.printFileProcessor = printFileProcessor;
 	}
 

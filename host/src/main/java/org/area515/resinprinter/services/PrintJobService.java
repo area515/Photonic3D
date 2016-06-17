@@ -1,5 +1,10 @@
 package org.area515.resinprinter.services;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,6 +20,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
@@ -26,15 +33,14 @@ import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.slice.StlError;
+import org.area515.resinprinter.stl.Triangle3d;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 @Api(value="printJobs")
 @Path("printJobs")
@@ -301,38 +307,88 @@ public class PrintJobService {
 		printJob.overrideExposureTime(exposureTime);
 		return new MachineResponse("exposureTime", true, "Exposure time set");
 	}
-		 
+	
     @ApiOperation(value="Retrieves the geometry data associated with the PrintJob designated by the specified job id. "
     		+ "The geometry data returned by this method is highly dependant upon the org.area515.resinprinter.job.PrintFileProcessor<G> that took responsibility for the printable file that this PrintJob is printing. ")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+            @ApiResponse(code = 400, message = "Invalid job id"),
+            @ApiResponse(code = 400, message = "Job not found"),
+            @ApiResponse(code = 400, message = "Couldn't convert geometry to JSON"),
+            @ApiResponse(code = 400, message = "(A job manager problem)")
+            })
 	@GET
 	@Path("geometry/{jobId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MachineResponse getGeometry(@PathParam("jobId") String jobId) {
+	public Response getGeometry(@PathParam("jobId") String jobId) {
 		UUID uuid = null;
 		PrintJob printJob = null;
 		try {
 			uuid = UUID.fromString(jobId);
 			printJob = PrintJobManager.Instance().getJob(uuid);
 		} catch (IllegalArgumentException e) {
-			return new MachineResponse("geometry", false, "Invalid jobId: "+ jobId);
+			return Response.status(Status.BAD_REQUEST).entity("Invalid jobId: "+ jobId).build();
 		}
 		if (printJob == null) {
-			return new MachineResponse("geometry", false, "Job not found.");
+			return Response.status(Status.BAD_REQUEST).entity("Job not found: "+ jobId).build();
 		}
 		try {
 			Object data = printJob.getPrintFileProcessor().getGeometry(printJob);
 			ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+			//TODO: Eventually these should be put into a hashmap and called up based on the format that the restful client asks for
+			SimpleModule simpleModule = new SimpleModule(Photonic3dTriangleSerializer.class.getSimpleName(), Version.unknownVersion());
+			simpleModule.addSerializer(Triangle3d.class, new Photonic3dTriangleSerializer());
+			mapper.registerModule(simpleModule);
 			String json = mapper.writeValueAsString(data);
-			return new MachineResponse("geometry", true, json);
+			return Response.status(Status.OK).encoding(MediaType.APPLICATION_JSON).entity(json).build();
 		} catch (JobManagerException e) {
 			logger.error("Job:" + jobId, e);
-			return new MachineResponse("geometry", false, e.getMessage());
+			return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity(e.getMessage()).build();
 		} catch (JsonProcessingException e) {
 			logger.error("Job:" + jobId, e);
-			return new MachineResponse("geometry", false, "Couldn't convert geometry to JSON");
+			return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity("Couldn't convert geometry to JSON").build();
+		}
+	}
+    
+    @ApiOperation(value="Retrieves the error geometry data associated with the PrintJob designated by the specified job id. "
+    		+ "This function will return a list of indicies that are determined to be in error.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 400, message = "Invalid job id"),
+            @ApiResponse(code = 400, message = "Job not found"),
+            @ApiResponse(code = 400, message = "Couldn't convert geometry to JSON"),
+            @ApiResponse(code = 400, message = "(A job manager problem)")
+            })
+	@GET
+	@Path("geometryErrors/{jobId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getGeometryErrors(@PathParam("jobId") String jobId) {
+		UUID uuid = null;
+		PrintJob printJob = null;
+		try {
+			uuid = UUID.fromString(jobId);
+			printJob = PrintJobManager.Instance().getJob(uuid);
+		} catch (IllegalArgumentException e) {
+			return Response.status(Status.BAD_REQUEST).entity("Invalid jobId: "+ jobId).build();
+		}
+		if (printJob == null) {
+			return Response.status(Status.BAD_REQUEST).entity("Job not found: "+ jobId).build();
+		}
+		try {
+			Object data = printJob.getPrintFileProcessor().getErrors(printJob);
+			ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+			//TODO: Eventually these should be put into a hashmap and called up based on the format that the restful client asks for
+			SimpleModule simpleModule = new SimpleModule(Photonic3dSTLErrorSerializer.class.getSimpleName(), Version.unknownVersion());
+			simpleModule.addSerializer(StlError.class, new Photonic3dSTLErrorSerializer());
+			mapper.registerModule(simpleModule);			
+			String json = mapper.writeValueAsString(data);
+			return Response.status(Status.OK).encoding(MediaType.APPLICATION_JSON).entity(json).build();
+		} catch (JobManagerException e) {
+			logger.error("Job:" + jobId, e);
+			return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity(e.getMessage()).build();
+		} catch (JsonProcessingException e) {
+			logger.error("Job:" + jobId, e);
+			return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity("Couldn't convert geometry to JSON").build();
 		}
 	}
 }

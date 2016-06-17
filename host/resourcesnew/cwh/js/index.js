@@ -1,5 +1,5 @@
 (function() {
-		var cwhApp = angular.module('cwhApp', ['ui.bootstrap', 'ngRoute', 'cwh.comport', 'cwh.spinner', 'cwh.webSocket', 'cwh.testscript', 'ngFileUpload', 'ngAnimate', 'chart.js']);
+		var cwhApp = angular.module('cwhApp', ['ui.bootstrap', 'ngRoute', 'cwh.comport', 'cwh.spinner', 'cwh.webSocket', 'cwh.testscript', 'ngFileUpload', 'ngAnimate', 'chart.js', 'printJobModelViewer']);
 		cwhApp.filter('secondsToDateTime', [function() {
 		    return function(milliseconds) {
 		        return new Date(1970, 0, 1).setMilliseconds(milliseconds);
@@ -97,13 +97,20 @@
     			$rootScope.currentError = {command:"Server Error " + args.status, message : customMessage};
     	    	$('#errorModal').modal();
     	    });
-			
+
+			$http.get('/services/settings/printerProfileRepo').success(function(data) {
+				$scope.repo = data;
+			});
 	        $http.get('/services/settings/visibleCards').success(function(data) {
             	$scope.visibleCards = data;
             });
 	        $http.get('/services/settings/integerVersion').success(function(data) {
             	$scope.integerVersion = data;
             });
+			$http.get('/services/settings/releaseTagName').success(function(data) {
+				$scope.releaseTagName = data;
+			});
+
 	        this.currentPage = 'dashboard';
 	        
     	})

@@ -1,5 +1,7 @@
 package org.area515.resinprinter.stl;
 
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+
 public class Point3d implements Shape3d {
 	public double x;
 	public double y;
@@ -11,6 +13,13 @@ public class Point3d implements Shape3d {
 		this.x = x;
 		this.y = y;
 		this.z = z;
+	}
+	
+	public Point3d(Vector3D point, Face3d originatingShape) {
+		this.x = point.getX();
+		this.y = point.getY();
+		this.z = point.getZ();
+		this.originatingShape = originatingShape;
 	}
 	
 	public Point3d(double x, double y, double z, Point3d normal, Face3d originatingShape) {
@@ -34,12 +43,6 @@ public class Point3d implements Shape3d {
 		return "(x:" + x + ",y:" + y + ",z:" + z + (normal != null?("@x:" + normal.x + ",y:" + normal.y + ",z:" + normal.z):"") + ")";
 	}
 	
-	public boolean ceilingEquals(Point3d otherPoint) {
-		return Math.ceil(x) == Math.ceil(otherPoint.x) &&
-				Math.ceil(y) == Math.ceil(otherPoint.y) &&
-				Math.ceil(z) == Math.ceil(otherPoint.z);
-	}
-	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -56,7 +59,24 @@ public class Point3d implements Shape3d {
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		return result;
 	}
+	
+	@Deprecated
+	public boolean ceilingEquals(Point3d otherPoint) {
+	return Math.ceil(x) == Math.ceil(otherPoint.x) &&
+			Math.ceil(y) == Math.ceil(otherPoint.y) &&
+			Math.ceil(z) == Math.ceil(otherPoint.z);
+	}
 
+	public boolean pointEquals(Point3d other) {
+		double xdiff = this.x - other.x;
+		double ydiff = this.y - other.y;
+		double zdiff = this.z - other.z;
+		
+		return xdiff <= Triangle3d.EQUAL_TOLERANCE && xdiff >= -Triangle3d.EQUAL_TOLERANCE &&
+			ydiff <= Triangle3d.EQUAL_TOLERANCE && ydiff >= -Triangle3d.EQUAL_TOLERANCE &&
+			zdiff <= Triangle3d.EQUAL_TOLERANCE && zdiff >= -Triangle3d.EQUAL_TOLERANCE;
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -75,7 +95,8 @@ public class Point3d implements Shape3d {
 			return false;
 		if (Double.doubleToLongBits(y) != Double.doubleToLongBits(other.y))
 			return false;
-		if (Double.doubleToLongBits(z) != Double.doubleToLongBits(other.z))
+		if (Double.doubleToLongBits(z) != Double.doubleToLongBits(other.z) || 
+			(other.z < z - Triangle3d.EQUAL_TOLERANCE && other.z > z + Triangle3d.EQUAL_TOLERANCE))
 			return false;
 		return true;
 	}

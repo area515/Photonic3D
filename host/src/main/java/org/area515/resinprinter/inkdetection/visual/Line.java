@@ -19,7 +19,11 @@ public class Line implements HoughShape {
 		this.votes = votes;
 		this.houghReference = houghReference;
 	}
-
+	
+	public double getSlope() {
+		return ((double)y2 - (double)y1) / ((double)x2 - (double)x1);
+	}
+	
 	public HoughReference getHoughReference() {
 		return houghReference;
 	}

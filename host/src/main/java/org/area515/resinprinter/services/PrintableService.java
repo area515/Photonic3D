@@ -1,6 +1,12 @@
 package org.area515.resinprinter.services;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,10 +27,12 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -47,10 +55,7 @@ import org.area515.util.PrintFileFilter;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import com.google.common.io.ByteStreams;
 
 @Api(value="printables")
 @Path("printables")
@@ -178,6 +183,31 @@ public class PrintableService {
 	public Response uploadPrintableFile(InputStream istream, @PathParam("filename")String fileName) {
 		return uploadFile(fileName, istream, HostProperties.Instance().getUploadDir());
 	}
+    
+    @ApiOperation(value="Download a printable file using application/octet-stream. "
+    		+ "No conversion of the stream is performed; instead, it is streamed directly from the source file.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@POST
+	@Path("/downloadPrintableFile/{filename}")
+	@Produces("application/octet-stream")
+	public StreamingOutput downloadPrintableFile(@PathParam("filename")String fileName) {
+		return new StreamingOutput() {
+			@Override
+			public void write(OutputStream output) throws IOException, WebApplicationException {
+				InputStream stream = new FileInputStream(new File(HostProperties.Instance().getUploadDir(), fileName));
+				try {
+					ByteStreams.copy(stream, output);
+				} finally {
+					try {
+						stream.close();
+					} catch (IOException e) {}
+				}
+			}
+		};
+	}
 	
 	// Parse Content-Disposition header to get the original file name
 	static String parseFileName(MultivaluedMap<String, String> headers) {
@@ -240,7 +270,7 @@ public class PrintableService {
 		ArrayList<Printable> printables = new ArrayList<Printable>();
 		for(File file : acceptedFiles) {
 			logger.info("Loaded printable file: {}", file);
-			PrintFileProcessor<?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
+			PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
 			printables.add(new Printable(file, processor));
 		}
 		
@@ -310,7 +340,7 @@ public class PrintableService {
 		}
 		
 		File currentFile = new File(HostProperties.Instance().getUploadDir(), fileName);
-		for (PrintFileProcessor currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
+		for (PrintFileProcessor<?,?> currentProcessor : HostProperties.Instance().getPrintFileProcessors()) {
 			if (currentProcessor.acceptsFile(currentFile)) {
 				final File newUploadFile = new File(HostProperties.Instance().getUploadDir(), fileName);
 				try {
