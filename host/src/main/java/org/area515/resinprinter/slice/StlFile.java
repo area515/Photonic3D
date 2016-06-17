@@ -84,19 +84,15 @@ public abstract class StlFile<T> {
    *
    * @param parser The file parser. An instance of StlFileParser.
    */
-  private void readEOL(StlFileParser parser)
-  {
-    try
-    {
+  private void readEOL(StlFileParser parser) throws IOException {
+    try {
     	parser.nextToken();
+    } catch (IOException e) {
+      throw new IOException("Error getting next token:" + parser, e);
     }
-    catch (IOException e)
-    {
-      logger.error("Error getting next token:" + parser, e);
-    }
-    if(parser.ttype != StlFileParser.TT_EOL)
-    {
-      logger.error("Format Error:expecting End Of Line on line " + parser.lineno());
+    
+    if(parser.ttype != StlFileParser.TT_EOL) {
+      throw new IOException("Format Error:expecting End Of Line on line " + parser.lineno());
     }
   }
 
@@ -109,7 +105,7 @@ public abstract class StlFile<T> {
    *
    * @param parser The file parser. An instance of StlFileParser.
    */
-	private void readSolid(StlFileParser parser) {
+	private void readSolid(StlFileParser parser) throws IOException {
 		if (parser.sval == null || !parser.sval.equals("solid")) {
 			logger.warn("Expecting solid on line:{}", parser.lineno());
 			// If the first word is not "solid" then we consider the file is
@@ -121,11 +117,11 @@ public abstract class StlFile<T> {
 			try {
 				parser.nextToken();
 			} catch (IOException e) {
-				logger.error("IO Error on line " + parser.lineno() + ": " + e.getMessage());
+				throw new IOException("IO Error on line " + parser.lineno() + ": " + e.getMessage());
 			}
 			if (parser.ttype != StlFileParser.TT_WORD) {
 				// Is the object name always provided???
-				logger.error("Format Error:expecting the object name on line " + parser.lineno());
+				throw new IOException("Format Error:expecting the object name on line " + parser.lineno());
 			} else {
 				// Store the object Name
 				this.setObjectName(new String(parser.sval));
@@ -143,22 +139,18 @@ public abstract class StlFile<T> {
    * @param parseKey - string "outer", "loop", "endloop", or "endfacet"
    * */
   
-  private void readToken(StlFileParser parser, String parseKey)
-  {
-		if (parser.ttype != StlFileParser.TT_WORD || !parser.sval.equals(parseKey))
-	    {
-			logger.error("Format Error:expecting " + parseKey + " on line " + parser.lineno());
-	    }
-	    else 
-	    {
-	    	if (parseKey.equals("outer"))
-	    	{
+  private void readToken(StlFileParser parser, String parseKey) throws IOException {
+		if (parser.ttype != StlFileParser.TT_WORD || !parser.sval.equals(parseKey)) {
+			throw new IOException("Format Error:expecting " + parseKey + " on line " + parser.lineno());
+	    } else {
+	    	if (parseKey.equals("outer")) {
 	    		try {
 					parser.nextToken();
 				} catch (IOException e) {
-					logger.error("Expected next token after outer", e);
+					throw new IOException("Expected next token after outer", e);
 				}
 	    	}
+	    	
 	    	readEOL(parser);
 	    }
   }
@@ -237,6 +229,7 @@ public abstract class StlFile<T> {
   protected abstract void buildTriangle(Point3d[] points, Point3d normal);
   protected abstract Point3d buildPoint(double x, double y, double z);
   protected abstract Set<T> createSet();
+  protected abstract T getFirstTriangle();
 
   private void fixNormalIfBadSTLFile(Point3d normal, double[] p1, double[] p2, double[] p3) {
 		if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
@@ -376,17 +369,65 @@ public abstract class StlFile<T> {
 		}
   }
   
+  private boolean isASCIIFile(PushbackInputStream pushStream, int determinantSize) throws IOException {
+		byte sampleSize[] = new byte[determinantSize];
+		int bytesRead = pushStream.read(sampleSize);
+		pushStream.unread(sampleSize);
+		
+		//If less than 80 bytes, that breaks the binary spec
+		if (bytesRead < 80) {
+			return true;
+		}
+		
+		/*int faceBytes = ( 32 / 8 * 3 ) + ( ( 32 / 8 * 3 ) * 3 ) + ( 16 / 8 );
+        ByteBuffer dataBuffer = ByteBuffer.wrap(stlHeader);
+        dataBuffer.position(80);
+        dataBuffer.order(ByteOrder.nativeOrder());    // Set the right order
+        int expectedFaceCount = dataBuffer.getInt();
+        int expectedByteCount = 80 + ( 32 / 8 ) + ( expectedFaceCount * faceBytes );
+		if (expectedByteCount == filesize)*/
+		
+		for (int t = 0; t < sampleSize.length; t++) {
+			int currentByte = sampleSize[t];
+			if (currentByte > 127) {
+				return false;
+			}
+			
+			if (currentByte == 10) {
+				String facet = "facet";
+				int letter = 0;
+				for (; t < sampleSize.length; t++) {
+					if (sampleSize[t] == 10) {
+						continue;
+					}
+					if (sampleSize[t] == 12) {
+						continue;
+					}
+					
+					if (facet.charAt(letter) == (char)sampleSize[t]) {
+						letter++;
+						if (letter == facet.length()) {
+							return true;
+						}
+						continue;
+					}
+					
+					return false;
+				}
+			}
+		}
+		
+		logger.warn("Falling back on using 'solid' identifier to determine ASCII/Binary stl file type");
+		return new String(sampleSize, 0, 20).trim().toLowerCase().startsWith("solid");
+  }
   /** Entry point for all STL file types */
   public void load(InputStream inputStream) throws IOException {
-		PushbackInputStream pushStream = new PushbackInputStream(inputStream, 80);
+	  	int determinantSize = 2048;
+		PushbackInputStream pushStream = new PushbackInputStream(inputStream, determinantSize);
 		triangles = createSet();
 		
 		try {
-			byte stlHeader[] = new byte[80];
-			int bytesRead = pushStream.read(stlHeader);
-			pushStream.unread(stlHeader);
-			
-			if (bytesRead < 80 || new String(stlHeader).trim().startsWith("solid")) {
+			if (isASCIIFile(pushStream, determinantSize)) {
 				readASCIIFile(pushStream);
 			} else {
 				readBinaryFile(pushStream);

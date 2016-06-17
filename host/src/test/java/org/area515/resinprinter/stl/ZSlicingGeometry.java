@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.slice.CheckSlicePoints;
 import org.area515.resinprinter.slice.CloseOffMend;
 import org.area515.resinprinter.slice.FillFile;
@@ -21,6 +23,9 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class ZSlicingGeometry {
+    private static final Logger logger = LogManager.getLogger();
+
+    private String fileName;
 	private ZSlicer slicer;
 	private List<FillPoint> checkPoints;
 	private BufferedImage image;
@@ -36,8 +41,10 @@ public class ZSlicingGeometry {
 				fillFile.getzSliceOffset(),
 				true, new CloseOffMend());
 		checkPoints = fillFile.getPoints();
+		logger.info("Reading file:" + fillFile.getFileName());
 		slicer.loadFile(CheckSlicePoints.class.getResourceAsStream(fillFile.getFileName()), (double)x, (double)y);
 		image = new BufferedImage(x, y, BufferedImage.TYPE_INT_ARGB);
+		fileName = fillFile.getFileName();
 	}
 	
 	@Test
@@ -64,7 +71,7 @@ public class ZSlicingGeometry {
 		}
 		
 		if (brokenPoints.size() > 0) {
-			Assert.fail("These points are broken:" + brokenPoints);
+			Assert.fail("This file:" + fileName + " has these broken points:" + brokenPoints);
 		}
 	}
 	

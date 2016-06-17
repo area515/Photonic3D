@@ -41,6 +41,21 @@
 					</div>			
 				</div>
 			</div>
+			<!-- Code added by Wilbur Shi -->
+			<div class="col-sm-7" id="preview"> 
+				<div class="preview-box"> 
+					<div class="panel panel-default">
+						<div class="panel-heading">Your STL Model</div>
+						<div style="height: 300px" class="panel-body">This is the preview box for this printable: {{printablesController.currentPrintable.name}}. Changes are also reflected here: {{printablesController.changeMsg}}</div>
+					</div>
+				</div>
+				<form method="POST">
+					<input type="checkbox" ng-model="flip" ng-change="printablesController.changeFlip(flip)"> Flip image
+					<br>
+				</form>
+				<tt>Flipped = {{flip}}</tt><br>
+			</div>
+			<!-- End code added by Wilbur Shi -->
 		</div>
 	<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="editModal" aria-hidden="true">
 		<div class="modal-dialog">

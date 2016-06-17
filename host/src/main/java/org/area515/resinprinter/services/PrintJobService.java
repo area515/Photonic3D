@@ -338,7 +338,7 @@ public class PrintJobService {
 			//TODO: Eventually these should be put into a hashmap and called up based on the format that the restful client asks for
 			SimpleModule simpleModule = new SimpleModule(Photonic3dTriangleSerializer.class.getSimpleName(), Version.unknownVersion());
 			simpleModule.addSerializer(Triangle3d.class, new Photonic3dTriangleSerializer());
-			mapper.registerModule(simpleModule);			
+			mapper.registerModule(simpleModule);
 			String json = mapper.writeValueAsString(data);
 			return Response.status(Status.OK).encoding(MediaType.APPLICATION_JSON).entity(json).build();
 		} catch (JobManagerException e) {

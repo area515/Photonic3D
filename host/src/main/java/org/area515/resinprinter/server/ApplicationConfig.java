@@ -7,6 +7,7 @@ import java.util.Set;
 
 import javax.ws.rs.core.Application;
 
+import org.area515.resinprinter.services.CustomizerService;
 import org.area515.resinprinter.services.MachineService;
 import org.area515.resinprinter.services.MediaService;
 import org.area515.resinprinter.services.PrintJobService;
@@ -59,6 +60,7 @@ public class ApplicationConfig extends Application{
     	singletons.add(PrinterService.INSTANCE);
     	singletons.add(PrintJobService.INSTANCE);
     	singletons.add(MediaService.INSTANCE);
+    	singletons.add(CustomizerService.INSTANCE);
     }
 
     public JacksonJaxbJsonProvider buildJacksonJaxbJsonProvider() {
