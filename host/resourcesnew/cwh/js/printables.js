@@ -14,11 +14,11 @@
         		}
 	        );
 	        // Code added by Wilbur Shi
-	        $http.get("/services/customizers/list").success(
-        		function (data) {
-        			controller.customizers = data;
-        		}
-	        );
+	        // $http.get("/services/customizers/list").success(
+        	// 	function (data) {
+        	// 		controller.customizers = data;
+        	// 	}
+	        // );
 	        // End code added by Wilbur Shi
 		}
 		this.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(
@@ -46,6 +46,9 @@
 		// }
 		this.changeFlip = function changeFlip(flip) {
 			if (controller.currentCustomizer != null) {
+				//customizer returns a json object. js side only knows api
+				//TODO: need to access controller.currentCustomizer.printableName.getAffineTransformSettings();
+				//TODO: need to save
 				var affineTransformSettings = controller.currentCustomizer.getAffineTransformSettings();
 				if (flip) {
 					affineTransformSettings.setyScale(-1);

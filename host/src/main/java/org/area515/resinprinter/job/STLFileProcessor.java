@@ -123,6 +123,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			dataByPrintJob.remove(printJob);
 		}
 	}
+	//TODO: Create PreviewSlice0 method that copies processfile code
 
 	@Override
 	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException {
