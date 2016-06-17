@@ -102,4 +102,16 @@
   "pixelsPerMMY" : 5.0,
   "zSliceResolution" : 0.1,
   "zSliceOffset" : 0.0
+}, {
+  "points" : [ {
+    "x" : 464,
+    "y" : 290,
+    "sliceNumber" : 276623
+  } ],
+  "fileName" : "lager houder.STL",
+  "stlScale" : 1.0,
+  "pixelsPerMMX" : 5.0,
+  "pixelsPerMMY" : 5.0,
+  "zSliceResolution" : 0.1,
+  "zSliceOffset" : 0.0
 } ]

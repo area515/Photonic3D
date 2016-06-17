@@ -106,9 +106,9 @@
 		}
 		
 		$scope.installCommunityPrinter = function installCommunityPrinter(printer) {
-	        $http.post(printer.download_url).success(
+	        $http.get(printer.url).success(
 	        		function (data) {
-	        			controller.editPrinter = data;
+	        			controller.editPrinter = JSON.parse(window.atob(data.content));
 	        			$scope.savePrinter(controller.editPrinter, false);
 	        		}).error(
     				function (data, status, headers, config, statusText) {
@@ -224,7 +224,7 @@
 					controller.machineConfigurations = data;
 					controller.loadingMachineConfigMessage = "Select a machine configuration...";
 				});
-		
+		//https://raw.githubusercontent.com/WesGilster/Creation-Workshop-Host/master/host/printers/mUVe%201.json
 		$http.get("https://api.github.com/repos/" + $scope.repo + "/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(
 			function (data) {
 				$scope.communityPrinters = data;
