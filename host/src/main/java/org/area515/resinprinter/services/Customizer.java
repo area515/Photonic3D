@@ -14,31 +14,31 @@ public class Customizer {
 		private Double yScale;//-1 for yflip
 		private String affineTransformScriptCalculator;//Ignore this for now
 		
-		public Integer getxTranslate() {
+		public Integer getXTranslate() {
 			return xTranslate;
 		}
-		public void setxTranslate(Integer xTranslate) {
+		public void setXTranslate(Integer xTranslate) {
 			this.xTranslate = xTranslate;
 		}
 		
-		public Integer getyTranslate() {
+		public Integer getYTranslate() {
 			return yTranslate;
 		}
-		public void setyTranslate(Integer yTranslate) {
+		public void setYTranslate(Integer yTranslate) {
 			this.yTranslate = yTranslate;
 		}
 		
-		public Double getxScale() {
+		public Double getXScale() {
 			return xScale;
 		}
-		public void setxScale(Double xScale) {
+		public void setXScale(Double xScale) {
 			this.xScale = xScale;
 		}
 		
-		public Double getyScale() {
+		public Double getYScale() {
 			return yScale;
 		}
-		public void setyScale(Double yScale) {
+		public void setYScale(Double yScale) {
 			this.yScale = yScale;
 		}
 		
