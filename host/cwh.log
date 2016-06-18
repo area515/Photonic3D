@@ -1,0 +1,424 @@
+2016-06-14 14:02:51,640 INFO o.a.r.s.Main [main] =================================================================
+2016-06-14 14:02:51,643 INFO o.a.r.s.Main [main] =================================================================
+2016-06-14 14:02:51,644 INFO o.a.r.s.Main [main] Photonic3D started
+2016-06-14 14:02:51,644 INFO o.a.r.s.Main [main] =================================================================
+2016-06-14 14:02:51,644 INFO o.a.r.s.Main [main] =================================================================
+2016-06-14 14:03:00,185 INFO o.a.r.d.UPNPAdvertiser [main] Relative UPNP root descriptor: /dev/85ff529b-aa16-cda5-0000-0000203b1340/desc
+2016-06-14 14:50:20,030 INFO o.a.r.s.Main [main] =================================================================
+2016-06-14 14:50:20,033 INFO o.a.r.s.Main [main] =================================================================
+2016-06-14 14:50:20,033 INFO o.a.r.s.Main [main] Photonic3D started
+2016-06-14 14:50:20,034 INFO o.a.r.s.Main [main] =================================================================
+2016-06-14 14:50:20,034 INFO o.a.r.s.Main [main] =================================================================
+2016-06-14 14:50:28,767 INFO o.a.r.d.UPNPAdvertiser [main] Relative UPNP root descriptor: /dev/85ff529b-aa16-cda5-0000-0000203b1340/desc
+2016-06-14 14:51:56,840 INFO o.a.r.s.ProgressiveDownloadServlet [qtp644345897-20] HTTPGet:/video/camera.mp4
+2016-06-14 14:51:56,842 WARN o.a.r.s.ProgressiveDownloadServlet [qtp644345897-20] File doesn't exist:C:\Users\wilbur\AppData\Local\Temp\temp.mp4 for resource:http://localhost:9091/video/camera.mp4
+2016-06-14 14:53:31,957 INFO o.a.r.s.ProgressiveDownloadServlet [qtp644345897-59] HTTPGet:/video/camera.mp4
+2016-06-14 14:53:31,957 WARN o.a.r.s.ProgressiveDownloadServlet [qtp644345897-59] File doesn't exist:C:\Users\wilbur\AppData\Local\Temp\temp.mp4 for resource:http://localhost:9091/video/camera.mp4
+2016-06-14 15:18:32,945 INFO o.a.r.s.PrintableService [qtp644345897-20] File saved to:C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 15:18:38,951 INFO o.a.r.s.PrintableService [qtp644345897-128] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 15:21:12,645 INFO o.a.r.s.PrintableService [qtp644345897-59] File saved to:C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 15:21:12,655 INFO o.a.r.s.PrintableService [qtp644345897-20] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 15:33:40,212 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-16] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 15:33:40,212 INFO o.a.r.s.PrintableService [qtp644345897-16] File saved to:C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 15:33:49,970 INFO o.a.r.s.PrintableService [qtp644345897-16] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 15:33:49,971 INFO o.a.r.s.PrintableService [qtp644345897-16] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 15:33:49,975 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-16] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 15:37:22,143 INFO o.a.r.s.PrintableService [qtp644345897-59] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 15:37:22,143 INFO o.a.r.s.PrintableService [qtp644345897-59] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 15:37:22,146 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-59] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 16:17:30,974 INFO o.a.r.s.PrintableService [qtp644345897-13] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 16:17:30,974 INFO o.a.r.s.PrintableService [qtp644345897-13] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 16:17:30,977 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-13] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 16:23:54,418 INFO o.a.r.s.PrintableService [qtp644345897-14] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 16:23:54,419 INFO o.a.r.s.PrintableService [qtp644345897-14] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 16:23:54,420 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-14] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 16:24:05,475 INFO o.a.r.s.PrintableService [qtp644345897-59] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 16:24:05,477 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-59] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 16:36:39,064 INFO o.a.r.s.PrintableService [qtp644345897-16] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 16:36:39,066 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-16] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 16:37:45,655 INFO o.a.r.s.PrintableService [qtp644345897-16] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 16:37:45,657 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-16] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 16:38:11,488 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 16:38:11,490 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-15] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 16:39:57,966 INFO o.a.r.s.PrintableService [qtp644345897-14] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 16:39:57,968 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-14] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 16:40:23,186 INFO o.a.r.s.PrintableService [qtp644345897-14] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 16:40:23,187 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-14] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 16:40:54,465 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 16:40:54,467 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-15] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 16:56:34,302 INFO o.a.r.s.PrintableService [qtp644345897-59] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 16:56:34,304 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-59] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 16:58:20,366 INFO o.a.r.s.PrintableService [qtp644345897-13] File saved to:C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 16:58:20,380 INFO o.a.r.s.PrintableService [qtp644345897-14] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 16:58:20,381 INFO o.a.r.s.PrintableService [qtp644345897-14] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 16:58:20,382 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-14] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 17:05:15,604 INFO o.a.r.s.PrintableService [qtp644345897-59] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 17:05:15,605 INFO o.a.r.s.PrintableService [qtp644345897-59] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 17:05:15,606 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-59] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 19:37:21,107 INFO o.a.r.s.PrintableService [qtp644345897-637] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 19:37:21,110 INFO o.a.r.s.PrintableService [qtp644345897-637] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 19:37:21,112 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-637] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 19:39:23,552 INFO o.a.r.s.PrintableService [qtp644345897-340] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 19:39:23,553 INFO o.a.r.s.PrintableService [qtp644345897-340] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 19:39:23,554 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-340] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 19:40:45,083 INFO o.a.r.s.PrintableService [qtp644345897-20] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 19:40:45,083 INFO o.a.r.s.PrintableService [qtp644345897-20] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 19:40:45,084 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-20] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 21:35:03,616 INFO o.a.r.s.PrintableService [qtp644345897-638] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 21:35:03,619 INFO o.a.r.s.PrintableService [qtp644345897-638] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 21:35:03,622 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-638] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 21:35:12,405 INFO o.a.r.s.PrintableService [qtp644345897-637] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 21:35:12,406 INFO o.a.r.s.PrintableService [qtp644345897-637] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 21:35:12,407 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-637] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-14 21:35:27,441 INFO o.a.r.s.PrintableService [qtp644345897-13] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-14 21:35:27,442 INFO o.a.r.s.PrintableService [qtp644345897-13] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-14 21:35:27,443 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-13] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 14:07:19,933 INFO o.a.r.s.Main [main] =================================================================
+2016-06-15 14:07:19,950 INFO o.a.r.s.Main [main] =================================================================
+2016-06-15 14:07:19,950 INFO o.a.r.s.Main [main] Photonic3D started
+2016-06-15 14:07:19,951 INFO o.a.r.s.Main [main] =================================================================
+2016-06-15 14:07:19,951 INFO o.a.r.s.Main [main] =================================================================
+2016-06-15 14:07:25,143 INFO o.a.r.d.UPNPAdvertiser [main] Relative UPNP root descriptor: /dev/85ff529b-aa16-cda5-0000-0000203b1340/desc
+2016-06-15 14:07:25,814 INFO o.a.r.s.HostProperties [main] Created printer configuration for:Kudo3D Titan 1
+2016-06-15 14:07:25,816 DEBUG o.a.r.p.PrinterManager [main] Attempting to start printer:Kudo3D Titan 1
+2016-06-15 14:07:26,312 ERROR o.a.r.p.PrinterManager [main] Error starting printer:Kudo3D Titan 1
+org.area515.resinprinter.job.JobManagerException: Couldn't find graphicsDevice called::0.0
+	at org.area515.resinprinter.printer.PrinterManager.startPrinter(PrinterManager.java:129) [main/:?]
+	at org.area515.resinprinter.services.PrinterService.startPrinter(PrinterService.java:230) [main/:?]
+	at org.area515.resinprinter.server.Main.main(Main.java:181) [main/:?]
+2016-06-15 14:07:26,336 INFO o.a.r.s.SerialManager [main] Removing serial assignments for printer:Kudo3D Titan 1(printerFirmwareSerialPort:null, projectorSerialPort:null Display:null)
+2016-06-15 14:07:26,337 INFO o.a.r.s.SerialManager [main] Clearing up projector model from printer:Kudo3D Titan 1(printerFirmwareSerialPort:null, projectorSerialPort:null Display:null)
+2016-06-15 14:07:26,337 ERROR o.a.r.s.PrinterService [main] Error starting printer:Kudo3D Titan 1
+org.area515.resinprinter.job.JobManagerException: Couldn't find graphicsDevice called::0.0
+	at org.area515.resinprinter.printer.PrinterManager.startPrinter(PrinterManager.java:129) ~[main/:?]
+	at org.area515.resinprinter.services.PrinterService.startPrinter(PrinterService.java:230) [main/:?]
+	at org.area515.resinprinter.server.Main.main(Main.java:181) [main/:?]
+2016-06-15 14:15:35,952 INFO o.a.r.s.PrintableService [qtp644345897-19] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 14:15:35,956 INFO o.a.r.s.PrintableService [qtp644345897-19] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 14:15:36,282 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-19] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 14:25:57,476 INFO o.a.r.s.HostProperties [qtp644345897-15] Created .slicing for:C:\Users\wilbur\Profiles\Titan1-PSP-General.slicing
+2016-06-15 14:25:57,501 INFO o.a.r.s.HostProperties [qtp644345897-19] Created .machine for:C:\Users\wilbur\Machines\Titan1.machine
+2016-06-15 14:26:00,030 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 14:26:00,031 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 14:26:00,037 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-15] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 15:18:08,966 INFO o.a.r.s.ProgressiveDownloadServlet [qtp644345897-15] HTTPGet:/video/camera.mp4
+2016-06-15 15:18:08,966 WARN o.a.r.s.ProgressiveDownloadServlet [qtp644345897-15] File doesn't exist:C:\Users\wilbur\AppData\Local\Temp\temp.mp4 for resource:http://localhost:9091/video/camera.mp4
+2016-06-15 15:18:10,451 INFO o.a.r.s.HostProperties [qtp644345897-69] Created .slicing for:C:\Users\wilbur\Profiles\Titan1-PSP-General.slicing
+2016-06-15 15:18:10,471 INFO o.a.r.s.HostProperties [qtp644345897-17] Created .machine for:C:\Users\wilbur\Machines\Titan1.machine
+2016-06-15 15:18:19,115 INFO o.a.r.s.PrintableService [qtp644345897-77] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 15:18:19,116 INFO o.a.r.s.PrintableService [qtp644345897-77] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 15:18:19,119 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-77] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 15:18:20,296 INFO o.a.r.s.HostProperties [qtp644345897-79] Created .slicing for:C:\Users\wilbur\Profiles\Titan1-PSP-General.slicing
+2016-06-15 15:18:20,311 INFO o.a.r.s.HostProperties [qtp644345897-79] Created .machine for:C:\Users\wilbur\Machines\Titan1.machine
+2016-06-15 15:18:25,647 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 15:18:25,647 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 15:18:25,650 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-69] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 15:18:26,018 INFO o.a.r.s.HostProperties [qtp644345897-69] Created .slicing for:C:\Users\wilbur\Profiles\Titan1-PSP-General.slicing
+2016-06-15 15:18:26,052 INFO o.a.r.s.HostProperties [qtp644345897-69] Created .machine for:C:\Users\wilbur\Machines\Titan1.machine
+2016-06-15 15:20:01,983 INFO o.a.r.s.HostProperties [qtp644345897-77] Created .slicing for:C:\Users\wilbur\Profiles\CWH Template Printer.slicing
+2016-06-15 15:20:02,023 INFO o.a.r.s.HostProperties [qtp644345897-77] Created .slicing for:C:\Users\wilbur\Profiles\Titan1-PSP-General.slicing
+2016-06-15 15:20:02,057 INFO o.a.r.s.HostProperties [qtp644345897-69] Created .machine for:C:\Users\wilbur\Machines\CWH Template Printer.machine
+2016-06-15 15:20:02,069 INFO o.a.r.s.HostProperties [qtp644345897-69] Created .machine for:C:\Users\wilbur\Machines\Titan1.machine
+2016-06-15 15:23:46,582 INFO o.a.r.s.PrintableService [qtp644345897-19] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 15:23:46,583 INFO o.a.r.s.PrintableService [qtp644345897-19] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 15:23:46,587 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-19] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 15:23:47,219 INFO o.a.r.s.HostProperties [qtp644345897-77] Created .slicing for:C:\Users\wilbur\Profiles\CWH Template Printer.slicing
+2016-06-15 15:23:47,244 INFO o.a.r.s.HostProperties [qtp644345897-77] Created .slicing for:C:\Users\wilbur\Profiles\Titan1-PSP-General.slicing
+2016-06-15 15:23:47,265 INFO o.a.r.s.HostProperties [qtp644345897-79] Created .machine for:C:\Users\wilbur\Machines\CWH Template Printer.machine
+2016-06-15 15:23:47,271 INFO o.a.r.s.HostProperties [qtp644345897-79] Created .machine for:C:\Users\wilbur\Machines\Titan1.machine
+2016-06-15 15:23:49,904 INFO o.a.r.s.ProgressiveDownloadServlet [qtp644345897-19] HTTPGet:/video/camera.mp4
+2016-06-15 15:23:49,904 WARN o.a.r.s.ProgressiveDownloadServlet [qtp644345897-19] File doesn't exist:C:\Users\wilbur\AppData\Local\Temp\temp.mp4 for resource:http://localhost:9091/video/camera.mp4
+2016-06-15 15:23:50,859 INFO o.a.r.s.HostProperties [qtp644345897-18] Created .slicing for:C:\Users\wilbur\Profiles\CWH Template Printer.slicing
+2016-06-15 15:23:50,913 INFO o.a.r.s.HostProperties [qtp644345897-18] Created .slicing for:C:\Users\wilbur\Profiles\Titan1-PSP-General.slicing
+2016-06-15 15:23:50,921 INFO o.a.r.s.HostProperties [qtp644345897-17] Created .machine for:C:\Users\wilbur\Machines\CWH Template Printer.machine
+2016-06-15 15:23:50,927 INFO o.a.r.s.HostProperties [qtp644345897-17] Created .machine for:C:\Users\wilbur\Machines\Titan1.machine
+2016-06-15 15:24:04,804 DEBUG o.a.r.p.PrinterManager [qtp644345897-77] Attempting to start printer:Kudo3D Titan 1
+2016-06-15 15:24:04,804 ERROR o.a.r.p.PrinterManager [qtp644345897-77] Error starting printer:Kudo3D Titan 1
+org.area515.resinprinter.job.JobManagerException: Couldn't find graphicsDevice called::0.0
+	at org.area515.resinprinter.printer.PrinterManager.startPrinter(PrinterManager.java:129) [main/:?]
+	at org.area515.resinprinter.services.PrinterService.startPrinter(PrinterService.java:230) [main/:?]
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:1.8.0_91]
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62) ~[?:1.8.0_91]
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:1.8.0_91]
+	at java.lang.reflect.Method.invoke(Method.java:498) ~[?:1.8.0_91]
+	at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:137) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:296) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:250) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:237) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:356) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:179) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher.service(ServletContainerDispatcher.java:220) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher.service(HttpServletDispatcher.java:56) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher.service(HttpServletDispatcher.java:51) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:790) [javax.servlet-api-3.1.0.jar:3.1.0]
+	at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:835) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1685) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.websocket.server.WebSocketUpgradeFilter.doFilter(WebSocketUpgradeFilter.java:225) [websocket-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1668) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:224) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1158) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:185) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1090) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.HandlerList.handle(HandlerList.java:52) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:119) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.Server.handle(Server.java:517) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:308) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:242) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273) [jetty-io-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95) [jetty-io-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:75) [jetty-io-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceAndRun(ExecuteProduceConsume.java:213) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:147) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:654) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$3.run(QueuedThreadPool.java:572) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_91]
+2016-06-15 15:24:04,805 INFO o.a.r.s.SerialManager [qtp644345897-77] Removing serial assignments for printer:Kudo3D Titan 1(printerFirmwareSerialPort:null, projectorSerialPort:null Display:null)
+2016-06-15 15:24:04,806 INFO o.a.r.s.SerialManager [qtp644345897-77] Clearing up projector model from printer:Kudo3D Titan 1(printerFirmwareSerialPort:null, projectorSerialPort:null Display:null)
+2016-06-15 15:24:04,806 ERROR o.a.r.s.PrinterService [qtp644345897-77] Error starting printer:Kudo3D Titan 1
+org.area515.resinprinter.job.JobManagerException: Couldn't find graphicsDevice called::0.0
+	at org.area515.resinprinter.printer.PrinterManager.startPrinter(PrinterManager.java:129) ~[main/:?]
+	at org.area515.resinprinter.services.PrinterService.startPrinter(PrinterService.java:230) [main/:?]
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:1.8.0_91]
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62) ~[?:1.8.0_91]
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:1.8.0_91]
+	at java.lang.reflect.Method.invoke(Method.java:498) ~[?:1.8.0_91]
+	at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:137) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:296) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:250) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:237) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:356) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:179) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher.service(ServletContainerDispatcher.java:220) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher.service(HttpServletDispatcher.java:56) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher.service(HttpServletDispatcher.java:51) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:790) [javax.servlet-api-3.1.0.jar:3.1.0]
+	at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:835) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1685) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.websocket.server.WebSocketUpgradeFilter.doFilter(WebSocketUpgradeFilter.java:225) [websocket-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1668) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:224) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1158) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:185) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1090) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.HandlerList.handle(HandlerList.java:52) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:119) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.Server.handle(Server.java:517) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:308) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:242) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273) [jetty-io-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95) [jetty-io-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:75) [jetty-io-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceAndRun(ExecuteProduceConsume.java:213) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:147) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:654) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$3.run(QueuedThreadPool.java:572) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_91]
+2016-06-15 15:24:22,360 DEBUG o.a.r.p.PrinterManager [qtp644345897-18] Attempting to start printer:Kudo3D Titan 1
+2016-06-15 15:24:22,951 INFO o.a.r.d.DisplayManager [qtp644345897-18] Display:Simulated display assigned to Printer:Kudo3D Titan 1(printerFirmwareSerialPort:null, projectorSerialPort:null Display:Simulated display)
+2016-06-15 15:24:22,952 DEBUG o.a.r.p.PrinterManager [qtp644345897-18] Assigned display:Simulated display to:Kudo3D Titan 1(printerFirmwareSerialPort:null, projectorSerialPort:null Display:Simulated display)
+2016-06-15 15:24:22,953 INFO o.a.r.s.SerialManager [qtp644345897-18] Attempting to assign firmware using serialPort:GCode response simulation with settings:{Port:GCode response simulation speed:115200 databits:8 parity:None stopbits:One handshake:None} to printer:Kudo3D Titan 1(printerFirmwareSerialPort:null, projectorSerialPort:null Display:Simulated display)
+2016-06-15 15:24:22,954 INFO o.a.r.s.SerialManager [qtp644345897-18] Attempting to autodetect resources for:PrinterFirmware using serialPort:GCode response simulation with settings:{Port:GCode response simulation speed:115200 databits:8 parity:None stopbits:One handshake:None} to printer:Kudo3D Titan 1(printerFirmwareSerialPort:null, projectorSerialPort:null Display:Simulated display)
+2016-06-15 15:24:22,955 INFO o.a.r.s.SerialManager [qtp644345897-18] Resources detected:{comPort:GCode response simulation model:null settings:{Port:GCode response simulation speed:115200 databits:8 parity:None stopbits:One handshake:None}}
+2016-06-15 15:24:22,956 INFO o.a.r.s.ConsoleCommPort [qtp644345897-18] Printer opened
+2016-06-15 15:24:22,956 INFO o.a.r.p.Printer [qtp644345897-18] Firmware serial port set to:GCode response simulation
+2016-06-15 15:24:25,159 INFO o.a.r.g.GCodeControl [qtp644345897-18] Write: G91
+
+2016-06-15 15:24:25,159 INFO o.a.r.s.ConsoleCommPort [qtp644345897-18] Printer received:G91
+
+2016-06-15 15:24:25,161 INFO o.a.r.g.GCodeControl [qtp644345897-18] lineRead: ok
+
+2016-06-15 15:24:25,161 INFO o.a.r.p.Printer [qtp644345897-18] Firmware Welcome chitchat:Console chitchat
+ok
+
+2016-06-15 15:24:25,161 INFO o.a.r.s.SerialManager [qtp644345897-18] Completed assignment of firmware using serialPort:GCode response simulation with settings:{Port:GCode response simulation speed:115200 databits:8 parity:None stopbits:One handshake:None} to printer:Kudo3D Titan 1(printerFirmwareSerialPort:GCode response simulation, projectorSerialPort:null Display:Simulated display)
+2016-06-15 15:24:25,162 DEBUG o.a.r.p.PrinterManager [qtp644345897-18] Assigned 3dprinter firmware:GCode response simulation to:Kudo3D Titan 1(printerFirmwareSerialPort:GCode response simulation, projectorSerialPort:null Display:Simulated display)
+2016-06-15 15:24:25,162 INFO o.a.r.p.PrinterManager [qtp644345897-18] Printer started:Kudo3D Titan 1(printerFirmwareSerialPort:GCode response simulation, projectorSerialPort:null Display:Simulated display)
+2016-06-15 15:24:44,650 INFO o.a.r.s.HostProperties [qtp644345897-15] Created .slicing for:C:\Users\wilbur\Profiles\CWH Template Printer.slicing
+2016-06-15 15:24:44,672 INFO o.a.r.s.HostProperties [qtp644345897-15] Created .slicing for:C:\Users\wilbur\Profiles\Titan1-PSP-General.slicing
+2016-06-15 15:24:44,686 INFO o.a.r.s.HostProperties [qtp644345897-18] Created .machine for:C:\Users\wilbur\Machines\CWH Template Printer.machine
+2016-06-15 15:24:44,694 INFO o.a.r.s.HostProperties [qtp644345897-18] Created .machine for:C:\Users\wilbur\Machines\Titan1.machine
+2016-06-15 15:24:47,758 DEBUG o.a.r.p.PrinterManager [qtp644345897-18] Attempting to stop printer:Kudo3D Titan 1(printerFirmwareSerialPort:GCode response simulation, projectorSerialPort:null Display:Simulated display)
+2016-06-15 15:24:47,759 INFO o.a.r.s.ConsoleCommPort [qtp644345897-18] Printer closed
+2016-06-15 15:24:47,828 DEBUG o.a.r.p.PrinterManager [qtp644345897-18] Stopped printer:Kudo3D Titan 1(printerFirmwareSerialPort:GCode response simulation, projectorSerialPort:null Display:Simulated display)
+2016-06-15 15:24:47,829 INFO o.a.r.s.SerialManager [qtp644345897-18] Removing serial assignments for printer:Kudo3D Titan 1(printerFirmwareSerialPort:GCode response simulation, projectorSerialPort:null Display:Simulated display)
+2016-06-15 15:24:47,829 INFO o.a.r.s.SerialManager [qtp644345897-18] Removing firmware serialGCode response simulation assignment for printer:Kudo3D Titan 1(printerFirmwareSerialPort:GCode response simulation, projectorSerialPort:null Display:Simulated display)
+2016-06-15 15:24:47,829 INFO o.a.r.p.Printer [qtp644345897-18] Firmware serial port set to:null
+2016-06-15 15:24:47,829 INFO o.a.r.s.SerialManager [qtp644345897-18] Clearing up projector model from printer:Kudo3D Titan 1(printerFirmwareSerialPort:null, projectorSerialPort:null Display:Simulated display)
+2016-06-15 17:10:58,133 INFO o.a.r.s.HostProperties [qtp644345897-69] Created .machine for:C:\Users\wilbur\Machines\CWH Template Printer.machine
+2016-06-15 17:10:58,142 INFO o.a.r.s.HostProperties [qtp644345897-69] Created .machine for:C:\Users\wilbur\Machines\Titan1.machine
+2016-06-15 17:10:58,150 INFO o.a.r.s.HostProperties [qtp644345897-77] Created .slicing for:C:\Users\wilbur\Profiles\CWH Template Printer.slicing
+2016-06-15 17:10:58,187 INFO o.a.r.s.HostProperties [qtp644345897-77] Created .slicing for:C:\Users\wilbur\Profiles\Titan1-PSP-General.slicing
+2016-06-15 17:11:00,167 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 17:11:00,168 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 17:11:00,171 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-17] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 17:12:28,501 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 17:12:28,502 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 17:12:28,505 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-79] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 17:12:40,154 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 17:12:40,155 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 17:12:40,157 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-15] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 17:13:01,366 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 17:13:01,367 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 17:13:01,368 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-69] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 17:13:13,253 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 17:13:13,254 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 17:13:13,255 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-69] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 17:14:41,648 INFO o.a.r.s.HostProperties [qtp644345897-17] Created .slicing for:C:\Users\wilbur\Profiles\CWH Template Printer.slicing
+2016-06-15 17:14:41,673 INFO o.a.r.s.HostProperties [qtp644345897-18] Created .machine for:C:\Users\wilbur\Machines\CWH Template Printer.machine
+2016-06-15 17:14:41,686 INFO o.a.r.s.HostProperties [qtp644345897-18] Created .machine for:C:\Users\wilbur\Machines\Titan1.machine
+2016-06-15 17:14:41,705 INFO o.a.r.s.HostProperties [qtp644345897-17] Created .slicing for:C:\Users\wilbur\Profiles\Titan1-PSP-General.slicing
+2016-06-15 17:15:20,823 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 17:15:20,824 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 17:15:20,826 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-18] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 18:12:06,270 ERROR o.a.u.ExceptionMarshaller [qtp644345897-18] Error caught by exception marshaller and relayed to browser
+java.lang.IllegalArgumentException: You need to have a printer started before you can print.
+	at org.area515.resinprinter.services.PrintableService.print(PrintableService.java:168) ~[main/:?]
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:1.8.0_91]
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62) ~[?:1.8.0_91]
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:1.8.0_91]
+	at java.lang.reflect.Method.invoke(Method.java:498) ~[?:1.8.0_91]
+	at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:137) ~[resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:296) ~[resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:250) ~[resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:237) ~[resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:356) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:179) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher.service(ServletContainerDispatcher.java:220) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher.service(HttpServletDispatcher.java:56) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher.service(HttpServletDispatcher.java:51) [resteasy-jaxrs-3.0.9.Final.jar:?]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:790) [javax.servlet-api-3.1.0.jar:3.1.0]
+	at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:835) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1685) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.websocket.server.WebSocketUpgradeFilter.doFilter(WebSocketUpgradeFilter.java:225) [websocket-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1668) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:224) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1158) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511) [jetty-servlet-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:185) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1090) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.HandlerList.handle(HandlerList.java:52) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:119) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.Server.handle(Server.java:517) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:308) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:242) [jetty-server-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273) [jetty-io-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95) [jetty-io-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:75) [jetty-io-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceAndRun(ExecuteProduceConsume.java:213) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:147) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:654) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$3.run(QueuedThreadPool.java:572) [jetty-util-9.3.7.v20160115.jar:9.3.7.v20160115]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_91]
+2016-06-15 18:54:34,822 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 18:54:34,824 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 18:54:34,826 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-15] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:02:32,808 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:02:32,809 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:02:32,810 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-69] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:04:14,213 INFO o.a.r.s.PrintableService [qtp644345897-19] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:04:14,214 INFO o.a.r.s.PrintableService [qtp644345897-19] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:04:14,215 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-19] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:06:53,207 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:06:53,208 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:06:53,209 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-79] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:07:40,614 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:07:40,615 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:07:40,616 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-18] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:10:38,315 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:10:38,316 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:10:38,317 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-18] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:12:12,413 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:12:12,414 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:12:12,415 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-79] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:13:54,485 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:13:54,485 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:13:54,487 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-17] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:15:59,068 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:15:59,068 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:15:59,069 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-15] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:16:13,345 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:16:13,346 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:16:13,347 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-15] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:16:27,662 INFO o.a.r.s.PrintableService [qtp644345897-19] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:16:27,663 INFO o.a.r.s.PrintableService [qtp644345897-19] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:16:27,664 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-19] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:17:36,265 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:17:36,266 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:17:36,267 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-79] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:18:18,125 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:18:18,125 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:18:18,126 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-17] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:19:29,500 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:19:29,501 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:19:29,502 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-17] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:21:18,963 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:21:18,964 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:21:18,965 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-15] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:23:46,825 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:23:46,826 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:23:46,827 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-79] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:24:56,903 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:24:56,904 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:24:56,905 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-79] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:25:18,275 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:25:18,276 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:25:18,277 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-17] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:29:23,623 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:29:23,624 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:29:23,625 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-79] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:29:37,819 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:29:37,819 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:29:37,820 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-15] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:30:52,323 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:30:52,324 INFO o.a.r.s.PrintableService [qtp644345897-15] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:30:52,325 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-15] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:35:25,855 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:35:25,855 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:35:25,856 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-17] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:36:08,715 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:36:08,716 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:36:08,717 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-79] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:38:22,947 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:38:22,947 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:38:22,949 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-69] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:38:40,932 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:38:40,932 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:38:40,933 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-18] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:40:20,229 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:40:20,230 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:40:20,231 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-17] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:40:43,869 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:40:43,870 INFO o.a.r.s.PrintableService [qtp644345897-17] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:40:43,871 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-17] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:40:58,269 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:40:58,269 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:40:58,271 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-69] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:41:53,436 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:41:53,437 INFO o.a.r.s.PrintableService [qtp644345897-69] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:41:53,438 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-69] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:44:25,434 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:44:25,434 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:44:25,435 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-79] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:45:03,416 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:45:03,417 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:45:03,418 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-18] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:45:27,993 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:45:27,993 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:45:27,994 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-18] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:46:56,090 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:46:56,091 INFO o.a.r.s.PrintableService [qtp644345897-18] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:46:56,092 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-18] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:47:21,852 INFO o.a.r.s.PrintableService [qtp644345897-77] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:47:21,853 INFO o.a.r.s.PrintableService [qtp644345897-77] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:47:21,855 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-77] Accepting new printable bishop_slices.zip as a Zip of Slice Images
+2016-06-15 21:51:49,688 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\Bishop.stl
+2016-06-15 21:51:49,688 INFO o.a.r.s.PrintableService [qtp644345897-79] Loaded printable file: C:\Users\wilbur\AppData\Local\Temp\uploaddir\bishop_slices.zip
+2016-06-15 21:51:49,690 INFO o.a.r.j.ZipImagesFileProcessor [qtp644345897-79] Accepting new printable bishop_slices.zip as a Zip of Slice Images
