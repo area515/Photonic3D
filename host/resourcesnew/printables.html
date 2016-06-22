@@ -49,11 +49,11 @@
 						<div style="height: 300px" class="panel-body">This is the preview box for this printable: {{printablesController.currentPrintable.name}}. Changes are also reflected here: {{printablesController.changeMsg}}</div>
 					</div>
 				</div>
-				<form method="POST">
-					<input type="checkbox" ng-model="flip" ng-change="printablesController.changeFlip(flip)"> Flip image
+				<form>
+					<input type="checkbox" ng-model="printablesController.currentCustomizer.affineTransformSettings.yscale" ng-true-value="-1" ng-false-value="0" ng-change="printablesController.changeFlip()"> Flip image
 					<br>
 				</form>
-				<tt>Flipped = {{flip}}</tt><br>
+				<tt>Flipped = {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</tt><br>
 			</div>
 			<!-- End code added by Wilbur Shi -->
 		</div>
