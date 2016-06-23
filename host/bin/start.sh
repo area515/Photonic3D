@@ -103,6 +103,8 @@ if [ -f ${downloadPrefix}.*.zip ]; then
 	unzip ${OFFLINE_FILE}
 	chmod 777 *.sh
 	rm ${OFFLINE_FILE}
+elif [ -z "${NETWORK_TAG}" ]; then
+	echo "Couldn't fetch version from GitHub, launching existing install."
 elif [ "${NETWORK_TAG}" != "${LOCAL_TAG}" -o "$2" == "force" ]; then
 	echo Installing latest version of ${downloadPrefix}: ${NETWORK_TAG}
 
