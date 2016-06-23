@@ -11,6 +11,18 @@
 	    // Code added by Wilbur Shi
 		controller.customizers = {};
 
+		this.test = function test() {
+			$http.post("/services/customizers/testAPITEST", controller.currentCustomizer).success(
+				function (data) {
+					console.log("reached success");
+				}
+			).error(
+				function (data) {
+					console.log("error");
+				});
+			// console.log("Hi this is a test");
+		};
+
 		this.refreshPrintables = function refreshPrintables() {
 			$http.get("/services/printables/list").success(
         		function (data) {
@@ -33,7 +45,7 @@
 									xtranslate: 0,
 									ytranslate: 0
 								}
-							}
+							};
 						controller.customizers[currName] = customizer;
 						controller.currentPrintable = controller.printables[0];
 						controller.currentCustomizer = controller.customizers[currName];
@@ -43,7 +55,7 @@
         		}
 	        );
 	        // End code added by Wilbur Shi
-		}
+		};
 		this.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(
 			function(data) {
 				if (data.notificationEvent == "FileUploadComplete") {
@@ -51,21 +63,21 @@
 				}
 			}
 		);
-		if (this.hostSocket == null) {
+		if (this.hostSocket === null) {
 			$scope.$emit("MachineResponse",  {machineResponse: {command:"Browser Too Old", message:"You will need to use a modern browser to run this application."}});
 		}
 
 		this.changeFlip = function changeFlip() {
-			if (controller.currentCustomizer != null) {
+			if (controller.currentCustomizer !== null) {
 				//customizer returns a json object. js side only knows api
 				controller.changeMsg = controller.currentCustomizer.name + " yscale is ";
 				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
 				if (affineTransformSettings.yscale) {
 					affineTransformSettings.yscale = -1;
-					controller.changeMsg += "-1"
+					controller.changeMsg += "-1";
 				} else {
 					affineTransformSettings.yscale = 0;
-					controller.changeMsg += "0" 
+					controller.changeMsg += "0";
 				}
 			}
 		}
@@ -82,7 +94,7 @@
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		})
-		}
+		};
 		this.deletePrintable = function deletePrintable() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
 			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);
@@ -97,7 +109,7 @@
 	        		})
 	        delete controller.customizers[printableName];
 	        this.refreshPrintables();
-	    }
+	    };
 		this.changeCurrentPrintable = function changeCurrentPrintable(newPrintable) {
 			controller.currentPrintable = newPrintable;
 			// Code added by Wilbur Shi
@@ -105,7 +117,7 @@
 			// console.log(currName);
 			controller.currentCustomizer = controller.customizers[currName];
 			// // End code added by Wilbur Shi
-		}
+		};
 
 		//TODO: When we get an upload complete message, we need to refresh file list...
 		this.showUpload = function showUpload() {
@@ -118,13 +130,13 @@
 		        	title: function () {return "Upload Printable";},
 		        	supportedFileTypes: function () {return null},
 		        	getRestfulFileUploadURL: function () {return function (filename) {return '/services/printables/uploadPrintableFile/' + encodeURIComponent(filename);}},
-		        	getRestfulURLUploadURL: function () {return function (filename, url) {return "services/printables/uploadviaurl/" + encodeURIComponent(filename) + "/" + encodeURIComponent(url)}}
+		        	getRestfulURLUploadURL: function () {return function (filename, url) {return "services/printables/uploadviaurl/" + encodeURIComponent(filename) + "/" + encodeURIComponent(url);}}
 		        }
 			});
 			this.refreshPrintables();
 			
 			//fileChosenModal.result.then(function (savedPrinter) {$scope.savePrinter(savedPrinter, newPrinter)});
-		}
+		};
 		
 		this.getPrintableIconClass = function getPrintableIconClass(printable) {
 			if (printable.printFileProcessor.friendlyName === 'Image') {
@@ -146,9 +158,9 @@
 				return "fa-bold";
 			}
 			return "fa-question-circle";
-		}
+		};
 
 		this.refreshPrintables();
-	}])
+	}]);
 
 })();
