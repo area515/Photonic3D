@@ -145,7 +145,8 @@ public class Main {
 		try {
 			server.start();
 		} catch (Exception e) {
-			logger.error("Error starting Photonic3D http server", e);
+			logger.error("FATAL Error starting Photonic3D http server", e);
+			return;
 		}
 		   
 		//Start broadcasting server
