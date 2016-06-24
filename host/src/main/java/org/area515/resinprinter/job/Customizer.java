@@ -4,6 +4,7 @@ public class Customizer {
 	private String name;
 	private String printerName;
 	private String printableName;
+	private String printableExtension;
 	private boolean supportsAffineTransformSettings;        //True means supported/False means not supported
 	private AffineTransformSettings affineTransformSettings;//null means it's not used event if this customizer does support the AffineTransform	
 	
@@ -48,6 +49,14 @@ public class Customizer {
 		public void setAffineTransformScriptCalculator(String affineTransformScriptCalculator) {
 			this.affineTransformScriptCalculator = affineTransformScriptCalculator;
 		}
+	}
+
+	public String getPrintableExtension() {
+		return printableExtension;
+	}
+
+	public void setPrintableExtension(String extension) {
+		this.printableExtension = extension;
 	}
 
 	public String getName() {

@@ -12,9 +12,9 @@
 		controller.customizers = {};
 
 		this.test = function test() {
-			$http.post("/services/customizers/testAPITEST", controller.currentCustomizer).success(
+			$http.post("/services/customizers/customizerTest", controller.currentCustomizer).success(
 				function (data) {
-					console.log("reached success");
+					console.log(data);
 				}
 			).error(
 				function (data) {
@@ -37,6 +37,7 @@
 								name: currName,
 								printerName: currPrint.printerName,
 								printableName: currPrint.name,
+								printableExtension: currPrint.extension,
 								supportsAffineTransformSettings: true,
 								affineTransformSettings: {
 									affineTransformScriptCalculator: "placeholder",
@@ -48,7 +49,7 @@
 							};
 						controller.customizers[currName] = customizer;
 						controller.currentPrintable = controller.printables[0];
-						controller.currentCustomizer = controller.customizers[currName];
+						controller.currentCustomizer = controller.customizers[controller.currentPrintable.name];
 						// console.log("we have customizer for " + controller.customizers.currName.name);
 						}				
 					}
