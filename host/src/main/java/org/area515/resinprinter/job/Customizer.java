@@ -4,6 +4,7 @@ public class Customizer {
 	private String name;
 	private String printerName;
 	private String printableName;
+	private String printableExtension;
 	private boolean supportsAffineTransformSettings;        //True means supported/False means not supported
 	private AffineTransformSettings affineTransformSettings;//null means it's not used event if this customizer does support the AffineTransform	
 	
@@ -14,31 +15,31 @@ public class Customizer {
 		private Double yScale;//-1 for yflip
 		private String affineTransformScriptCalculator;//Ignore this for now
 		
-		public Integer getxTranslate() {
+		public Integer getXTranslate() {
 			return xTranslate;
 		}
-		public void setxTranslate(Integer xTranslate) {
+		public void setXTranslate(Integer xTranslate) {
 			this.xTranslate = xTranslate;
 		}
 		
-		public Integer getyTranslate() {
+		public Integer getYTranslate() {
 			return yTranslate;
 		}
-		public void setyTranslate(Integer yTranslate) {
+		public void setYTranslate(Integer yTranslate) {
 			this.yTranslate = yTranslate;
 		}
 		
-		public Double getxScale() {
+		public Double getXScale() {
 			return xScale;
 		}
-		public void setxScale(Double xScale) {
+		public void setXScale(Double xScale) {
 			this.xScale = xScale;
 		}
 		
-		public Double getyScale() {
+		public Double getYScale() {
 			return yScale;
 		}
-		public void setyScale(Double yScale) {
+		public void setYScale(Double yScale) {
 			this.yScale = yScale;
 		}
 		
@@ -48,6 +49,14 @@ public class Customizer {
 		public void setAffineTransformScriptCalculator(String affineTransformScriptCalculator) {
 			this.affineTransformScriptCalculator = affineTransformScriptCalculator;
 		}
+	}
+
+	public String getPrintableExtension() {
+		return printableExtension;
+	}
+
+	public void setPrintableExtension(String extension) {
+		this.printableExtension = extension;
 	}
 
 	public String getName() {
