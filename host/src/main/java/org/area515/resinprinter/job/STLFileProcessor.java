@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
+import java.io.*;
+import java.awt.image.*;
+import javax.imageio.*;
 
 import org.area515.resinprinter.job.render.RenderingFileData;
 import org.area515.resinprinter.printer.BuildDirection;
@@ -19,6 +22,8 @@ import org.area515.resinprinter.slice.CloseOffMend;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.resinprinter.slice.ZSlicer;
 import org.area515.resinprinter.stl.Triangle3d;
+
+
 
 public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> {
 	private Map<PrintJob, RenderingFileData> dataByPrintJob = new HashMap<PrintJob, RenderingFileData>();
@@ -124,6 +129,38 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		}
 	}
 	//TODO: Create PreviewSlice0 method that copies processfile code
+	public void previewSlice(PrintJob printJob) throws Exception {
+		try {
+			//Initialize DataAid
+			//TODO: Create dataaid manually based on started printer
+			//how do access list of printers?
+			//if printer.isPrintActive() {
+			//	create dataaid
+			//}
+			//
+			DataAid dataAid = initializeDataAid(printJob);
+			RenderingFileData stlData = new RenderingFileData();
+			dataByPrintJob.put(printJob, stlData);
+			
+			stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, new CloseOffMend());
+			stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(dataAid.xResolution), new Double(dataAid.yResolution));
+			printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
+			
+			//Get the slicer queued up for the first image;
+			stlData.slicer.setZIndex(stlData.slicer.getZMinIndex());
+			Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
+			Future<BufferedImage> currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
+			//do i need to preslice? what even does preslice do?
+			
+			//store slice 0 
+			BufferedImage image = currentImage.get();
+			File outputfile = new File("previewSlice0.png");
+			ImageIO.write(image, "png", outputfile);
+			//saves slice 0 into previewSlice0.png	
+		} finally {
+			System.out.println("failed lol");
+		}
+	}
 
 	@Override
 	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException {
