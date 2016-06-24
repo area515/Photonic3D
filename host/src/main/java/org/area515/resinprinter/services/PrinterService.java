@@ -19,6 +19,7 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.security.RolesAllowed;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.ws.rs.Consumes;
@@ -59,6 +60,7 @@ import org.area515.resinprinter.services.TestingResult.ChartData;
 import org.area515.util.TemplateEngine;
 
 @Api(value="printers")
+@RolesAllowed(UserService.FULL_RIGHTS)
 @Path("printers")
 public class PrinterService {
     private static final Logger logger = LogManager.getLogger();

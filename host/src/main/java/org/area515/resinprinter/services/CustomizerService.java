@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiOperation;
 
 import java.util.List;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -20,6 +21,7 @@ import javax.ws.rs.core.StreamingOutput;
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
 
 @Api(value="customizers")
+@RolesAllowed(UserService.FULL_RIGHTS)
 @Path("customizers")
 public class CustomizerService {
     public static CustomizerService INSTANCE = new CustomizerService();
