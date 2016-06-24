@@ -17,6 +17,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
+
 @Api(value="customizers")
 @Path("customizers")
 public class CustomizerService {
@@ -74,14 +76,22 @@ public class CustomizerService {
 	@POST
 	@Path("testAPITEST") 
 	// @Consumes(MediaType.APPLICATION_JSON)
-	// @Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	public String test(Customizer customizer) {
 		if (customizer != null) {
-			return customizer.getName();
+			return "\"" + new String(JsonStringEncoder.getInstance().quoteAsString(customizer.getName())) + "\"";
 		} else {
-			return "Customizer is null";
+			return "\"" +  new String(JsonStringEncoder.getInstance().quoteAsString("Customizer is null")) + "\"";
 		}
 
+	}
+
+	@ApiOperation(value="Test to return a customizer")
+	@POST
+	@Path("customizerTest")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Customizer customizerTest(Customizer customizer) {
+		return customizer;
 	}
 	
     @ApiOperation(value="Renders any given slice based on the customizer and current slice number. This method assumes that the customizer has already been saved.")
