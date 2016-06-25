@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.security.RolesAllowed;
 import javax.imageio.ImageIO;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -43,6 +44,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 @Api(value="printJobs")
+@RolesAllowed(UserService.FULL_RIGHTS)
 @Path("printJobs")
 public class PrintJobService {
     private static final Logger logger = LogManager.getLogger();
