@@ -48,11 +48,11 @@
 								}
 							};
 						controller.customizers[currName] = customizer;
-						controller.currentPrintable = controller.printables[0];
-						controller.currentCustomizer = controller.customizers[controller.currentPrintable.name];
 						// console.log("we have customizer for " + controller.customizers.currName.name);
 						}				
 					}
+					controller.currentPrintable = controller.printables[0];
+					controller.currentCustomizer = controller.customizers[controller.currentPrintable.name];
         		}
 	        );
 	        // End code added by Wilbur Shi
@@ -74,10 +74,10 @@
 				controller.changeMsg = controller.currentCustomizer.name + " yscale is ";
 				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
 				if (affineTransformSettings.yscale) {
-					affineTransformSettings.yscale = -1;
+					// affineTransformSettings.yscale = -1;
 					controller.changeMsg += "-1";
 				} else {
-					affineTransformSettings.yscale = 0;
+					// affineTransformSettings.yscale = 0;
 					controller.changeMsg += "0";
 				}
 			}
