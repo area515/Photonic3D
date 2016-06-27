@@ -33,6 +33,7 @@ public class UserService {
     private static final Logger logger = LogManager.getLogger();
 
 	public static final String FULL_RIGHTS = "admin";
+	public static final String LISTENER = "listener";
 	public static UserService INSTANCE = new UserService();
 	
     @ApiOperation(value = "Gets all known users to this Photonic installation.")

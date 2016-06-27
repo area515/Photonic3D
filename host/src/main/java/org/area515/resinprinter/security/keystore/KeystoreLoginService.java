@@ -6,13 +6,13 @@ import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
+import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -35,13 +35,29 @@ import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.util.security.Credential;
 
-public class KeystoreLoginService implements UserManagementFeature {
+public class KeystoreLoginService implements UserManagementFeature<X509Certificate[], PhotonicCrypto> {
     private static final Logger logger = LogManager.getLogger();
     
+    private File keyFile;
+    private String keystorePassword;
 	private String realmName;
 	private IdentityService identityService = new DefaultIdentityService();
 	private Map<PhotonicUser, DefaultUserIdentity> loggedInUsers = new HashMap<>();
 	private Map<String, Set<PhotonicUser>> knownUsers = new HashMap<>();
+	private boolean allowInsecureCommunications = false;
+	
+	public KeystoreLoginService() {
+		keyFile = HostProperties.Instance().getUserKeystoreFile();
+		keystorePassword = HostProperties.Instance().getUserKeystorePassword();
+		//Probably not a good idea
+		//TODO: allowInsecureCommunications = HostProperties.Instance().allowInsecureCommunications();
+	}
+	
+	public KeystoreLoginService(File userskeystore, String keystorePassword, boolean allowInsecureCommunications) {
+		this.keyFile = userskeystore;
+		this.keystorePassword = keystorePassword;
+		this.allowInsecureCommunications = allowInsecureCommunications;
+	}
 	
 	public void setName(String realmName) {
 		this.realmName = realmName;
@@ -57,13 +73,12 @@ public class KeystoreLoginService implements UserManagementFeature {
 		Set<PhotonicUser> users = knownUsers.get(username);
 		
 		if (users == null) {
+			logger.error("No known users. It isn't possible to login to Photonic3d");
 			return null;
 		}
 		
 		PhotonicUser userFound = null;
 		for (PhotonicUser user : users) {
-			File keyFile = HostProperties.Instance().getUserKeystoreFile();
-			String keystorePassword = HostProperties.Instance().getUserKeystorePassword();
 			if (JettySecurityUtils.isCertificateAndPrivateKeyAvailable(keyFile, user.getUserId() + "E", credentials + "", keystorePassword)) {
 				if (userFound != null) {
 					logger.error("There are at least two users that have the same username id1:" + user.getUserId() + " and id2:" + userFound.getUserId());
@@ -74,6 +89,7 @@ public class KeystoreLoginService implements UserManagementFeature {
 		}
 
 		if (userFound == null) {
+			logger.error("No known user with the name:" + username);
 			return null;
 		}
 		
@@ -83,7 +99,6 @@ public class KeystoreLoginService implements UserManagementFeature {
 		return identity;
 	}
 
-	//TODO: stop hardcoding rights
 	private DefaultUserIdentity buildUserIdentity(PhotonicUser user, String[] roles) {
 		return new DefaultUserIdentity(new Subject(), user, roles);
 	}
@@ -110,8 +125,6 @@ public class KeystoreLoginService implements UserManagementFeature {
 
 	@Override
 	public void start(URI uri) {
-		File keyFile = HostProperties.Instance().getUserKeystoreFile();
-		String keystorePassword = HostProperties.Instance().getUserKeystorePassword();
 		if (!keyFile.exists()) {
 			return;
 		}
@@ -138,24 +151,29 @@ public class KeystoreLoginService implements UserManagementFeature {
 
 	@Override
 	public PhotonicUser update(String userName, Credential credential, String[] roleArray) throws UserManagementException {
-		File keyFile = HostProperties.Instance().getUserKeystoreFile();
-		String keystorePassword = HostProperties.Instance().getUserKeystorePassword();
 		Set<PhotonicUser> users = knownUsers.get(userName);
 		if (users == null) {
 			users = new HashSet<>();
 			knownUsers.put(userName, users);
 		}
-		
-		PhotonicUser user = new PhotonicUser(userName, UUID.randomUUID());
-		
+
 		Date validTo = new Calendar.Builder()
 								.set(Calendar.YEAR, Calendar.getInstance().get(Calendar.YEAR) + 50)
 								.set(Calendar.MONTH, Calendar.getInstance().get(Calendar.MONTH))
 								.set(Calendar.DAY_OF_MONTH, 1)
 							.build().getTime();
 		try {
-			//TODO: Need to add roles here:
-			KeystoreUtilities.generateRSAKeypairsForUserAndPossiblyKeystore(JettySecurityUtils.buildFullyQualifiedDN(userName), user.getUserId(), validTo, keyFile, credential.toString(), keystorePassword);
+			//TODO: Need to add roles here
+			//TODO: Do not regenerate all of the keys for the user!!
+			PhotonicCrypto crypto = KeystoreUtilities.generateRSAKeypairsForUserAndPossiblyKeystore(
+					JettySecurityUtils.buildFullyQualifiedDN(userName), 
+					validTo, 
+					keyFile, 
+					credential.toString(), 
+					keystorePassword,
+					allowInsecureCommunications);
+			
+			PhotonicUser user = new PhotonicUser(userName, crypto.getLocalUserId());
 			users.add(user);
 			DefaultUserIdentity identity = loggedInUsers.get(user);
 			if (identity != null) {
@@ -181,9 +199,6 @@ public class KeystoreLoginService implements UserManagementFeature {
 
 	@Override
 	public void remove(PhotonicUser user) throws UserManagementException {
-		File keyFile = HostProperties.Instance().getUserKeystoreFile();
-		String keystorePassword = HostProperties.Instance().getUserKeystorePassword();
-		
 		try {
 			JettySecurityUtils.removeKeysForUser(user.getUserId(), keyFile, keystorePassword);
 			loggedInUsers.remove(user);
@@ -201,10 +216,6 @@ public class KeystoreLoginService implements UserManagementFeature {
 		}
 	}
 
-	public void createRemoteUser(PhotonicCrypto crypto, String[] roleArray) throws UserManagementException {
-		//TODO: This allows you to install remote users
-	}
-
 	@Override
 	public PhotonicUser getUser(UUID userId) {
 		for (Set<PhotonicUser> usersPerName : knownUsers.values()) {
@@ -216,5 +227,15 @@ public class KeystoreLoginService implements UserManagementFeature {
 		}
 		
 		return null;
+	}
+	
+	@Override
+	public PhotonicCrypto trustUser(PhotonicUser user, X509Certificate[] trustData, String[] roleArray) throws UserManagementException {
+		try {
+			return KeystoreUtilities.trustCertificate(user, keyFile, keystorePassword, trustData[0], trustData[1], allowInsecureCommunications);
+		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidNameException
+				| UnrecoverableEntryException | IOException e) {
+			throw new UserManagementException("Couldn't trust user", e);
+		}
 	}
 }

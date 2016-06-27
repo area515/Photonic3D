@@ -42,7 +42,6 @@ import org.area515.resinprinter.services.UserService;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -56,6 +55,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import sun.security.x509.AlgorithmId;
 import sun.security.x509.CertificateAlgorithmId;
+import sun.security.x509.CertificateExtensions;
 import sun.security.x509.CertificateIssuerName;
 import sun.security.x509.CertificateSerialNumber;
 import sun.security.x509.CertificateSubjectName;
@@ -65,6 +65,8 @@ import sun.security.x509.CertificateX509Key;
 import sun.security.x509.X500Name;
 import sun.security.x509.X509CertImpl;
 import sun.security.x509.X509CertInfo;
+import sun.security.x509.SubjectKeyIdentifierExtension;
+import sun.security.x509.KeyIdentifier;
 
 public class JettySecurityUtils {
     private static final Logger logger = LogManager.getLogger();
@@ -89,7 +91,17 @@ public class JettySecurityUtils {
 		info.set(X509CertInfo.KEY, new CertificateX509Key(pair.getPublic()));
 		info.set(X509CertInfo.VERSION, new CertificateVersion(CertificateVersion.V3));
 		//info.set(X509CertInfo.DN_NAME, dn);
-		
+
+		//TODO: Technically I should be specifying key usage requirements to prevent key confusion attacks
+		/*CertificateExtensions ext = new CertificateExtensions();
+        ext.set(sun.security.x509.SubjectKeyIdentifierExtension.NAME,
+                new SubjectKeyIdentifierExtension(
+                new KeyIdentifier(pair.getPublic()).getIdentifier()));
+        info.set(X509CertInfo.EXTENSIONS, ext);*/
+		//1.3.6.1.5.5.7.3.2 client auth
+		//1.3.6.1.5.5.7.3.1 server auth
+		//1.2.840.113549.1.1.X RSA Encryption
+		//1.2.840.113549.2.X Signing Algorithms
 		//AlgorithmId algo = new AlgorithmId(AlgorithmId.DH_oid);
 		AlgorithmId algo = new AlgorithmId(AlgorithmId.sha256WithRSAEncryption_oid);
 		info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(algo));
@@ -97,7 +109,7 @@ public class JettySecurityUtils {
 		// Sign the cert to identify the algorithm that's used.
 		X509CertImpl cert = new X509CertImpl(info);
 		cert.sign(privkey, algorithm);
-
+		
 		// Update the algorithm, and resign.
 		algo = (AlgorithmId) cert.get(X509CertImpl.SIG_ALG);
 		info.set(CertificateAlgorithmId.NAME + "." + CertificateAlgorithmId.ALGORITHM, algo);
@@ -106,12 +118,18 @@ public class JettySecurityUtils {
 		return cert;
 	}
 	
-	public static PrivateKeyEntry generateCertAndKeyPair(LdapName fullyQualifiedDN, Date endDate) throws GeneralSecurityException, IOException {
+	public static PrivateKeyEntry generateCertAndKeyPair(LdapName fullyQualifiedDN, Date endDate) throws GeneralSecurityException, IOException, InvalidNameException {
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
 		keyGen.initialize(2048, random);
 		
 		KeyPair keyPair = keyGen.generateKeyPair();
+		String[] userIdAndName = getUserIdAndName(fullyQualifiedDN.toString());
+		if (userIdAndName[0] != null) {
+			throw new InvalidNameException("The uid component of the ldapname cannot be set in the fullQualifiedDN");
+		}
+		
+		fullyQualifiedDN.add(new Rdn("uid", UUID.nameUUIDFromBytes(keyPair.getPublic().getEncoded()).toString()));
 		X509Certificate cert = generateX509Certificate(fullyQualifiedDN, keyPair, endDate, "SHA256withRSA");
 		return new PrivateKeyEntry(keyPair.getPrivate(), new Certificate[]{cert});
 	}
@@ -147,6 +165,20 @@ public class JettySecurityUtils {
 		saveKeystore(keyFile, keyStore, keystorePassword);
 	}
 	
+	public static String[] getUserIdAndName(String fullyQualifiedDN) throws InvalidNameException {
+		LdapName ldapName = new LdapName(fullyQualifiedDN);
+		String[] names = new String[2];
+		for (Rdn rdn : ldapName.getRdns()) {
+			if (rdn.getType().equalsIgnoreCase("cn")) {
+				names[1] = rdn.getValue() + "";
+			} else if (rdn.getType().equalsIgnoreCase("uid")) {
+				names[0] = rdn.getValue() + "";
+			}
+		}
+		
+		return names;
+	}
+	
 	public static Set<PhotonicUser> getAllUsers(File keyFile, String keystorePassword) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
 		FileInputStream outputStream = new FileInputStream(keyFile);
 		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -157,30 +189,35 @@ public class JettySecurityUtils {
 		while (aliases.hasMoreElements()) {
 			String alias = aliases.nextElement();
 			X509Certificate cert = (X509Certificate)keyStore.getCertificate(alias);
-			LdapName ldapName;
+			String[] userIdAndName = null;
 			try {
-				ldapName = new LdapName(cert.getSubjectDN().getName());
+				userIdAndName = getUserIdAndName(cert.getSubjectDN().getName());
 			} catch (InvalidNameException e) {
 				logger.error("Couldn't parse name from keystore:" + cert.getSubjectDN().getName(), e);
 				continue;
-			}
-			String name = null;
-			for (Rdn rdn : ldapName.getRdns()) {
-				if (rdn.getType().equalsIgnoreCase("cn")) {
-					name = rdn.getValue() + "";
-				}
-			}
-			if (name == null) {
+			}		
+
+			if (userIdAndName[0] == null) {
+				logger.error("No UID component found for:" + cert.getSubjectDN().getName());
+				continue;
+			}			
+			if (userIdAndName[1] == null) {
 				logger.error("No CN component found for:" + cert.getSubjectDN().getName());
 				continue;
 			}
-			users.add(new PhotonicUser(name, UUID.fromString((String)alias.substring(0, alias.length() - 1))));
+
+			alias = alias.substring(0, alias.length() - 1);
+			if (!userIdAndName[0].equals(alias)) {
+				logger.error("UID component:" + userIdAndName[0] + " can't be different than alias:" + alias);
+				continue;
+			}
+			users.add(new PhotonicUser(userIdAndName[1], UUID.fromString(userIdAndName[0])));
 		}
 
 		return users;
 	}
 	
-	public static void generateRSAKeypairAndPossiblyKeystore(LdapName fullyQualifiedDN, Date endDate, File keyFile, String keyPairAlias, String keypairPassword, String keystorePassword) throws IOException, GeneralSecurityException {
+	public static void generateRSAKeypairAndPossiblyKeystore(LdapName fullyQualifiedDN, Date endDate, File keyFile, String keyPairAlias, String keypairPassword, String keystorePassword) throws IOException, GeneralSecurityException, InvalidNameException {
 		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 		if (keyFile.exists()) {
 			FileInputStream outputStream = new FileInputStream(keyFile);
