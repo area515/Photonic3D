@@ -140,7 +140,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		Printer activePrinter = null;
 		List<Printer> printers = PrinterService.INSTANCE.getPrinters();
 		for (Printer printer : printers) {
-			if (printer.isPrintActive()) {
+			if (printer.isStarted()) {
 				activePrinter = printer;
 				break;
 			}

@@ -46,7 +46,8 @@
 				<div class="preview-box"> 
 					<div class="panel panel-default">
 						<div class="panel-heading">Your STL Model</div>
-						<div style="height: 300px" class="panel-body">This is the preview box for this printable: {{printablesController.currentPrintable.name}}. Changes are also reflected here: {{printablesController.changeMsg}}</div>
+						<div style="height: 300px" class="panel-body">This is the preview box for this printable: {{printablesController.currentPrintable.name}}. Changes are also reflected here: {{printablesController.changeMsg}}
+						<img ng-src="{{printablesController.currentPreviewImg}}"</div>
 					</div>
 				</div>
 				<form>
