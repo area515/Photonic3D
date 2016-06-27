@@ -2,8 +2,18 @@
 
 cpu=`uname -m`
 
+DEFAULT_REPO="area515/Creation-Workshop-Host"
+CONFIG_PROPS="${HOME}/3dPrinters/config.properties"
+
+if [ -f ${CONFIG_PROPS} ]; then
+  CONFIG_REPO=$(grep '^updateRepo' "${CONFIG_PROPS}" | cut -d= -f 2 | awk '$1=$1')
+  if [[ ${CONFIG_REPO} ]]; then
+    DEFAULT_REPO="${CONFIG_REPO}"
+  fi
+fi
+
 if [ -z "$1" ]; then
-	repo="area515/Creation-Workshop-Host"
+	repo=${DEFAULT_REPO}
 else
 	if [[ $1 =~ .*Creation-Workshop-Host.* ]]; then
 		repo=$1
@@ -143,7 +153,7 @@ if [ ! -f "/etc/init.d/cwhservice" ]; then
 fi
 
 echo Determinging if one time install has occurred
-performedOneTimeInstall=$(grep performedOneTimeInstall ~/3dPrinters/config.properties | awk -F= '{print $2}')
+performedOneTimeInstall=$(grep performedOneTimeInstall ${CONFIG_PROPS} | awk -F= '{print $2}')
 if [ -f "oneTimeInstall.sh" -a [${performedOneTimeInstall} != "true"] ]; then
 	./oneTimeInstall.sh
 fi
