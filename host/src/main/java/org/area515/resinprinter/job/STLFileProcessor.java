@@ -159,6 +159,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		
 		RenderingFileData stlData = new RenderingFileData();
 		
+		System.out.println( dataAid.xPixelsPerMM + "," + dataAid.yPixelsPerMM +"," + dataAid.sliceHeight + "," + dataAid.sliceHeight / 2);
 		stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, new CloseOffMend());
 		stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(dataAid.xResolution), new Double(dataAid.yResolution));
 		printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
@@ -168,6 +169,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
 		STLImageRenderer renderer = new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution);
 		BufferedImage image = renderer.call();
+		System.out.println(image.toString());
 		return image;
 	}
 

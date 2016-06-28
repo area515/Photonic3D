@@ -119,11 +119,13 @@ public class CustomizerService {
 			STLFileProcessor stlfileprocessor = (STLFileProcessor) processor;
 			try {
 				BufferedImage img = stlfileprocessor.previewSlice(file);
+				System.out.println("just got the bufferedimg from previewSlice");
 				StreamingOutput stream = new StreamingOutput() {
 					@Override
 					public void write(OutputStream output) throws IOException, WebApplicationException {
 						try {
 							ImageIO.write(img, "PNG", output);
+							System.out.println("Writing the img");
 						} catch (IOException e) {
 							throw new IOException("We can't write the image");
 						}
