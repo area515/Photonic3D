@@ -30,10 +30,14 @@ import org.area515.resinprinter.job.STLFileProcessor;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.util.PrintFileFilter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Api(value="customizers")
 @RolesAllowed(UserService.FULL_RIGHTS)
 @Path("customizers")
 public class CustomizerService {
+	private static final Logger logger = LogManager.getLogger();
     public static CustomizerService INSTANCE = new CustomizerService();
     
 	//TODO: do we want this? getCustomizersByPrinterName(String printerName)
@@ -110,32 +114,41 @@ public class CustomizerService {
 	@POST
 	@Path("renderFirstSliceImage")
 	@Produces("image/png")
-	public StreamingOutput renderImage(Customizer customizer) {
+	public StreamingOutput renderFirstSliceImage(Customizer customizer) {
 		String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
+		//System.out.println("File name: " + fileName);
 		File file = new File(HostProperties.Instance().getUploadDir(), fileName);
 
 		PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
+		//System.out.println("Processor step");
 		if (processor instanceof STLFileProcessor) {
 			STLFileProcessor stlfileprocessor = (STLFileProcessor) processor;
 			try {
+				//System.out.println("====PreviewSlice====");
 				BufferedImage img = stlfileprocessor.previewSlice(file);
+				//System.out.println("about to write");
 				StreamingOutput stream = new StreamingOutput() {
 					@Override
 					public void write(OutputStream output) throws IOException, WebApplicationException {
 						try {
+							//System.out.println("writing image");
 							ImageIO.write(img, "PNG", output);
+							//System.out.println("Wrote the image lmao");
 						} catch (IOException e) {
+							//System.out.println("failed writing");
 							throw new IOException("We can't write the image");
 						}
 					}
 				};
 				return stream;
 			} catch (Exception e) {
+				//System.out.println("lol something's broke and it aint me who's broke");
 				throw new IllegalArgumentException(e + " and cause: " + e.getCause());
 			}
 		} else {
 			throw new IllegalArgumentException("Incorrect file type. Cannot display preview for non STL files as of now");
 		}
+		
 	}
 	
     @ApiOperation(value="Renders any given slice based on the customizer and current slice number. This method assumes that the customizer has already been saved.")
