@@ -80,6 +80,10 @@ public class NotificationManager {
 	}
 	
 	public static void hostSettingsChanged() {
+		if (notifiers == null) {
+			return;
+		}
+		
 		for (Notifier currentNotifier : notifiers) {
 			currentNotifier.hostSettingsChanged();
 		}

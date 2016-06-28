@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.zip.ZipOutputStream;
 
+import javax.annotation.security.RolesAllowed;
 import javax.mail.AuthenticationFailedException;
 import javax.mail.MessagingException;
 import javax.mail.Transport;
@@ -77,6 +78,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import com.sun.mail.smtp.SMTPSendFailedException;
 
 @Api(value="machine")
+@RolesAllowed(UserService.FULL_RIGHTS)
 @Path("machine")
 public class MachineService {
     private static final Logger logger = LogManager.getLogger();

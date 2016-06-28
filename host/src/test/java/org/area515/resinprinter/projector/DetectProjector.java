@@ -1,9 +1,5 @@
 package org.area515.resinprinter.projector;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.printer.ComPortSettings;
@@ -11,10 +7,8 @@ import org.area515.resinprinter.serial.JSSCCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.serial.SerialManager.DetectedResources;
-import org.area515.resinprinter.server.HostProperties;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class DetectProjector {
     private static final Logger logger = LogManager.getLogger();
