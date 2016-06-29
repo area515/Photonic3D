@@ -29,15 +29,15 @@
 		this.setPreview = function setPreview() {
 			var parameter = controller.currentCustomizer;
 			// do things with the currentCustomizer and get the png then set a variable like currentPreview to that png so that HTML page can display it
-			$http.post("/services/customizers/renderFirstSliceImage", parameter).success(
+			$http.post("/services/customizers/upsertCustomizer", parameter).success(
 				function (data) {
-					this.currentPreviewImg = data;
-					console.log("reached success while rendering first slice image, browser side");
+					// console.log("reached success while rendering first slice image, browser side");
 				}).error(
 				function (data) {
 					// error stuff
-					console.log("error while trying rendering first slice image, browser side");
-				})
+					// console.log("error while trying rendering first slice image, browser side");
+				});
+			controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name;
 		};
 
 		this.refreshPrintables = function refreshPrintables() {
@@ -81,6 +81,7 @@
 					controller.refreshPrintables();
 				}
 			}
+			// potentially add one for when customizerischanged to reset the preview again (this is the whole preview/customizer thing goes into a separate controller or somethng like that)
 		);
 		if (this.hostSocket === null) {
 			$scope.$emit("MachineResponse",  {machineResponse: {command:"Browser Too Old", message:"You will need to use a modern browser to run this application."}});
@@ -99,6 +100,7 @@
 					controller.changeMsg += "0";
 				}
 			}
+			this.setPreview();
 		};
 		// End code added by Wilbur Shi
 

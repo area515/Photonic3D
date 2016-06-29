@@ -176,6 +176,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			throw new Exception("Unsuccessful Slicing.");
 		}
 		//System.out.println("queueing for first image");	
+		
 		//Get the slicer queued up for the first image;
 		stlData.slicer.setZIndex(stlData.slicer.getZMinIndex());
 		Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
@@ -184,6 +185,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		//System.out.println("creating bufferedimage");
 		BufferedImage image = renderer.call();
 		//System.out.println(image.toString());
+
 		return image;
 	}
 
