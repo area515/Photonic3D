@@ -44,10 +44,10 @@
 			<!-- Code added by Wilbur Shi -->
 			<div class="col-sm-7" id="preview"> 
 				<div class="preview-box"> 
-					<div class="panel panel-default">
+					<div class="panel panel-default" style="height:450px;">
 						<div class="panel-heading">Your STL Model</div>
 						<div style="height: 300px" class="panel-body">This is the preview box for this printable: {{printablesController.currentPrintable.name}}. Changes are also reflected here: {{printablesController.changeMsg}}
-						<img ng-src="{{printablesController.currentPreviewImg}}"</div>
+						<img ng-src="{{printablesController.currentPreviewImg}}" class="img-responsive" style="width:700px; height:350px;"/>
 					</div>
 				</div>
 				<form hidden>
