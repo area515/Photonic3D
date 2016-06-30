@@ -21,7 +21,8 @@ import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.job.*;
+// import org.area515.resinprinter.job.*;
+// import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.CloseOffMend;
 import org.area515.resinprinter.slice.StlError;
@@ -136,35 +137,41 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		}
 	}
 	//This method takes in an STL file and produces the first slice of the file
-	public BufferedImage previewSlice(File jobFile) throws Exception {
+	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws Exception {
+		
+
 		//find the first activePrinter
+		String printerName = customizer.getPrinterName();
 		Printer activePrinter = null;
-		//System.out.println("Getting printers");
-		List<Printer> printers = PrinterService.INSTANCE.getPrinters();
-		for (Printer printer : printers) {
-			if (printer.isStarted()) {
-				activePrinter = printer;
-				break;
+		if (printerName == null || printerName.isEmpty()) {
+			//if customizer doesn't have a printer stored, set first active printer as printer
+			List<Printer> printers = PrinterService.INSTANCE.getPrinters();
+			for (Printer printer : printers) {
+				if (printer.isStarted()) {
+					activePrinter = printer;
+					break;
+				}
 			}
+		} else {
+			activePrinter = PrinterService.INSTANCE.getPrinter(printerName);
 		}
+		
 
 		if (activePrinter == null) {
-			System.out.println("no printers found");
+			System.out.println("No printers found.");
 			throw new Exception("No active printers.");
 		}
 
-		//System.out.println("Creating new job");
 		//instantiate a new print job based on the jobFile and set its printer to activePrinter
 		PrintJob printJob = new PrintJob(jobFile);
 		printJob.setPrinter(activePrinter);
 
 		//instantiate new dataaid 
-		//System.out.println("Creating dataaid");
 		DataAid dataAid = initializeDataAid(printJob);
-		
+		//dataAid.setAffineTransformSettings(customizer);
+
 		RenderingFileData stlData = new RenderingFileData();
 		
-		//System.out.println("Slicing");
 		try {
 			stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, new CloseOffMend());
 			//System.out.println("step 1");

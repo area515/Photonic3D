@@ -21,6 +21,7 @@ import org.area515.util.TemplateEngine;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.job.Customizer;
 
 public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProcessor<G,E>{
 	private static final Logger logger = LogManager.getLogger();
@@ -42,6 +43,9 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		public InkDetector inkDetector;
 		public long currentSliceTime;
 		public Paint maskPaint;
+
+		//should have affine transform matrix calculated here 
+		//store Affine Transform Object here
 		
 		public DataAid(PrintJob printJob) throws InappropriateDeviceException {
 			this.printJob = printJob;
@@ -64,6 +68,16 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			//TODO: how do I integrate slicingProfile.getLiftDistance()
 			sliceHeight = inkConfiguration.getSliceHeight();
 		}
+
+		//MOVE THIS TO CUSTOMIZER. 
+		//
+		//probably take affine transform from printer template & customizer's in future.
+		// public void setAffineTransformSettings(Customizer customizer) {
+		// 	xTranslate = customizer.getXTranslate();
+		// 	yTranslate = customizer.getYTranslate();
+		// 	xScale = customizer.getXScale();
+		// 	yScale = customizer.getYScale();
+		// }
 	}
 	
 	public DataAid initializeDataAid(PrintJob printJob) throws InappropriateDeviceException {

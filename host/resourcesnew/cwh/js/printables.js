@@ -33,10 +33,9 @@
 				function (data) {
 					// console.log("reached success while rendering first slice image, browser side");
 				}).error(
-				function (data) {
-					// error stuff
-					// console.log("error while trying rendering first slice image, browser side");
-				});
+    				function (data, status, headers, config, statusText) {
+ 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
+	        		});
 			controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name;
 		};
 

@@ -28,6 +28,7 @@ import javax.ws.rs.core.StreamingOutput;
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.STLFileProcessor;
+import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.util.PrintFileFilter;
 
@@ -116,6 +117,7 @@ public class CustomizerService {
 	@POST
 	@Path("upsertCustomizer")
 	public void addCustomizer(Customizer customizer) {
+		//throw new IllegalArgumentException("fail");
 		customizers.put(customizer.getPrintableName(), customizer);
 	}
 
@@ -136,7 +138,7 @@ public class CustomizerService {
 				STLFileProcessor stlfileprocessor = (STLFileProcessor) processor;
 				try {
 					//System.out.println("====PreviewSlice====");
-					BufferedImage img = stlfileprocessor.previewSlice(file);
+					BufferedImage img = stlfileprocessor.previewSlice(customizer, file);
 
 					System.out.println("just got the bufferedimg from previewSlice");
 

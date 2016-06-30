@@ -1,4 +1,4 @@
-package org.area515.resinprinter.services;
+package org.area515.resinprinter.job;
 
 public class Customizer {
 	private String name;
