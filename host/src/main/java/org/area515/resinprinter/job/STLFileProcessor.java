@@ -21,15 +21,15 @@ import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.printer.PrinterManager;
-import org.area515.resinprinter.printer.PrinterConfiguration;
-import org.area515.resinprinter.job.*;
+// import org.area515.resinprinter.job.*;
+// import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.CloseOffMend;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.resinprinter.slice.ZSlicer;
 import org.area515.resinprinter.stl.Triangle3d;
-import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.services.PrinterService;
+
 
 
 
@@ -136,84 +136,64 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			dataByPrintJob.remove(printJob);
 		}
 	}
-	//TODO: Create PreviewSlice0 method that copies processfile code
-	// might have to pass in an array of printers 
-	// passing in printable rn but idk if it works? 
-	// should i be passing in a printable or a jobFile? or should I just be passing in a printJob?
-	
-	//public void previewSlice(List<Printer> printers, File jobFile) throws Exception {
-	//
-	//probably trying to do too much higher level things but i juust wanted the code to compile
-	public void previewSlice(PrintJob printJob) throws Exception {
-		try {
-			//Initialize DataAid
-			//TODO: Create dataaid manually based on started printer
-			//how do access list of printers?
-			//printerservice.getprinters
-			//if printer.isPrintActive() {
-			//	create dataaid
-			//}
-			//
-			
-			//TODO: This doesn't work
-			List<PrinterConfiguration> identifiers = HostProperties.Instance().getPrinterConfigurations();
-			Printer activePrinter = null;
-			for (PrinterConfiguration current : identifiers) {
-				try {
-					Printer printer = PrinterManager.Instance().getPrinter(current.getName());
-					if (printer == null) {
-						printer = new Printer(current);
-					}
-					if (printer.isPrintActive()) {
-						activePrinter = printer;
-						break;
-					}
-				} catch (Exception e) {
-				    throw new Exception("Error getting printer list", e);
+	//This method takes in an STL file and produces the first slice of the file
+	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws Exception {
+		
+
+		//find the first activePrinter
+		String printerName = customizer.getPrinterName();
+		Printer activePrinter = null;
+		if (printerName == null || printerName.isEmpty()) {
+			//if customizer doesn't have a printer stored, set first active printer as printer
+			List<Printer> printers = PrinterService.INSTANCE.getPrinters();
+			for (Printer printer : printers) {
+				if (printer.isStarted()) {
+					activePrinter = printer;
+					break;
 				}
 			}
-			
-			//basically dataaid using printer 
-			PrinterConfiguration configuration = activePrinter.getConfiguration();
-			SlicingProfile slicingProfile = configuration.getSlicingProfile();
-			InkConfig inkConfiguration = slicingProfile.getSelectedInkConfig();
-			double xPixelsPerMM = slicingProfile.getDotsPermmX();
-			double yPixelsPerMM = slicingProfile.getDotsPermmY();
-			int xResolution = slicingProfile.getxResolution();
-			int yResolution = slicingProfile.getyResolution();
-			
-			//TODO: Does this file processor requires an ink configuration?
-			if (inkConfiguration == null) {
-				throw new Exception("Your printer doesn't have a selected ink configuration.");
-			}
-			double sliceHeight = inkConfiguration.getSliceHeight();
-
-			// DataAid dataAid = initializeDataAid(printJob);
-			RenderingFileData stlData = new RenderingFileData();
-			
-			stlData.slicer = new ZSlicer(1, xPixelsPerMM, yPixelsPerMM, sliceHeight, sliceHeight / 2, true, new CloseOffMend());
-			//TODO: What is jobfile?
-			stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(xResolution), new Double(yResolution));
-			printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
-			
-			//Get the slicer queued up for the first image;
-			stlData.slicer.setZIndex(stlData.slicer.getZMinIndex());
-			Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
-			//TODO: this calls dataAid...how do I not call data-aid
-			//TODO: place holder > delete this later
-			DataAid dataAid = initializeDataAid(printJob);
-			//should i create a new method that takes in only printer, and not dataAid/printJob? 
-			Future<BufferedImage> currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, xResolution, yResolution));
-			//do i need to preslice? what even does preslice do?
-			
-			//store slice 0 
-			BufferedImage image = currentImage.get();
-			File outputfile = new File("previewSlice0.png");
-			ImageIO.write(image, "png", outputfile);
-			//saves slice 0 into previewSlice0.png	
-		} finally {
-			System.out.println("failed lol");
+		} else {
+			activePrinter = PrinterService.INSTANCE.getPrinter(printerName);
 		}
+		
+
+		if (activePrinter == null) {
+			System.out.println("No printers found.");
+			throw new Exception("No active printers.");
+		}
+
+		//instantiate a new print job based on the jobFile and set its printer to activePrinter
+		PrintJob printJob = new PrintJob(jobFile);
+		printJob.setPrinter(activePrinter);
+
+		//instantiate new dataaid 
+		DataAid dataAid = initializeDataAid(printJob);
+		//dataAid.setAffineTransformSettings(customizer);
+
+		RenderingFileData stlData = new RenderingFileData();
+		
+		try {
+			stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, new CloseOffMend());
+			//System.out.println("step 1");
+			stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(dataAid.xResolution), new Double(dataAid.yResolution));
+			//System.out.println("step 2");
+			printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
+		} catch (Exception e) {
+			System.out.println("Unsuccessful Slicing.");
+			throw new Exception("Unsuccessful Slicing.");
+		}
+		//System.out.println("queueing for first image");	
+		
+		//Get the slicer queued up for the first image;
+		stlData.slicer.setZIndex(stlData.slicer.getZMinIndex());
+		Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
+		//System.out.println("rendering");
+		STLImageRenderer renderer = new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution);
+		//System.out.println("creating bufferedimage");
+		BufferedImage image = renderer.call();
+		//System.out.println(image.toString());
+
+		return image;
 	}
 
 	@Override

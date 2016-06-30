@@ -44,20 +44,21 @@
 			<!-- Code added by Wilbur Shi -->
 			<div class="col-sm-7" id="preview"> 
 				<div class="preview-box"> 
-					<div class="panel panel-default">
+					<div class="panel panel-default" style="height:350px;">
 						<div class="panel-heading">Your STL Model</div>
-						<div style="height: 300px" class="panel-body">This is the preview box for this printable: {{printablesController.currentPrintable.name}}. Changes are also reflected here: {{printablesController.changeMsg}}</div>
+						<div class="panel-body">This is the preview box for this printable: {{printablesController.currentPrintable.name}}. Changes are also reflected here: {{printablesController.changeMsg}}
+						<img ng-src="{{printablesController.currentPreviewImg}}" class="img-responsive" style="width:100%; height:100%;"/>
 					</div>
 				</div>
-				<form>
-					<input type="checkbox" ng-model="printablesController.currentCustomizer.affineTransformSettings.yscale" ng-true-value="-1" ng-false-value="0" ng-change="printablesController.changeFlip()"> Flip image
+				<form hidden>
+					<input hidden type="checkbox" ng-model="printablesController.currentCustomizer.affineTransformSettings.yscale" ng-true-value="-1" ng-false-value="0" ng-change="printablesController.changeFlip()"> Flip image
 					<br>
 				</form>
-				<tt>Flipped = {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</tt><br>
-				<button class="btn btn-primary" ng-click="printablesController.test()">
+				<tt hidden>Flipped = {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</tt><br>
+<!-- 				<button hidden class="btn btn-primary" ng-click="printablesController.test()">
 										<i class="fa fa-upload"></i> 
 										<span>Test</span>
-									</button>
+									</button> -->
 			</div>
 			<!-- End code added by Wilbur Shi -->
 		</div>

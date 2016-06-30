@@ -7,9 +7,12 @@
 		this.currentCustomizer = null;
 		this.supportedFileTypes = null;
 
+		// Possibly have this to save the currentPreview png image
+		this.currentPreviewImg = null;
+
 	        
 	    // Code added by Wilbur Shi
-		controller.customizers = {};
+		this.customizers = {};
 
 		this.test = function test() {
 			$http.post("/services/customizers/customizerTest", controller.currentCustomizer).success(
@@ -21,6 +24,19 @@
 					console.log("error");
 				});
 			// console.log("Hi this is a test");
+		};
+
+		this.setPreview = function setPreview() {
+			var parameter = controller.currentCustomizer;
+			// do things with the currentCustomizer and get the png then set a variable like currentPreview to that png so that HTML page can display it
+			$http.post("/services/customizers/upsertCustomizer", parameter).success(
+				function (data) {
+					// console.log("reached success while rendering first slice image, browser side");
+				}).error(
+    				function (data, status, headers, config, statusText) {
+ 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
+	        		});
+			controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name;
 		};
 
 		this.refreshPrintables = function refreshPrintables() {
@@ -53,6 +69,7 @@
 					}
 					controller.currentPrintable = controller.printables[0];
 					controller.currentCustomizer = controller.customizers[controller.currentPrintable.name];
+					controller.setPreview();
         		}
 	        );
 	        // End code added by Wilbur Shi
@@ -63,6 +80,7 @@
 					controller.refreshPrintables();
 				}
 			}
+			// potentially add one for when customizerischanged to reset the preview again (this is the whole preview/customizer thing goes into a separate controller or somethng like that)
 		);
 		if (this.hostSocket === null) {
 			$scope.$emit("MachineResponse",  {machineResponse: {command:"Browser Too Old", message:"You will need to use a modern browser to run this application."}});
@@ -81,7 +99,8 @@
 					controller.changeMsg += "0";
 				}
 			}
-		}
+			this.setPreview();
+		};
 		// End code added by Wilbur Shi
 
 		this.printPrintable = function printPrintable() {
@@ -117,6 +136,7 @@
 			var currName = newPrintable.name;
 			// console.log(currName);
 			controller.currentCustomizer = controller.customizers[currName];
+			this.setPreview();
 			// // End code added by Wilbur Shi
 		};
 
