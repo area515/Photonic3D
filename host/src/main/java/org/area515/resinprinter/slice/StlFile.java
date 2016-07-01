@@ -85,15 +85,13 @@ public abstract class StlFile<T> {
    * @param parser The file parser. An instance of StlFileParser.
    */
   private void readEOL(StlFileParser parser) throws IOException {
-    try {
-    	parser.nextToken();
-    } catch (IOException e) {
-      throw new IOException("Error getting next token:" + parser, e);
-    }
-    
-    if(parser.ttype != StlFileParser.TT_EOL) {
-      throw new IOException("Format Error:expecting End Of Line on line " + parser.lineno());
-    }
+	try {
+		do {
+			parser.nextToken();
+		} while (parser.ttype != StlFileParser.TT_EOL);
+	} catch (IOException e) {
+	    throw new IOException("Error getting next token:" + parser, e);
+	}
   }
 
   /**
