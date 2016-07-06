@@ -1,5 +1,7 @@
 package org.area515.resinprinter.job;
 
+import java.awt.geom.AffineTransform; 
+
 public class Customizer {
 	private String name;
 	private String printerName;
@@ -9,23 +11,23 @@ public class Customizer {
 	private AffineTransformSettings affineTransformSettings;//null means it's not used event if this customizer does support the AffineTransform	
 	
 	public static class AffineTransformSettings {
-		private Integer xTranslate;//negative printerwidth for xflip
-		private Integer yTranslate;//negative printerlength for yflip
+		private Double xTranslate;//negative printerwidth for xflip
+		private Double yTranslate;//negative printerlength for yflip
 		private Double xScale;//-1 for xflip
 		private Double yScale;//-1 for yflip
 		private String affineTransformScriptCalculator;//Ignore this for now
 		
-		public Integer getXTranslate() {
+		public Double getXTranslate() {
 			return xTranslate;
 		}
-		public void setXTranslate(Integer xTranslate) {
+		public void setXTranslate(Double xTranslate) {
 			this.xTranslate = xTranslate;
 		}
 		
-		public Integer getYTranslate() {
+		public Double getYTranslate() {
 			return yTranslate;
 		}
-		public void setYTranslate(Integer yTranslate) {
+		public void setYTranslate(Double yTranslate) {
 			this.yTranslate = yTranslate;
 		}
 		
@@ -49,7 +51,22 @@ public class Customizer {
 		public void setAffineTransformScriptCalculator(String affineTransformScriptCalculator) {
 			this.affineTransformScriptCalculator = affineTransformScriptCalculator;
 		}
+
+		public AffineTransform createAffineTransform() {
+			AffineTransform affinetransform = new AffineTransform();
+			affinetransform.scale(this.xScale, this.yScale);
+			affinetransform.translate(this.xTranslate, this.yTranslate);
+			return affinetransform;
+		} 
+		
 	}
+
+	public AffineTransform getAffineTransform() {
+		// AffineTransform affinetransform = new AffineTransform();
+		// affinetransform.scale(affineTransformSettings.getXScale(), affineTransformSettings.getYScale());
+		// affinetransform.translate(affineTransformSettings.getXTranslate, affineTransformSettings.getYTranslate);
+		return this.affineTransformSettings.createAffineTransform();
+	} 
 
 	public String getPrintableExtension() {
 		return printableExtension;
