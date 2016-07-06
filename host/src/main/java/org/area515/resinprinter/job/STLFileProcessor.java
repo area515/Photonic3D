@@ -16,6 +16,8 @@ import java.io.*;
 import java.awt.image.*;
 import javax.imageio.*;
 
+import org.area515.resinprinter.exception.SlicerException;
+import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.job.render.RenderingFileData;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.SlicingProfile;
@@ -137,7 +139,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		}
 	}
 	//This method takes in an STL file and produces the first slice of the file
-	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws Exception {
+	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws SlicerException, NoPrinterFoundException {
 		
 
 		//find the first activePrinter

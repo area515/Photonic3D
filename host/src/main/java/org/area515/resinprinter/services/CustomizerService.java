@@ -29,6 +29,8 @@ import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.STLFileProcessor;
 import org.area515.resinprinter.job.Customizer;
+import org.area515.resinprinter.exception.SlicerException;
+import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.util.PrintFileFilter;
 
@@ -162,9 +164,13 @@ public class CustomizerService {
 						}
 					};
 					return stream;
-				} catch (Exception e) {
-					//System.out.println("lol something's broke and it aint me who's broke");
-					throw new IllegalArgumentException(e + " and cause: " + e.getCause());
+				} catch (NoPrinterFoundException e) {
+					// TODO: Handle no printer found exception
+					
+					// System.out.println("lol something's broke and it aint me who's broke");
+					// throw new IllegalArgumentException(e + " and cause: " + e.getCause());
+				} catch (SlicerException se) {
+					//TODO: Handle slicer exception
 				}
 			} else {
 				throw new IllegalArgumentException("Incorrect file type. Cannot display preview for non STL files as of now");
