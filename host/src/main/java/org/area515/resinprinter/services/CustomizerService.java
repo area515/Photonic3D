@@ -2,6 +2,9 @@ package org.area515.resinprinter.services;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -124,10 +127,13 @@ public class CustomizerService {
 	}
 
 	@ApiOperation(value="Renders the first slice of a printable based on the customizer")
+	    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("renderFirstSliceImage/{printableName}")
 	@Produces("image/png")
-	public StreamingOutput renderFirstSliceImage(@PathParam("printableName") String printableName) {
+	public StreamingOutput renderFirstSliceImage(@PathParam("printableName") String printableName) throws NoPrinterFoundException, SlicerException, Exception {
 		Customizer customizer = customizers.get(printableName);
 		if (customizer != null) {
 			String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
@@ -166,21 +172,21 @@ public class CustomizerService {
 					return stream;
 				} catch (NoPrinterFoundException e) {
 					// TODO: Handle no printer found exception
-					// throw e;
 					// console.log('no printers');
 					System.out.println("No printers");
+					throw e;
 					// System.out.println("lol something's broke and it aint me who's broke");
 					// throw new IllegalArgumentException(e + " and cause: " + e.getCause());
 				} catch (SlicerException se) {
 					//TODO: Handle slicer exception
 					// console.log('slicer error');
 					System.out.println("Slicer error");
-					// throw se;
+					throw se;
 				} catch (Exception e) {
 					// TODO: Some weird exception
 					// console.log('weird exception');
 					System.out.println("Weird exception");
-					// throw e;
+					throw e;
 				}
 			} else {
 				throw new IllegalArgumentException("Incorrect file type. Cannot display preview for non STL files as of now");

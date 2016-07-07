@@ -7,7 +7,6 @@
 		this.currentCustomizer = null;
 		this.supportedFileTypes = null;
 
-		// Possibly have this to save the currentPreview png image
 		this.currentPreviewImg = null;
 
 	        
@@ -15,38 +14,17 @@
 		this.customizers = {};
 		this.errorMsg = "asdf";
 
-		this.test = function test() {
-			$http.post("/services/customizers/customizerTest", controller.currentCustomizer).success(
-				function (data) {
-					console.log(data);
-				}
-			).error(
-				function (data) {
-					console.log("error");
-				});
-			// console.log("Hi this is a test");
-		};
-
-		cwhApp.directive('handleError', function() {
-			return {
-				link: function(scope, element, attrs) {
-					// attrs.style = "width:50%; height:100%;";
-					controller.errorMsg = "WHAT IS THIS";
-					// pc.errorMsg = "GOT INTO HANDLEERROR FUNCTION";
-					// element.bind('error', function() {
-					// 	// if (attrs.src) {
-					// 	// 	// Do stuff
-					// 	// 	controller.errorMsg = "EVERYTHING IS OKAY";
-					// 	// } else {
-					// 	// 	this.handlePreviewError();
-					// 	// }
-					// });
-				}
-			};
-		});
 
 		this.handlePreviewError = function handlePreviewError() {
-			controller.errorMsg = "TESTING HANDLE PREVIEW ERROR";
+			$http.get("/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name).success(
+				function (data) {
+
+				}).error(
+				function (data, status, headers, config, statusText) {
+					// $scope.$emit("HTTPError", {status:status, statusText:data});
+					controller.errorMsg = "Error: " + data;
+				})
+
 		}
 
 		this.setPreview = function setPreview() {
@@ -60,6 +38,18 @@
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		});
 			controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name;
+		};
+
+		this.changeCurrentPrintable = function changeCurrentPrintable(newPrintable) {
+			controller.currentPrintable = newPrintable;
+			// Code added by Wilbur Shi
+			var currName = newPrintable.name;
+			// console.log(currName);
+			controller.currentCustomizer = controller.customizers[currName];
+			// controller.handlePreviewError();
+			controller.errorMsg = "";
+			this.setPreview();
+			// // End code added by Wilbur Shi
 		};
 
 		this.refreshPrintables = function refreshPrintables() {
@@ -90,8 +80,7 @@
 						// console.log("we have customizer for " + controller.customizers.currName.name);
 						}				
 					}
-					controller.currentPrintable = controller.printables[0];
-					controller.currentCustomizer = controller.customizers[controller.currentPrintable.name];
+					controller.changeCurrentPrintable(controller.printables[0]);
 					controller.setPreview();
         		}
 	        );
@@ -153,15 +142,7 @@
 	        delete controller.customizers[printableName];
 	        this.refreshPrintables();
 	    };
-		this.changeCurrentPrintable = function changeCurrentPrintable(newPrintable) {
-			controller.currentPrintable = newPrintable;
-			// Code added by Wilbur Shi
-			var currName = newPrintable.name;
-			// console.log(currName);
-			controller.currentCustomizer = controller.customizers[currName];
-			this.setPreview();
-			// // End code added by Wilbur Shi
-		};
+
 
 		//TODO: When we get an upload complete message, we need to refresh file list...
 		this.showUpload = function showUpload() {
@@ -206,5 +187,23 @@
 
 		this.refreshPrintables();
 	}]);
+
+	cwhApp.directive('handleError', function() {
+			return {
+				link: function(scope, element, attrs) {
+					
+					var pc = scope.printablesController;
+
+					element.bind('error', function() {
+						// attrs.$set('handleError', "true");
+						pc.handlePreviewError();
+						scope.$apply();
+						// pc.errorMsg = "HANDLING Error";
+					});
+
+				}
+			};
+		});
+
 
 })();
