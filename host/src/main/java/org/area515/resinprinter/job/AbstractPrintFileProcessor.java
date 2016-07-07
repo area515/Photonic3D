@@ -2,6 +2,7 @@ package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.geom.AffineTransform; 
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -43,6 +44,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		public InkDetector inkDetector;
 		public long currentSliceTime;
 		public Paint maskPaint;
+		public AffineTransform affineTransform;
 
 		//should have affine transform matrix calculated here 
 		//store Affine Transform Object here
@@ -72,12 +74,9 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		//MOVE THIS TO CUSTOMIZER. 
 		//
 		//probably take affine transform from printer template & customizer's in future.
-		// public void setAffineTransformSettings(Customizer customizer) {
-		// 	xTranslate = customizer.getXTranslate();
-		// 	yTranslate = customizer.getYTranslate();
-		// 	xScale = customizer.getXScale();
-		// 	yScale = customizer.getYScale();
-		// }
+		public void setAffineTransform(Customizer customizer) {
+			this.affineTransform = customizer.getAffineTransform();
+		}
 	}
 	
 	public DataAid initializeDataAid(PrintJob printJob) throws InappropriateDeviceException {
