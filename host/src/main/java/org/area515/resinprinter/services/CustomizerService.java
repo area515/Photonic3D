@@ -171,21 +171,10 @@ public class CustomizerService {
 					};
 					return stream;
 				} catch (NoPrinterFoundException e) {
-					// TODO: Handle no printer found exception
-					// console.log('no printers');
-					System.out.println("No printers");
 					throw e;
-					// System.out.println("lol something's broke and it aint me who's broke");
-					// throw new IllegalArgumentException(e + " and cause: " + e.getCause());
 				} catch (SlicerException se) {
-					//TODO: Handle slicer exception
-					// console.log('slicer error');
-					System.out.println("Slicer error");
 					throw se;
 				} catch (Exception e) {
-					// TODO: Some weird exception
-					// console.log('weird exception');
-					System.out.println("Weird exception");
 					throw e;
 				}
 			} else {

@@ -8,11 +8,9 @@
 		this.supportedFileTypes = null;
 
 		this.currentPreviewImg = null;
-
-	        
-	    // Code added by Wilbur Shi
+   
 		this.customizers = {};
-		this.errorMsg = "asdf";
+		this.errorMsg = "";
 
 
 		this.handlePreviewError = function handlePreviewError() {
@@ -23,8 +21,7 @@
 				function (data, status, headers, config, statusText) {
 					// $scope.$emit("HTTPError", {status:status, statusText:data});
 					controller.errorMsg = "Error: " + data;
-				})
-
+				});
 		}
 
 		this.setPreview = function setPreview() {
@@ -42,14 +39,12 @@
 
 		this.changeCurrentPrintable = function changeCurrentPrintable(newPrintable) {
 			controller.currentPrintable = newPrintable;
-			// Code added by Wilbur Shi
 			var currName = newPrintable.name;
-			// console.log(currName);
+
+			// Set currentCustomizer to the customizer in the dictionary given the current printable name
 			controller.currentCustomizer = controller.customizers[currName];
-			// controller.handlePreviewError();
 			controller.errorMsg = "";
 			this.setPreview();
-			// // End code added by Wilbur Shi
 		};
 
 		this.refreshPrintables = function refreshPrintables() {
@@ -84,7 +79,6 @@
 					controller.setPreview();
         		}
 	        );
-	        // End code added by Wilbur Shi
 		};
 		this.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(
 			function(data) {
@@ -104,16 +98,13 @@
 				controller.changeMsg = controller.currentCustomizer.name + " yscale is ";
 				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
 				if (affineTransformSettings.yscale) {
-					// affineTransformSettings.yscale = -1;
 					controller.changeMsg += "-1";
 				} else {
-					// affineTransformSettings.yscale = 0;
 					controller.changeMsg += "0";
 				}
 			}
 			this.setPreview();
 		};
-		// End code added by Wilbur Shi
 
 		this.printPrintable = function printPrintable() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
@@ -195,10 +186,8 @@
 					var pc = scope.printablesController;
 
 					element.bind('error', function() {
-						// attrs.$set('handleError', "true");
 						pc.handlePreviewError();
 						scope.$apply();
-						// pc.errorMsg = "HANDLING Error";
 					});
 
 				}
