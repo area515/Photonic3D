@@ -1,6 +1,6 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	var pc = cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket) {
+	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket) {
 		controller = this;
 		
 		this.currentPrintable = null;
@@ -30,7 +30,7 @@
 		cwhApp.directive('handleError', function() {
 			return {
 				link: function(scope, element, attrs) {
-					attrs.style = "width:50%; height:100%;";
+					// attrs.style = "width:50%; height:100%;";
 					controller.errorMsg = "WHAT IS THIS";
 					// pc.errorMsg = "GOT INTO HANDLEERROR FUNCTION";
 					// element.bind('error', function() {
