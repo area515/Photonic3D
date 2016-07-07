@@ -170,7 +170,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 
 		//instantiate new dataaid 
 		DataAid dataAid = initializeDataAid(printJob);
-		//dataAid.setAffineTransformSettings(customizer);
+		dataAid.setAffineTransform(customizer);
 
 		RenderingFileData stlData = new RenderingFileData();
 		
