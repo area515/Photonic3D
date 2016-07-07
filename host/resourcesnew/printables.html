@@ -46,8 +46,10 @@
 				<div class="preview-box"> 
 					<div class="panel panel-default" style="height:350px;">
 						<div class="panel-heading">Your STL Model</div>
-						<div class="panel-body">This is the preview box for this printable: {{printablesController.currentPrintable.name}}. Changes are also reflected here: {{printablesController.changeMsg}}
-						<img ng-src="{{printablesController.currentPreviewImg}}" class="img-responsive" style="width:100%; height:100%;"/>
+						<div class="panel-body">This is the preview box for this printable: {{printablesController.currentPrintable.name}} {{printablesController.errorMsg}}
+							<!-- <div> {{printablesController.errorMsg}} </div> -->
+							<img ng-src="{{printablesController.currentPreviewImg}}" handle-error="what" class="img-responsive" style="width:100%; height:100%;"/>
+						</div>
 					</div>
 				</div>
 				<form hidden>

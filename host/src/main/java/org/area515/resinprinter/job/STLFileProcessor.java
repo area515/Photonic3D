@@ -139,7 +139,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		}
 	}
 	//This method takes in an STL file and produces the first slice of the file
-	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws SlicerException, NoPrinterFoundException {
+	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws Exception {
 		
 
 		//find the first activePrinter
@@ -161,7 +161,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 
 		if (activePrinter == null) {
 			System.out.println("No printers found.");
-			throw new Exception("No active printers.");
+			throw new NoPrinterFoundException("No active printers.");
 		}
 
 		//instantiate a new print job based on the jobFile and set its printer to activePrinter
@@ -182,7 +182,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
 		} catch (Exception e) {
 			System.out.println("Unsuccessful Slicing.");
-			throw new Exception("Unsuccessful Slicing.");
+			throw new SlicerException("Unsuccessful Slicing.");
 		}
 		//System.out.println("queueing for first image");	
 		

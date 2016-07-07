@@ -1,6 +1,6 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket) {
+	var pc = cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket) {
 		controller = this;
 		
 		this.currentPrintable = null;
@@ -13,6 +13,7 @@
 	        
 	    // Code added by Wilbur Shi
 		this.customizers = {};
+		this.errorMsg = "asdf";
 
 		this.test = function test() {
 			$http.post("/services/customizers/customizerTest", controller.currentCustomizer).success(
@@ -25,6 +26,28 @@
 				});
 			// console.log("Hi this is a test");
 		};
+
+		cwhApp.directive('handleError', function() {
+			return {
+				link: function(scope, element, attrs) {
+					attrs.style = "width:50%; height:100%;";
+					controller.errorMsg = "WHAT IS THIS";
+					// pc.errorMsg = "GOT INTO HANDLEERROR FUNCTION";
+					// element.bind('error', function() {
+					// 	// if (attrs.src) {
+					// 	// 	// Do stuff
+					// 	// 	controller.errorMsg = "EVERYTHING IS OKAY";
+					// 	// } else {
+					// 	// 	this.handlePreviewError();
+					// 	// }
+					// });
+				}
+			};
+		});
+
+		this.handlePreviewError = function handlePreviewError() {
+			controller.errorMsg = "TESTING HANDLE PREVIEW ERROR";
+		}
 
 		this.setPreview = function setPreview() {
 			var parameter = controller.currentCustomizer;
