@@ -7,26 +7,24 @@
 		this.currentCustomizer = null;
 		this.supportedFileTypes = null;
 
-		// Possibly have this to save the currentPreview png image
 		this.currentPreviewImg = null;
-
-	        
-	    // Code added by Wilbur Shi
+   
 		this.customizers = {};
+		this.errorMsg = "";
 
-		this.test = function test() {
-			$http.post("/services/customizers/customizerTest", controller.currentCustomizer).success(
+
+		this.handlePreviewError = function handlePreviewError() {
+			$http.get("/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name).success(
 				function (data) {
-					console.log(data);
-				}
-			).error(
-				function (data) {
-					console.log("error");
+
+				}).error(
+				function (data, status, headers, config, statusText) {
+					// $scope.$emit("HTTPError", {status:status, statusText:data});
+					controller.errorMsg = "Error: " + data;
 				});
-			// console.log("Hi this is a test");
-		};
+		}
 
-		this.setPreview = function setPreview() {
+		this.setPreview = function setPreview(reload) {
 			var parameter = controller.currentCustomizer;
 			// do things with the currentCustomizer and get the png then set a variable like currentPreview to that png so that HTML page can display it
 			$http.post("/services/customizers/upsertCustomizer", parameter).success(
@@ -36,7 +34,21 @@
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		});
+
 			controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name;
+			if (reload) {
+				controller.currentPreviewImg += '?decache=' + Math.random();
+			}
+		};
+
+		this.changeCurrentPrintable = function changeCurrentPrintable(newPrintable) {
+			controller.currentPrintable = newPrintable;
+			var currName = newPrintable.name;
+
+			// Set currentCustomizer to the customizer in the dictionary given the current printable name
+			controller.currentCustomizer = controller.customizers[currName];
+			controller.errorMsg = "";
+			this.setPreview(false);
 		};
 
 		this.refreshPrintables = function refreshPrintables() {
@@ -57,8 +69,8 @@
 								supportsAffineTransformSettings: true,
 								affineTransformSettings: {
 									affineTransformScriptCalculator: "placeholder",
-									xscale: 0,
-									yscale: 0,
+									xscale: 1,
+									yscale: 1,
 									xtranslate: 0,
 									ytranslate: 0
 								}
@@ -67,13 +79,12 @@
 						// console.log("we have customizer for " + controller.customizers.currName.name);
 						}				
 					}
-					controller.currentPrintable = controller.printables[0];
-					controller.currentCustomizer = controller.customizers[controller.currentPrintable.name];
-					controller.setPreview();
+					controller.changeCurrentPrintable(controller.printables[0]);
+					controller.setPreview(false);
         		}
 	        );
-	        // End code added by Wilbur Shi
 		};
+
 		this.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(
 			function(data) {
 				if (data.notificationEvent == "FileUploadComplete") {
@@ -91,17 +102,14 @@
 				//customizer returns a json object. js side only knows api
 				controller.changeMsg = controller.currentCustomizer.name + " yscale is ";
 				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
-				if (affineTransformSettings.yscale) {
-					// affineTransformSettings.yscale = -1;
-					controller.changeMsg += "-1";
-				} else {
-					// affineTransformSettings.yscale = 0;
-					controller.changeMsg += "0";
-				}
+				// if (affineTransformSettings.yscale ) {
+					controller.changeMsg += affineTransformSettings.yscale;
+				// } else {
+				// 	controller.changeMsg += "1";
+				// }
 			}
-			this.setPreview();
+			this.setPreview(true);
 		};
-		// End code added by Wilbur Shi
 
 		this.printPrintable = function printPrintable() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
@@ -130,15 +138,7 @@
 	        delete controller.customizers[printableName];
 	        this.refreshPrintables();
 	    };
-		this.changeCurrentPrintable = function changeCurrentPrintable(newPrintable) {
-			controller.currentPrintable = newPrintable;
-			// Code added by Wilbur Shi
-			var currName = newPrintable.name;
-			// console.log(currName);
-			controller.currentCustomizer = controller.customizers[currName];
-			this.setPreview();
-			// // End code added by Wilbur Shi
-		};
+
 
 		//TODO: When we get an upload complete message, we need to refresh file list...
 		this.showUpload = function showUpload() {
@@ -183,5 +183,21 @@
 
 		this.refreshPrintables();
 	}]);
+
+	cwhApp.directive('handleError', function() {
+			return {
+				link: function(scope, element, attrs) {
+					
+					var pc = scope.printablesController;
+
+					element.bind('error', function() {
+						pc.handlePreviewError();
+						scope.$apply();
+					});
+
+				}
+			};
+		});
+
 
 })();

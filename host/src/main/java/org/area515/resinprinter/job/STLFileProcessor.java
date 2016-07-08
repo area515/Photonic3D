@@ -16,6 +16,8 @@ import java.io.*;
 import java.awt.image.*;
 import javax.imageio.*;
 
+import org.area515.resinprinter.exception.SlicerException;
+import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.job.render.RenderingFileData;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.SlicingProfile;
@@ -159,7 +161,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 
 		if (activePrinter == null) {
 			System.out.println("No printers found.");
-			throw new Exception("No active printers.");
+			throw new NoPrinterFoundException("No active printers.");
 		}
 
 		//instantiate a new print job based on the jobFile and set its printer to activePrinter
@@ -180,7 +182,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
 		} catch (Exception e) {
 			System.out.println("Unsuccessful Slicing.");
-			throw new Exception("Unsuccessful Slicing.");
+			throw new SlicerException("Unsuccessful Slicing.");
 		}
 		//System.out.println("queueing for first image");	
 		

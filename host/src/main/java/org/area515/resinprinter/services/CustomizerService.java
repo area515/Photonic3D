@@ -2,6 +2,9 @@ package org.area515.resinprinter.services;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -29,6 +32,8 @@ import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.STLFileProcessor;
 import org.area515.resinprinter.job.Customizer;
+import org.area515.resinprinter.exception.SlicerException;
+import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.util.PrintFileFilter;
 
@@ -122,10 +127,13 @@ public class CustomizerService {
 	}
 
 	@ApiOperation(value="Renders the first slice of a printable based on the customizer")
+	    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("renderFirstSliceImage/{printableName}")
 	@Produces("image/png")
-	public StreamingOutput renderFirstSliceImage(@PathParam("printableName") String printableName) {
+	public StreamingOutput renderFirstSliceImage(@PathParam("printableName") String printableName) throws NoPrinterFoundException, SlicerException, Exception {
 		Customizer customizer = customizers.get(printableName);
 		if (customizer != null) {
 			String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
@@ -162,9 +170,12 @@ public class CustomizerService {
 						}
 					};
 					return stream;
+				} catch (NoPrinterFoundException e) {
+					throw e;
+				} catch (SlicerException se) {
+					throw se;
 				} catch (Exception e) {
-					//System.out.println("lol something's broke and it aint me who's broke");
-					throw new IllegalArgumentException(e + " and cause: " + e.getCause());
+					throw e;
 				}
 			} else {
 				throw new IllegalArgumentException("Incorrect file type. Cannot display preview for non STL files as of now");
