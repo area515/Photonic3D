@@ -281,7 +281,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
-		if (bi != null) {
+		if (img != null) {
 			BufferedImage after = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 			AffineTransformOp transOp = 
 			   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);

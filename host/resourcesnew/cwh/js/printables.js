@@ -103,7 +103,7 @@
 				controller.changeMsg = controller.currentCustomizer.name + " yscale is ";
 				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
 				// if (affineTransformSettings.yscale ) {
-					controller.changeMsg += affineTransformSettings.yscale;
+					controller.changeMsg = affineTransformSettings.yscale;
 				// } else {
 				// 	controller.changeMsg += "1";
 				// }
