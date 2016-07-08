@@ -275,6 +275,9 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 
 	public void applyImageTransforms(DataAid aid, Graphics2D g2, int width, int height) throws ScriptException {
 //		g2.setTransform(aid.affineTransform);
+		if (aid == null) {
+			throw new IllegalStateException("initializeDataAid must be called before this method");
+		}
 		g2.transform(aid.affineTransform);
 		System.out.println(aid.affineTransform);
 		applyBulbMask(aid, g2, width, height);
