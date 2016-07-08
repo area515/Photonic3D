@@ -41,7 +41,6 @@
 					</div>			
 				</div>
 			</div>
-			<!-- Code added by Wilbur Shi -->
 			<div class="col-sm-7" id="preview"> 
 				<div class="preview-box"> 
 					<div class="panel panel-default" style="height:450px;">
@@ -52,17 +51,17 @@
 						</div>
 					</div>
 				</div>
-				<form hidden>
+				<form >
+					<input type="checkbox" ng-model="printablesController.currentCustomizer.affineTransformSettings.yscale" ng-true-value="-1" ng-false-value="0" ng-change="printablesController.changeFlip()"> Flip image
+					<br>
+				</form>
+				<tt >Flipped = {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</tt><br>
+				<!-- <form hidden>
 					<input hidden type="checkbox" ng-model="printablesController.currentCustomizer.affineTransformSettings.yscale" ng-true-value="-1" ng-false-value="0" ng-change="printablesController.changeFlip()"> Flip image
 					<br>
 				</form>
-				<tt hidden>Flipped = {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</tt><br>
-<!-- 				<button hidden class="btn btn-primary" ng-click="printablesController.test()">
-										<i class="fa fa-upload"></i> 
-										<span>Test</span>
-									</button> -->
+				<tt hidden>Flipped = {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</tt><br> -->
 			</div>
-			<!-- End code added by Wilbur Shi -->
 		</div>
 	<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="editModal" aria-hidden="true">
 		<div class="modal-dialog">

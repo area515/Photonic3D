@@ -119,7 +119,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 							String imageFilename = FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png";
 							File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
 							BufferedImage newImage = ImageIO.read(imageFile);
-							applyBulbMask(aid, (Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
+							applyImageTransforms(aid, (Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
 							currentlyDisplayedImage.put(printJob, newImage);
 							logger.info("Show picture: {}", imageFilename);
 							

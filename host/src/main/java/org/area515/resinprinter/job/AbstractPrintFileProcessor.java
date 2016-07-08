@@ -247,7 +247,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			throw new IllegalArgumentException("The result of your " + calculationName + " needs to evaluate to an instance of java.lang.Number");
 		}
 	}
-	
+
 	public void applyBulbMask(DataAid aid, Graphics2D g2, int width, int height) throws ScriptException {
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
@@ -270,5 +270,13 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		} catch (ClassCastException e) {
 			throw new IllegalArgumentException("The result of your bulb mask script needs to evaluate to an instance of java.awt.Paint");
 		}
+	}
+
+
+	public void applyImageTransforms(DataAid aid, Graphics2D g2, int width, int height) throws ScriptException {
+//		g2.setTransform(aid.affineTransform);
+		g2.transform(aid.affineTransform);
+		System.out.println(aid.affineTransform);
+		applyBulbMask(aid, g2, width, height);
 	}
 }
