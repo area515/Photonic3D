@@ -35,7 +35,9 @@ public abstract class CurrentImageRenderer implements Callable<BufferedImage> {
 			RenderingFileData.ImageData imageData = data.get(imageIndexToBuild);
 			BufferedImage image = data.getCurrentImage();
 			Graphics2D graphics = (Graphics2D)image.getGraphics();
+			graphics.transform(aid.affineTransform);
 			renderImage(image, graphics, imageData);
+			// graphics.drawRenderedImage(image, aid.affineTransform);
 			processor.applyImageTransforms(aid, graphics, width, height);
 			return data.getCurrentImage();
 		} finally {

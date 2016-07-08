@@ -69,8 +69,8 @@
 								supportsAffineTransformSettings: true,
 								affineTransformSettings: {
 									affineTransformScriptCalculator: "placeholder",
-									xscale: 0,
-									yscale: 0,
+									xscale: 1,
+									yscale: 1,
 									xtranslate: 0,
 									ytranslate: 0
 								}
@@ -102,11 +102,11 @@
 				//customizer returns a json object. js side only knows api
 				controller.changeMsg = controller.currentCustomizer.name + " yscale is ";
 				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
-				if (affineTransformSettings.yscale) {
-					controller.changeMsg += "-1";
-				} else {
-					controller.changeMsg += "0";
-				}
+				// if (affineTransformSettings.yscale ) {
+					controller.changeMsg += affineTransformSettings.yscale;
+				// } else {
+				// 	controller.changeMsg += "1";
+				// }
 			}
 			this.setPreview(true);
 		};

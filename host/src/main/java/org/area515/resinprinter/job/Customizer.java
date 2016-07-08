@@ -55,6 +55,9 @@ public class Customizer {
 		public AffineTransform createAffineTransform() {
 			AffineTransform affinetransform = new AffineTransform();
 			affinetransform.scale(this.xScale, this.yScale);
+			// affinetransform.scale(1, 1);
+			// affinetransform.rotate(Math.toRadians(90));
+			// affinetransform.translate(0, 0);
 			affinetransform.translate(this.xTranslate, this.yTranslate);
 			return affinetransform;
 		} 
