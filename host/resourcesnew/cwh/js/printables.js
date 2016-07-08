@@ -68,7 +68,7 @@
 								printableExtension: currPrint.extension,
 								supportsAffineTransformSettings: true,
 								affineTransformSettings: {
-									affineTransformScriptCalculator: null,
+									// affineTransformScriptCalculator: null,
 									xscale: 1,
 									yscale: 1,
 									xtranslate: 0,

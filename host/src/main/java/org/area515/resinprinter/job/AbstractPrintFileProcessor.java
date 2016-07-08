@@ -2,7 +2,8 @@ package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
 import java.awt.Paint;
-import java.awt.geom.AffineTransform; 
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -273,13 +274,18 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 	}
 
 
-	public void applyImageTransforms(DataAid aid, Graphics2D g2, int width, int height) throws ScriptException {
+	public void applyImageTransforms(DataAid aid, BufferedImage bi, int width, int height) throws ScriptException {
 //		g2.setTransform(aid.affineTransform);
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
-		g2.transform(aid.affineTransform);
-		System.out.println(g2.getTransform());
-		applyBulbMask(aid, g2, width, height);
+		if (bi != null) {
+			Graphics2D g2 = (Graphics2D) bi.getGraphics();
+//		g2.transform(aid.affineTransform);
+			System.out.println(g2.getTransform());
+			applyBulbMask(aid, g2, width, height);
+		}
+
+		// TODO: Do the AffineTransformOp here
 	}
 }

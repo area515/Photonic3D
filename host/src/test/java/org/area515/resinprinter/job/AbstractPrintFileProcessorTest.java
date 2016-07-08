@@ -1,6 +1,7 @@
 package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 
 import javax.script.ScriptException;
 
@@ -94,7 +95,8 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getProjectorGradientCalculator()).thenReturn("var mm = $buildAreaMM * 2;java.awt.Color.ORANGE");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
 		DataAid aid = processor.initializeDataAid(printJob);
-		processor.applyImageTransforms(aid, graphics, 0, 0);
+//		processor.applyImageTransforms(aid, graphics, 0, 0);
+		processor.applyImageTransforms(aid, null, 0, 0);
 	}
 
 	@Test
