@@ -16,6 +16,9 @@ import java.io.*;
 import java.awt.image.*;
 import javax.imageio.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.SlicerException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.job.render.RenderingFileData;
@@ -36,6 +39,7 @@ import org.area515.resinprinter.services.PrinterService;
 
 
 public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> {
+	private static final Logger logger = LogManager.getLogger();
 	private Map<PrintJob, RenderingFileData> dataByPrintJob = new HashMap<PrintJob, RenderingFileData>();
 
 	@Override
@@ -139,8 +143,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		}
 	}
 	//This method takes in an STL file and produces the first slice of the file
-	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws Exception {
-		
+	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws NoPrinterFoundException, SlicerException {
 
 		//find the first activePrinter
 		String printerName = customizer.getPrinterName();
@@ -155,47 +158,45 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 				}
 			}
 		} else {
-			activePrinter = PrinterService.INSTANCE.getPrinter(printerName);
+			try {
+				activePrinter = PrinterService.INSTANCE.getPrinter(printerName);
+			} catch (InappropriateDeviceException e) {
+				logger.warn("Could not locate printer {}", printerName, e);
+			}
 		}
 		
 
 		if (activePrinter == null) {
-			System.out.println("No printers found.");
-			throw new NoPrinterFoundException("No active printers.");
+			throw new NoPrinterFoundException("No printers found for slice preview. You must have a started printer or specify a valid printer in the Customizer.");
 		}
 
-		//instantiate a new print job based on the jobFile and set its printer to activePrinter
-		PrintJob printJob = new PrintJob(jobFile);
-		printJob.setPrinter(activePrinter);
-
-		//instantiate new dataaid 
-		DataAid dataAid = initializeDataAid(printJob);
-		dataAid.setAffineTransform(customizer);
-
-		RenderingFileData stlData = new RenderingFileData();
-		
 		try {
-			stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, new CloseOffMend());
-			//System.out.println("step 1");
-			stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(dataAid.xResolution), new Double(dataAid.yResolution));
-			//System.out.println("step 2");
-			printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
-		} catch (Exception e) {
-			System.out.println("Unsuccessful Slicing.");
-			throw new SlicerException("Unsuccessful Slicing.");
-		}
-		//System.out.println("queueing for first image");	
-		
-		//Get the slicer queued up for the first image;
-		stlData.slicer.setZIndex(stlData.slicer.getZMinIndex());
-		Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
-		//System.out.println("rendering");
-		STLImageRenderer renderer = new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution);
-		//System.out.println("creating bufferedimage");
-		BufferedImage image = renderer.call();
-		//System.out.println(image.toString());
+			//instantiate a new print job based on the jobFile and set its printer to activePrinter
+			PrintJob printJob = new PrintJob(jobFile);
+			printJob.setPrinter(activePrinter);
 
-		return image;
+			//instantiate new dataaid
+			DataAid dataAid = initializeDataAid(printJob);
+			dataAid.setAffineTransform(customizer);
+
+			RenderingFileData stlData = new RenderingFileData();
+
+			stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, new CloseOffMend());
+			stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(dataAid.xResolution), new Double(dataAid.yResolution));
+			printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
+
+			//Get the slicer queued up for the first image;
+			stlData.slicer.setZIndex(stlData.slicer.getZMinIndex());
+			Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
+			STLImageRenderer renderer = new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution);
+			BufferedImage image = renderer.call();
+
+			return image;
+
+		} catch (Exception e) {
+			logger.error(e);
+			throw new SlicerException(e);
+		}
 	}
 
 	@Override

@@ -133,35 +133,28 @@ public class CustomizerService {
 	@GET
 	@Path("renderFirstSliceImage/{printableName}")
 	@Produces("image/png")
-	public StreamingOutput renderFirstSliceImage(@PathParam("printableName") String printableName) throws NoPrinterFoundException, SlicerException, Exception {
+	public StreamingOutput renderFirstSliceImage(@PathParam("printableName") String printableName) throws NoPrinterFoundException, SlicerException {
 		Customizer customizer = customizers.get(printableName);
 		if (customizer != null) {
 			String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
-			//System.out.println("File name: " + fileName);
 			File file = new File(HostProperties.Instance().getUploadDir(), fileName);
 
 			PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
-			//System.out.println("Processor step");
 			if (processor instanceof STLFileProcessor) {
 				STLFileProcessor stlfileprocessor = (STLFileProcessor) processor;
 				try {
-					//System.out.println("====PreviewSlice====");
 					BufferedImage img = stlfileprocessor.previewSlice(customizer, file);
 
-					System.out.println("just got the bufferedimg from previewSlice");
+					logger.debug("just got the bufferedimg from previewSlice");
 
-					//System.out.println("about to write");
 
 					StreamingOutput stream = new StreamingOutput() {
 						@Override
 						public void write(OutputStream output) throws IOException, WebApplicationException {
 							try {
-								//System.out.println("writing image");
 								ImageIO.write(img, "PNG", output);
 
-								System.out.println("Writing the img");
-
-								//System.out.println("Wrote the image lmao");
+								logger.debug("Writing the img");
 
 							} catch (IOException e) {
 								//System.out.println("failed writing");
@@ -172,9 +165,7 @@ public class CustomizerService {
 					return stream;
 				} catch (NoPrinterFoundException e) {
 					throw e;
-				} catch (SlicerException se) {
-					throw se;
-				} catch (Exception e) {
+				} catch (SlicerException e) {
 					throw e;
 				}
 			} else {

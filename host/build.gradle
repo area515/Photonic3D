@@ -121,7 +121,7 @@ grgit = Grgit.open(project.file('..'));
 def commitVersion = "unknown";
 
 mainClassName = "org.area515.resinprinter.server.Main"
-applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=log4j2.properties"]
+applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=conf/eclipselog4j2.properties"]
 applicationName = 'photonic3d'
 jar.archiveName = 'photonic3d.jar'
 
