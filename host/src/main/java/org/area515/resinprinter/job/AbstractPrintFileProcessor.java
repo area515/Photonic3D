@@ -266,7 +266,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 				aid.maskPaint = (Paint)TemplateEngine.runScript(aid.printJob, aid.printer, aid.scriptEngine, aid.slicingProfile.getProjectorGradientCalculator(), "projector gradient script", null);
 			}
 			g2.setPaint(aid.maskPaint);
-			g2.fillRect(0, 0, width, height / 2);
+			g2.fillRect(0, 0, width, height);
 		} catch (ClassCastException e) {
 			throw new IllegalArgumentException("The result of your bulb mask script needs to evaluate to an instance of java.awt.Paint");
 		}
