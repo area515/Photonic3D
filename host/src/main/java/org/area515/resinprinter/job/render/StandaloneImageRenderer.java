@@ -35,6 +35,8 @@ public class StandaloneImageRenderer implements Callable<StandaloneImageData> {
 		long pixelArea = computePixelArea(image);
 		image = processor.applyImageTransforms(aid, image, image.getWidth(), image.getHeight());
 		processor.applyBulbMask(aid, (Graphics2D)image.getGraphics(), image.getWidth(), image.getHeight());
+		//WILBUR:
+		//processor.applyImageTransforms(aid, image, image.getWidth(), image.getHeight());
 		logger.info("Loaded {}  with {} non-black pixels in {}ms", imageFile.getName(), pixelArea, System.currentTimeMillis()-startTime);
 		return new StandaloneImageData(image, pixelArea);
 	}

@@ -268,24 +268,32 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 				aid.maskPaint = (Paint)TemplateEngine.runScript(aid.printJob, aid.printer, aid.scriptEngine, aid.slicingProfile.getProjectorGradientCalculator(), "projector gradient script", null);
 			}
 			g2.setPaint(aid.maskPaint);
-			g2.fillRect(0, 0, width, height / 2);
+			g2.fillRect(0, 0, width, height);
 		} catch (ClassCastException e) {
 			throw new IllegalArgumentException("The result of your bulb mask script needs to evaluate to an instance of java.awt.Paint");
 		}
 	}
 
 
+
+	//public void applyImageTransforms(DataAid aid, BufferedImage bi, int width, int height) throws ScriptException {
 	public BufferedImage applyImageTransforms(DataAid aid, BufferedImage img, int width, int height) throws ScriptException {
-//		BufferedImage before = getBufferedImage(encoded);
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
-		BufferedImage after = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		AffineTransformOp transOp = 
-		   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
-		after = transOp.filter(img, after);	
-
-		// applyBulbMask(aid, (Graphics2D)after.getGraphics(), width, height);
-		return after;
+		if (bi != null) {
+			BufferedImage after = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+			AffineTransformOp transOp = 
+			   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
+			after = transOp.filter(img, after);	
+			return after;
+		}
+// 		if (bi != null) {
+// 			Graphics2D g2 = (Graphics2D) bi.getGraphics();
+// //		g2.transform(aid.affineTransform);
+// 			System.out.println(g2.getTransform());
+// 			applyBulbMask(aid, g2, width, height);
+// 		}
+		return null;
 	}
 }
