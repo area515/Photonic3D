@@ -89,9 +89,10 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 					//graphics.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
 					graphics.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
 				}
-				
-//				applyImageTransforms(data, graphics, data.xResolution, data.yResolution);
-				applyImageTransforms(data, image, data.xResolution, data.yResolution);
+				//applyImageTransforms(data, graphics, data.xResolution, data.yResolution);
+				applyBulbMask(data, graphics, data.xResolution, data.yResolution);
+				//WILBUR
+				//applyImageTransforms(data, image, data.xResolution, data.yResolution);
 				data.printer.showImage(image);
 				printCube.currentImage = image;
 				

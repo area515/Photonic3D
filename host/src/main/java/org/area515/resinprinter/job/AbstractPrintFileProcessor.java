@@ -2,8 +2,9 @@ package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
 import java.awt.Paint;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.geom.AffineTransform; 
+import java.awt.image.AffineTransformOp;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -45,7 +46,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		public InkDetector inkDetector;
 		public long currentSliceTime;
 		public Paint maskPaint;
-		public AffineTransform affineTransform;
+		public AffineTransform affineTransform = new AffineTransform();
 
 		//should have affine transform matrix calculated here 
 		//store Affine Transform Object here
@@ -274,18 +275,25 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 	}
 
 
-	public void applyImageTransforms(DataAid aid, BufferedImage bi, int width, int height) throws ScriptException {
-//		g2.setTransform(aid.affineTransform);
+
+	//public void applyImageTransforms(DataAid aid, BufferedImage bi, int width, int height) throws ScriptException {
+	public BufferedImage applyImageTransforms(DataAid aid, BufferedImage img, int width, int height) throws ScriptException {
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
 		if (bi != null) {
-			Graphics2D g2 = (Graphics2D) bi.getGraphics();
-//		g2.transform(aid.affineTransform);
-			System.out.println(g2.getTransform());
-			applyBulbMask(aid, g2, width, height);
+			BufferedImage after = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+			AffineTransformOp transOp = 
+			   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
+			after = transOp.filter(img, after);	
+			return after;
 		}
-
-		// TODO: Do the AffineTransformOp here
+// 		if (bi != null) {
+// 			Graphics2D g2 = (Graphics2D) bi.getGraphics();
+// //		g2.transform(aid.affineTransform);
+// 			System.out.println(g2.getTransform());
+// 			applyBulbMask(aid, g2, width, height);
+// 		}
+		return null;
 	}
 }
