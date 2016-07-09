@@ -40,6 +40,12 @@ public class AbstractPrintFileProcessorTest {
 		} catch (IllegalStateException e) {
 		}
 		try {
+			//applyimagetransform
+			processor.applyImageTransforms(aid, null, 0, 0);
+			Assert.fail("Failed to throw IllegalStateException.");
+		} catch (IllegalStateException e) {
+		}
+		try {
 			processor.performFooter(aid);
 			Assert.fail("Failed to throw IllegalStateException.");
 		} catch (IllegalStateException e) {

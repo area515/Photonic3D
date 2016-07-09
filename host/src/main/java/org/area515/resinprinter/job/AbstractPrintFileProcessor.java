@@ -77,7 +77,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		//
 		//probably take affine transform from printer template & customizer's in future.
 		public void setAffineTransform(Customizer customizer) {
-			this.affineTransform = customizer.getAffineTransform();
+			this.affineTransform = customizer.createAffineTransform();
 		}
 	}
 	
@@ -281,19 +281,21 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
-		if (img != null) {
-			BufferedImage after = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-			AffineTransformOp transOp = 
-			   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
-			after = transOp.filter(img, after);	
-			return after;
+		if (img == null) {
+			throw new IllegalStateException("BufferedImage is null");
 		}
-// 		if (bi != null) {
-// 			Graphics2D g2 = (Graphics2D) bi.getGraphics();
-// //		g2.transform(aid.affineTransform);
-// 			System.out.println(g2.getTransform());
-// 			applyBulbMask(aid, g2, width, height);
-// 		}
-		return null;
+
+		BufferedImage after = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		if(aid.affineTransform.getScaleY() == -1) { 
+			aid.affineTransform.translate(0., -height);
+		}
+		AffineTransformOp transOp = 
+		   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
+		after = transOp.filter(img, after);	
+		//System.out.println("affineTranform's yscale = " + aid.affineTransform.getScaleY());
+		applyBulbMask(aid, (Graphics2D)after.getGraphics(), width, height);
+		return after;
+
+		
 	}
 }
