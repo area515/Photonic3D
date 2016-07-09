@@ -21,10 +21,12 @@ public class Customizer {
 			return xTranslate;
 		}
 		public void setXTranslate(Double xTranslate) {
+			//check width bounds
 			this.xTranslate = xTranslate;
 		}
 		
 		public Double getYTranslate() {
+			//check height bounds
 			return yTranslate;
 		}
 		public void setYTranslate(Double yTranslate) {
@@ -58,7 +60,7 @@ public class Customizer {
 			// affinetransform.scale(1, 1);
 			// affinetransform.rotate(Math.toRadians(90));
 			// affinetransform.translate(0, 0);
-			//affinetransform.translate(this.xTranslate, this.yTranslate);
+			affinetransform.translate(this.xTranslate, this.yTranslate);
 			return affinetransform;
 		} 
 		
