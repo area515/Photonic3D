@@ -58,13 +58,13 @@ public class Customizer {
 			// affinetransform.scale(1, 1);
 			// affinetransform.rotate(Math.toRadians(90));
 			// affinetransform.translate(0, 0);
-			affinetransform.translate(this.xTranslate, this.yTranslate);
+			//affinetransform.translate(this.xTranslate, this.yTranslate);
 			return affinetransform;
 		} 
 		
 	}
 
-	public AffineTransform getAffineTransform() {
+	public AffineTransform createAffineTransform() {
 		// AffineTransform affinetransform = new AffineTransform();
 		// affinetransform.scale(affineTransformSettings.getXScale(), affineTransformSettings.getYScale());
 		// affinetransform.translate(affineTransformSettings.getXTranslate, affineTransformSettings.getYTranslate);
