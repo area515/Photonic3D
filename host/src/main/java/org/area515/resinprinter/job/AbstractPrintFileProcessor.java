@@ -286,9 +286,14 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 
 		BufferedImage after = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		if(aid.affineTransform.getScaleY() == -1) { 
-			aid.affineTransform.translate(0., -height);
-		}
+		// if(aid.affineTransform.getScaleY() == -1) { 
+		// 	aid.affineTransform.translate(0., -height);
+		// }
+		// after.getMinX() + i
+		// aid.affineTransform.translate(img.getMinX() - after.getMinX(), img.getMinY() - after.getMinY());
+		double yOff = -(height - (aid.affineTransform.getScaleY()*height))/2;
+		double xOff = -(width - (aid.affineTransform.getScaleX()*width))/2;
+		aid.affineTransform.translate(xOff, yOff);
 		AffineTransformOp transOp = 
 		   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
 		after = transOp.filter(img, after);	
