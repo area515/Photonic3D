@@ -2,7 +2,9 @@ package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.image.BufferedImage;
 import java.awt.geom.AffineTransform; 
+import java.awt.image.AffineTransformOp;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -44,7 +46,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		public InkDetector inkDetector;
 		public long currentSliceTime;
 		public Paint maskPaint;
-		public AffineTransform affineTransform;
+		public AffineTransform affineTransform = new AffineTransform();
 
 		//should have affine transform matrix calculated here 
 		//store Affine Transform Object here
@@ -75,7 +77,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		//
 		//probably take affine transform from printer template & customizer's in future.
 		public void setAffineTransform(Customizer customizer) {
-			this.affineTransform = customizer.getAffineTransform();
+			this.affineTransform = customizer.createAffineTransform();
 		}
 	}
 	
@@ -247,7 +249,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			throw new IllegalArgumentException("The result of your " + calculationName + " needs to evaluate to an instance of java.lang.Number");
 		}
 	}
-	
+
 	public void applyBulbMask(DataAid aid, Graphics2D g2, int width, int height) throws ScriptException {
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
@@ -270,5 +272,30 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		} catch (ClassCastException e) {
 			throw new IllegalArgumentException("The result of your bulb mask script needs to evaluate to an instance of java.awt.Paint");
 		}
+	}
+
+
+
+	//public void applyImageTransforms(DataAid aid, BufferedImage bi, int width, int height) throws ScriptException {
+	public BufferedImage applyImageTransforms(DataAid aid, BufferedImage img, int width, int height) throws ScriptException {
+		if (aid == null) {
+			throw new IllegalStateException("initializeDataAid must be called before this method");
+		}
+		if (img == null) {
+			throw new IllegalStateException("BufferedImage is null");
+		}
+
+		BufferedImage after = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		if(aid.affineTransform.getScaleY() == -1) { 
+			aid.affineTransform.translate(0., -height);
+		}
+		AffineTransformOp transOp = 
+		   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
+		after = transOp.filter(img, after);	
+		//System.out.println("affineTranform's yscale = " + aid.affineTransform.getScaleY());
+		applyBulbMask(aid, (Graphics2D)after.getGraphics(), width, height);
+		return after;
+
+		
 	}
 }

@@ -24,7 +24,7 @@
 				});
 		}
 
-		this.setPreview = function setPreview() {
+		this.setPreview = function setPreview(reload) {
 			var parameter = controller.currentCustomizer;
 			// do things with the currentCustomizer and get the png then set a variable like currentPreview to that png so that HTML page can display it
 			$http.post("/services/customizers/upsertCustomizer", parameter).success(
@@ -34,7 +34,11 @@
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		});
+
 			controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name;
+			if (reload) {
+				controller.currentPreviewImg += '?decache=' + Math.random();
+			}
 		};
 
 		this.changeCurrentPrintable = function changeCurrentPrintable(newPrintable) {
@@ -44,7 +48,7 @@
 			// Set currentCustomizer to the customizer in the dictionary given the current printable name
 			controller.currentCustomizer = controller.customizers[currName];
 			controller.errorMsg = "";
-			this.setPreview();
+			this.setPreview(false);
 		};
 
 		this.refreshPrintables = function refreshPrintables() {
@@ -64,9 +68,9 @@
 								printableExtension: currPrint.extension,
 								supportsAffineTransformSettings: true,
 								affineTransformSettings: {
-									affineTransformScriptCalculator: "placeholder",
-									xscale: 0,
-									yscale: 0,
+									// affineTransformScriptCalculator: null,
+									xscale: 1,
+									yscale: 1,
 									xtranslate: 0,
 									ytranslate: 0
 								}
@@ -76,10 +80,11 @@
 						}				
 					}
 					controller.changeCurrentPrintable(controller.printables[0]);
-					controller.setPreview();
+					controller.setPreview(false);
         		}
 	        );
 		};
+
 		this.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(
 			function(data) {
 				if (data.notificationEvent == "FileUploadComplete") {
@@ -97,13 +102,13 @@
 				//customizer returns a json object. js side only knows api
 				controller.changeMsg = controller.currentCustomizer.name + " yscale is ";
 				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
-				if (affineTransformSettings.yscale) {
-					controller.changeMsg += "-1";
-				} else {
-					controller.changeMsg += "0";
-				}
+				// if (affineTransformSettings.yscale ) {
+					controller.changeMsg = affineTransformSettings.yscale;
+				// } else {
+				// 	controller.changeMsg += "1";
+				// }
 			}
-			this.setPreview();
+			this.setPreview(true);
 		};
 
 		this.printPrintable = function printPrintable() {
