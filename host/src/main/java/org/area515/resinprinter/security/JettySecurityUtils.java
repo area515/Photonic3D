@@ -55,7 +55,6 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import sun.security.x509.AlgorithmId;
 import sun.security.x509.CertificateAlgorithmId;
-import sun.security.x509.CertificateExtensions;
 import sun.security.x509.CertificateIssuerName;
 import sun.security.x509.CertificateSerialNumber;
 import sun.security.x509.CertificateSubjectName;
@@ -65,8 +64,6 @@ import sun.security.x509.CertificateX509Key;
 import sun.security.x509.X500Name;
 import sun.security.x509.X509CertImpl;
 import sun.security.x509.X509CertInfo;
-import sun.security.x509.SubjectKeyIdentifierExtension;
-import sun.security.x509.KeyIdentifier;
 
 public class JettySecurityUtils {
     private static final Logger logger = LogManager.getLogger();
@@ -134,12 +131,17 @@ public class JettySecurityUtils {
 		return new PrivateKeyEntry(keyPair.getPrivate(), new Certificate[]{cert});
 	}
 	
-	public static LdapName buildFullyQualifiedDN(String cn) throws InvalidNameException {
+	public static LdapName buildFullyQualifiedDN(String cn, String dc) throws InvalidNameException {
 		HostInformation info = HostProperties.Instance().loadHostInformation();
 		List<Rdn> rdn = new ArrayList<Rdn>();
 		rdn.add(new Rdn("ou", info.getManufacturer()));
 		rdn.add(new Rdn("ou", info.getDeviceName()));
-		rdn.add(new Rdn("cn", cn));
+		if (cn != null) {
+			rdn.add(new Rdn("cn", cn));
+		}
+		if (dc != null) {
+			rdn.add(new Rdn("dc", dc));
+		}
 		return new LdapName(rdn);
 	}
 	
@@ -167,12 +169,14 @@ public class JettySecurityUtils {
 	
 	public static String[] getUserIdAndName(String fullyQualifiedDN) throws InvalidNameException {
 		LdapName ldapName = new LdapName(fullyQualifiedDN);
-		String[] names = new String[2];
+		String[] names = new String[3];
 		for (Rdn rdn : ldapName.getRdns()) {
 			if (rdn.getType().equalsIgnoreCase("cn")) {
 				names[1] = rdn.getValue() + "";
 			} else if (rdn.getType().equalsIgnoreCase("uid")) {
 				names[0] = rdn.getValue() + "";
+			} else if (rdn.getType().equalsIgnoreCase("mail")) {
+				names[2] = rdn.getValue() + "";
 			}
 		}
 		
@@ -211,7 +215,8 @@ public class JettySecurityUtils {
 				logger.error("UID component:" + userIdAndName[0] + " can't be different than alias:" + alias);
 				continue;
 			}
-			users.add(new PhotonicUser(userIdAndName[1], UUID.fromString(userIdAndName[0])));
+			
+			users.add(new PhotonicUser(userIdAndName[1], null, UUID.fromString(userIdAndName[0]), null, null));
 		}
 
 		return users;
@@ -277,7 +282,7 @@ public class JettySecurityUtils {
 				HostProperties.Instance().getSSLKeypairPassword(), 
 				HostProperties.Instance().getSSLKeystorePassword())) {
 			
-    		generateRSAKeypairAndPossiblyKeystore(buildFullyQualifiedDN(ipAddress),
+    		generateRSAKeypairAndPossiblyKeystore(buildFullyQualifiedDN(null, ipAddress),
     				new Calendar.Builder().set(Calendar.YEAR, Calendar.getInstance()
     						.get(Calendar.YEAR) + 5).set(Calendar.MONTH, 2)
     						.set(Calendar.DAY_OF_MONTH, 1)
@@ -311,7 +316,7 @@ public class JettySecurityUtils {
         //All below is user based security
         Constraint constraint = new Constraint();
         constraint.setName( Constraint.__BASIC_AUTH );
-        constraint.setRoles( new String[]{ UserService.FULL_RIGHTS } );//Ahhh what????
+        constraint.setRoles( new String[]{ PhotonicUser.FULL_RIGHTS, PhotonicUser.LOGIN } );//Allows a login
         constraint.setAuthenticate( true );
      
         ConstraintMapping mapping = new ConstraintMapping();

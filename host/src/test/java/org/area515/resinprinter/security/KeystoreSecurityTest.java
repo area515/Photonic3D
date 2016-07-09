@@ -1,9 +1,11 @@
 package org.area515.resinprinter.security;
 
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.util.Arrays;
+import java.util.Base64;
 
 import javax.websocket.server.ServerContainer;
 
@@ -12,10 +14,8 @@ import org.area515.resinprinter.security.keystore.KeystoreLoginService;
 import org.area515.resinprinter.security.keystore.KeystoreUtilities;
 import org.area515.resinprinter.security.keystore.Message;
 import org.area515.resinprinter.security.keystore.PhotonicCrypto;
-import org.area515.resinprinter.services.UserService;
 import org.eclipse.jetty.server.UserIdentity;
-import org.eclipse.jetty.util.security.Credential;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -28,10 +28,13 @@ public class KeystoreSecurityTest {
 	private static File user1Keystore;
 	private static File user2Keystore;
 	private static KeystoreLoginService service1;
+	private static KeystoreLoginService service2;
+	private static PhotonicUser user1;
+	private static PhotonicUser user2;
 	
 	@BeforeClass
 	public static void setupCryptos() throws Exception {
-		NotificationManager.start(Mockito.mock(ServerContainer.class));
+		NotificationManager.start(null, Mockito.mock(ServerContainer.class));
 		user1Keystore = new File("user1.keystore");
 		user2Keystore = new File("user2.keystore");
 		
@@ -44,16 +47,32 @@ public class KeystoreSecurityTest {
 		String username2 = "User2";
 		
 		service1 = new KeystoreLoginService(user1Keystore, password, false);
-		KeystoreLoginService service2 = new KeystoreLoginService(user2Keystore, password, false);
+		service2 = new KeystoreLoginService(user2Keystore, password, false);
 		
-		PhotonicUser user1 = service1.update(username1, Credential.getCredential(password), new String[]{UserService.FULL_RIGHTS});
-		PhotonicUser user2 = service2.update(username2, Credential.getCredential(password), new String[]{UserService.FULL_RIGHTS});
+		PhotonicUser insertUser1 = new PhotonicUser(username1, password, null, username1 + "@stuff.com", new String[]{PhotonicUser.FULL_RIGHTS});
+		PhotonicUser insertUser2 = new PhotonicUser(username2, password, null, username2 + "@stuff.com", new String[]{PhotonicUser.FULL_RIGHTS});
+		
+		user1 = service1.update(insertUser1);
+		user2 = service2.update(insertUser2);
 		
 		crypto1 = KeystoreUtilities.getPhotonicCrypto(user1, user1Keystore, password, password, false);
 		crypto2 = KeystoreUtilities.getPhotonicCrypto(user2, user2Keystore, password, password, false);
 		
-		service1.trustUser(user2, crypto2.getCertificates(), new String[]{UserService.FULL_RIGHTS});
-		service2.trustUser(user1, crypto1.getCertificates(), new String[]{UserService.FULL_RIGHTS});
+		Friend user1sFriendIsUser2 = new Friend();
+		user1sFriendIsUser2.setUser(user2);
+		user1sFriendIsUser2.setTrustData(new String[]{
+				Base64.getEncoder().encodeToString(crypto2.getCertificates()[0].getEncoded()),
+				Base64.getEncoder().encodeToString(crypto2.getCertificates()[1].getEncoded())
+			});
+		
+		Friend user2sFriendIsUser1 = new Friend();
+		user2sFriendIsUser1.setUser(user1);
+		user2sFriendIsUser1.setTrustData(new String[]{
+				Base64.getEncoder().encodeToString(crypto1.getCertificates()[0].getEncoded()),
+				Base64.getEncoder().encodeToString(crypto1.getCertificates()[1].getEncoded())
+			});
+		service1.trustNewFriend(user1sFriendIsUser2);
+		service2.trustNewFriend(user2sFriendIsUser1);
 		
 		PhotonicCrypto remoteCypto1 = KeystoreUtilities.getPhotonicCrypto(user1, user2Keystore, null, password, false);
 		PhotonicCrypto remoteCrypto2 = KeystoreUtilities.getPhotonicCrypto(user2, user1Keystore, null, password, false);
@@ -64,21 +83,24 @@ public class KeystoreSecurityTest {
 		uninitializedCrypto = KeystoreUtilities.getPhotonicCrypto(user1, user1Keystore, password, password, false);
 	}
 	
-	@After
-	public void deleteKeystores() {
+	@AfterClass
+	public static void teardownCryptos() throws UserManagementException {
+		service1.remove(user2);
+		service2.remove(user1);
 		user1Keystore.delete();
 		user2Keystore.delete();
 	}
 	
 	@Test
     public void createKeystoreAndAddUser() throws Exception {
-		NotificationManager.start(Mockito.mock(ServerContainer.class));
+		NotificationManager.start(null, Mockito.mock(ServerContainer.class));
 		
 		String testUsername = "<>!@#$%^&*()~` ,.;'[]-=?:\"{}|\\frank,cn=Wes";//Ensure they can't perform a name spoof
 		
 		service1.start(null);
 		Assert.assertNull(service1.login(testUsername, testUsername, null));
-		PhotonicUser user = service1.update(testUsername, Credential.getCredential(testUsername), new String[]{UserService.FULL_RIGHTS});
+		PhotonicUser insertUser = new PhotonicUser(testUsername, testUsername, null, testUsername, new String[]{PhotonicUser.FULL_RIGHTS});
+		PhotonicUser user = service1.update(insertUser);
 		Assert.assertNotNull(user);
 		Assert.assertEquals(user.getName(), testUsername);
 		Assert.assertEquals(testUsername, user.getName());
@@ -104,7 +126,7 @@ public class KeystoreSecurityTest {
 		Assert.assertNull(crypto2.getData(keyexchange));
 		
 		//Crypto2 says hello
-		Message dataMessage = crypto2.buildEncryptedMessage(dangerousActionThatShouldOnlyHappenOnce);
+		Message dataMessage = crypto2.buildEncryptedMessage(ByteBuffer.wrap(dangerousActionThatShouldOnlyHappenOnce));
 		Assert.assertArrayEquals(dangerousActionThatShouldOnlyHappenOnce, crypto1.getData(dataMessage));
 		
 		//Man in the middle replays dangerousAction
@@ -121,14 +143,14 @@ public class KeystoreSecurityTest {
 	
 	private void testConversation(byte[]... conversation) throws Exception {
 		for (byte[] data : conversation) {
-			Message dataMessage = crypto2.buildEncryptedMessage(data);
+			Message dataMessage = crypto2.buildEncryptedMessage(ByteBuffer.wrap(data));
 			Assert.assertArrayEquals(data, crypto1.getData(dataMessage));
 		}
 	}
 	
 	private void testReverseConversation(byte[]... conversation) throws Exception {
 		for (byte[] data : conversation) {
-			Message dataMessage = crypto1.buildEncryptedMessage(data);
+			Message dataMessage = crypto1.buildEncryptedMessage(ByteBuffer.wrap(data));
 			Assert.assertArrayEquals(data, crypto2.getData(dataMessage));
 		}
 	}
@@ -188,7 +210,7 @@ public class KeystoreSecurityTest {
 		byte[] greeting = "hello!".getBytes();
 		
 		try {
-			uninitializedCrypto.buildEncryptedMessage(greeting);
+			uninitializedCrypto.buildEncryptedMessage(ByteBuffer.wrap(greeting));
 			Assert.fail("You can't encrypt before you initialized the crypto.");
 		} catch (InvalidKeyException badiv) {}
 	}

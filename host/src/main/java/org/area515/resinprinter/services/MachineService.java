@@ -65,6 +65,7 @@ import org.area515.resinprinter.network.WirelessNetwork;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.SlicingProfile;
+import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.CwhEmailSettings;
@@ -78,7 +79,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import com.sun.mail.smtp.SMTPSendFailedException;
 
 @Api(value="machine")
-@RolesAllowed(UserService.FULL_RIGHTS)
+@RolesAllowed(PhotonicUser.FULL_RIGHTS)
 @Path("machine")
 public class MachineService {
     private static final Logger logger = LogManager.getLogger();

@@ -39,7 +39,9 @@ public class ZSlicingGeometry {
 				fillFile.getPixelsPerMMY(), 
 				fillFile.getzSliceResolution(),
 				fillFile.getzSliceOffset(),
-				true, new CloseOffMend());
+				true, 
+				false, //TODO: this value should come out of our points.json file
+				new CloseOffMend());
 		checkPoints = fillFile.getPoints();
 		logger.info("Reading file:" + fillFile.getFileName());
 		slicer.loadFile(CheckSlicePoints.class.getResourceAsStream(fillFile.getFileName()), (double)x, (double)y);

@@ -1,5 +1,6 @@
 package org.area515.resinprinter.security.keystore;
 
+import java.nio.ByteBuffer;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore.Entry;
@@ -10,6 +11,7 @@ import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
@@ -25,12 +27,17 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.naming.InvalidNameException;
 
+import org.area515.resinprinter.security.Friend;
 import org.area515.resinprinter.security.JettySecurityUtils;
-import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.security.PhotonicUser;
+
+import sun.security.x509.X509CertImpl;
 
 public class PhotonicCrypto {
 	private static final int IV_LENGTH = 16;
 	private static final int AES_KEY_SIZE = 16;
+	private static final String PUBLIC_CERT_REQUEST = "X509CertsBase64NewLine";
+	private static final String BAD_UUID = "Uid of subject on certifiate didn't match expected uuid of public key.";
 	
 	//Local User
 	private PrivateKeyEntry decryptor;
@@ -49,7 +56,7 @@ public class PhotonicCrypto {
 	private SecureRandom random;
 	private boolean allowInsecureCommunication;
 	
-	public PhotonicCrypto(Entry decryptor, Entry signer, boolean allowInsecureCommunication) throws CertificateExpiredException, CertificateNotYetValidException, CertificateEncodingException, InvalidNameException {
+	public PhotonicCrypto(Entry signer, Entry decryptor, boolean allowInsecureCommunication) throws CertificateExpiredException, CertificateNotYetValidException, CertificateEncodingException, InvalidNameException {
 		this.allowInsecureCommunication = allowInsecureCommunication;
 		if (decryptor instanceof PrivateKeyEntry) {
 			this.decryptor = (PrivateKeyEntry)decryptor;
@@ -76,7 +83,7 @@ public class PhotonicCrypto {
 	private void validateUIDOfVerifier() throws InvalidNameException, CertificateEncodingException {
 		String[] userIdAndName = JettySecurityUtils.getUserIdAndName(verifier.getSubjectDN().getName());
 		if (!UUID.fromString(userIdAndName[0]).equals(UUID.nameUUIDFromBytes(verifier.getPublicKey().getEncoded()))) {
-			throw new InvalidNameException("Uid of subject on certifiate didn't match expected uuid of public key.");
+			throw new InvalidNameException(BAD_UUID);
 		}
 		localUserId = UUID.fromString(userIdAndName[0]);
 	}
@@ -91,6 +98,43 @@ public class PhotonicCrypto {
 	
 	public boolean isAsymetricEncryption(String algorithm) {
 		return algorithm != null && algorithm.equalsIgnoreCase("rsa");
+	}
+	
+	public Message buildCertificateTrustMessage(UUID toUser) throws CertificateEncodingException {
+		Message message = new Message();
+		message.setFrom(getLocalUserId());
+		message.setTo(toUser);
+		message.setEncryptionAlgorithm(PUBLIC_CERT_REQUEST);
+		message.setData((Base64.getEncoder().encode(verifier.getEncoded()) + "\n" + Base64.getEncoder().encode(encryptor.getEncoded())).getBytes());
+		return message;
+	}
+	
+	public static Friend checkCertificateTrustExchange(Message message) throws CertificateException, InvalidNameException {
+		if (!message.getEncryptionAlgorithm().equalsIgnoreCase(PUBLIC_CERT_REQUEST)) {
+			return null;
+		}
+		
+		String signCertAndEncryptCert = new String(message.getData());
+		int newLineSep = signCertAndEncryptCert.indexOf("\n");
+		String signBase64 = signCertAndEncryptCert.substring(0, newLineSep);
+		String encryptBase64 = signCertAndEncryptCert.substring(newLineSep + 1);
+		X509CertImpl sign = new X509CertImpl(Base64.getDecoder().decode(signBase64));
+		X509CertImpl encrypt = new X509CertImpl(Base64.getDecoder().decode(encryptBase64));
+		
+    	String[] names = JettySecurityUtils.getUserIdAndName(sign.getSubjectDN().getName());
+    	if (!names[0].equals(message.getFrom().toString())) {
+    		throw new InvalidNameException("User:" + names[1] + " sent a friend request with userId:" + names[0] + " on cert which doesn't match userId:" + message.getFrom() + " from which it came");
+    	}
+    	
+    	if (UUID.fromString(names[0]).equals(UUID.nameUUIDFromBytes(sign.getPublicKey().getEncoded()))) {
+    		throw new InvalidNameException(BAD_UUID);
+    	}
+    	
+    	Friend friend = new Friend();
+    	friend.setUser(new PhotonicUser(names[1], null, UUID.fromString(names[0]), null, new String[]{PhotonicUser.LOGIN, PhotonicUser.LISTENER}));
+    	friend.setFriendshipFeature(X509FriendshipFeature.FEATURE_NAME);
+    	friend.setTrustData(new String[]{signBase64, encryptBase64});
+		return friend;
 	}
 	
 	public byte[] getData(Message message) throws NoSuchAlgorithmException, CertificateExpiredException, CertificateNotYetValidException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
@@ -130,18 +174,20 @@ public class PhotonicCrypto {
 			encryptor.checkValidity(new Date());
 			decrypt.init(Cipher.DECRYPT_MODE, decryptor.getPrivateKey());
 			String ivAndKey = new String(decrypt.doFinal(message.getData()));
-			int ivSep = ivAndKey.indexOf("\n");
-			if (ivSep > 0) {
-				random = new SecureRandom(Base64.getDecoder().decode(ivAndKey.substring(0, ivSep)));
+			int newLineSep = ivAndKey.indexOf("\n");
+			if (newLineSep > 0) {
+				random = new SecureRandom(Base64.getDecoder().decode(ivAndKey.substring(0, newLineSep)));//TODO: This needs to be a known algorithm
 				currentOffset = 0;
 			}
-			if (ivSep < ivAndKey.length()) {
-		        symKey = new SecretKeySpec(Base64.getDecoder().decode(ivAndKey.substring(ivSep + 1)), "AES");
+			if (newLineSep < ivAndKey.length()) {
+		        symKey = new SecretKeySpec(Base64.getDecoder().decode(ivAndKey.substring(newLineSep + 1)), "AES");
 			}
 	        
 	        conversationCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 	        return null;
 		}
+		
+		//TODO: At this point we treat the message.getEncryptionAlgorithm() as AES encryption. Should I check it?
 		
 		//It must be a data message
 		if (random == null) {
@@ -196,13 +242,13 @@ public class PhotonicCrypto {
 		keyMessage.setSignature(sig.sign());
 		
 		currentOffset = 0;
-		this.random = new SecureRandom(ivBytes);
+		this.random = new SecureRandom(ivBytes);//TODO: This needs to be a known algorithm
 	    symKey = new SecretKeySpec(keyBytes, "AES");
     	conversationCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 		return keyMessage;
 	}
 	
-	public Message buildEncryptedMessage(byte[] data) throws InvalidNameException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+	public Message buildEncryptedMessage(ByteBuffer buffer) throws InvalidNameException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
 		if (random == null) {
 			throw new InvalidKeyException("You need to perform a key exchange with this crypto before you use it");
 		}
@@ -221,8 +267,7 @@ public class PhotonicCrypto {
 		keyMessage.setIvOffset(currentOffset);
 		
     	conversationCipher.init(Cipher.ENCRYPT_MODE, symKey, iv);
-    	keyMessage.setData(data);
-		keyMessage.setData(conversationCipher.doFinal(data));
+    	keyMessage.setData(conversationCipher.doFinal(buffer.array()));
     	return keyMessage;
 	}
 	

@@ -16,8 +16,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.area515.resinprinter.security.PhotonicUser;
+
 @Api(value="customizers")
-@RolesAllowed(UserService.FULL_RIGHTS)
+@RolesAllowed(PhotonicUser.FULL_RIGHTS)
 @Path("customizers")
 public class CustomizerService {
     public static CustomizerService INSTANCE = new CustomizerService();

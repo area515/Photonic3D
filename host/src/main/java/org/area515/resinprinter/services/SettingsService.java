@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
 
+import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.server.CwhEmailSettings;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
@@ -23,7 +24,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 @Api(value="settings")
-@RolesAllowed(UserService.FULL_RIGHTS)
+@RolesAllowed(PhotonicUser.FULL_RIGHTS)
 @Path("settings")
 public class SettingsService {
 	public static SettingsService INSTANCE = new SettingsService();

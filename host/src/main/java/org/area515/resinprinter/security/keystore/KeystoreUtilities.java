@@ -2,7 +2,6 @@ package org.area515.resinprinter.security.keystore;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -15,7 +14,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
-import java.util.UUID;
+import java.util.Enumeration;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
@@ -42,7 +41,7 @@ public class KeystoreUtilities {
 		
 		JettySecurityUtils.saveKeystore(keyFile, keyStore, keystorePassword);
 		
-		return new PhotonicCrypto(encryptionData, signatureData, allowInsecureCommunications);
+		return new PhotonicCrypto(signatureData, encryptionData, allowInsecureCommunications);
 	}
 
 	public static PhotonicCrypto getPhotonicCrypto(PhotonicUser user, File keyFile, String keypairPassword, String keystorePassword, boolean allowInsecureCommunications) throws IOException, GeneralSecurityException, InvalidNameException {
@@ -51,21 +50,32 @@ public class KeystoreUtilities {
 		keyStore.load(outputStream, keystorePassword.toCharArray());
 		
 		return new PhotonicCrypto(
-				keyStore.getEntry(user.getUserId() + "E", keypairPassword != null?new PasswordProtection(keypairPassword.toCharArray()):null), 
 				keyStore.getEntry(user.getUserId() + "S", keypairPassword != null?new PasswordProtection(keypairPassword.toCharArray()):null), 
+				keyStore.getEntry(user.getUserId() + "E", keypairPassword != null?new PasswordProtection(keypairPassword.toCharArray()):null), 
 				allowInsecureCommunications);
 	}
 	
 	public static PhotonicCrypto trustCertificate(PhotonicUser user, File keyFile, String keystorePassword, X509Certificate signingCert, X509Certificate encryptionCert, boolean allowInsecureCommunications) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, InvalidNameException, UnrecoverableEntryException {
+		String signerName = user.getUserId() + "S";
+		String encryptorName = user.getUserId() + "E";
 		FileInputStream outputStream = new FileInputStream(keyFile);
 		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 		keyStore.load(outputStream, keystorePassword.toCharArray());
+
+		Enumeration<String> aliases = keyStore.aliases();
+		while (aliases.hasMoreElements()) {
+			String currentName = aliases.nextElement();
+			if (currentName.equalsIgnoreCase(signerName) &&
+				currentName.equalsIgnoreCase(encryptorName)) {
+				throw new InvalidNameException("UserId:" + user.getUserId() + " already exists in keystore");
+			}
+		}
 		
-		keyStore.setCertificateEntry(user.getUserId() + "S", signingCert);
-		keyStore.setCertificateEntry(user.getUserId() + "E", encryptionCert);
+		keyStore.setCertificateEntry(signerName, signingCert);
+		keyStore.setCertificateEntry(encryptorName, encryptionCert);
 		
 		JettySecurityUtils.saveKeystore(keyFile, keyStore, keystorePassword);
 		
-		return new PhotonicCrypto(keyStore.getEntry(user.getUserId() + "E", null), keyStore.getEntry(user.getUserId() + "S", null), allowInsecureCommunications);
+		return new PhotonicCrypto(keyStore.getEntry(signerName, null), keyStore.getEntry(encryptorName, null), allowInsecureCommunications);
 	}
 }
