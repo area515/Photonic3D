@@ -75,7 +75,6 @@ public class ZSlicer {
 		 this.zOffset = zSliceOffset;
 		 this.keepTrackOfErrors = keepTrackOfErrors;
 		 this.fixBrokenLoops = fixBrokenLoops;
-		 this.rewriteNormalsWithRightHandRule = rewriteNormalsWithRightHandRule;
 		 
 		 stlFile = new StlFile<Triangle3d>() {
 			private Triangle3d lastTriangle;
@@ -937,7 +936,7 @@ public class ZSlicer {
 	 
 	 public void loadFile(InputStream stream, Double buildPlatformXPixels, Double buildPlatformYPixels) throws IOException {
 		  logger.info("Load file start", ()->Log4jTimer.startTimer("fileLoadTime"));
-		  stlFile.load(stream, false);
+		  stlFile.load(stream, rewriteNormalsWithRightHandRule);
  
 		if (imageOffsetX == null) {
 			if (buildPlatformXPixels != null) {

@@ -76,13 +76,14 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			RenderingFileData stlData = new RenderingFileData();
 			dataByPrintJob.put(printJob, stlData);
 			
+			boolean overrideNormals = dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule() == null?false:dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule();
 			stlData.slicer = new ZSlicer(1, 
 					dataAid.xPixelsPerMM, 
 					dataAid.yPixelsPerMM, 
 					dataAid.sliceHeight, 
 					dataAid.sliceHeight / 2, 
 					true, 
-					false,
+					overrideNormals,
 					new CloseOffMend());
 			stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(dataAid.xResolution), new Double(dataAid.yResolution));
 			printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
