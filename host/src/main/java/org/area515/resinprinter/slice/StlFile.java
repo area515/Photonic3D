@@ -396,10 +396,7 @@ public abstract class StlFile<T> {
 				String facet = "facet";
 				int letter = 0;
 				for (; t < sampleSize.length; t++) {
-					if (sampleSize[t] == 10) {
-						continue;
-					}
-					if (sampleSize[t] == 12) {
+					if ((sampleSize[t] > 8 && sampleSize[t] < 14) || sampleSize[t] == 32) {
 						continue;
 					}
 					
