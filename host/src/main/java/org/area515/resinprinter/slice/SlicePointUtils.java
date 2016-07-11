@@ -29,6 +29,7 @@ public class SlicePointUtils {
 		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
 		mapper.enable(SerializationFeature.INDENT_OUTPUT);
 		mapper.writeValue(new File(unzippedFileAccess), new ArrayList<FillFile>(testPoints.values()));
+		System.out.println("Saved to:" + new File(unzippedFileAccess).getAbsolutePath());
 	}
 	
 	public static Map<FillFile, FillFile> loadPoints() throws IOException {
