@@ -8,13 +8,14 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.GeneralSecurityException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -112,7 +113,7 @@ public class HostProperties {
 	private String[] imagingCommand;
 	private String[] dumpStackTraceCommand;
 	private String[] rebootCommand;
-	
+		
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
 			INSTANCE = new HostProperties();
@@ -143,7 +144,8 @@ public class HostProperties {
 		if (clientUsername != null) {
 			if (clientPassword != null) {
 				try {
-					PhotonicUser user = UserService.INSTANCE.createNewUser(clientUsername, clientPassword);
+					PhotonicUser newUser = new PhotonicUser(clientUsername, clientPassword, null, null, new String[] {PhotonicUser.FULL_RIGHTS});
+					UserService.INSTANCE.createNewUser(newUser);
 					removeProperties(securityRealmName + ".clientUsername", securityRealmName + ".clientPassword");
 				} catch (UserManagementException e) {
 					logger.error("Couldn't migrate user", e);
@@ -290,7 +292,7 @@ public class HostProperties {
 		}
 		
 		if (uploadDirString == null) {
-			uploadDir = new File(System.getProperty("java.io.tmpdir"), "uploaddir");
+			uploadDir = new File(System.getProperty("user.home"), "uploaddir");
 		} else {
 			uploadDir = new File(uploadDirString);
 		}
@@ -553,6 +555,7 @@ public class HostProperties {
 				configurationProperties.getProperty("manufacturer", "Wes Gilster"));
 		return settings;
 	}
+	
 	public void saveHostInformation(HostInformation device) {
 		Properties hostInfoformationProperties = new Properties();
 		hostInfoformationProperties.setProperty("deviceName", device.getDeviceName());
@@ -832,17 +835,22 @@ public class HostProperties {
 		NotificationManager.hostSettingsChanged();
 	}
 
-	/*public void saveUserMapping(String userName, UUID userId) {
-		Properties userUserProperties = new Properties();
-		userUserProperties.setProperty("user." + userName, userId.toString());
-		saveOverriddenConfigurationProperties(userUserProperties);
+	public void saveProperty(String name, String value) {
+		Properties properties = loadOverriddenConfigurationProperties();
+		properties.setProperty(name, value);
 		
+		overwriteOverriddenConfigurationProperties(properties);
 		NotificationManager.hostSettingsChanged();
 	}
 	
-	public void removeUserMapping(String userName) {
-		removeProperty("user." + userName);
-	}*/
+	public String loadProperty(String name) {
+		Properties properties = loadOverriddenConfigurationProperties();
+		String value = properties.getProperty(name);
+		
+		overwriteOverriddenConfigurationProperties(properties);
+		NotificationManager.hostSettingsChanged();
+		return value;
+	}
 	
 	public void removeProperties(String... propertiesToRemove) {
 		Properties properties = loadOverriddenConfigurationProperties();

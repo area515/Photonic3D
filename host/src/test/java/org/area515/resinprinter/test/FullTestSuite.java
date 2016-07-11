@@ -10,6 +10,8 @@ import org.area515.resinprinter.network.LinuxNetworkManagerTest;
 import org.area515.resinprinter.printer.DetectFirmwareMock;
 import org.area515.resinprinter.projector.HexCodeBasedProjectorTesting;
 import org.area515.resinprinter.security.KeystoreSecurityTest;
+import org.area515.resinprinter.security.RendezvousExchange;
+import org.area515.resinprinter.security.SerializeMessageAsJson;
 import org.area515.resinprinter.services.TestScriptAndTemplating;
 import org.area515.resinprinter.slice.CheckSlicePoints;
 import org.area515.resinprinter.stl.ZSlicingGeometry;
@@ -32,7 +34,9 @@ import org.junit.runners.Suite;
 	ConvertCWMaskToTransparencyMask.class,
 	CheckSlicePoints.class,
 	ZSlicingGeometry.class,
-	KeystoreSecurityTest.class
+	KeystoreSecurityTest.class,
+	SerializeMessageAsJson.class,
+	RendezvousExchange.class,
 })
 
 public class FullTestSuite {
