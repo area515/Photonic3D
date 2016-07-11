@@ -20,15 +20,15 @@ import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.slice.StlError;
+import org.area515.util.Log4jTimer;
 import org.area515.util.TemplateEngine;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.Customizer;
 
 public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProcessor<G,E>{
 	private static final Logger logger = LogManager.getLogger();
-
+	public static final String EXPOSURE_TIMER = "exposureTime";
 	//TODO: Instead of having each implementation keep it's own state in it's own hashtable, we should be doing all of that work in here...
 	
 	public static class DataAid {
@@ -174,6 +174,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		
 		//Blank the screen in the case that our printer doesn't have a shutter
 		aid.printer.showBlankImage();
+		
+		logger.info("ExposureTime:{}", ()->Log4jTimer.completeTimer(EXPOSURE_TIMER));
 		
 		//Perform two actions at once here:
 		// 1. Pause if the user asked us to pause

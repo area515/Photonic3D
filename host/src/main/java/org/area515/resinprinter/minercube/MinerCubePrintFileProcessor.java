@@ -22,6 +22,7 @@ import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.server.Main;
+import org.area515.util.Log4jTimer;
 
 public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Object,Object> {
     private static final Logger logger = LogManager.getLogger();
@@ -89,10 +90,13 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 					//graphics.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
 					graphics.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
 				}
+
 				image = applyImageTransforms(data, image, data.xResolution, data.yResolution);
 				//applyBulbMask(data, graphics, data.xResolution, data.yResolution);
-				//WILBUR
-				//applyImageTransforms(data, image, data.xResolution, data.yResolution);
+				
+				//Start the exposure timer
+				logger.info("ExposureStart:{}", ()->Log4jTimer.completeTimer(EXPOSURE_TIMER));
+
 				data.printer.showImage(image);
 				printCube.currentImage = image;
 				

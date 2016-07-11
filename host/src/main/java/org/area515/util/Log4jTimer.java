@@ -18,7 +18,12 @@ public class Log4jTimer {
 	
 	public static long completeTimer(String timerName) {
 		long newTime = System.currentTimeMillis();
-		long timeTaken = newTime - Long.parseLong(ThreadContext.get(timerName));
+		String value = ThreadContext.get(timerName);
+		if (value == null) {
+			return -1;
+		}
+		
+		long timeTaken = newTime - Long.parseLong(value);
 		ThreadContext.remove(timerName);
 		return timeTaken;
 	}

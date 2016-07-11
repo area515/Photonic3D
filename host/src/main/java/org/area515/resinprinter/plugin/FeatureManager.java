@@ -2,10 +2,13 @@ package org.area515.resinprinter.plugin;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.security.FriendshipFeature;
 import org.area515.resinprinter.security.UserManagementFeature;
 import org.area515.resinprinter.server.HostProperties;
 
@@ -44,6 +47,21 @@ public class FeatureManager {
 		for (Feature currentFeature : features) {
 			currentFeature.stop();
 		}
+	}
+	
+	public static Map<String, FriendshipFeature> getFriendshipFeatures() {
+		if (features == null) {
+			initFeatures();
+		}
+		
+		Map<String, FriendshipFeature> friendshipFeatures = new HashMap<String, FriendshipFeature>();
+		for (Feature currentFeature : features) {
+			if (currentFeature instanceof FriendshipFeature) {
+				friendshipFeatures.put(((FriendshipFeature) currentFeature).getName(), (FriendshipFeature)currentFeature);
+			}
+		}
+		
+		return friendshipFeatures;
 	}
 	
 	public static UserManagementFeature getUserManagementFeature() {

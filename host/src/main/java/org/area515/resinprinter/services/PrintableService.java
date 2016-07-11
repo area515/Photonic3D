@@ -50,6 +50,7 @@ import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.job.Printable;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 import org.area515.util.PrintFileFilter;
@@ -59,7 +60,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import com.google.common.io.ByteStreams;
 
 @Api(value="printables")
-@RolesAllowed(UserService.FULL_RIGHTS)
+@RolesAllowed(PhotonicUser.FULL_RIGHTS)
 @Path("printables")
 public class PrintableService {
     private static final Logger logger = LogManager.getLogger();

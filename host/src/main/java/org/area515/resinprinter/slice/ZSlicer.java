@@ -49,6 +49,7 @@ public class ZSlicer {
 	 private double zOffset = .05;
 	 private StlFile<Triangle3d> stlFile;
 	 private boolean keepTrackOfErrors = false;
+	 private boolean rewriteNormalsWithRightHandRule = false;
 	 private PolygonMendingMechanism fixBrokenLoops;
 	 
 	 //These are the variables per z
@@ -65,7 +66,8 @@ public class ZSlicer {
 	 private int buildArea;
 	 
 	 //TODO: Need to add in super sampling
-	 public ZSlicer(double stlScale, double pixelsPerMMX, double pixelsPerMMY, double zSliceResolution, double zSliceOffset, boolean keepTrackOfErrors, PolygonMendingMechanism fixBrokenLoops) {
+	 public ZSlicer(double stlScale, double pixelsPerMMX, double pixelsPerMMY, double zSliceResolution, double zSliceOffset, boolean keepTrackOfErrors, boolean rewriteNormalsWithRightHandRule, PolygonMendingMechanism fixBrokenLoops) {
+		 this.rewriteNormalsWithRightHandRule = rewriteNormalsWithRightHandRule;
 		 this.stlScale = stlScale;
 		 this.pixelsPerMMX = pixelsPerMMX;
 		 this.pixelsPerMMY = pixelsPerMMY;
@@ -934,7 +936,7 @@ public class ZSlicer {
 	 
 	 public void loadFile(InputStream stream, Double buildPlatformXPixels, Double buildPlatformYPixels) throws IOException {
 		  logger.info("Load file start", ()->Log4jTimer.startTimer("fileLoadTime"));
-		  stlFile.load(stream);
+		  stlFile.load(stream, rewriteNormalsWithRightHandRule);
  
 		if (imageOffsetX == null) {
 			if (buildPlatformXPixels != null) {
