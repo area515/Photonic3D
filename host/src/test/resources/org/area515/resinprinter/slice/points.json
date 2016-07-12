@@ -32,6 +32,18 @@
   "zSliceOffset" : 0.05
 }, {
   "points" : [ {
+    "x" : 511,
+    "y" : 150,
+    "sliceNumber" : 0
+  } ],
+  "fileName" : "Homebrew_Finds_Magnet_Mounting_Thingy.stl",
+  "stlScale" : 1.0,
+  "pixelsPerMMX" : 5.0,
+  "pixelsPerMMY" : 5.0,
+  "zSliceResolution" : 0.1,
+  "zSliceOffset" : 0.0
+}, {
+  "points" : [ {
     "x" : 526,
     "y" : 162,
     "sliceNumber" : 0
@@ -109,6 +121,22 @@
     "sliceNumber" : 276623
   } ],
   "fileName" : "lager houder.STL",
+  "stlScale" : 1.0,
+  "pixelsPerMMX" : 5.0,
+  "pixelsPerMMY" : 5.0,
+  "zSliceResolution" : 0.1,
+  "zSliceOffset" : 0.0
+}, {
+  "points" : [ {
+    "x" : 504,
+    "y" : 257,
+    "sliceNumber" : -100
+  }, {
+    "x" : 507,
+    "y" : 236,
+    "sliceNumber" : -100
+  } ],
+  "fileName" : "lenscap-36mm.stl",
   "stlScale" : 1.0,
   "pixelsPerMMX" : 5.0,
   "pixelsPerMMY" : 5.0,

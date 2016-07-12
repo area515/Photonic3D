@@ -2,6 +2,7 @@ package org.area515.resinprinter.notification;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -24,7 +25,7 @@ public class EmailOnCompletionNotifier implements Notifier {
     private static final Logger logger = LogManager.getLogger();
 	
 	@Override
-	public void register(ServerContainer container) throws InappropriateDeviceException {
+	public void register(URI uri, ServerContainer container) throws InappropriateDeviceException {
 	}
 
 	@Override
@@ -88,5 +89,11 @@ public class EmailOnCompletionNotifier implements Notifier {
 	@Override
 	public Long getTimeOfLastClientPing() {
 		return null;
+	}
+
+	@Override
+	public void remoteMessageReceived(String message) {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -39,7 +39,9 @@ public class ZSlicingGeometry {
 				fillFile.getPixelsPerMMY(), 
 				fillFile.getzSliceResolution(),
 				fillFile.getzSliceOffset(),
-				true, new CloseOffMend());
+				true, 
+				false, //TODO: this value should come out of our points.json file
+				new CloseOffMend());
 		checkPoints = fillFile.getPoints();
 		logger.info("Reading file:" + fillFile.getFileName());
 		slicer.loadFile(CheckSlicePoints.class.getResourceAsStream(fillFile.getFileName()), (double)x, (double)y);
@@ -49,29 +51,34 @@ public class ZSlicingGeometry {
 	
 	@Test
 	public void testSpecialPoints() {
-		List<FillPoint> brokenPoints = new ArrayList<FillPoint>();
-		int currentSliceNumber = Integer.MIN_VALUE;
-		Graphics2D g = (Graphics2D)image.createGraphics();
-		for (FillPoint point : checkPoints) {
-			if (point.getSliceNumber() == null) {
-				continue;
+		try {
+			List<FillPoint> brokenPoints = new ArrayList<FillPoint>();
+			int currentSliceNumber = Integer.MIN_VALUE;
+			Graphics2D g = (Graphics2D)image.createGraphics();
+			for (FillPoint point : checkPoints) {
+				if (point.getSliceNumber() == null) {
+					continue;
+				}
+				
+				if (currentSliceNumber != point.getSliceNumber()) {
+					g.drawRect(0, 0, x, y);
+					slicer.setZIndex(point.getSliceNumber());
+					slicer.colorizePolygons(null, null);
+					slicer.paintSlice(g);
+				}
+				
+				int[] data = image.getRaster().getPixel(point.getX(), point.getY(), (int[])null);
+				if (data[0] == 0 && data[1] == 0 && data[2] == 0) {
+					brokenPoints.add(point);
+				}
 			}
 			
-			if (currentSliceNumber != point.getSliceNumber()) {
-				g.drawRect(0, 0, x, y);
-				slicer.setZIndex(point.getSliceNumber());
-				slicer.colorizePolygons(null, null);
-				slicer.paintSlice(g);
+			if (brokenPoints.size() > 0) {
+				Assert.fail("This file:" + fileName + " has these broken points:" + brokenPoints);
 			}
-			
-			int[] data = image.getRaster().getPixel(point.getX(), point.getY(), (int[])null);
-			if (data[0] == 0 && data[1] == 0 && data[2] == 0) {
-				brokenPoints.add(point);
-			}
-		}
-		
-		if (brokenPoints.size() > 0) {
-			Assert.fail("This file:" + fileName + " has these broken points:" + brokenPoints);
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			Assert.fail("This file:" + fileName + " threw error");
 		}
 	}
 	

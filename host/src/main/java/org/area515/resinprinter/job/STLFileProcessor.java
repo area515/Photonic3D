@@ -15,12 +15,14 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.io.*;
 import java.awt.image.*;
 import javax.imageio.*;
+import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.SlicerException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
+
 import org.area515.resinprinter.job.render.RenderingFileData;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.SlicingProfile;
@@ -35,10 +37,11 @@ import org.area515.resinprinter.slice.ZSlicer;
 import org.area515.resinprinter.stl.Triangle3d;
 import org.area515.resinprinter.services.PrinterService;
 
-
-
+import org.area515.util.Log4jTimer;
 
 public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> {
+	public static String STL_OVERHEAD = "stlOverhead";
+
 	private static final Logger logger = LogManager.getLogger();
 	private Map<PrintJob, RenderingFileData> dataByPrintJob = new HashMap<PrintJob, RenderingFileData>();
 
@@ -90,7 +93,15 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			RenderingFileData stlData = new RenderingFileData();
 			dataByPrintJob.put(printJob, stlData);
 			
-			stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, new CloseOffMend());
+			boolean overrideNormals = dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule() == null?false:dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule();
+			stlData.slicer = new ZSlicer(1, 
+					dataAid.xPixelsPerMM, 
+					dataAid.yPixelsPerMM, 
+					dataAid.sliceHeight, 
+					dataAid.sliceHeight / 2, 
+					true, 
+					overrideNormals,
+					new CloseOffMend());
 			stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(dataAid.xResolution), new Double(dataAid.yResolution));
 			printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
 			
@@ -112,11 +123,18 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 					return status;
 				}
 				
+				logger.info("SliceOverheadStart:{}", ()->Log4jTimer.startTimer(STL_OVERHEAD));
+				
 				//Wait until the image has been properly rendered. Most likely, it's already done though...
 				BufferedImage image = currentImage.get();
 				
+				logger.info("SliceOverhead:{}", ()->Log4jTimer.completeTimer(STL_OVERHEAD));
+				
 				//Now that the image has been rendered, we can make the switch to use the pointer that we were using while we were rendering
 				stlData.setCurrentRenderingPointer(nextRenderingPointer);
+				
+				//Start the exposure timer
+				logger.info("ExposureStart:{}", ()->Log4jTimer.completeTimer(EXPOSURE_TIMER));
 				
 				//Cure the current image
 				dataAid.printer.showImage(image);
@@ -143,7 +161,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		}
 	}
 	//This method takes in an STL file and produces the first slice of the file
-	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws NoPrinterFoundException, SlicerException {
+	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws NoPrinterFoundException, SlicerException, IOException, InappropriateDeviceException, ScriptException {
 
 		//find the first activePrinter
 		String printerName = customizer.getPrinterName();
@@ -181,7 +199,8 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 
 			RenderingFileData stlData = new RenderingFileData();
 
-			stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, new CloseOffMend());
+			boolean overrideNormals = dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule() == null?false:dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule();
+			stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, overrideNormals, new CloseOffMend());
 			stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(dataAid.xResolution), new Double(dataAid.yResolution));
 			printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
 
@@ -193,9 +212,25 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 
 			return image;
 
-		} catch (Exception e) {
+		} catch (NegativeArraySizeException e) {
 			logger.error(e);
 			throw new SlicerException(e);
+		} catch (InappropriateDeviceException e) {
+			// Thrown if ink configuration is null
+			logger.warn(e);
+			throw e;
+		} catch (FileNotFoundException e) {
+			// Should not occur because this method shouldn't be able to be called without having a file selected.
+			logger.error(e);
+			throw e;
+		} catch (IOException e) {
+			// Also should not occur because previewSlice shouldn't be able to be called without having a file selected.
+			logger.error(e);
+			throw e;
+		} catch (ScriptException e) {
+			// Thrown if there is a problem with the bulb mask script, or any other script
+			logger.warn(e);
+			throw e;
 		}
 	}
 

@@ -58,9 +58,10 @@ import org.area515.resinprinter.stl.Point3d;
 public abstract class StlFile<T> {
   private static final Logger logger = LogManager.getLogger();
 
-  private int flag;                         // Needed cause implements Loader
+  //private int flag;                         // Needed cause implements Loader
   private boolean Ascii = true;             // File type Ascii -> true o binary -> false
-
+  private boolean rewriteNormalsWithRightHandRule = false;
+  
   protected Set<T> triangles;
   protected double zmin = Double.MAX_VALUE;
   protected double zmax = -Double.MAX_VALUE;
@@ -85,15 +86,13 @@ public abstract class StlFile<T> {
    * @param parser The file parser. An instance of StlFileParser.
    */
   private void readEOL(StlFileParser parser) throws IOException {
-    try {
-    	parser.nextToken();
-    } catch (IOException e) {
-      throw new IOException("Error getting next token:" + parser, e);
-    }
-    
-    if(parser.ttype != StlFileParser.TT_EOL) {
-      throw new IOException("Format Error:expecting End Of Line on line " + parser.lineno());
-    }
+	try {
+		do {
+			parser.nextToken();
+		} while (parser.ttype != StlFileParser.TT_EOL);
+	} catch (IOException e) {
+	    throw new IOException("Error getting next token:" + parser, e);
+	}
   }
 
   /**
@@ -232,7 +231,7 @@ public abstract class StlFile<T> {
   protected abstract T getFirstTriangle();
 
   private void fixNormalIfBadSTLFile(Point3d normal, double[] p1, double[] p2, double[] p3) {
-		if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
+		if ((normal.x == 0 && normal.y == 0 && normal.z == 0) || rewriteNormalsWithRightHandRule) {
 			/*normal.x = (p3[1] - p2[1]) * (p2[2] - p1[2]) - (p3[2] - p2[2]) * (p2[1] - p1[1]);
 			normal.y = (p3[2] - p2[2]) * (p2[0] - p1[0]) - (p3[0] - p2[0]) * (p2[2] - p1[2]);
 			normal.z = (p3[0] - p2[0]) * (p2[1] - p1[1]) - (p3[1] - p2[1]) * (p2[0] - p1[0]);*/
@@ -397,10 +396,7 @@ public abstract class StlFile<T> {
 				String facet = "facet";
 				int letter = 0;
 				for (; t < sampleSize.length; t++) {
-					if (sampleSize[t] == 10) {
-						continue;
-					}
-					if (sampleSize[t] == 12) {
+					if ((sampleSize[t] > 8 && sampleSize[t] < 14) || sampleSize[t] == 32) {
 						continue;
 					}
 					
@@ -421,30 +417,21 @@ public abstract class StlFile<T> {
 		return new String(sampleSize, 0, 20).trim().toLowerCase().startsWith("solid");
   }
   /** Entry point for all STL file types */
-  public void load(InputStream inputStream) throws IOException {
-	  	int determinantSize = 2048;
-		PushbackInputStream pushStream = new PushbackInputStream(inputStream, determinantSize);
-		triangles = createSet();
-		
-		try {
-			if (isASCIIFile(pushStream, determinantSize)) {
-				readASCIIFile(pushStream);
-			} else {
-				readBinaryFile(pushStream);
-			}
-		} finally {
-			pushStream.close();
+  public void load(InputStream inputStream, boolean rewriteNormalsWithRightHandRule) throws IOException {
+	this.rewriteNormalsWithRightHandRule = rewriteNormalsWithRightHandRule;
+	int determinantSize = 2048;
+	PushbackInputStream pushStream = new PushbackInputStream(inputStream, determinantSize);
+	triangles = createSet();
+	
+	try {
+		if (isASCIIFile(pushStream, determinantSize)) {
+			readASCIIFile(pushStream);
+		} else {
+			readBinaryFile(pushStream);
 		}
-  }
-
-  public int getFlags()
-  {
-    return flag;
-  }
-
-  public void setFlags(int parm)
-  {
-    this.flag=parm;
+	} finally {
+		pushStream.close();
+	}
   }
 
   public boolean getAscii()

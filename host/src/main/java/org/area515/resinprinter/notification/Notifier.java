@@ -1,6 +1,7 @@
 package org.area515.resinprinter.notification;
 
 import java.io.File;
+import java.net.URI;
 import java.util.List;
 
 import javax.websocket.server.ServerContainer;
@@ -17,11 +18,12 @@ public interface Notifier {
 		GeometryError,
 		FileUploadComplete,
 		SettingsChanged,
-		Ping
+		Ping,
+		RemoteMessage
 	}
 	
 	//Management methods for Notifier
-	public void register(ServerContainer container) throws InappropriateDeviceException;
+	public void register(URI uri, ServerContainer container) throws InappropriateDeviceException;
 	public void stop();
 	
 	//Events 
@@ -32,4 +34,5 @@ public interface Notifier {
 	public void hostSettingsChanged();
 	public void sendPingMessage(String message);
 	public Long getTimeOfLastClientPing();
+	public void remoteMessageReceived(String message);
 }

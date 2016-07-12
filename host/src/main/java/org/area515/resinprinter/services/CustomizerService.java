@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiResponses;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import javax.annotation.security.RolesAllowed;
 import javax.imageio.ImageIO;
+import javax.script.ScriptException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -29,6 +31,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
+import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.STLFileProcessor;
 import org.area515.resinprinter.job.Customizer;
@@ -40,8 +43,10 @@ import org.area515.util.PrintFileFilter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.area515.resinprinter.security.PhotonicUser;
+
 @Api(value="customizers")
-@RolesAllowed(UserService.FULL_RIGHTS)
+@RolesAllowed(PhotonicUser.FULL_RIGHTS)
 @Path("customizers")
 public class CustomizerService {
 	private static final Logger logger = LogManager.getLogger();
@@ -133,7 +138,7 @@ public class CustomizerService {
 	@GET
 	@Path("renderFirstSliceImage/{printableName}")
 	@Produces("image/png")
-	public StreamingOutput renderFirstSliceImage(@PathParam("printableName") String printableName) throws NoPrinterFoundException, SlicerException {
+	public StreamingOutput renderFirstSliceImage(@PathParam("printableName") String printableName) throws IOException, InappropriateDeviceException, ScriptException, NoPrinterFoundException, SlicerException {
 		Customizer customizer = customizers.get(printableName);
 		if (customizer != null) {
 			String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
@@ -163,9 +168,8 @@ public class CustomizerService {
 						}
 					};
 					return stream;
-				} catch (NoPrinterFoundException e) {
-					throw e;
-				} catch (SlicerException e) {
+				} catch (NoPrinterFoundException|SlicerException|IOException|InappropriateDeviceException|ScriptException e) {
+					// Loggers already warned or had error messages so just throw these up the stack
 					throw e;
 				}
 			} else {

@@ -13,11 +13,11 @@ import java.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.commons.io.FileUtils;
-
 import org.area515.resinprinter.job.render.StandaloneImageData;
 import org.area515.resinprinter.job.render.StandaloneImageRenderer;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.server.Main;
+import org.area515.util.Log4jTimer;
 
 import se.sawano.java.text.AlphanumericComparator;
 
@@ -101,6 +101,9 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 					StandaloneImageData oldImage = currentImageByJob.get(printJob);
 					StandaloneImageData imageData = prepareImage.get();
 					currentImageByJob.put(printJob, imageData);
+					
+					//Start the exposure timer
+					logger.info("ExposureStart:{}", ()->Log4jTimer.completeTimer(EXPOSURE_TIMER));
 					
 					dataAid.printer.showImage(imageData.getImage());
 					
