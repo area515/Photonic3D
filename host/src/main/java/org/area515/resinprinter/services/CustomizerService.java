@@ -123,6 +123,27 @@ public class CustomizerService {
 	// 	return customizer;
 	// }
 
+	public Customizer getCustomizer(String filename) {
+		// TODO: Do some work to get the basename of the file (just the printableName since those are the keys in the hashmap). Alternative is to store filenames as keys in hashmap
+		if (!customizers.contain(filename)) {
+			// Fix handling of this error case (shouldn't happen)
+			throw IllegalArgumentException("Could not find customizer for " + filename);
+		}
+		return customizers.get(filename);
+	}
+
+    @ApiOperation(value="Attempt to start a print by specifying the name of the printable file. "
+    		+ "For this operation to be successful, there must be exactly one Printer started.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@POST
+	@Path("print/{filename}")
+	public PrintJob print(@PathParam("filename")String fileName) {
+		return PrintableService.INSTANCE.print(fileName, true);
+	}
+
+
 	@ApiOperation(value="Save Customizer to a static HashMap given a printable name")
 	@POST
 	@Path("upsertCustomizer")

@@ -48,6 +48,7 @@ import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.job.Printable;
+import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.security.PhotonicUser;
@@ -163,12 +164,18 @@ public class PrintableService {
 				atLeastOnePrinterStarted = true;
 			}
 			if (printer.isStarted() && !printer.isPrintInProgress()) {
-				MachineResponse response = PrinterService.INSTANCE.print(fileName, printer.getName());
+				if (useCustomizer) {
+					MachineResponse response = PrinterService.INSTANCE.print(fileName, printer.getName(), useCustomizer);
+				} else {
+					MachineResponse response = PrinterService.INSTANCE.print(fileName, printer.getName());				
+				}
+
 				if (response.getResponse()) {
 					return PrintJobService.INSTANCE.getById(response.getMessage());
 				} else {
 					throw new IllegalArgumentException(response.getMessage());
-				}
+				}					
+
 			}
 		}
 		if (!atLeastOnePrinterStarted) {

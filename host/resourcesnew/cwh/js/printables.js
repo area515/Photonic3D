@@ -99,6 +99,16 @@
 
 		this.printWithCustomizer = function printWithCustomizer() {
 			// TODO: API Call to CustomizerService.print() and handle printing w/ customizer
+			var printableName = encodeURIComponent(controller.currentPrintable.name);
+			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);
+	        $http.post("/services/customizers/print/" + printableName + "." + printableExtension).success(
+	        		function (data) {
+	        			controller.refreshPrintables();
+	        			//$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrintables, afterErrorFunction:null});
+	        		}).error(
+    				function (data, status, headers, config, statusText) {
+ 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
+	        		})
 		}
 
 		this.changeFlip = function changeFlip() {
@@ -113,7 +123,7 @@
 				// }
 			}
 			this.setPreview(true);
-		};
+		}
 
 		this.resetTranslation = function resetTranslation() {
 			if (controller.currentCustomizer !== null) {

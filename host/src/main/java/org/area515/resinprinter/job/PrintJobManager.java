@@ -18,6 +18,8 @@ import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 
+import org.area515.resinprinter.services.CustomizerService;
+
 public class PrintJobManager {
 	private static final Logger logger = LogManager.getLogger();
 	private static PrintJobManager INSTANCE;
@@ -82,9 +84,13 @@ public class PrintJobManager {
 	}
 	
 	public PrintJob createJob(File job, final Printer printer) throws JobManagerException, AlreadyAssignedException  {
+		return createJob(job, printer, false);
+	}
+
+	public PrintJob createJob(File job, final Printer printer, boolean useCustomizer) {
 		final PrintJob newJob = new PrintJob(job);
 		PrintJob otherJob = printJobsByJobId.putIfAbsent(newJob.getId(), newJob);
-		
+
 		//This could never happen.
 		if (otherJob != null) {
 			throw new JobManagerException("The selected job is already running");
@@ -97,6 +103,10 @@ public class PrintJobManager {
 		if (!job.isFile()) {
 			printJobsByJobId.remove(newJob.getId());
 			throw new JobManagerException("The selected job is not a file");
+		}
+
+		if (useCustomizer) {
+			newJob.setCustomizer(CustomizerService.INSTANCE.getCustomizer(job));
 		}
 		
 		//Why are these being set?
@@ -117,7 +127,7 @@ public class PrintJobManager {
 			//Trigger all job completion tasks after job is complete
 			Main.GLOBAL_EXECUTOR.submit(new JobCloser(printer, futureJobStatus, newJob));
 		}
-		return newJob;
+		return newJob;		
 	}
 	
 	public PrintJob getJob(UUID jobId) {
