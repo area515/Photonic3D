@@ -17,6 +17,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
+import org.area515.resinprinter.job.Customizer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -47,6 +48,8 @@ public class PrintJob {
 	private Future<JobStatus> futureJobStatus;
 	private CountDownLatch futureJobStatusAssigned = new CountDownLatch(1);
 	private Map<String, CompiledScript> scriptsByName = new HashMap<>();
+
+	private Customizer customizer;
 
 	public PrintJob(File jobFile) {
 		this.jobFile = jobFile;
@@ -109,6 +112,14 @@ public class PrintJob {
 	}
 	public Printer getPrinter() {
 		return printer;
+	}
+
+	public void setCustomizer(Customizer customizer) {
+		this.customizer = customizer;
+	}
+
+	public Customizer getCustomizer() {
+		return customizer;
 	}
 	
 	@XmlTransient

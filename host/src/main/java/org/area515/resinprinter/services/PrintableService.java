@@ -152,6 +152,10 @@ public class PrintableService {
 	@POST
 	@Path("/print/{filename}")
 	public PrintJob print(@PathParam("filename")String fileName) {
+		return print(fileName, false);
+	}
+
+	public PrintJob print(String fileName, boolean useCustomizer) {
 		boolean atLeastOnePrinterStarted = false;
 		List<Printer> printers = PrinterService.INSTANCE.getPrinters();
 		for (Printer printer : printers) {
