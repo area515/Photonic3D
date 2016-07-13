@@ -274,5 +274,7 @@ public class KeystoreSecurityTest {
 		Assert.assertArrayEquals(greetingResponseResponse, crypto1.getData(message3));
 	}
 
+	//TODO: Test two way + out of order messaging and I think we'll have a problem.
+	
 	//TODO: Test oracle attacks
 }
