@@ -97,6 +97,10 @@
 			$scope.$emit("MachineResponse",  {machineResponse: {command:"Browser Too Old", message:"You will need to use a modern browser to run this application."}});
 		}
 
+		this.printWithCustomizer = function printWithCustomizer() {
+			// TODO: API Call to CustomizerService.print() and handle printing w/ customizer
+		}
+
 		this.changeFlip = function changeFlip() {
 			if (controller.currentCustomizer !== null) {
 				//customizer returns a json object. js side only knows api
