@@ -94,7 +94,7 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 				applyBulbMask(data, graphics, data.xResolution, data.yResolution);
 				
 				//Start the exposure timer
-				logger.info("ExposureStart:{}", ()->Log4jTimer.completeTimer(EXPOSURE_TIMER));
+				logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
 
 				data.printer.showImage(image);
 				printCube.currentImage = image;

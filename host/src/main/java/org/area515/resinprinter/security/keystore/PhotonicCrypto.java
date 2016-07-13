@@ -7,7 +7,6 @@ import java.security.KeyStore.Entry;
 import java.security.KeyStore.PrivateKeyEntry;
 import java.security.KeyStore.TrustedCertificateEntry;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
@@ -17,11 +16,14 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -30,6 +32,7 @@ import javax.naming.InvalidNameException;
 import org.area515.resinprinter.security.Friend;
 import org.area515.resinprinter.security.JettySecurityUtils;
 import org.area515.resinprinter.security.PhotonicUser;
+import org.area515.resinprinter.security.SHA1PRNG;
 
 import sun.security.x509.X509CertImpl;
 
@@ -53,9 +56,10 @@ public class PhotonicCrypto {
 	private Cipher conversationCipher;
 	private SecretKeySpec symKey;
 	private int currentOffset;
-	private SecureRandom random;
+	private SHA1PRNG consistentRandom;
 	private boolean allowInsecureCommunication;
-	
+	private Map<Integer, byte[]> outOfOrderIvs = new HashMap<>();
+
 	public PhotonicCrypto(Entry signer, Entry decryptor, boolean allowInsecureCommunication) throws CertificateExpiredException, CertificateNotYetValidException, CertificateEncodingException, InvalidNameException {
 		this.allowInsecureCommunication = allowInsecureCommunication;
 		if (decryptor instanceof PrivateKeyEntry) {
@@ -176,7 +180,8 @@ public class PhotonicCrypto {
 			String ivAndKey = new String(decrypt.doFinal(message.getData()));
 			int newLineSep = ivAndKey.indexOf("\n");
 			if (newLineSep > 0) {
-				random = new SecureRandom(Base64.getDecoder().decode(ivAndKey.substring(0, newLineSep)));//TODO: This needs to be a known algorithm
+				consistentRandom = new SHA1PRNG();
+				consistentRandom.engineSetSeed(Base64.getDecoder().decode(ivAndKey.substring(0, newLineSep)));
 				currentOffset = 0;
 			}
 			if (newLineSep < ivAndKey.length()) {
@@ -190,20 +195,23 @@ public class PhotonicCrypto {
 		//TODO: At this point we treat the message.getEncryptionAlgorithm() as AES encryption. Should I check it?
 		
 		//It must be a data message
-		if (random == null) {
+		if (consistentRandom == null) {
 			throw new InvalidKeyException("You need to perform a key exchange with this crypto before you use it");
 		}
-		IvParameterSpec iv = null;
+		
+		byte[] ivBytes = null;
 		for (; currentOffset < message.getIvOffset(); currentOffset++) {
-			byte[] ivBytes = new byte[IV_LENGTH];
-			random.nextBytes(ivBytes);
-			iv = new IvParameterSpec(ivBytes);
+			ivBytes = new byte[IV_LENGTH];
+			consistentRandom.engineNextBytes(ivBytes);
+			outOfOrderIvs.put(currentOffset + 1, ivBytes);
 		}
 		
-		if (iv == null) {
+		ivBytes = outOfOrderIvs.remove(message.getIvOffset());
+		if (ivBytes == null) {
 			throw new InvalidAlgorithmParameterException("Old iv offset specified. Replay attack?");
 		}
 		
+		IvParameterSpec iv = new IvParameterSpec(ivBytes);
     	conversationCipher.init(Cipher.DECRYPT_MODE, symKey, iv);
     	return conversationCipher.doFinal(message.getData());
 	}
@@ -220,18 +228,17 @@ public class PhotonicCrypto {
 		keyMessage.setEncryptionAlgorithm("RSA");
 		
 		remoteCrypto.encryptor.checkValidity(new Date());
-		SecureRandom throwAwayRandom = new SecureRandom();
-		byte[] ivBytes = new byte[IV_LENGTH];
-		throwAwayRandom.nextBytes(ivBytes);
-		byte[] keyBytes = new byte[AES_KEY_SIZE];
-		throwAwayRandom.nextBytes(keyBytes);
+		KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+		keyGen.init(AES_KEY_SIZE * 8);
+		byte[] ivBytes = keyGen.generateKey().getEncoded();
+		byte[] keyBytes = keyGen.generateKey().getEncoded();
 		Cipher encrypt=Cipher.getInstance("RSA");
 		encrypt.init(Cipher.ENCRYPT_MODE, remoteCrypto.encryptor.getPublicKey());
 		encrypt.update(Base64.getEncoder().encode(ivBytes));
 		encrypt.update(new byte[]{10});
 		byte[] ivAndKey = encrypt.doFinal(Base64.getEncoder().encode(keyBytes));
 		keyMessage.setData(ivAndKey);
-    
+		
 		verifier.checkValidity(new Date());
 		Signature sig = Signature.getInstance(verifier.getSigAlgName());
 		sig.initSign(signer.getPrivateKey());
@@ -242,14 +249,15 @@ public class PhotonicCrypto {
 		keyMessage.setSignature(sig.sign());
 		
 		currentOffset = 0;
-		this.random = new SecureRandom(ivBytes);//TODO: This needs to be a known algorithm
+		consistentRandom = new SHA1PRNG();
+		consistentRandom.engineSetSeed(ivBytes);
 	    symKey = new SecretKeySpec(keyBytes, "AES");
     	conversationCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 		return keyMessage;
 	}
 	
 	public Message buildEncryptedMessage(ByteBuffer buffer) throws InvalidNameException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		if (random == null) {
+		if (consistentRandom == null) {
 			throw new InvalidKeyException("You need to perform a key exchange with this crypto before you use it");
 		}
 		
@@ -261,7 +269,7 @@ public class PhotonicCrypto {
 
 		currentOffset++;
 		byte[] ivBytes = new byte[IV_LENGTH];
-		random.nextBytes(ivBytes);
+		consistentRandom.engineNextBytes(ivBytes);
 		IvParameterSpec iv = new IvParameterSpec(ivBytes);
 		keyMessage.setEncryptionAlgorithm("AES/CBC/PKCS5PADDING");
 		keyMessage.setIvOffset(currentOffset);

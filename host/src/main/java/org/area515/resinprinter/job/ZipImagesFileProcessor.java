@@ -103,7 +103,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 					currentImageByJob.put(printJob, imageData);
 					
 					//Start the exposure timer
-					logger.info("ExposureStart:{}", ()->Log4jTimer.completeTimer(EXPOSURE_TIMER));
+					logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
 					
 					dataAid.printer.showImage(imageData.getImage());
 					
