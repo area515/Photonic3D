@@ -111,6 +111,15 @@
 			this.setPreview(true);
 		};
 
+		this.resetTranslation = function resetTranslation() {
+			if (controller.currentCustomizer !== null) {
+				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
+				affineTransformSettings.xtranslate = 0;
+				affineTransformSettings.ytranslate = 0;
+			}
+			this.setPreview(true);
+		}
+
 		this.changeTranslate = function changeTranslate(x, y) {
 			if (controller.currentCustomizer !== null) {
 				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
