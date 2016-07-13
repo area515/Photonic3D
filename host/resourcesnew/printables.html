@@ -54,7 +54,7 @@
 				<div class="panel panel-default"> 
 					<div class="panel-body"> 
 						<div class="controlBox">
-							<div class="col-sm-7" id="translationButtons">
+							<div class="col-sm-5" id="translationButtons">
 								<h5>Translate image on Y axis: {{printablesController.currentCustomizer.affineTransformSettings.ytranslate}}</h5>
 								<span class="btn-group btn-xs" >
 									<a class="btn btn-xs btn-danger fa fa-angle-double-down" ng-click="printablesController.changeTranslate(0, 500)">500</a> 
@@ -75,15 +75,16 @@
 								</span>
 							</button>							
 							</div>
-							<form style="margin-bottom:10px;" class="col-sm-3">
+							<form style="margin-bottom:10px;" class="col-sm-4">
 								<input type="checkbox" ng-model="printablesController.currentCustomizer.affineTransformSettings.yscale" ng-true-value="-1" ng-false-value="1" ng-change="printablesController.changeFlip()"> Flip Image
 							</form>			
+							<button class="btn btn-default" ng-click="printablesController.resetTranslation()">
+												<i class="fa fa-refresh"></i> 
+												<span>Reset Translation</span>							
 							<button class="btn btn-success" ng-click="printablesController.printWithCustomizer()">
 												<i class="fa fa-print"></i> 
 												<span>Print with Customizer</span>				
-							<button class="btn btn-default" ng-click="printablesController.resetTranslation()">
-												<i class="fa fa-refresh"></i> 
-												<span>Reset Translation</span>
+	
 
 							<!-- <tt >Flipped = {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</tt><br> -->
 							<!-- <form hidden>
