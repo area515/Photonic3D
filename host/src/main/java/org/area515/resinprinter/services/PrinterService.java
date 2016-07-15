@@ -40,6 +40,7 @@ import org.area515.resinprinter.job.InkDetector;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
+import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.render.StubPrintFileProcessor;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.ComPortSettings;
@@ -749,6 +750,10 @@ public class PrinterService {
 	@Path("startJob/{fileName}/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MachineResponse print(@PathParam("fileName") String fileName, @PathParam("printername") String printername) {
+		return print(fileName, printername, false);
+	}
+
+	public MachineResponse print(String fileName, String printername, boolean useCustomizer) {
 		Printer printer = PrinterManager.Instance().getPrinter(printername);
 		if (printer == null) {
 			return new MachineResponse("start", false, "Printer not started:" + printername);
@@ -766,12 +771,17 @@ public class PrinterService {
 		// Delete and Create handled in jobManager
 		PrintJob printJob = null;
 		try {
-			printJob = PrintJobManager.Instance().createJob(selectedFile, printer);
+			if (useCustomizer) {
+				printJob = PrintJobManager.Instance().createJob(selectedFile, printer, useCustomizer);
+			} else {
+				printJob = PrintJobManager.Instance().createJob(selectedFile, printer);				
+			}
+
 			return new MachineResponse("start", true, printJob.getId() + "");
 		} catch (JobManagerException | AlreadyAssignedException e) {
 		    logger.error("Error starting job:" + fileName + " printer:" + printername, e);
 			return new MachineResponse("start", false, e.getMessage());
-		}
+		}		
 	}
 	
 	private List<ChartData> getChartData(String seriesString) {

@@ -63,6 +63,10 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			yPixelsPerMM = slicingProfile.getDotsPermmY();
 			xResolution = slicingProfile.getxResolution();
 			yResolution = slicingProfile.getyResolution();
+
+			// Set the affine transform given the customizer from the printJob
+			setAffineTransform(printJob.getCustomizer());
+
 			
 			//This file processor requires an ink configuration
 			if (inkConfiguration == null) {

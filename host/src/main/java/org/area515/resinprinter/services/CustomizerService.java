@@ -35,6 +35,7 @@ import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.STLFileProcessor;
 import org.area515.resinprinter.job.Customizer;
+import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.exception.SlicerException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.server.HostProperties;
@@ -123,12 +124,35 @@ public class CustomizerService {
 	// 	return customizer;
 	// }
 
+	public Customizer getCustomizer(String filename) {
+		// TODO: Do some work to get the basename of the file (just the printableName since those are the keys in the hashmap). Alternative is to store filenames as keys in hashmap
+		if (!(customizers.containsKey(filename))) {
+			// Fix handling of this error case (shouldn't happen)
+			throw new IllegalArgumentException("Could not find customizer for " + filename);
+		}
+		return customizers.get(filename);
+	}
+
+    @ApiOperation(value="Attempt to start a print by specifying the name of the printable file. "
+    		+ "For this operation to be successful, there must be exactly one Printer started.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@POST
+	@Path("print/{filename}")
+	public PrintJob print(@PathParam("filename")String fileName) {
+		return PrintableService.INSTANCE.print(fileName, true);
+	}
+
+
 	@ApiOperation(value="Save Customizer to a static HashMap given a printable name")
 	@POST
 	@Path("upsertCustomizer")
 	public void addCustomizer(Customizer customizer) {
 		//throw new IllegalArgumentException("fail");
-		customizers.put(customizer.getPrintableName(), customizer);
+		String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
+		logger.debug("Add to customizers with key " + fileName + " and the customizer affineTransform is" + customizer.createAffineTransform());
+		customizers.put(fileName, customizer);
 	}
 
 	@ApiOperation(value="Renders the first slice of a printable based on the customizer")
@@ -136,12 +160,13 @@ public class CustomizerService {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
-	@Path("renderFirstSliceImage/{printableName}")
+	@Path("renderFirstSliceImage/{fileName}")
 	@Produces("image/png")
-	public StreamingOutput renderFirstSliceImage(@PathParam("printableName") String printableName) throws IOException, InappropriateDeviceException, ScriptException, NoPrinterFoundException, SlicerException {
-		Customizer customizer = customizers.get(printableName);
+	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName) throws IOException, InappropriateDeviceException, ScriptException, NoPrinterFoundException, SlicerException {
+		logger.debug("Filename is " + fileName);
+		Customizer customizer = customizers.get(fileName);
 		if (customizer != null) {
-			String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
+			// String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
 			File file = new File(HostProperties.Instance().getUploadDir(), fileName);
 
 			PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
@@ -179,21 +204,21 @@ public class CustomizerService {
 		return null;
 	}
 	
-    @ApiOperation(value="Renders any given slice based on the customizer and current slice number. This method assumes that the customizer has already been saved.")
-	@GET
-    @Path("renderSliceImage/{customizerName}/{currentSlice}")
-    @Produces("image/png")
-	public StreamingOutput renderImage(@PathParam("customizerName") String customizer, @PathParam("currentSlice")int currentSlice) {
-		//TODO: Pretend this is implemented.
-		return null;
-	}
+ //    @ApiOperation(value="Renders any given slice based on the customizer and current slice number. This method assumes that the customizer has already been saved.")
+	// @GET
+ //    @Path("renderSliceImage/{customizerName}/{currentSlice}")
+ //    @Produces("image/png")
+	// public StreamingOutput renderImage(@PathParam("customizerName") String customizer, @PathParam("currentSlice")int currentSlice) {
+	// 	//TODO: Pretend this is implemented.
+	// 	return null;
+	// }
     
-    @ApiOperation(value="Renders any given slice based on the provided Customizer and current slice number.")
-	@GET
-    @Path("testRenderSliceImage/{currentSlice}")
-    @Produces("image/png")
-	public StreamingOutput testRenderImage(Customizer customizer, @PathParam("currentSlice")int currentSlice) {
-		//TODO: Pretend this is implemented.
-		return null;
-	}
+ //    @ApiOperation(value="Renders any given slice based on the provided Customizer and current slice number.")
+	// @GET
+ //    @Path("testRenderSliceImage/{currentSlice}")
+ //    @Produces("image/png")
+	// public StreamingOutput testRenderImage(Customizer customizer, @PathParam("currentSlice")int currentSlice) {
+	// 	//TODO: Pretend this is implemented.
+	// 	return null;
+	// }
 }
