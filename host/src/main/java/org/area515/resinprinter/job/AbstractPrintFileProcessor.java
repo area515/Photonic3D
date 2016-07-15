@@ -306,8 +306,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		AffineTransformOp transOp = 
 		   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
 		after = transOp.filter(img, after);	
-		for (int y = 0; y < after.getHeight(); y++) {
-		    for (int x = 0; x < after.getWidth(); x++) {
+		for (int y = 0; y < height; y++) {
+		    for (int x = 0; x < width; x++) {
 		          //image.setRGB(x, y, Color.black);
 		          if (after.getRGB(x, y) == 0) {
 		          	// after.setRGB(x, y, -16777216);
@@ -315,8 +315,6 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		          }
 		    }
 		}
-
-
 		//System.out.println("affineTranform's yscale = " + aid.affineTransform.getScaleY());
 		applyBulbMask(aid, (Graphics2D)after.getGraphics(), width, height);
 		return after;
