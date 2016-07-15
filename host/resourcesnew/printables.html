@@ -45,22 +45,58 @@
 				<div class="preview-box"> 
 					<div class="panel panel-default" style="height:450px;">
 						<div class="panel-heading">Preview box for: {{printablesController.currentPrintable.name}}</div>
-						<div style="height: 300px" class="panel-body">
+						<div class="panel-body">
 							<p> <b>{{printablesController.errorMsg}}</b> </p>
 							<img ng-src="{{printablesController.currentPreviewImg}}" handle-error class="img-responsive" style="width:100%; height:100%;"/>
 						</div>
 					</div>
 				</div>
-				<form >
-					<input type="checkbox" ng-model="printablesController.currentCustomizer.affineTransformSettings.yscale" ng-true-value="-1" ng-false-value="1" ng-change="printablesController.changeFlip()"> Flip image
-					<br>
-				</form>
-				<tt >Flipped = {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</tt><br>
-				<!-- <form hidden>
-					<input hidden type="checkbox" ng-model="printablesController.currentCustomizer.affineTransformSettings.yscale" ng-true-value="-1" ng-false-value="0" ng-change="printablesController.changeFlip()"> Flip image
-					<br>
-				</form>
-				<tt hidden>Flipped = {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</tt><br> -->
+				<div class="panel panel-default"> 
+					<div class="panel-body"> 
+						<div class="controlBox">
+							<div class="col-sm-5" id="translationButtons">
+								<h5>Translate image on Y axis: {{printablesController.currentCustomizer.affineTransformSettings.ytranslate}}</h5>
+								<span class="btn-group btn-xs" >
+									<a class="btn btn-xs btn-danger fa fa-angle-double-down" ng-click="printablesController.changeTranslate(0, 500)">500</a> 
+									<a class="btn btn-xs btn-danger fa fa-angle-down" ng-click="printablesController.changeTranslate(0, 100)">100</a> 
+									<a class="btn btn-xs btn-danger fa fa-angle-down" ng-click="printablesController.changeTranslate(0, 10)">10</a>
+									<a class="btn btn-xs btn-success fa fa-angle-up" ng-click="printablesController.changeTranslate(0, -10)">10</a>
+									<a class="btn btn-xs btn-success fa fa-angle-up" ng-click="printablesController.changeTranslate(0, -100)">100</a>
+									<a class="btn btn-xs btn-success fa fa-angle-double-up" ng-click="printablesController.changeTranslate(0, -500)">500</a>
+								</span>					
+								<h5>Translate image on X axis: {{printablesController.currentCustomizer.affineTransformSettings.xtranslate}}</h5>
+								<span class="btn-group btn-xs" >
+									<a class="btn btn-xs btn-danger fa fa-angle-double-down" ng-click="printablesController.changeTranslate(-500, 0)">500</a> 
+									<a class="btn btn-xs btn-danger fa fa-angle-down" ng-click="printablesController.changeTranslate(-100, 0)">100</a> 
+									<a class="btn btn-xs btn-danger fa fa-angle-down" ng-click="printablesController.changeTranslate(-10, 0)">10</a>
+									<a class="btn btn-xs btn-success fa fa-angle-up" ng-click="printablesController.changeTranslate(10, 0)">10</a>
+									<a class="btn btn-xs btn-success fa fa-angle-up" ng-click="printablesController.changeTranslate(100, 0)">100</a>
+									<a class="btn btn-xs btn-success fa fa-angle-double-up" ng-click="printablesController.changeTranslate(500, 0)">500</a>
+								</span>
+							</button>							
+							</div>
+							<form style="margin-bottom:10px;" class="col-sm-4">
+								<input type="checkbox" ng-model="printablesController.currentCustomizer.affineTransformSettings.yscale" ng-true-value="-1" ng-false-value="1" ng-change="printablesController.changeFlip()"> Flip Image
+							</form>			
+							<button class="btn btn-default" ng-click="printablesController.resetTranslation()">
+												<i class="fa fa-refresh"></i> 
+												<span>Reset Translation</span>							
+							<button class="btn btn-success" ng-click="printablesController.printWithCustomizer()">
+												<i class="fa fa-print"></i> 
+												<span>Print with Customizer</span>				
+	
+
+							<!-- <tt >Flipped = {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</tt><br> -->
+							<!-- <form hidden>
+								<input hidden type="checkbox" ng-model="printablesController.currentCustomizer.affineTransformSettings.yscale" ng-true-value="-1" ng-false-value="0" ng-change="printablesController.changeFlip()"> Flip image
+								<br>
+							</form>
+							<tt hidden>Flipped = {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</tt><br> -->
+						</div>
+					</div>
+				</div>
+				
+
 			</div>
 		</div>
 	<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="editModal" aria-hidden="true">

@@ -77,7 +77,9 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		//
 		//probably take affine transform from printer template & customizer's in future.
 		public void setAffineTransform(Customizer customizer) {
-			this.affineTransform = customizer.createAffineTransform();
+			if (customizer != null) {
+				this.affineTransform = customizer.createAffineTransform();
+			}
 		}
 	}
 	

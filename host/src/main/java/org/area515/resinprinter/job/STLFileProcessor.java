@@ -15,6 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.io.*;
 import java.awt.image.*;
 import javax.imageio.*;
+import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -160,7 +161,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		}
 	}
 	//This method takes in an STL file and produces the first slice of the file
-	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws NoPrinterFoundException, SlicerException {
+	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws NoPrinterFoundException, SlicerException, IOException, InappropriateDeviceException, ScriptException {
 
 		//find the first activePrinter
 		String printerName = customizer.getPrinterName();
@@ -211,9 +212,25 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 
 			return image;
 
-		} catch (Exception e) {
+		} catch (NegativeArraySizeException e) {
 			logger.error(e);
 			throw new SlicerException(e);
+		} catch (InappropriateDeviceException e) {
+			// Thrown if ink configuration is null
+			logger.warn(e);
+			throw e;
+		} catch (FileNotFoundException e) {
+			// Should not occur because this method shouldn't be able to be called without having a file selected.
+			logger.error(e);
+			throw e;
+		} catch (IOException e) {
+			// Also should not occur because previewSlice shouldn't be able to be called without having a file selected.
+			logger.error(e);
+			throw e;
+		} catch (ScriptException e) {
+			// Thrown if there is a problem with the bulb mask script, or any other script
+			logger.warn(e);
+			throw e;
 		}
 	}
 

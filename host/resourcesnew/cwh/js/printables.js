@@ -97,6 +97,10 @@
 			$scope.$emit("MachineResponse",  {machineResponse: {command:"Browser Too Old", message:"You will need to use a modern browser to run this application."}});
 		}
 
+		this.printWithCustomizer = function printWithCustomizer() {
+			// TODO: API Call to CustomizerService.print() and handle printing w/ customizer
+		}
+
 		this.changeFlip = function changeFlip() {
 			if (controller.currentCustomizer !== null) {
 				//customizer returns a json object. js side only knows api
@@ -110,6 +114,24 @@
 			}
 			this.setPreview(true);
 		};
+
+		this.resetTranslation = function resetTranslation() {
+			if (controller.currentCustomizer !== null) {
+				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
+				affineTransformSettings.xtranslate = 0;
+				affineTransformSettings.ytranslate = 0;
+			}
+			this.setPreview(true);
+		}
+
+		this.changeTranslate = function changeTranslate(x, y) {
+			if (controller.currentCustomizer !== null) {
+				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
+				affineTransformSettings.xtranslate += x;
+				affineTransformSettings.ytranslate += y;
+			}
+			this.setPreview(true);
+		}
 
 		this.printPrintable = function printPrintable() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
