@@ -196,9 +196,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 
 			//instantiate new dataaid
 			DataAid dataAid = initializeDataAid(printJob);
-
-			logger.debug("The affineTransform is " + dataAid.affineTransform);
-
+			
 			RenderingFileData stlData = new RenderingFileData();
 
 			boolean overrideNormals = dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule() == null?false:dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule();

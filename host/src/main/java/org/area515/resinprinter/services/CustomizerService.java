@@ -151,7 +151,7 @@ public class CustomizerService {
 	public void addCustomizer(Customizer customizer) {
 		//throw new IllegalArgumentException("fail");
 		String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
-		logger.debug("Add to customizers with key " + fileName + " and the customizer affineTransform is" + customizer.createAffineTransform());
+		// logger.debug("Add to customizers with key " + fileName + " and the customizer affineTransform is" + customizer.createAffineTransform());
 		customizers.put(fileName, customizer);
 	}
 
@@ -163,7 +163,7 @@ public class CustomizerService {
 	@Path("renderFirstSliceImage/{fileName}")
 	@Produces("image/png")
 	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName) throws IOException, InappropriateDeviceException, ScriptException, NoPrinterFoundException, SlicerException {
-		logger.debug("Filename is " + fileName);
+		// logger.debug("Filename is " + fileName);
 		Customizer customizer = customizers.get(fileName);
 		if (customizer != null) {
 			// String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
