@@ -306,7 +306,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		    for (int x = 0; x < after.getWidth(); x++) {
 		          //image.setRGB(x, y, Color.black);
 		          if (after.getRGB(x, y) == 0) {
-		          	after.setRGB(x, y, -16777216);
+		          	// after.setRGB(x, y, -16777216);
+		          	after.setRGB(x, y, Color.black.getRGB());
 		          }
 		    }
 		}

@@ -67,7 +67,7 @@
 			<!-- End Preview Box -->
 
 			<!-- Customizer -->
-			<div class="col-sm-5 bootcards-list" id="list">
+			<div class="col-sm-7 bootcards-list pull-right" id="list">
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<i class="fa fa-2x fa-magic pull-left"></i>
@@ -75,7 +75,7 @@
 						</h3>
 						<div class="row">
 							<div class="btn-group pull-right" >
-							<button class="btn btn-primary" ng-click="printablesController.printWithCustomizer()">
+							<button class="btn btn-success" ng-click="printablesController.printWithCustomizer()">
 									<i class="fa fa-print"></i> 
 									<span>Print with Customizations</span>	
 							</button>
@@ -110,26 +110,26 @@
 							<h6>Translate image on Y axis: {{printablesController.currentCustomizer.affineTransformSettings.ytranslate}}</h6>
 							<span class="btn-group btn-xs" >
 								<!-- <a class="btn btn-xs btn-danger fa fa-angle-double-down" ng-click="printablesController.changeTranslate(0, 500)">500</a>  -->
-								<a class="btn btn-xs btn-danger fa fa-angle-double-down" ng-click="printablesController.changeTranslate(0, 100)">100</a> 
-								<a class="btn btn-xs btn-danger fa fa-angle-down" ng-click="printablesController.changeTranslate(0, 10)">10</a>
-								<a class="btn btn-xs btn-danger fa fa-angle-down" ng-click="printablesController.changeTranslate(0, 1)">1</a>
-								<a class="btn btn-xs btn-success fa fa-angle-up" ng-click="printablesController.changeTranslate(0, -1)">1</a>
-								<a class="btn btn-xs btn-success fa fa-angle-up" ng-click="printablesController.changeTranslate(0, -10)">10</a>
-								<a class="btn btn-xs btn-success fa fa-angle-double-up" ng-click="printablesController.changeTranslate(0, -100)">100</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeTranslate(0, 100)">100</a> 
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeTranslate(0, 10)">10</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeTranslate(0, 1)">1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeTranslate(0, -1)">1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeTranslate(0, -10)">10</a>
+								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeTranslate(0, -100)">100</a>
 								<!-- <a class="btn btn-xs btn-success fa fa-angle-double-up" ng-click="printablesController.changeTranslate(0, -500)">500</a> -->
 							</span>					
 							<h6>Translate image on X axis: {{printablesController.currentCustomizer.affineTransformSettings.xtranslate}}</h6>
 							<span class="btn-group btn-xs" >
 								<!-- <a class="btn btn-xs btn-danger fa fa-angle-double-left" ng-click="printablesController.changeTranslate(-500, 0)">500</a>  -->
-								<a class="btn btn-xs btn-danger fa fa-angle-double-left" ng-click="printablesController.changeTranslate(-100, 0)">100</a> 
-								<a class="btn btn-xs btn-danger fa fa-angle-left" ng-click="printablesController.changeTranslate(-10, 0)">10</a>
-								<a class="btn btn-xs btn-danger fa fa-angle-left" ng-click="printablesController.changeTranslate(1, 0)">1</a>
-								<a class="btn btn-xs btn-success fa fa-angle-right" ng-click="printablesController.changeTranslate(-1, 0)">1</a>
-								<a class="btn btn-xs btn-success fa fa-angle-right" ng-click="printablesController.changeTranslate(10, 0)">10</a>
-								<a class="btn btn-xs btn-success fa fa-angle-double-right" ng-click="printablesController.changeTranslate(100, 0)">100</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-double-left" ng-click="printablesController.changeTranslate(-100, 0)">100</a> 
+								<a class="btn btn-sm btn-danger fa fa-angle-left" ng-click="printablesController.changeTranslate(-10, 0)">10</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-left" ng-click="printablesController.changeTranslate(1, 0)">1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeTranslate(-1, 0)">1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeTranslate(10, 0)">10</a>
+								<a class="btn btn-sm btn-success fa fa-angle-double-right" ng-click="printablesController.changeTranslate(100, 0)">100</a>
 								<!-- <a class="btn btn-xs btn-success fa fa-angle-double-right" ng-click="printablesController.changeTranslate(500, 0)">500</a> -->
 							</span>
-							<div class="btn btn-danger pull-right" ng-disabled="printablesController.isNotModified()" ng-click="printablesController.resetTranslation()">
+							<div class="btn btn-danger" ng-disabled="printablesController.isNotModified()" ng-click="printablesController.resetTranslation()">
 								<!-- <i class="fa fa-undo pull-left"></i>  -->
 								<span> Reset</span>
 							</div>
