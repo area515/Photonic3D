@@ -164,10 +164,11 @@ public class PrintableService {
 				atLeastOnePrinterStarted = true;
 			}
 			if (printer.isStarted() && !printer.isPrintInProgress()) {
+				MachineResponse response;
 				if (useCustomizer) {
-					MachineResponse response = PrinterService.INSTANCE.print(fileName, printer.getName(), useCustomizer);
+					response = PrinterService.INSTANCE.print(fileName, printer.getName(), useCustomizer);
 				} else {
-					MachineResponse response = PrinterService.INSTANCE.print(fileName, printer.getName());				
+					response = PrinterService.INSTANCE.print(fileName, printer.getName());				
 				}
 
 				if (response.getResponse()) {

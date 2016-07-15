@@ -14,7 +14,9 @@
 
 
 		this.handlePreviewError = function handlePreviewError() {
-			$http.get("/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name).success(
+			var printableName = encodeURIComponent(controller.currentPrintable.name);
+			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);				
+			$http.get("/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension).success(
 				function (data) {
 
 				}).error(
@@ -26,6 +28,8 @@
 
 		this.setPreview = function setPreview(reload) {
 			var parameter = controller.currentCustomizer;
+			var printableName = encodeURIComponent(controller.currentPrintable.name);
+			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);			
 			// do things with the currentCustomizer and get the png then set a variable like currentPreview to that png so that HTML page can display it
 			$http.post("/services/customizers/upsertCustomizer", parameter).success(
 				function (data) {
@@ -35,9 +39,9 @@
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		});
 
-			controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name;
+			controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension;
 			if (reload) {
-				controller.currentPreviewImg += '?decache=' + Math.random();
+				controller.currentPreviewImg += '?decache=' + Date.now();
 			}
 		};
 
@@ -64,7 +68,7 @@
 							var customizer = {
 								name: currName,
 								printerName: currPrint.printerName,
-								printableName: currPrint.name,
+								printableName: currName,
 								printableExtension: currPrint.extension,
 								supportsAffineTransformSettings: true,
 								affineTransformSettings: {

@@ -87,7 +87,7 @@ public class PrintJobManager {
 		return createJob(job, printer, false);
 	}
 
-	public PrintJob createJob(File job, final Printer printer, boolean useCustomizer) {
+	public PrintJob createJob(File job, final Printer printer, boolean useCustomizer) throws JobManagerException, AlreadyAssignedException {
 		final PrintJob newJob = new PrintJob(job);
 		PrintJob otherJob = printJobsByJobId.putIfAbsent(newJob.getId(), newJob);
 
@@ -106,7 +106,8 @@ public class PrintJobManager {
 		}
 
 		if (useCustomizer) {
-			newJob.setCustomizer(CustomizerService.INSTANCE.getCustomizer(job));
+			newJob.setCustomizer(CustomizerService.INSTANCE.getCustomizer(job.getName()));
+			logger.info(newJob.getCustomizer());
 		}
 		
 		//Why are these being set?

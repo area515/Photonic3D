@@ -192,10 +192,12 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			//instantiate a new print job based on the jobFile and set its printer to activePrinter
 			PrintJob printJob = new PrintJob(jobFile);
 			printJob.setPrinter(activePrinter);
+			printJob.setCustomizer(customizer);
 
 			//instantiate new dataaid
 			DataAid dataAid = initializeDataAid(printJob);
-			dataAid.setAffineTransform(customizer);
+
+			logger.debug("The affineTransform is " + dataAid.affineTransform);
 
 			RenderingFileData stlData = new RenderingFileData();
 
