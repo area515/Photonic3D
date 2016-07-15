@@ -2,6 +2,7 @@ package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.geom.AffineTransform; 
 import java.awt.image.AffineTransformOp;
@@ -305,6 +306,17 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		AffineTransformOp transOp = 
 		   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
 		after = transOp.filter(img, after);	
+		for (int y = 0; y < after.getHeight(); y++) {
+		    for (int x = 0; x < after.getWidth(); x++) {
+		          //image.setRGB(x, y, Color.black);
+		          if (after.getRGB(x, y) == 0) {
+		          	// after.setRGB(x, y, -16777216);
+		          	after.setRGB(x, y, Color.black.getRGB());
+		          }
+		    }
+		}
+
+
 		//System.out.println("affineTranform's yscale = " + aid.affineTransform.getScaleY());
 		applyBulbMask(aid, (Graphics2D)after.getGraphics(), width, height);
 		return after;

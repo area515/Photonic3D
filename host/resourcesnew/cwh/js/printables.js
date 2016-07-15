@@ -33,16 +33,15 @@
 			// do things with the currentCustomizer and get the png then set a variable like currentPreview to that png so that HTML page can display it
 			$http.post("/services/customizers/upsertCustomizer", parameter).success(
 				function (data) {
+					controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name;
+					if (reload) {
+						controller.currentPreviewImg += '?decache=' + Math.random();
+					}
 					// console.log("reached success while rendering first slice image, browser side");
 				}).error(
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		});
-
-			controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension;
-			if (reload) {
-				controller.currentPreviewImg += '?decache=' + Date.now();
-			}
 		};
 
 		this.changeCurrentPrintable = function changeCurrentPrintable(newPrintable) {
@@ -115,18 +114,33 @@
 	        		})
 		}
 
-		this.changeFlip = function changeFlip() {
+		this.changeFlip = function changeFlip(y) {
 			if (controller.currentCustomizer !== null) {
 				//customizer returns a json object. js side only knows api
 				controller.changeMsg = controller.currentCustomizer.name + " yscale is ";
 				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
+				affineTransformSettings.yscale = y;
 				// if (affineTransformSettings.yscale ) {
-					controller.changeMsg = affineTransformSettings.yscale;
+				controller.changeMsg = affineTransformSettings.yscale;
 				// } else {
 				// 	controller.changeMsg += "1";
 				// }
 			}
 			this.setPreview(true);
+		}
+
+		this.isFlipped = function isFlipped() {
+			if (controller.currentCustomizer !== null) {
+				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
+				if (affineTransformSettings.yscale == -1) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		this.isNotFlipped = function isNotFlipped() {
+			return !controller.isFlipped(); 
 		}
 
 		this.resetTranslation = function resetTranslation() {
@@ -136,6 +150,16 @@
 				affineTransformSettings.ytranslate = 0;
 			}
 			this.setPreview(true);
+		}
+
+		this.isNotModified = function isNotModified() {
+			if (controller.currentCustomizer !== null) {
+				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
+				if (affineTransformSettings.xtranslate !== 0 || affineTransformSettings.ytranslate !== 0) {
+					return false;
+				}
+			}
+			return true;
 		}
 
 		this.changeTranslate = function changeTranslate(x, y) {
