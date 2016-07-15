@@ -22,15 +22,23 @@ public class Customizer {
 		}
 		public void setXTranslate(Double xTranslate) {
 			//check width bounds
-			this.xTranslate = xTranslate;
+			if (this.xScale == -1) {
+				this.xTranslate = -xTranslate;
+			} else {
+				this.xTranslate = xTranslate;
+			}
 		}
 		
 		public Double getYTranslate() {
-			//check height bounds
+			//check height bound
 			return yTranslate;
 		}
 		public void setYTranslate(Double yTranslate) {
-			this.yTranslate = yTranslate;
+			if (this.yScale == -1) {
+				this.yTranslate = -yTranslate;
+			} else {
+				this.yTranslate = yTranslate;
+			}
 		}
 		
 		public Double getXScale() {
@@ -57,6 +65,9 @@ public class Customizer {
 		public AffineTransform createAffineTransform() {
 			AffineTransform affinetransform = new AffineTransform();
 			affinetransform.scale(this.xScale, this.yScale);
+			// affinetransform.scale(1, 1);
+			// affinetransform.rotate(Math.toRadians(90));
+			// affinetransform.translate(0, 0);
 			affinetransform.translate(this.xTranslate, this.yTranslate);
 			return affinetransform;
 		} 
@@ -64,7 +75,10 @@ public class Customizer {
 	}
 
 	public AffineTransform createAffineTransform() {
-		return affineTransformSettings.createAffineTransform();
+		// AffineTransform affinetransform = new AffineTransform();
+		// affinetransform.scale(affineTransformSettings.getXScale(), affineTransformSettings.getYScale());
+		// affinetransform.translate(affineTransformSettings.getXTranslate, affineTransformSettings.getYTranslate);
+		return this.affineTransformSettings.createAffineTransform();
 	} 
 
 	public String getPrintableExtension() {

@@ -106,7 +106,7 @@
 			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);
 	        $http.post("/services/printables/printWithCustomizer/" + printableName + "." + printableExtension + "/true").success(
 	        		function (data) {
-	        			controller.refreshPrintables();
+	        			//controller.refreshPrintables();
 	        			//$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrintables, afterErrorFunction:null});
 	        		}).error(
     				function (data, status, headers, config, statusText) {
