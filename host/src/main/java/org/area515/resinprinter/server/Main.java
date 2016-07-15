@@ -138,8 +138,9 @@ public class Main {
 			JettySecurityUtils.secureContext(externallyAccessableIP, serviceContext, server);
 		}
 		
+		URI startURI = new URI("http" + (HostProperties.Instance().isUseSSL()?"s://":"://") + externallyAccessableIP + ":" + port);
 		ServerContainer container = WebSocketServerContainerInitializer.configureContext(serviceContext);
-		NotificationManager.start(container);
+		NotificationManager.start(startURI, container);
 		
 		//Start server before we start broadcasting!
 		try {
@@ -150,7 +151,7 @@ public class Main {
 		}
 		   
 		//Start broadcasting server
-		FeatureManager.start(new URI("http" + (HostProperties.Instance().isUseSSL()?"s://":"://") + externallyAccessableIP + ":" + port));
+		FeatureManager.start(startURI);
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {

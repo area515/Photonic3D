@@ -16,6 +16,13 @@
 					<input type="text" class="form-control" placeholder="regex" ng-model="printersController.currentPrinter.configuration.machineConfig.PauseOnPrinterResponseRegEx"></input>
 				</div>
 			</div>
+			<div class="list-group">
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-neuter fa-rotate-270 pull-left"></i>
+					<h4>Override model normal with right hand rule</h4>
+					<input class="form-control" type="checkbox" ng-model="printersController.currentPrinter.configuration.machineConfig.OverrideModelNormalsWithRightHandRule">
+				</div>
+			</div>
 			
 			<div class="panel-footer">
 				<span ng-include="'cardFooter.html'"></span>

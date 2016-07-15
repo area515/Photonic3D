@@ -3,7 +3,10 @@ package org.area515.resinprinter.security.keystore;
 import java.util.UUID;
 
 /**
- * signature = signatureAlgorithm(from + to + encryptionAlgorithm + encryptionAlgorithm(data))
+ * Uses Encrypt-then-MAC theory of crypto.
+ * 
+ * Asym
+ * signature = signatureAlgorithm(from + to + encryptionAlgorithm + encryptionAlgorithm(data(base64(iv) + '\n' + base64(symkey)))
  * 
  * @author wgilster
  */
@@ -12,8 +15,15 @@ public class Message {
 	private UUID to;
 	private byte[] signature;
 	private String encryptionAlgorithm;
+	private Integer ivOffset;
 	private byte[] data;
 	
+	public Integer getIvOffset() {
+		return ivOffset;
+	}
+	public void setIvOffset(Integer ivOffset) {
+		this.ivOffset = ivOffset;
+	}
 	public UUID getFrom() {
 		return from;
 	}

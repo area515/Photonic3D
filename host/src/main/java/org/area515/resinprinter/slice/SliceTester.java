@@ -23,6 +23,7 @@ public class SliceTester {
 				 sliceResolution,
 				 0,
 				 true,
+				 false,
 				 new CloseOffMend());
 		 slicer.loadFile(new FileInputStream(new File("C:\\Users\\wgilster\\git\\Creation-Workshop-Host\\host\\src\\test\\resources\\org\\area515\\resinprinter\\slice\\CornerBracket_2.stl")), null, null);
 		 

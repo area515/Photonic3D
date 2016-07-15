@@ -2,6 +2,7 @@ package org.area515.resinprinter.notification;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -57,7 +58,7 @@ public class WebSocketPrinterNotifier implements Notifier {
 	}
 	
 	@Override
-	public void register(ServerContainer container) throws InappropriateDeviceException {
+	public void register(URI uri, ServerContainer container) throws InappropriateDeviceException {
 		try {
 			container.addEndpoint(WebSocketPrinterNotifier.class);
 		} catch (DeploymentException e) {
@@ -122,5 +123,11 @@ public class WebSocketPrinterNotifier implements Notifier {
 	public Long getTimeOfLastClientPing() {
 		//Not for printers
 		return null;
+	}
+
+	@Override
+	public void remoteMessageReceived(String message) {
+		// TODO Auto-generated method stub
+		
 	}
 }

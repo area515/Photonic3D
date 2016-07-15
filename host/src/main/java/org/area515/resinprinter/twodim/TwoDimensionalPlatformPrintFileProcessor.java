@@ -10,6 +10,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
@@ -17,8 +19,10 @@ import org.area515.resinprinter.job.render.RenderingFileData;
 import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.services.PrinterService;
+import org.area515.util.Log4jTimer;
 
 public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends AbstractPrintFileProcessor<T,E> {
+    private static final Logger logger = LogManager.getLogger();
 	private Map<PrintJob, TwoDimensionalPrintState> twoDimensionalPrintDataByJob = new HashMap<PrintJob, TwoDimensionalPrintState>();
 	
 	public static abstract class TwoDimensionalPrintState extends RenderingFileData {
@@ -93,6 +97,9 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 				
 				//Now that the image has been rendered, we can make the switch to use the pointer that we were using while we were rendering
 				printState.setCurrentRenderingPointer(nextRenderingPointer);
+				
+				//Start the exposure timer
+				logger.info("ExposureStart:{}", ()->Log4jTimer.completeTimer(EXPOSURE_TIMER));
 				
 				//Cure the current image
 				dataAid.printer.showImage(image);
