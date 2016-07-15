@@ -133,16 +133,16 @@ public class CustomizerService {
 		return customizers.get(filename);
 	}
 
-    @ApiOperation(value="Attempt to start a print by specifying the name of the printable file. "
-    		+ "For this operation to be successful, there must be exactly one Printer started.")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
-            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
-	@POST
-	@Path("print/{filename}")
-	public PrintJob print(@PathParam("filename")String fileName) {
-		return PrintableService.INSTANCE.print(fileName, true);
-	}
+ //    @ApiOperation(value="Attempt to start a print by specifying the name of the printable file. "
+ //    		+ "For this operation to be successful, there must be exactly one Printer started.")
+ //    @ApiResponses(value = {
+ //            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+ //            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	// @POST
+	// @Path("print/{filename}")
+	// public PrintJob print(@PathParam("filename")String fileName) {
+	// 	return PrintableService.INSTANCE.print(fileName, true);
+	// }
 
 
 	@ApiOperation(value="Save Customizer to a static HashMap given a printable name")

@@ -156,7 +156,14 @@ public class PrintableService {
 		return print(fileName, false);
 	}
 
-	public PrintJob print(String fileName, boolean useCustomizer) {
+    @ApiOperation(value="Attempt to start a print by specifying the name of the printable file. "
+    		+ "For this operation to be successful, there must be exactly one Printer started.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@POST
+	@Path("/printWithCustomizer/{fileName}/{useCustomizer}")
+	public PrintJob print(@PathParam("fileName") String fileName, @PathParam("useCustomizer") boolean useCustomizer) {
 		boolean atLeastOnePrinterStarted = false;
 		List<Printer> printers = PrinterService.INSTANCE.getPrinters();
 		for (Printer printer : printers) {

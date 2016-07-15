@@ -33,7 +33,7 @@
 			// do things with the currentCustomizer and get the png then set a variable like currentPreview to that png so that HTML page can display it
 			$http.post("/services/customizers/upsertCustomizer", parameter).success(
 				function (data) {
-					controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + controller.currentPrintable.name;
+					controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension;
 					if (reload) {
 						controller.currentPreviewImg += '?decache=' + Math.random();
 					}
@@ -104,7 +104,7 @@
 			// TODO: API Call to CustomizerService.print() and handle printing w/ customizer
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
 			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);
-	        $http.post("/services/customizers/print/" + printableName + "." + printableExtension).success(
+	        $http.post("/services/printables/printWithCustomizer/" + printableName + "." + printableExtension + "/true").success(
 	        		function (data) {
 	        			controller.refreshPrintables();
 	        			//$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrintables, afterErrorFunction:null});

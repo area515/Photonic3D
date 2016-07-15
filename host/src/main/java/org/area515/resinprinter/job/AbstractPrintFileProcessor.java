@@ -66,8 +66,10 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			yResolution = slicingProfile.getyResolution();
 
 			// Set the affine transform given the customizer from the printJob
-			setAffineTransform(printJob.getCustomizer());
-
+			Customizer customizer = printJob.getCustomizer();
+			if (customizer != null) {
+				setAffineTransform(customizer);
+			}
 			
 			//This file processor requires an ink configuration
 			if (inkConfiguration == null) {
@@ -82,9 +84,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		//
 		//probably take affine transform from printer template & customizer's in future.
 		public void setAffineTransform(Customizer customizer) {
-			if (customizer != null) {
-				this.affineTransform = customizer.createAffineTransform();
-			}
+			this.affineTransform = customizer.createAffineTransform();
 		}
 	}
 	
