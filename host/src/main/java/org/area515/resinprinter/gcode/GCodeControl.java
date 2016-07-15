@@ -72,7 +72,7 @@ public abstract class GCodeControl {
 		return responseRegEx != null && responseRegEx.trim().length() > 0 && matcher.group(2) != null && matcher.group(2).matches(responseRegEx);
 	}
 	
-    public String sendGcodeAndRespectPrinter(PrintJob printJob, String cmd) throws IOException {
+	String sendGcodeAndRespectPrinter(PrintJob printJob, String cmd) throws IOException {
 		gCodeLock.lock();
         try {
         	if (!cmd.endsWith("\n")) {
@@ -189,8 +189,24 @@ public abstract class GCodeControl {
         return sendGcode("G28\r\n");
     }
     
+    private void parseCommentCommand(String comment) {
+		//If a comment was encountered, parse it to determine if something interesting was in there.
+		Pattern delayPattern = Pattern.compile(";\\s*<\\s*Delay\\s*>\\s*(\\d+).*", Pattern.CASE_INSENSITIVE);
+		Matcher matcher = delayPattern.matcher(comment);
+		if (matcher.matches()) {
+			try {
+				int sleepTime = Integer.parseInt(matcher.group(1));
+				logger.info("Sleep:{}", sleepTime);
+				Thread.sleep(sleepTime);
+				logger.info("Sleep complete");
+			} catch (InterruptedException e) {
+				logger.error("Interrupted while waiting for sleep to complete.", e);
+			}
+		}
+    }
+    
     public String executeGCodeWithTemplating(PrintJob printJob, String gcodes) throws InappropriateDeviceException {
-		Pattern gCodePattern = Pattern.compile("\\s*([^;]+)\\s*;?.*", Pattern.CASE_INSENSITIVE);
+		Pattern gCodePattern = Pattern.compile("\\s*([^;]*)\\s*(;.*)?", Pattern.CASE_INSENSITIVE);
 		try {
 			if (gcodes == null || gcodes.trim().isEmpty()) {
 				throw new InappropriateDeviceException(MachineConfig.NOT_CAPABLE);
@@ -211,6 +227,9 @@ public abstract class GCodeControl {
 					Matcher matcher = gCodePattern.matcher(gcode);
 					if (matcher.matches()) {
 						buffer.append(sendGcodeAndRespectPrinter(printJob, matcher.group(1)));
+						if (matcher.group(2) != null) {
+							parseCommentCommand(matcher.group(2));
+						}
 					}
 				}
 			}

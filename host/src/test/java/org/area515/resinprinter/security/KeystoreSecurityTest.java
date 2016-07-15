@@ -253,5 +253,28 @@ public class KeystoreSecurityTest {
 		} catch (InvalidKeyException e) {}
 	}
 	
+	@Test
+	public void ensureOutOfOrderMessagingWorksOk() throws Exception {
+		byte[] greeting = "hello!".getBytes();
+		byte[] greetingResponse = "Well hello. How are you!".getBytes();
+		byte[] greetingResponseResponse = "I'm fantastic, and you?".getBytes();
+		byte[] greetingResponseResponseResponse = "Not so good I have a sore back. :(".getBytes();
+		Message keyExchange;
+
+		keyExchange = crypto1.buildKeyExchange();
+		Assert.assertNull(crypto2.getData(keyExchange));
+
+		Message message1 = crypto2.buildEncryptedMessage(ByteBuffer.wrap(greeting));
+		Message message2 = crypto2.buildEncryptedMessage(ByteBuffer.wrap(greetingResponse));
+		Message message3 = crypto2.buildEncryptedMessage(ByteBuffer.wrap(greetingResponseResponse));
+		Message message4 = crypto2.buildEncryptedMessage(ByteBuffer.wrap(greetingResponseResponseResponse));
+		Assert.assertArrayEquals(greetingResponse, crypto1.getData(message2));
+		Assert.assertArrayEquals(greetingResponseResponseResponse, crypto1.getData(message4));
+		Assert.assertArrayEquals(greeting, crypto1.getData(message1));
+		Assert.assertArrayEquals(greetingResponseResponse, crypto1.getData(message3));
+	}
+
+	//TODO: Test two way + out of order messaging and I think we'll have a problem.
+	
 	//TODO: Test oracle attacks
 }

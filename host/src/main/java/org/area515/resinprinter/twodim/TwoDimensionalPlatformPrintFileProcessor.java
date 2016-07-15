@@ -99,7 +99,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 				printState.setCurrentRenderingPointer(nextRenderingPointer);
 				
 				//Start the exposure timer
-				logger.info("ExposureStart:{}", ()->Log4jTimer.completeTimer(EXPOSURE_TIMER));
+				logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
 				
 				//Cure the current image
 				dataAid.printer.showImage(image);

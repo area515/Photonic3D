@@ -78,11 +78,9 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 			String currentLine;
 			Integer sliceCount = null;
 			Pattern slicePattern = Pattern.compile("\\s*;\\s*<\\s*Slice\\s*>\\s*(\\d+|blank)\\s*", Pattern.CASE_INSENSITIVE);
-			Pattern delayPattern = Pattern.compile("\\s*;\\s*<\\s*Delay\\s*>\\s*(\\d+)\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern liftSpeedPattern = Pattern.compile(   "\\s*;\\s*\\(?\\s*Z\\s*Lift\\s*Feed\\s*Rate\\s*=\\s*([\\d\\.]+)\\s*(?:[Mm]{2}?/[Ss])?\\s*\\)?\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern liftDistancePattern = Pattern.compile("\\s*;\\s*\\(?\\s*Lift\\s*Distance\\s*=\\s*([\\d\\.]+)\\s*(?:[Mm]{2})?\\s*\\)?\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern sliceCountPattern = Pattern.compile("\\s*;\\s*Number\\s*of\\s*Slices\\s*=\\s*(\\d+)\\s*", Pattern.CASE_INSENSITIVE);
-			Pattern gCodePattern = Pattern.compile("\\s*([^;]+)\\s*;?.*", Pattern.CASE_INSENSITIVE);
 			
 			//We can't set these values, that means they aren't set to helpful values when this job starts
 			//data.printJob.setExposureTime(data.inkConfiguration.getExposureTime());
@@ -138,7 +136,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 						continue;
 					}
 					
-					matcher = delayPattern.matcher(currentLine);
+					/*matcher = delayPattern.matcher(currentLine);
 					if (matcher.matches()) {
 						try {
 							int sleepTime = Integer.parseInt(matcher.group(1));
@@ -154,7 +152,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 							logger.error("Interrupted while waiting for exposure to complete.", e);
 						}
 						continue;
-					}
+					}*/
 					
 					matcher = sliceCountPattern.matcher(currentLine);
 					if (matcher.matches()) {
@@ -188,7 +186,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 						continue;
 					}
 					
-					matcher = gCodePattern.matcher(currentLine);
+					/*matcher = gCodePattern.matcher(currentLine);
 					if (matcher.matches()) {
 						String gCode = matcher.group(1).trim();
 						logger.info("Send GCode:{}", gCode);
@@ -202,10 +200,11 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 						}
 						logger.info("Printer Response:{}", gCode);
 						continue;
-					}
+					}*/
 					
 					// print out comments
-					logger.info("Ignored line:{}", currentLine);
+					//logger.info("Ignored line:{}", currentLine);
+					printer.getGCodeControl().executeGCodeWithTemplating(printJob, currentLine);
 			}
 			
 			return printer.isPrintActive()?JobStatus.Completed:printer.getStatus();
