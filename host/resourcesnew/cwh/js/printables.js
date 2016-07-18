@@ -12,7 +12,6 @@
 		this.customizers = {};
 		this.errorMsg = "";
 
-
 		this.handlePreviewError = function handlePreviewError() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
 			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);				
@@ -23,6 +22,7 @@
 				function (data, status, headers, config, statusText) {
 					// $scope.$emit("HTTPError", {status:status, statusText:data});
 					controller.errorMsg = "Error: " + data;
+					controller.showControls = false;
 				});
 		}
 
@@ -51,6 +51,7 @@
 			// Set currentCustomizer to the customizer in the dictionary given the current printable name
 			controller.currentCustomizer = controller.customizers[currName];
 			controller.errorMsg = "";
+			this.showControls = true;
 			this.setPreview(false);
 		};
 
@@ -58,35 +59,44 @@
 			$http.get("/services/printables/list").success(
         		function (data) {
         			controller.printables = data;
-					var length = controller.printables.length;
-					for (var i = 0; i < length; i++) {
-						var currPrint = controller.printables[i];
-						var currName = currPrint.name;
-						if (!(currName in controller.customizers)) {						  
-						    // console.log("we do not have customizer for name: " + currName);										
-							var customizer = {
-								name: currName,
-								printerName: currPrint.printerName,
-								printableName: currName,
-								printableExtension: currPrint.extension,
-								supportsAffineTransformSettings: true,
-								affineTransformSettings: {
-									// affineTransformScriptCalculator: null,
-									xscale: 1,
-									yscale: 1,
-									xtranslate: 0,
-									ytranslate: 0
-								}
-							};
-						controller.customizers[currName] = customizer;
-						// console.log("we have customizer for " + controller.customizers.currName.name);
-						}				
-					}
+        			// $http.get("services/customizers/list").success(
+        			// 	function (data) {
+        			// 		controller.customizers = data;
+        			// 		console.log("Reached success in listing customizers, here is the list: " + data);
+        			// 	});
+        			controller.initializeCustomizers();
 					controller.changeCurrentPrintable(controller.printables[0]);
 					controller.setPreview(false);
         		}
 	        );
 		};
+
+		this.initializeCustomizers = function initializeCustomizers() {
+			var length = controller.printables.length;
+			for (var i = 0; i < length; i++) {
+				var currPrint = controller.printables[i];
+				var currName = currPrint.name;
+				if (!(currName in controller.customizers)) {						  
+				    // console.log("we do not have customizer for name: " + currName);										
+					var customizer = {
+						name: currName,
+						printerName: currPrint.printerName,
+						printableName: currName,
+						printableExtension: currPrint.extension,
+						supportsAffineTransformSettings: true,
+						affineTransformSettings: {
+							// affineTransformScriptCalculator: null,
+							xscale: 1,
+							yscale: 1,
+							xtranslate: 0,
+							ytranslate: 0
+						}
+					};
+				controller.customizers[currName] = customizer;
+						// console.log("we have customizer for " + controller.customizers.currName.name);
+				}				
+			}			
+		}
 
 		this.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(
 			function(data) {
@@ -165,6 +175,9 @@
 		this.changeTranslate = function changeTranslate(x, y) {
 			if (controller.currentCustomizer !== null) {
 				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
+				if (affineTransformSettings.yscale === -1) {
+					y = -y;
+				}
 				affineTransformSettings.xtranslate += x;
 				affineTransformSettings.ytranslate += y;
 			}

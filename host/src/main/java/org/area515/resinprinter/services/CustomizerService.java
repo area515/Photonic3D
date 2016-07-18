@@ -79,8 +79,8 @@ public class CustomizerService {
     @ApiOperation(value="Retrieves all Customizers from static HashMap")
 	@GET
     @Path("list")
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<Customizer> getCustomizers() {
+	// @Produces(MediaType.APPLICATION_JSON)
+	public HashMap<String, Customizer> getCustomizers() {
 		// ArrayList<Customizer> customizers = new ArrayList<Customizer>();
 		// for(File file : acceptedFiles) {
 		// 	logger.info("Loaded customizer for {}", file);
@@ -89,6 +89,8 @@ public class CustomizerService {
 		// }
 		
 		// return printables;
+		
+		return customizers;
 	}
     
  //    @ApiOperation(value="Retrieves all Customizers that have been created for a given Printable.")
