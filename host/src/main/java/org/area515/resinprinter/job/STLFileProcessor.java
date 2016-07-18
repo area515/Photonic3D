@@ -39,7 +39,7 @@ import org.area515.resinprinter.services.PrinterService;
 
 import org.area515.util.Log4jTimer;
 
-public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> {
+public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> implements Previewable {
 	public static String STL_OVERHEAD = "stlOverhead";
 
 	private static final Logger logger = LogManager.getLogger();

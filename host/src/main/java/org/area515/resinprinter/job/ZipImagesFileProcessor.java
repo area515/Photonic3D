@@ -21,7 +21,7 @@ import org.area515.util.Log4jTimer;
 
 import se.sawano.java.text.AlphanumericComparator;
 
-public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
+public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor implements Previewable {
 	private static final Logger logger = LogManager.getLogger();
 
 	private Map<PrintJob, StandaloneImageData> currentImageByJob = new HashMap<>();
@@ -129,6 +129,10 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 		} finally {
 			currentImageByJob.remove(printJob);
 		}
+	}
+
+	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws IllegalArgumentException {
+		throw new IllegalArgumentException("Zip files still do not work as of now");
 	}
 
 	@Override
