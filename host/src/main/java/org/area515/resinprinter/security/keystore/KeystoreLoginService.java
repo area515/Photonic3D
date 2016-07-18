@@ -72,6 +72,8 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 	}
 
 	@Override
+	//TODO: When a user is logged out we need to logout all of it's conversations in the RendezvousClient.
+	//TODO: Logout users after a certain period of inactivity?
 	public UserIdentity login(String username, Object credentials, ServletRequest request) {
 		Set<PhotonicUser> users = knownUsers.get(username);
 		
@@ -133,6 +135,7 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 
 	@Override
 	public void logout(UserIdentity user) {
+		//TODO: When we logout, we should shut off all PhotonicCrypto connections to all remote users that were talking to this UserIdentity
 		loggedInUsers.remove(user.getUserPrincipal());
 	}
 
@@ -291,5 +294,10 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 		} catch (InvalidNameException | IOException | GeneralSecurityException e) {
 			throw new UserManagementException("Couldn't validate identity of user", e);
 		}
+	}
+
+	@Override
+	public CryptoUserIdentity getLoggedInIdentity(PhotonicUser user) {
+		return loggedInUsers.get(user);
 	}
 }

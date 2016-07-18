@@ -28,7 +28,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.security.Friend;
 import org.area515.resinprinter.security.UserManagementException;
-import org.area515.resinprinter.security.keystore.RendezvousServer.UserConnection;
+import org.area515.resinprinter.security.keystore.RendezvousClient.UserConnection;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
@@ -45,13 +45,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class IncomingHttpTunnel {
     private static final Logger logger = LogManager.getLogger();
 
-    private TimeUnit timeoutUnit = TimeUnit.MINUTES;
-    private int timeoutValue = 2;
 	private Session session;
-	private RendezvousServer server;
-	private static Map<Long, ResponseWaiter> waiters = new ConcurrentHashMap<>();
+	private RendezvousClient server;
+	private Map<Long, ResponseWaiter> waiters = new ConcurrentHashMap<>();
 	
-	private class ResponseWaiter {
+	public class ResponseWaiter {
 		private CountDownLatch latch = new CountDownLatch(1);
 		private int offset;
 		private int length;
@@ -60,8 +58,8 @@ public class IncomingHttpTunnel {
 		private ResponseWaiter() {
 		}
 		
-		public CountDownLatch getLatch() {
-			return latch;
+		public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+			return latch.await(timeout, unit);
 		}
 		
 		public void setResponse(byte[] content, int offset, int length) {
@@ -70,9 +68,13 @@ public class IncomingHttpTunnel {
 			this.length = length;
 			latch.countDown();
 		}
+		
+		public ByteBuffer getByteBuffer() {
+			return ByteBuffer.wrap(content, offset, length);
+		}
 	}
 	
-	public IncomingHttpTunnel(RendezvousServer server, URI rendezvousServerWebSocketAddress) throws Exception {
+	public IncomingHttpTunnel(RendezvousClient server, URI rendezvousServerWebSocketAddress) throws Exception {
 		this.server = server;
         WebSocketClient client = new WebSocketClient();
         client.start();
@@ -101,7 +103,7 @@ public class IncomingHttpTunnel {
 		return connection;
     }
     
-    public ResponseWaiter sendMessage(UUID fromLocal, UUID toRemote, String url, byte[] body) throws InvalidKeyException, InvalidNameException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, JsonProcessingException, IOException, InterruptedException, TimeoutException, UserManagementException, CertificateExpiredException, CertificateNotYetValidException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException {
+    public ResponseWaiter sendMessage(UUID fromLocal, UUID toRemote, String url, byte[] body, long timeoutValue, TimeUnit timeoutUnit) throws InvalidKeyException, InvalidNameException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, JsonProcessingException, IOException, InterruptedException, TimeoutException, UserManagementException, CertificateExpiredException, CertificateNotYetValidException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException {
 		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
     	UserConnection connection = buildConnection(fromLocal, toRemote);
     	Long requestNumber = new Random().nextLong();
@@ -115,10 +117,6 @@ public class IncomingHttpTunnel {
 		session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(outMessage)));
 		ResponseWaiter waiter = new ResponseWaiter();
 		waiters.put(requestNumber, waiter);
-		if (waiter.getLatch().await(timeoutValue, timeoutUnit)) {
-			throw new TimeoutException("Timed out waiting for answer");
-		}
-		
 		return waiter;
     }
     	
@@ -134,7 +132,7 @@ public class IncomingHttpTunnel {
     }
     
     @OnWebSocketMessage
-    public void onMessage(byte buf[]) {
+    public void onMessage(byte buf[], int offset, int length) {
 		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
 		Message inMessage;
 		try {
@@ -157,7 +155,7 @@ public class IncomingHttpTunnel {
 					server.addToFriendRequestList(newPotentialFriend);
 					return;
 				}
-			} catch (InvalidNameException | CertificateException e) {
+			} catch (InvalidNameException | CertificateException | RuntimeException e) {
 				logger.error(e);
 				server.unauthenticatedMessage(inMessage);
 				return;
@@ -165,7 +163,7 @@ public class IncomingHttpTunnel {
 			
 			//If not a trust request, we need to attempt a login first
 			try {
-				connection = server.attemptLogin(inMessage.getFrom(), inMessage.getTo());
+				connection = server.attemptLoginWithRemoteId(inMessage.getFrom(), inMessage.getTo());
 			} catch (UserManagementException e) {
 				logger.error(e);
 				server.unauthenticatedMessage(inMessage);
@@ -205,14 +203,13 @@ public class IncomingHttpTunnel {
 					//Check to see if this was a response first
 					ResponseWaiter waiter = waiters.remove(Long.parseLong(requestOrResponse));
 					if (waiter != null) {
-						waiter.setResponse(content, start, content.length - start);
-						waiter.getLatch().countDown();
+						waiter.setResponse(content, start + 1, content.length - start - 1);
 						return;
 					}
 
 					lastStart = start;
 				} else if (relativeURL == null) {
-					relativeURL = new String(content, lastStart + 1, start);
+					relativeURL = new String(content, lastStart + 1, start - lastStart - 1);
 					break;
 				}
 			}

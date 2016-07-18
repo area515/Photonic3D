@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.cert.CertificateEncodingException;
 import java.util.Arrays;
 import java.util.Base64;
 
@@ -32,6 +33,17 @@ public class KeystoreSecurityTest {
 	private static PhotonicUser user1;
 	private static PhotonicUser user2;
 	
+	public static Friend buildFriend(PhotonicUser user, PhotonicCrypto crypto) throws CertificateEncodingException {
+		Friend user1sFriendIsUser2 = new Friend();
+		user1sFriendIsUser2.setUser(user);
+		user1sFriendIsUser2.setTrustData(new String[]{
+				Base64.getEncoder().encodeToString(crypto.getCertificates()[0].getEncoded()),
+				Base64.getEncoder().encodeToString(crypto.getCertificates()[1].getEncoded())
+			});
+		
+		return user1sFriendIsUser2;
+	}
+	
 	@BeforeClass
 	public static void setupCryptos() throws Exception {
 		NotificationManager.start(null, Mockito.mock(ServerContainer.class));
@@ -57,20 +69,10 @@ public class KeystoreSecurityTest {
 		
 		crypto1 = KeystoreUtilities.getPhotonicCrypto(user1, user1Keystore, password, password, false);
 		crypto2 = KeystoreUtilities.getPhotonicCrypto(user2, user2Keystore, password, password, false);
+
+		Friend user1sFriendIsUser2 = buildFriend(user2, crypto2);
+		Friend user2sFriendIsUser1 = buildFriend(user1, crypto1);
 		
-		Friend user1sFriendIsUser2 = new Friend();
-		user1sFriendIsUser2.setUser(user2);
-		user1sFriendIsUser2.setTrustData(new String[]{
-				Base64.getEncoder().encodeToString(crypto2.getCertificates()[0].getEncoded()),
-				Base64.getEncoder().encodeToString(crypto2.getCertificates()[1].getEncoded())
-			});
-		
-		Friend user2sFriendIsUser1 = new Friend();
-		user2sFriendIsUser1.setUser(user1);
-		user2sFriendIsUser1.setTrustData(new String[]{
-				Base64.getEncoder().encodeToString(crypto1.getCertificates()[0].getEncoded()),
-				Base64.getEncoder().encodeToString(crypto1.getCertificates()[1].getEncoded())
-			});
 		service1.trustNewFriend(user1sFriendIsUser2);
 		service2.trustNewFriend(user2sFriendIsUser1);
 		
