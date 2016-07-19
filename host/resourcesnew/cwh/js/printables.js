@@ -165,8 +165,8 @@
 		this.changeTranslate = function changeTranslate(x, y) {
 			if (controller.currentCustomizer !== null) {
 				var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
-				affineTransformSettings.xtranslate += x;
-				affineTransformSettings.ytranslate += y;
+				affineTransformSettings.xtranslate += affineTransformSettings.xscale * x;
+				affineTransformSettings.ytranslate += affineTransformSettings.yscale * y;
 			}
 			this.setPreview(true);
 		}
