@@ -12,7 +12,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
 
 import javax.annotation.security.RolesAllowed;
 import javax.imageio.ImageIO;
@@ -79,17 +81,7 @@ public class CustomizerService {
     @ApiOperation(value="Retrieves all Customizers from static HashMap")
 	@GET
     @Path("list")
-	// @Produces(MediaType.APPLICATION_JSON)
-	public HashMap<String, Customizer> getCustomizers() {
-		// ArrayList<Customizer> customizers = new ArrayList<Customizer>();
-		// for(File file : acceptedFiles) {
-		// 	logger.info("Loaded customizer for {}", file);
-		// 	PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
-		// 	printables.add(new Printable(file, processor));
-		// }
-		
-		// return printables;
-		
+	public Map<String, Customizer> getCustomizers() {
 		return customizers;
 	}
     
@@ -154,7 +146,7 @@ public class CustomizerService {
 	}
 
 
-	@ApiOperation(value="Save Customizer to a static HashMap given a printable name")
+	@ApiOperation(value="Save Customizer to a static HashMap given a file name")
 	@POST
 	@Path("upsertCustomizer")
 	public void addCustomizer(Customizer customizer) {
@@ -162,6 +154,14 @@ public class CustomizerService {
 		String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
 		// logger.debug("Add to customizers with key " + fileName + " and the customizer affineTransform is" + customizer.createAffineTransform());
 		customizers.put(fileName, customizer);
+	}
+
+	@ApiOperation(value="Deletes a Customizer from a static HashMap given a file name")
+	@DELETE
+	@Path("removeCustomizer/{fileName}")
+	public void removeCustomizer(@PathParam("fileName") String fileName) {
+		//throw new IllegalArgumentException("fail");
+		customizers.remove(fileName);
 	}
 
 	@ApiOperation(value="Renders the first slice of a printable based on the customizer")
@@ -209,36 +209,6 @@ public class CustomizerService {
 			} else {
 				throw new IllegalArgumentException("Incorrect file type. Cannot display preview for non STL and ZIP files as of now");
 			}
-			// if (processor instanceof STLFileProcessor) {
-			// 	STLFileProcessor stlfileprocessor = (STLFileProcessor) processor;
-			// 	try {
-			// 		BufferedImage img = stlfileprocessor.previewSlice(customizer, file);
-
-			// 		logger.debug("just got the bufferedimg from previewSlice");
-
-
-			// 		StreamingOutput stream = new StreamingOutput() {
-			// 			@Override
-			// 			public void write(OutputStream output) throws IOException, WebApplicationException {
-			// 				try {
-			// 					ImageIO.write(img, "PNG", output);
-
-			// 					logger.debug("Writing the img");
-
-			// 				} catch (IOException e) {
-			// 					//System.out.println("failed writing");
-			// 					throw new IOException("We can't write the image");
-			// 				}
-			// 			}
-			// 		};
-			// 		return stream;
-			// 	} catch (NoPrinterFoundException|SlicerException|IOException|InappropriateDeviceException|ScriptException e) {
-			// 		// Loggers already warned or had error messages so just throw these up the stack
-			// 		throw e;
-			// 	}
-			// } else {
-			// 	throw new IllegalArgumentException("Incorrect file type. Cannot display preview for non STL and ZIP files as of now");
-			// }
 		}
 		return null;
 	}
