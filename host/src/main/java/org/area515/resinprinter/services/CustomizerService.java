@@ -57,6 +57,7 @@ public class CustomizerService {
 	private static final Logger logger = LogManager.getLogger();
     public static CustomizerService INSTANCE = new CustomizerService();
     private static HashMap<String, Customizer> customizers = new HashMap<>();
+    private static boolean projectImage = false;
     
 	//TODO: do we want this? getCustomizersByPrinterName(String printerName)
 
@@ -86,6 +87,19 @@ public class CustomizerService {
 		return customizers;
 	}
     
+    @ApiOperation(value="Sets whether the printer will project the image or not")
+    @POST
+    @Path("setProjectImage/{projectValue}") 
+    public void setProjectImage(@PathParam("projectValue")boolean projectValue) {
+    	projectImage = projectValue;
+    }
+
+    @ApiOperation(value="Retrieve whether or not to project image")
+    @GET
+    @Path("getProjectImage") 
+    public boolean getProjectImage() {
+    	return projectImage;
+    }
  //    @ApiOperation(value="Retrieves all Customizers that have been created for a given Printable.")
 	// @GET
  //    @Path("getByPrintableName/{printableName}")
@@ -174,44 +188,43 @@ public class CustomizerService {
 	@Produces("image/png")
 	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName) throws JobManagerException, IOException, InappropriateDeviceException, ScriptException, NoPrinterFoundException, SlicerException {
 		// logger.debug("Filename is " + fileName);
-		Customizer customizer = customizers.get(fileName);
-		if (customizer != null) {
-			// String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
-			File file = new File(HostProperties.Instance().getUploadDir(), fileName);
-
-			PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
-			if (processor instanceof Previewable) {
-				Previewable previewableProcessor = (Previewable) processor;
-				try {
-					BufferedImage img = previewableProcessor.previewSlice(customizer, file);
-
-					logger.debug("just got the bufferedimg from previewSlice");
-
-
-					StreamingOutput stream = new StreamingOutput() {
-						@Override
-						public void write(OutputStream output) throws IOException, WebApplicationException {
-							try {
-								ImageIO.write(img, "PNG", output);
-
-								logger.debug("Writing the img");
-
-							} catch (IOException e) {
-								//System.out.println("failed writing");
-								throw new IOException("We can't write the image");
-							}
-						}
-					};
-					return stream;
-				} catch (NoPrinterFoundException|SlicerException|IOException|InappropriateDeviceException|ScriptException|IllegalArgumentException|JobManagerException e) {
-					// Loggers already warned or had error messages so just throw these up the stack
-					throw e;
-				}
-			} else {
-				throw new IllegalArgumentException("Incorrect file type. Cannot display preview for non STL and ZIP files as of now");
-			}
+		Customizer customizer = getCustomizer(fileName);
+		if (customizer == null) {
+			throw new IllegalArgumentException("Customizer is null");
 		}
-		return null;
+			// String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
+		File file = new File(HostProperties.Instance().getUploadDir(), fileName);
+
+		PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
+		if (processor instanceof Previewable) {
+			Previewable previewableProcessor = (Previewable) processor;
+			try {
+				BufferedImage img = previewableProcessor.previewSlice(customizer, file, projectImage);
+
+				logger.debug("just got the bufferedimg from previewSlice");
+
+
+				StreamingOutput stream = new StreamingOutput() {
+					@Override
+					public void write(OutputStream output) throws IOException, WebApplicationException {
+						try {
+							ImageIO.write(img, "PNG", output);
+
+							logger.debug("Writing the img");
+						} catch (IOException e) {
+								//System.out.println("failed writing");
+							throw new IOException("We can't write the image");
+						}
+					}
+				};
+				return stream;
+			} catch (NoPrinterFoundException|SlicerException|IOException|InappropriateDeviceException|ScriptException|IllegalArgumentException|JobManagerException e) {
+				// Loggers already warned or had error messages so just throw these up the stack
+				throw e;
+			}
+		} else {
+			throw new IllegalArgumentException("Incorrect file type. Cannot display preview for non STL and ZIP files as of now");
+		}
 	}
 	
  //    @ApiOperation(value="Renders any given slice based on the customizer and current slice number. This method assumes that the customizer has already been saved.")

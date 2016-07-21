@@ -54,6 +54,17 @@
 							<i class="fa fa-2x fa-desktop pull-left"></i>
 							<h3 class="panel-title pull-left">Preview box for: {{printablesController.currentPrintable.name}}
 							</h3>
+								<h3 class="panel-title pull-right">Project Image</h3>							
+								<span class="btn-group pull-right" >
+								<a class="btn btn-danger btn-sm" ng-click="printablesController.setProjectImage(false)" ng-disabled="printablesController.isProjectImage()">
+									<b class="fa fa-toggle-off"></b> 
+									<b class="cwh-text-indent">Off</b>
+								</a>
+								<a class="btn btn-success btn-sm" ng-click="printablesController.setProjectImage(true)" ng-disabled="printablesController.isNotProjectImage()">
+									<b class="fa fa-toggle-on"></b> 
+									<b class="cwh-text-indent">On</b>
+								</a>
+							</span>
 							<div class="row">
 							</div>
 						</div>

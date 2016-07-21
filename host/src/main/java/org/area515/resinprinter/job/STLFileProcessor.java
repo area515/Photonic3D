@@ -159,7 +159,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		}
 	}
 	//This method takes in an STL file and produces the first slice of the file
-	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws NoPrinterFoundException, SlicerException, IOException, InappropriateDeviceException, ScriptException {
+	public BufferedImage previewSlice(Customizer customizer, File jobFile, boolean projectImage) throws NoPrinterFoundException, SlicerException, IOException, InappropriateDeviceException, ScriptException {
 
 		//find the first activePrinter
 		String printerName = customizer.getPrinterName();
@@ -207,6 +207,10 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
 			STLImageRenderer renderer = new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution);
 			BufferedImage image = renderer.call();
+
+			if (projectImage) {
+				activePrinter.showImage(image);
+			}
 
 			return image;
 

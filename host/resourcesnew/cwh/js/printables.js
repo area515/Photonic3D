@@ -12,6 +12,8 @@
 		this.customizers = {};
 		this.errorMsg = "";
 
+		this.projectImage = false;
+
 		this.handlePreviewError = function handlePreviewError() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
 			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);				
@@ -41,7 +43,7 @@
 					// console.log("reached success while rendering first slice image, browser side");
 				}).error(
     				function (data, status, headers, config, statusText) {
-    					console.log("up in here set preview failure");
+    					// console.log("up in here set preview failure");
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		});
 		};
@@ -73,19 +75,22 @@
                  				}
                  			});           							
         				});
-
+        			$http.get("services/customizers/getProjectImage").success(
+        				function (data) {
+        					// console.log("This is what we get from getProjectImage " + data);
+        					controller.projectImage = data;
+        				})
         		}
 	        );
 		};
 
 		this.initializeCustomizers = function initializeCustomizers(callback) {
 			var length = controller.printables.length;
-			console.log(controller.printables);
 			for (var i = 0; i < length; i++) {
 				var currPrint = controller.printables[i];
 				var customizerName = currPrint.name + "." + currPrint.extension;
 				if (!(customizerName in controller.customizers)) {		
-					console.log("Here is the customizer name that is not in controller.customizers " + customizerName);				  
+					// console.log("Here is the customizer name that is not in controller.customizers " + customizerName);				  
 				    // console.log("we do not have customizer for name: " + customizer.name);										
 					var customizer = {
 						name: customizerName,
@@ -204,6 +209,22 @@
 				// console.log(affineTransformSettings);
 			}
 			this.setPreview(true);
+		}
+
+		this.setProjectImage = function setProjectImage(projectImage) {
+			$http.post("services/customizers/setProjectImage/" + projectImage).success(
+				function (data) {
+					// console.log("we set the project image");
+					controller.projectImage = projectImage;
+				})
+		}
+
+		this.isProjectImage = function isProjectImage() {
+			return !(controller.projectImage);
+		}
+
+		this.isNotProjectImage = function isNotProjectImage() {
+			return !controller.isProjectImage();
 		}
 
 		this.isFlipped = function isFlipped() {

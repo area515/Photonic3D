@@ -143,7 +143,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 		}
 	}
 
-	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws NoPrinterFoundException, IOException, InappropriateDeviceException, ScriptException, JobManagerException {
+	public BufferedImage previewSlice(Customizer customizer, File jobFile, boolean projectImage) throws NoPrinterFoundException, IOException, InappropriateDeviceException, ScriptException, JobManagerException {
 
 		//find the first activePrinter
 		String printerName = customizer.getPrinterName();
@@ -196,6 +196,9 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 			StandaloneImageData stdImage = renderer.call();
 			BufferedImage image = stdImage.getImage();
 
+			if (projectImage) {
+				activePrinter.showImage(image);
+			}
 			return image;
 		} catch (InappropriateDeviceException e) {
 			// Thrown if ink configuration is null

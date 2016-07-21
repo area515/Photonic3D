@@ -14,5 +14,5 @@ import org.area515.resinprinter.job.JobManagerException;
 
 
 public interface Previewable {
-	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws JobManagerException, NoPrinterFoundException, SlicerException, IOException, InappropriateDeviceException, ScriptException ;
+	public BufferedImage previewSlice(Customizer customizer, File jobFile, boolean projectImage) throws JobManagerException, NoPrinterFoundException, SlicerException, IOException, InappropriateDeviceException, ScriptException ;
 }
