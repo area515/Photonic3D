@@ -80,21 +80,13 @@
 
 		this.initializeCustomizers = function initializeCustomizers(callback) {
 			var length = controller.printables.length;
-			var loop = function(counter, currPrint) {
-				if (counter === undefined) {
-					counter = 0;
-				}
-				if (counter >= length) {
-					callback();			
-					return;
-				}
-				if (currPrint === undefined || currPrint === null) {
-					return;
-				}
-
+			console.log(controller.printables);
+			for (var i = 0; i < length; i++) {
+				var currPrint = controller.printables[i];
 				var customizerName = currPrint.name + "." + currPrint.extension;
-				// console.log(controller.customizers);
-				if (!(customizerName in controller.customizers)) {											
+				if (!(customizerName in controller.customizers)) {		
+					console.log("Here is the customizer name that is not in controller.customizers " + customizerName);				  
+				    // console.log("we do not have customizer for name: " + customizer.name);										
 					var customizer = {
 						name: customizerName,
 						printerName: currPrint.printerName,
@@ -110,33 +102,36 @@
 						}
 					};
 					$http.post("/services/customizers/upsertCustomizer", customizer).success(
-						function (data) {
-							controller.customizers[customizer.name] = customizer;	
-							counter ++;
-							loop(counter, controller.printables[counter]);								
+						function (data) {								
 					}).error(
     					function (data, status, headers, config, statusText) {					
  	        				$scope.$emit("HTTPError", {status:status, statusText:data});
 
 	        			});
-				} else {
-					counter ++;
-					loop(counter, controller.printables[counter]);
-				}
-			};
-			loop(0, controller.printables[0]);
+					controller.customizers[customizerName] = customizer;
+				}				
+			}		
+			callback();
 
-			// Alternate approach with for loop. However, due to asynchronous calls, the for loop runs through everything and doesn't wait for each http.post request to finish. Thus, there
-			// are issues with creating the customizer dictionary.
+			// Alternate approach by forcing the synchronous calls to be async (having a function that calls itself after the http request completes). We do this because we set the dictionary
+			// values after the http request is completed. in the prior for-loop version, we take advantage of the synchronous call by setting dictionary values outside of the http request success callback.
 
-			// var length = controller.printables.length;
-			// console.log(controller.printables);
-			// for (var i = 0; i < length; i++) {
-			// 	var currPrint = controller.printables[i];
+						// var length = controller.printables.length;
+			// var loop = function(counter, currPrint) {
+			// 	if (counter === undefined) {
+			// 		counter = 0;
+			// 	}
+			// 	if (counter >= length) {
+			// 		callback();			
+			// 		return;
+			// 	}
+			// 	if (currPrint === undefined || currPrint === null) {
+			// 		return;
+			// 	}
+
 			// 	var customizerName = currPrint.name + "." + currPrint.extension;
-			// 	if (!(customizerName in controller.customizers)) {		
-			// 		console.log("Here is the customizer name that is not in controller.customizers " + customizerName);				  
-			// 	    // console.log("we do not have customizer for name: " + customizer.name);										
+			// 	// console.log(controller.customizers);
+			// 	if (!(customizerName in controller.customizers)) {											
 			// 		var customizer = {
 			// 			name: customizerName,
 			// 			printerName: currPrint.printerName,
@@ -153,20 +148,20 @@
 			// 		};
 			// 		$http.post("/services/customizers/upsertCustomizer", customizer).success(
 			// 			function (data) {
-			// 				console.log("we up in here with " + customizer.name);
-			// 				controller.customizers[customizer.name] = customizer;
-			// 				// console.log("we in here upserting the customizer");
-			// 				console.log(controller.customizers);										
+			// 				controller.customizers[customizer.name] = customizer;	
+			// 				counter ++;
+			// 				loop(counter, controller.printables[counter]);								
 			// 		}).error(
    //  					function (data, status, headers, config, statusText) {					
  	 //        				$scope.$emit("HTTPError", {status:status, statusText:data});
 
 	  //       			});
-
-			// 		// controller.customizers[currName] = customizer;
-			// 			// console.log("we have customizer for " + controller.customizers.currName.name);
-			// 	}				
-			// }		
+			// 	} else {
+			// 		counter ++;
+			// 		loop(counter, controller.printables[counter]);
+			// 	}
+			// };
+			// loop(0, controller.printables[0]);
 		}
 
 		this.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(
