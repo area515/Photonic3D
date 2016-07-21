@@ -28,8 +28,6 @@ import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.printer.Printer;
-// import org.area515.resinprinter.job.*;
-// import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.CloseOffMend;
 import org.area515.resinprinter.slice.StlError;
@@ -39,7 +37,7 @@ import org.area515.resinprinter.services.PrinterService;
 
 import org.area515.util.Log4jTimer;
 
-public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> {
+public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> implements Previewable {
 	public static String STL_OVERHEAD = "stlOverhead";
 
 	private static final Logger logger = LogManager.getLogger();

@@ -21,8 +21,6 @@ public class Customizer {
 			return xTranslate;
 		}
 		public void setXTranslate(Double xTranslate) {
-			//check width bounds
-			this.xTranslate = -xTranslate;
 			this.xTranslate = xTranslate;
 		}
 		
@@ -31,7 +29,6 @@ public class Customizer {
 			return yTranslate;
 		}
 		public void setYTranslate(Double yTranslate) {
-			this.yTranslate = -yTranslate;
 			this.yTranslate = yTranslate;
 		}
 		

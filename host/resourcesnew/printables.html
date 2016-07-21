@@ -67,7 +67,7 @@
 			<!-- End Preview Box -->
 
 			<!-- Customizer -->
-			<div class="col-sm-7 bootcards-list pull-right" id="list">
+			<div class="col-sm-7 bootcards-list pull-right" id="controls" ng-show="printablesController.showControls">
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<i class="fa fa-2x fa-magic pull-left"></i>
@@ -129,10 +129,10 @@
 								<a class="btn btn-sm btn-success fa fa-angle-double-right" ng-click="printablesController.changeTranslate(100, 0)">100</a>
 								<!-- <a class="btn btn-xs btn-success fa fa-angle-double-right" ng-click="printablesController.changeTranslate(500, 0)">500</a> -->
 							</span>
-							<div class="btn btn-danger" ng-disabled="printablesController.isNotModified()" ng-click="printablesController.resetTranslation()">
+							<button class="btn btn-danger" ng-disabled="printablesController.isNotModified()" ng-click="printablesController.resetTranslation()">
 								<!-- <i class="fa fa-undo pull-left"></i>  -->
-								<span> Reset</span>
-							</div>
+								<span>Reset</span>
+							</button>
 						</div>	
 					</div>
 					<!-- End list group -->

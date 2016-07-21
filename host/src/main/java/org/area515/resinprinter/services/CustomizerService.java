@@ -12,7 +12,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
 
 import javax.annotation.security.RolesAllowed;
 import javax.imageio.ImageIO;
@@ -36,6 +38,8 @@ import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.STLFileProcessor;
 import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.job.Previewable;
+import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.exception.SlicerException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.server.HostProperties;
@@ -75,14 +79,12 @@ public class CustomizerService {
 	// 	return null;
 	// }
 	
- //    @ApiOperation(value="Retrieves all Customizers")
-	// @GET
- //    @Path("list")
-	// @Produces(MediaType.APPLICATION_JSON)
-	// public List<Customizer> getCustomizersByPrintableName() {
-	// 	//TODO: Pretend this is implemented.
-	// 	return null;
-	// }
+    @ApiOperation(value="Retrieves all Customizers from static HashMap")
+	@GET
+    @Path("list")
+	public Map<String, Customizer> getCustomizers() {
+		return customizers;
+	}
     
  //    @ApiOperation(value="Retrieves all Customizers that have been created for a given Printable.")
 	// @GET
@@ -133,19 +135,19 @@ public class CustomizerService {
 		return customizers.get(filename);
 	}
 
- //    @ApiOperation(value="Attempt to start a print by specifying the name of the printable file. "
- //    		+ "For this operation to be successful, there must be exactly one Printer started.")
- //    @ApiResponses(value = {
- //            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
- //            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
-	// @POST
-	// @Path("print/{filename}")
-	// public PrintJob print(@PathParam("filename")String fileName) {
-	// 	return PrintableService.INSTANCE.print(fileName, true);
-	// }
+    @ApiOperation(value="Attempt to start a print by specifying the name of the printable file. "
+    		+ "For this operation to be successful, there must be exactly one Printer started.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@POST
+	@Path("print/{filename}")
+	public PrintJob print(@PathParam("filename")String fileName) {
+		return PrintableService.INSTANCE.print(fileName, true);
+	}
 
 
-	@ApiOperation(value="Save Customizer to a static HashMap given a printable name")
+	@ApiOperation(value="Save Customizer to a static HashMap given a file name")
 	@POST
 	@Path("upsertCustomizer")
 	public void addCustomizer(Customizer customizer) {
@@ -155,6 +157,14 @@ public class CustomizerService {
 		customizers.put(fileName, customizer);
 	}
 
+	@ApiOperation(value="Deletes a Customizer from a static HashMap given a file name")
+	@DELETE
+	@Path("removeCustomizer/{fileName}")
+	public void removeCustomizer(@PathParam("fileName") String fileName) {
+		//throw new IllegalArgumentException("fail");
+		customizers.remove(fileName);
+	}
+
 	@ApiOperation(value="Renders the first slice of a printable based on the customizer")
 	    @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
@@ -162,7 +172,7 @@ public class CustomizerService {
 	@GET
 	@Path("renderFirstSliceImage/{fileName}")
 	@Produces("image/png")
-	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName) throws IOException, InappropriateDeviceException, ScriptException, NoPrinterFoundException, SlicerException {
+	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName) throws JobManagerException, IOException, InappropriateDeviceException, ScriptException, NoPrinterFoundException, SlicerException {
 		// logger.debug("Filename is " + fileName);
 		Customizer customizer = customizers.get(fileName);
 		if (customizer != null) {
@@ -170,10 +180,10 @@ public class CustomizerService {
 			File file = new File(HostProperties.Instance().getUploadDir(), fileName);
 
 			PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
-			if (processor instanceof STLFileProcessor) {
-				STLFileProcessor stlfileprocessor = (STLFileProcessor) processor;
+			if (processor instanceof Previewable) {
+				Previewable previewableProcessor = (Previewable) processor;
 				try {
-					BufferedImage img = stlfileprocessor.previewSlice(customizer, file);
+					BufferedImage img = previewableProcessor.previewSlice(customizer, file);
 
 					logger.debug("just got the bufferedimg from previewSlice");
 
@@ -193,12 +203,12 @@ public class CustomizerService {
 						}
 					};
 					return stream;
-				} catch (NoPrinterFoundException|SlicerException|IOException|InappropriateDeviceException|ScriptException e) {
+				} catch (NoPrinterFoundException|SlicerException|IOException|InappropriateDeviceException|ScriptException|IllegalArgumentException|JobManagerException e) {
 					// Loggers already warned or had error messages so just throw these up the stack
 					throw e;
 				}
 			} else {
-				throw new IllegalArgumentException("Incorrect file type. Cannot display preview for non STL files as of now");
+				throw new IllegalArgumentException("Incorrect file type. Cannot display preview for non STL and ZIP files as of now");
 			}
 		}
 		return null;
