@@ -21,12 +21,6 @@ public class Customizer {
 			return xTranslate;
 		}
 		public void setXTranslate(Double xTranslate) {
-			// //check width bounds
-			// if (this.xScale == -1) {
-			// 	this.xTranslate = -xTranslate;
-			// } else {
-			// 	this.xTranslate = xTranslate;
-			// }
 			this.xTranslate = xTranslate;
 		}
 		
@@ -35,11 +29,6 @@ public class Customizer {
 			return yTranslate;
 		}
 		public void setYTranslate(Double yTranslate) {
-			// if (this.yScale == -1) {
-			// 	this.yTranslate = -yTranslate;
-			// } else {
-			// 	this.yTranslate = yTranslate;
-			// }
 			this.yTranslate = yTranslate;
 		}
 		
