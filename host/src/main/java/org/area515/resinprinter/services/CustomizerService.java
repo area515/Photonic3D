@@ -39,6 +39,7 @@ import org.area515.resinprinter.job.STLFileProcessor;
 import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.Previewable;
+import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.exception.SlicerException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.server.HostProperties;
@@ -171,7 +172,7 @@ public class CustomizerService {
 	@GET
 	@Path("renderFirstSliceImage/{fileName}")
 	@Produces("image/png")
-	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName) throws IOException, InappropriateDeviceException, ScriptException, NoPrinterFoundException, SlicerException {
+	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName) throws JobManagerException, IOException, InappropriateDeviceException, ScriptException, NoPrinterFoundException, SlicerException {
 		// logger.debug("Filename is " + fileName);
 		Customizer customizer = customizers.get(fileName);
 		if (customizer != null) {
@@ -202,7 +203,7 @@ public class CustomizerService {
 						}
 					};
 					return stream;
-				} catch (NoPrinterFoundException|SlicerException|IOException|InappropriateDeviceException|ScriptException|IllegalArgumentException e) {
+				} catch (NoPrinterFoundException|SlicerException|IOException|InappropriateDeviceException|ScriptException|IllegalArgumentException|JobManagerException e) {
 					// Loggers already warned or had error messages so just throw these up the stack
 					throw e;
 				}
