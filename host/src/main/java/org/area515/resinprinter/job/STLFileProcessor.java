@@ -3,7 +3,6 @@ package org.area515.resinprinter.job;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,23 +12,18 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
 import java.io.*;
-import java.awt.image.*;
-import javax.imageio.*;
 import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.exception.SlicerException;
+import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 
 import org.area515.resinprinter.job.render.RenderingFileData;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.SlicingProfile;
-import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.printer.Printer;
-// import org.area515.resinprinter.job.*;
-// import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.CloseOffMend;
 import org.area515.resinprinter.slice.StlError;
@@ -39,7 +33,7 @@ import org.area515.resinprinter.services.PrinterService;
 
 import org.area515.util.Log4jTimer;
 
-public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> {
+public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> implements Previewable {
 	public static String STL_OVERHEAD = "stlOverhead";
 
 	private static final Logger logger = LogManager.getLogger();
@@ -161,7 +155,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		}
 	}
 	//This method takes in an STL file and produces the first slice of the file
-	public BufferedImage previewSlice(Customizer customizer, File jobFile) throws NoPrinterFoundException, SlicerException, IOException, InappropriateDeviceException, ScriptException {
+	public BufferedImage previewSlice(Customizer customizer, File jobFile, boolean projectImage) throws NoPrinterFoundException, SliceHandlingException {
 
 		//find the first activePrinter
 		String printerName = customizer.getPrinterName();
@@ -210,27 +204,33 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			STLImageRenderer renderer = new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution);
 			BufferedImage image = renderer.call();
 
+			if (projectImage) {
+				activePrinter.showImage(image);
+			} else {
+				activePrinter.showBlankImage();
+			}
+
 			return image;
 
 		} catch (NegativeArraySizeException e) {
 			logger.error(e);
-			throw new SlicerException(e);
+			throw new SliceHandlingException(e);
 		} catch (InappropriateDeviceException e) {
 			// Thrown if ink configuration is null
 			logger.warn(e);
-			throw e;
+			throw new SliceHandlingException(e);
 		} catch (FileNotFoundException e) {
 			// Should not occur because this method shouldn't be able to be called without having a file selected.
 			logger.error(e);
-			throw e;
+			throw new SliceHandlingException(e);
 		} catch (IOException e) {
 			// Also should not occur because previewSlice shouldn't be able to be called without having a file selected.
 			logger.error(e);
-			throw e;
+			throw new SliceHandlingException(e);
 		} catch (ScriptException e) {
 			// Thrown if there is a problem with the bulb mask script, or any other script
 			logger.warn(e);
-			throw e;
+			throw new SliceHandlingException(e);
 		}
 	}
 

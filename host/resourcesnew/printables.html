@@ -54,6 +54,17 @@
 							<i class="fa fa-2x fa-desktop pull-left"></i>
 							<h3 class="panel-title pull-left">Preview box for: {{printablesController.currentPrintable.name}}
 							</h3>
+								<h3 class="panel-title pull-right">Project Image</h3>							
+								<span class="btn-group pull-right" >
+								<a class="btn btn-danger btn-sm" ng-click="printablesController.setProjectImage(false)" ng-disabled="printablesController.isProjectImage()">
+									<b class="fa fa-toggle-off"></b> 
+									<b class="cwh-text-indent">Off</b>
+								</a>
+								<a class="btn btn-success btn-sm" ng-click="printablesController.setProjectImage(true)" ng-disabled="!printablesController.isProjectImage()">
+									<b class="fa fa-toggle-on"></b> 
+									<b class="cwh-text-indent">On</b>
+								</a>
+							</span>
 							<div class="row">
 							</div>
 						</div>
@@ -67,7 +78,7 @@
 			<!-- End Preview Box -->
 
 			<!-- Customizer -->
-			<div class="col-sm-7 bootcards-list pull-right" id="list">
+			<div class="col-sm-7 bootcards-list pull-right" id="controls" ng-show="printablesController.showControls">
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<i class="fa fa-2x fa-magic pull-left"></i>
@@ -87,7 +98,7 @@
 							<i class="fa fa-2x fa-exchange fa-rotate-90 pull-left"></i>
 							<h4>Flip Image</h4>
 							<span class="btn-group" >
-								<a class="btn btn-danger btn-sm" ng-click="printablesController.changeFlip(1)" ng-disabled="printablesController.isNotFlipped()">
+								<a class="btn btn-danger btn-sm" ng-click="printablesController.changeFlip(1)" ng-disabled="!printablesController.isFlipped()">
 									<b class="fa fa-toggle-off"></b> 
 									<b class="cwh-text-indent">Off</b>
 								</a>
@@ -129,10 +140,10 @@
 								<a class="btn btn-sm btn-success fa fa-angle-double-right" ng-click="printablesController.changeTranslate(100, 0)">100</a>
 								<!-- <a class="btn btn-xs btn-success fa fa-angle-double-right" ng-click="printablesController.changeTranslate(500, 0)">500</a> -->
 							</span>
-							<div class="btn btn-danger" ng-disabled="printablesController.isNotModified()" ng-click="printablesController.resetTranslation()">
+							<button class="btn btn-danger" ng-disabled="printablesController.isNotModified()" ng-click="printablesController.resetTranslation()">
 								<!-- <i class="fa fa-undo pull-left"></i>  -->
-								<span> Reset</span>
-							</div>
+								<span>Reset</span>
+							</button>
 						</div>	
 					</div>
 					<!-- End list group -->
