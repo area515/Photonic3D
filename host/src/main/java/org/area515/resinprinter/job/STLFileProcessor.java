@@ -210,6 +210,8 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 
 			if (projectImage) {
 				activePrinter.showImage(image);
+			} else {
+				activePrinter.showBlankImage();
 			}
 
 			return image;

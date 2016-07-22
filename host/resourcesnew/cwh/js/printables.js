@@ -216,6 +216,7 @@
 				function (data) {
 					// console.log("we set the project image");
 					controller.projectImage = projectImage;
+					controller.setPreview(true);
 				})
 		}
 

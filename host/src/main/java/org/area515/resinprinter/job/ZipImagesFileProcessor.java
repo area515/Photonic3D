@@ -172,6 +172,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 
 		try {
 			//instantiate a new print job based on the jobFile and set its printer to activePrinter
+
 			PrintJob printJob = new PrintJob(jobFile);
 			printJob.setPrinter(activePrinter);
 			printJob.setCustomizer(customizer);
@@ -198,7 +199,10 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 
 			if (projectImage) {
 				activePrinter.showImage(image);
+			} else {
+				activePrinter.showBlankImage();
 			}
+			
 			return image;
 		} catch (InappropriateDeviceException e) {
 			// Thrown if ink configuration is null
