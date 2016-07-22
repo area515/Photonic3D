@@ -224,10 +224,6 @@
 			return !(controller.projectImage);
 		}
 
-		this.isNotProjectImage = function isNotProjectImage() {
-			return !controller.isProjectImage();
-		}
-
 		this.isFlipped = function isFlipped() {
 			// console.log(controller.currentCustomizer);
 			if (controller.currentCustomizer !== null && controller.currentCustomizer !== undefined) {
@@ -237,10 +233,6 @@
 				}
 			}
 			return false;
-		}
-
-		this.isNotFlipped = function isNotFlipped() {
-			return !controller.isFlipped(); 
 		}
 
 		this.resetTranslation = function resetTranslation() {

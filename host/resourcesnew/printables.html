@@ -60,7 +60,7 @@
 									<b class="fa fa-toggle-off"></b> 
 									<b class="cwh-text-indent">Off</b>
 								</a>
-								<a class="btn btn-success btn-sm" ng-click="printablesController.setProjectImage(true)" ng-disabled="printablesController.isNotProjectImage()">
+								<a class="btn btn-success btn-sm" ng-click="printablesController.setProjectImage(true)" ng-disabled="!printablesController.isProjectImage()">
 									<b class="fa fa-toggle-on"></b> 
 									<b class="cwh-text-indent">On</b>
 								</a>
@@ -98,7 +98,7 @@
 							<i class="fa fa-2x fa-exchange fa-rotate-90 pull-left"></i>
 							<h4>Flip Image</h4>
 							<span class="btn-group" >
-								<a class="btn btn-danger btn-sm" ng-click="printablesController.changeFlip(1)" ng-disabled="printablesController.isNotFlipped()">
+								<a class="btn btn-danger btn-sm" ng-click="printablesController.changeFlip(1)" ng-disabled="!printablesController.isFlipped()">
 									<b class="fa fa-toggle-off"></b> 
 									<b class="cwh-text-indent">Off</b>
 								</a>
