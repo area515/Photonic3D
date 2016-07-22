@@ -37,10 +37,11 @@ public abstract class CurrentImageRenderer implements Callable<BufferedImage> {
 			Graphics2D graphics = (Graphics2D)image.getGraphics();
 			renderImage(image, graphics, imageData);
 			// processor.applyBulbMask(aid, graphics, width, height);
-			image = processor.applyImageTransforms(aid, image, width, height);
+			BufferedImage after = processor.applyImageTransforms(aid, image, width, height);
+			image.setData(after.getData());
 			
 			//processor.applyImageTransforms(aid, image, width, height);
-			return image;
+			return after;
 		} finally {
 			lock.unlock();
 		}
