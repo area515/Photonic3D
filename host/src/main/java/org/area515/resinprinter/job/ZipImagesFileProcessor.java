@@ -179,6 +179,9 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 
 			//instantiate new dataaid
 			DataAid dataAid = initializeDataAid(printJob);
+
+			prepareEnvironment(jobFile, printJob);
+			
 			SortedMap<String, File> imageFiles = findImages(jobFile);
 			
 			printJob.setTotalSlices(imageFiles.size());
@@ -202,7 +205,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 			} else {
 				activePrinter.showBlankImage();
 			}
-			
+
 			return image;
 		} catch (InappropriateDeviceException e) {
 			// Thrown if ink configuration is null
