@@ -8,17 +8,13 @@ import io.swagger.annotations.ApiResponses;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
 
 import javax.annotation.security.RolesAllowed;
 import javax.imageio.ImageIO;
-import javax.script.ScriptException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -33,14 +29,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
-import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintFileProcessor;
-import org.area515.resinprinter.job.STLFileProcessor;
 import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.Previewable;
-import org.area515.resinprinter.job.JobManagerException;
-import org.area515.resinprinter.exception.SlicerException;
+import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.util.PrintFileFilter;
@@ -186,7 +179,7 @@ public class CustomizerService {
 	@GET
 	@Path("renderFirstSliceImage/{fileName}")
 	@Produces("image/png")
-	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName) throws JobManagerException, IOException, InappropriateDeviceException, ScriptException, NoPrinterFoundException, SlicerException {
+	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName) throws NoPrinterFoundException, SliceHandlingException {
 		// logger.debug("Filename is " + fileName);
 		Customizer customizer = getCustomizer(fileName);
 		if (customizer == null) {
@@ -218,7 +211,7 @@ public class CustomizerService {
 					}
 				};
 				return stream;
-			} catch (NoPrinterFoundException|SlicerException|IOException|InappropriateDeviceException|ScriptException|IllegalArgumentException|JobManagerException e) {
+			} catch (NoPrinterFoundException|SliceHandlingException |IllegalArgumentException e) {
 				// Loggers already warned or had error messages so just throw these up the stack
 				throw e;
 			}

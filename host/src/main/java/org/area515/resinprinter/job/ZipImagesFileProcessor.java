@@ -16,15 +16,12 @@ import javax.script.ScriptException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.exception.SlicerException;
+import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 
 import org.apache.commons.io.FileUtils;
-import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.render.StandaloneImageData;
 import org.area515.resinprinter.job.render.StandaloneImageRenderer;
-import org.area515.resinprinter.job.JobManagerException;
-import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.Main;
@@ -143,7 +140,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 		}
 	}
 
-	public BufferedImage previewSlice(Customizer customizer, File jobFile, boolean projectImage) throws NoPrinterFoundException, IOException, InappropriateDeviceException, ScriptException, JobManagerException {
+	synchronized public BufferedImage previewSlice(Customizer customizer, File jobFile, boolean projectImage) throws NoPrinterFoundException, SliceHandlingException {
 
 		//find the first activePrinter
 		String printerName = customizer.getPrinterName();
@@ -210,18 +207,18 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 		} catch (InappropriateDeviceException e) {
 			// Thrown if ink configuration is null
 			logger.warn(e);
-			throw e;
+			throw new SliceHandlingException(e);
 		} catch (IOException e) {
 			// Also should not occur because previewSlice shouldn't be able to be called without having a file selected.
 			logger.error(e);
-			throw e;
+			throw new SliceHandlingException(e);
 		} catch (ScriptException e) {
 			// Thrown if there is a problem with the bulb mask script, or any other script
 			logger.warn(e);
-			throw e;
+			throw new SliceHandlingException(e);
 		} catch (JobManagerException e) {
 			logger.warn(e);
-			throw e;
+			throw new SliceHandlingException(e);
 		}
 	}
 	
