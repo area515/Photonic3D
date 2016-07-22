@@ -17,13 +17,13 @@ import org.area515.resinprinter.slice.StlError;
 public class RendezvousServerNotifier implements Notifier {
     private static final Logger logger = LogManager.getLogger();
 
-    private RendezvousServer server;
+    private RendezvousClient server;
 
     //TODO: This class will get used once we want to notify things happening through websockets
 	@Override
 	public void register(URI startURI, ServerContainer container) throws InappropriateDeviceException {
 		try {
-			this.server = RendezvousServer.getServer(startURI);
+			this.server = RendezvousClient.getServer(startURI);
 		} catch (Exception e) {
 			throw new InappropriateDeviceException("Couldn't connect to rendezvous server", e);
 		}

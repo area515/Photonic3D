@@ -23,9 +23,16 @@ public class X509FriendshipFeature implements FriendshipFeature {
     private static final Logger logger = LogManager.getLogger();	
 	public static final String FEATURE_NAME = "Make friends through X509";
 	
-    private RendezvousServer server;
+    private RendezvousClient server;
     private Map<UUID, Friend> remotesAskingToBeFriends = new ConcurrentHashMap<>();
     private Map<UUID, List<PhotonicUser>> localsAskingToBeFriends = new ConcurrentHashMap<>();
+    
+    public X509FriendshipFeature() {
+    }
+    
+    X509FriendshipFeature(RendezvousClient server) {
+    	this.server = server;
+    }
     
 	@Override
 	public List<Friend> getFriendRequests() throws UserManagementException {
@@ -54,7 +61,7 @@ public class X509FriendshipFeature implements FriendshipFeature {
 	
 	@Override
 	public void start(URI startURI) throws Exception {
-		this.server = RendezvousServer.getServer(startURI);
+		this.server = RendezvousClient.getServer(startURI);
 	}
 	
 	@Override

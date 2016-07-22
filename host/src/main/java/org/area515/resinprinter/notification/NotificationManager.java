@@ -109,6 +109,10 @@ public class NotificationManager {
 	}
 	
 	public static void remoteMessageReceived(String remoteMessage) {
+		if (notifiers == null) {
+			return;
+		}
+		
 		for (Notifier currentNotifier : notifiers) {
 			currentNotifier.remoteMessageReceived(remoteMessage);
 		}

@@ -7,6 +7,7 @@ import java.security.KeyStore.Entry;
 import java.security.KeyStore.PrivateKeyEntry;
 import java.security.KeyStore.TrustedCertificateEntry;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
@@ -31,6 +32,7 @@ import javax.naming.InvalidNameException;
 
 import org.area515.resinprinter.security.Friend;
 import org.area515.resinprinter.security.JettySecurityUtils;
+import org.area515.resinprinter.security.PhotonicSecurityProvider;
 import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.security.SHA1PRNG;
 
@@ -41,6 +43,7 @@ public class PhotonicCrypto {
 	private static final int AES_KEY_SIZE = 16;
 	private static final String PUBLIC_CERT_REQUEST = "X509CertsBase64NewLine";
 	private static final String BAD_UUID = "Uid of subject on certifiate didn't match expected uuid of public key.";
+	private static final PhotonicSecurityProvider SHA1PRNG_PROVIDER = new PhotonicSecurityProvider();
 	
 	//Local User
 	private PrivateKeyEntry decryptor;
@@ -56,7 +59,7 @@ public class PhotonicCrypto {
 	private Cipher conversationCipher;
 	private SecretKeySpec symKey;
 	private int currentOffset;
-	private SHA1PRNG consistentRandom;
+	private SecureRandom consistentRandom;
 	private boolean allowInsecureCommunication;
 	private Map<Integer, byte[]> outOfOrderIvs = new HashMap<>();
 
@@ -76,6 +79,18 @@ public class PhotonicCrypto {
 		} else if (signer instanceof TrustedCertificateEntry) {
 			this.verifier = (X509Certificate)((TrustedCertificateEntry) signer).getTrustedCertificate();
 		}
+		verifier.checkValidity();
+		validateUIDOfVerifier();
+	}
+	
+	//This constructor duplicates the local crypto information so it can be used to communicate with another remote.
+	public PhotonicCrypto(PhotonicCrypto crypto) throws CertificateExpiredException, CertificateNotYetValidException, CertificateEncodingException, InvalidNameException {
+		this.allowInsecureCommunication = crypto.allowInsecureCommunication;
+		this.decryptor = crypto.decryptor;
+		this.encryptor = crypto.encryptor;
+		encryptor.checkValidity();
+		this.signer = crypto.signer;
+		this.verifier = crypto.verifier;
 		verifier.checkValidity();
 		validateUIDOfVerifier();
 	}
@@ -109,7 +124,7 @@ public class PhotonicCrypto {
 		message.setFrom(getLocalUserId());
 		message.setTo(toUser);
 		message.setEncryptionAlgorithm(PUBLIC_CERT_REQUEST);
-		message.setData((Base64.getEncoder().encode(verifier.getEncoded()) + "\n" + Base64.getEncoder().encode(encryptor.getEncoded())).getBytes());
+		message.setData((Base64.getEncoder().encodeToString(verifier.getEncoded()) + "\n" + Base64.getEncoder().encodeToString(encryptor.getEncoded())).getBytes());
 		return message;
 	}
 	
@@ -130,7 +145,7 @@ public class PhotonicCrypto {
     		throw new InvalidNameException("User:" + names[1] + " sent a friend request with userId:" + names[0] + " on cert which doesn't match userId:" + message.getFrom() + " from which it came");
     	}
     	
-    	if (UUID.fromString(names[0]).equals(UUID.nameUUIDFromBytes(sign.getPublicKey().getEncoded()))) {
+    	if (!UUID.fromString(names[0]).equals(UUID.nameUUIDFromBytes(sign.getPublicKey().getEncoded()))) {
     		throw new InvalidNameException(BAD_UUID);
     	}
     	
@@ -180,8 +195,8 @@ public class PhotonicCrypto {
 			String ivAndKey = new String(decrypt.doFinal(message.getData()));
 			int newLineSep = ivAndKey.indexOf("\n");
 			if (newLineSep > 0) {
-				consistentRandom = new SHA1PRNG();
-				consistentRandom.engineSetSeed(Base64.getDecoder().decode(ivAndKey.substring(0, newLineSep)));
+				consistentRandom = SecureRandom.getInstance("SHA1PRNG", SHA1PRNG_PROVIDER);
+				consistentRandom.setSeed(Base64.getDecoder().decode(ivAndKey.substring(0, newLineSep)));
 				currentOffset = 0;
 			}
 			if (newLineSep < ivAndKey.length()) {
@@ -202,7 +217,7 @@ public class PhotonicCrypto {
 		byte[] ivBytes = null;
 		for (; currentOffset < message.getIvOffset(); currentOffset++) {
 			ivBytes = new byte[IV_LENGTH];
-			consistentRandom.engineNextBytes(ivBytes);
+			consistentRandom.nextBytes(ivBytes);
 			outOfOrderIvs.put(currentOffset + 1, ivBytes);
 		}
 		
@@ -249,8 +264,8 @@ public class PhotonicCrypto {
 		keyMessage.setSignature(sig.sign());
 		
 		currentOffset = 0;
-		consistentRandom = new SHA1PRNG();
-		consistentRandom.engineSetSeed(ivBytes);
+		consistentRandom = SecureRandom.getInstance("SHA1PRNG", SHA1PRNG_PROVIDER);
+		consistentRandom.setSeed(ivBytes);
 	    symKey = new SecretKeySpec(keyBytes, "AES");
     	conversationCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 		return keyMessage;
@@ -269,7 +284,7 @@ public class PhotonicCrypto {
 
 		currentOffset++;
 		byte[] ivBytes = new byte[IV_LENGTH];
-		consistentRandom.engineNextBytes(ivBytes);
+		consistentRandom.nextBytes(ivBytes);
 		IvParameterSpec iv = new IvParameterSpec(ivBytes);
 		keyMessage.setEncryptionAlgorithm("AES/CBC/PKCS5PADDING");
 		keyMessage.setIvOffset(currentOffset);

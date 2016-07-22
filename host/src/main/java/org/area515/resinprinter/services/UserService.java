@@ -121,7 +121,7 @@ public class UserService {
 		if (currentUser == null) {
 			throw new UserManagementException("You have to be logged in to friend someone.");
 		}
-		
+
 		Map<String, FriendshipFeature> features = FeatureManager.getFriendshipFeatures();
 		FriendshipFeature friendshipFeature = features.get(friendshipFeatureName);
 		return friendshipFeature.sendFriendRequest(currentUser, new PhotonicUser(null, null, UUID.fromString(userId), null, null));
