@@ -47,6 +47,7 @@ public class IncomingHttpTunnel {
 
 	private Session session;
 	private RendezvousClient server;
+	//TODO: Unfortunately this isn't a good idea, we can't use this single socket asynchronously as it will eventually cause: Blocking message pending 10000 for BLOCKING
 	private Map<Long, ResponseWaiter> waiters = new ConcurrentHashMap<>();
 	
 	public class ResponseWaiter {
@@ -103,6 +104,7 @@ public class IncomingHttpTunnel {
 		return connection;
     }
     
+    //TODO: We need to make sure the body contains all of the proper headers
     public ResponseWaiter sendMessage(UUID fromLocal, UUID toRemote, String url, byte[] body, long timeoutValue, TimeUnit timeoutUnit) throws InvalidKeyException, InvalidNameException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, JsonProcessingException, IOException, InterruptedException, TimeoutException, UserManagementException, CertificateExpiredException, CertificateNotYetValidException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException {
 		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
     	UserConnection connection = buildConnection(fromLocal, toRemote);
@@ -190,6 +192,7 @@ public class IncomingHttpTunnel {
 			return;
 		}
 		
+		//TODO: We need to make sure the body contains all of the proper headers
 		//I don't think we have to call validate on Identity, because http execution will do it for us.
 		String relativeURL = null;		
 		int start = 0;

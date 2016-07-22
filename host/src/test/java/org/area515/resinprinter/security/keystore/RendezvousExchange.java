@@ -107,6 +107,12 @@ public class RendezvousExchange {
 		
 		ByteBuffer bufferFrom1To2 = server1.sendRequestToRemote(user1.getUserId(), user2.getUserId(), "services/printers/list", new byte[]{}, 20, TimeUnit.SECONDS);
 		ByteBuffer bufferFrom2To1 = server2.sendRequestToRemote(user2.getUserId(), user1.getUserId(), "services/printers/list", new byte[]{}, 20, TimeUnit.SECONDS);
+		bufferFrom1To2 = server1.sendRequestToRemote(user1.getUserId(), user2.getUserId(), "services/printers/list", new byte[]{}, 20, TimeUnit.SECONDS);
+		bufferFrom2To1 = server2.sendRequestToRemote(user2.getUserId(), user1.getUserId(), "services/printers/list", new byte[]{}, 20, TimeUnit.SECONDS);
+		bufferFrom1To2 = server1.sendRequestToRemote(user1.getUserId(), user2.getUserId(), "services/printers/list", new byte[]{}, 20, TimeUnit.SECONDS);
+		bufferFrom2To1 = server2.sendRequestToRemote(user2.getUserId(), user1.getUserId(), "services/printers/list", new byte[]{}, 20, TimeUnit.SECONDS);
+		bufferFrom1To2 = server1.sendRequestToRemote(user1.getUserId(), user2.getUserId(), "services/printers/list", new byte[]{}, 20, TimeUnit.SECONDS);
+		bufferFrom2To1 = server2.sendRequestToRemote(user2.getUserId(), user1.getUserId(), "services/printers/list", new byte[]{}, 20, TimeUnit.SECONDS);
 		
 		Assert.assertEquals(testMessage, new String(bufferFrom1To2.array(), bufferFrom1To2.position(), bufferFrom1To2.limit() - bufferFrom1To2.position()));
 		Assert.assertEquals(testMessage, new String(bufferFrom2To1.array(), bufferFrom2To1.position(), bufferFrom2To1.limit() - bufferFrom2To1.position()));
