@@ -54,17 +54,17 @@
 							<i class="fa fa-2x fa-desktop pull-left"></i>
 							<h3 class="panel-title pull-left">Preview box for: {{printablesController.currentPrintable.name}}
 							</h3>
-								<h3 class="panel-title pull-right">Project Image</h3>							
-								<span class="btn-group pull-right" >
-								<a class="btn btn-danger btn-sm" ng-click="printablesController.setProjectImage(false)" ng-disabled="printablesController.isProjectImage()">
-									<b class="fa fa-toggle-off"></b> 
-									<b class="cwh-text-indent">Off</b>
-								</a>
+							<span class="btn-group pull-right" >
 								<a class="btn btn-success btn-sm" ng-click="printablesController.setProjectImage(true)" ng-disabled="!printablesController.isProjectImage()">
-									<b class="fa fa-toggle-on"></b> 
-									<b class="cwh-text-indent">On</b>
+									<b class="fa fa-sun-o"></b> 
+									<b class="cwh-text-indent">Project Image On Printer</b>
+								</a>
+								<a class="btn btn-danger btn-sm" ng-click="printablesController.setProjectImage(false)" ng-disabled="printablesController.isProjectImage()">
+									<b class="cwh-text-indent">Disable</b>
 								</a>
 							</span>
+					<!-- 		<h3 class="panel-title pull-right">Project Image On Printer </h3>	 -->						
+							
 							<div class="row">
 							</div>
 						</div>
@@ -142,6 +142,7 @@
 							</span>
 							<button class="btn btn-danger" ng-disabled="printablesController.isNotModified()" ng-click="printablesController.resetTranslation()">
 								<!-- <i class="fa fa-undo pull-left"></i>  -->
+								<b class="fa fa-undo"></b> 
 								<span>Reset</span>
 							</button>
 						</div>	
