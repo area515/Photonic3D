@@ -49,7 +49,7 @@
 			<!-- Preview Box -->
 			<div class="col-sm-7" id="preview"> 
 				<div class="preview-box"> 
-					<div class="panel panel-default" style="height:450px;">
+					<div class="panel panel-default" style="height:400px;">
 						<div class="panel-heading">
 							<i class="fa fa-2x fa-desktop pull-left"></i>
 							<h3 class="panel-title pull-left">Preview box for: {{printablesController.currentPrintable.name}}
@@ -118,7 +118,7 @@
 						<div class="list-group-item">
 							<i class="fa fa-2x fa-arrows pull-left"></i>
 							<h4>Positioning</h4>
-							<h6>Translate image on Y axis: {{printablesController.currentCustomizer.affineTransformSettings.ytranslate}}</h6>
+							<h6>Translate image on Y axis: {{printablesController.findCurrentCustomizer(printablesController.currentPrintable).affineTransformSettings.ytranslate}}</h6>
 							<span class="btn-group btn-xs" >
 								<!-- <a class="btn btn-xs btn-danger fa fa-angle-double-down" ng-click="printablesController.changeTranslate(0, 500)">500</a>  -->
 								<a class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeTranslate(0, 100)">100</a> 
@@ -129,7 +129,7 @@
 								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeTranslate(0, -100)">100</a>
 								<!-- <a class="btn btn-xs btn-success fa fa-angle-double-up" ng-click="printablesController.changeTranslate(0, -500)">500</a> -->
 							</span>					
-							<h6>Translate image on X axis: {{printablesController.currentCustomizer.affineTransformSettings.xtranslate}}</h6>
+							<h6>Translate image on X axis: {{printablesController.findCurrentCustomizer(printablesController.currentPrintable).affineTransformSettings.xtranslate}}</h6>
 							<span class="btn-group btn-xs" >
 								<!-- <a class="btn btn-xs btn-danger fa fa-angle-double-left" ng-click="printablesController.changeTranslate(-500, 0)">500</a>  -->
 								<a class="btn btn-sm btn-danger fa fa-angle-double-left" ng-click="printablesController.changeTranslate(-100, 0)">100</a> 

@@ -24,6 +24,7 @@ import javax.ws.rs.WebApplicationException;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
@@ -177,14 +178,16 @@ public class CustomizerService {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
-	@Path("renderFirstSliceImage/{fileName}")
+	@Path("renderFirstSliceImage/{fileName}/{projectImage}")
 	@Produces("image/png")
-	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName) throws NoPrinterFoundException, SliceHandlingException {
+	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName, @PathParam("projectImage") boolean projectImage) throws NoPrinterFoundException, SliceHandlingException {
 		// logger.debug("Filename is " + fileName);
 		Customizer customizer = getCustomizer(fileName);
 		if (customizer == null) {
 			throw new IllegalArgumentException("Customizer is null");
 		}
+
+		logger.debug("projectImage is " + projectImage);
 			// String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
 		File file = new File(HostProperties.Instance().getUploadDir(), fileName);
 
