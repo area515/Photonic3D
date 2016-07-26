@@ -162,13 +162,19 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		Printer activePrinter = null;
 		if (printerName == null || printerName.isEmpty()) {
 			//if customizer doesn't have a printer stored, set first active printer as printer
-			List<Printer> printers = PrinterService.INSTANCE.getPrinters();
-			for (Printer printer : printers) {
-				if (printer.isStarted()) {
-					activePrinter = printer;
-					break;
-				}
+			// List<Printer> printers = PrinterService.INSTANCE.getPrinters();
+			// for (Printer printer : printers) {
+			// 	if (printer.isStarted()) {
+			// 		activePrinter = printer;
+			// 		break;
+			// 	}
+			// }
+			try {
+				activePrinter = PrinterService.INSTANCE.getFirstAvailablePrinter();				
+			} catch (NoPrinterFoundException e) {
+				throw new NoPrinterFoundException("No printers found for slice preview. You must have a started printer or specify a valid printer in the Customizer.");
 			}
+
 		} else {
 			try {
 				activePrinter = PrinterService.INSTANCE.getPrinter(printerName);
@@ -178,9 +184,9 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		}
 		
 
-		if (activePrinter == null) {
-			throw new NoPrinterFoundException("No printers found for slice preview. You must have a started printer or specify a valid printer in the Customizer.");
-		}
+		// if (activePrinter == null) {
+		// 	throw new NoPrinterFoundException("No printers found for slice preview. You must have a started printer or specify a valid printer in the Customizer.");
+		// }
 
 		try {
 			//instantiate a new print job based on the jobFile and set its printer to activePrinter
