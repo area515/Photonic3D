@@ -50,7 +50,7 @@
 			<div class="col-sm-7" id="preview"> 
 				<div class="preview-box"> 
 					<div class="panel panel-default" style="height:400px;">
-						<div class="panel-heading">
+						<div ng-show="printablesController.showControls" class="panel-heading">
 							<i class="fa fa-2x fa-desktop pull-left"></i>
 							<h3 class="panel-title pull-left">Preview box for: {{printablesController.currentPrintable.name}}
 							</h3>
@@ -70,7 +70,7 @@
 						</div>
 						<div class="panel-body">
 							<p> <b>{{printablesController.errorMsg}}</b> </p>
-							<img ng-src="{{printablesController.currentPreviewImg}}" handle-error class="img-responsive" style="width:100%; height:100%;"/>
+							<img ng-show="printablesController.showControls" ng-src="{{printablesController.currentPreviewImg}}" handle-error class="img-responsive" style="width:100%; height:100%;"/>
 						</div>
 					</div>
 				</div>
