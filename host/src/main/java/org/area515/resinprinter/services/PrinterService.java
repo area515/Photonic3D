@@ -36,6 +36,7 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.job.InkDetector;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
@@ -134,6 +135,29 @@ public class PrinterService {
 		
 		return printers;
 	}
+
+    @ApiOperation(value="Lists all of the printers that are managed by Photonic 3D.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.TODO),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@GET
+	@Path("getFirstAvailablePrinter")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Printer getFirstAvailablePrinter() throws NoPrinterFoundException {
+		List<Printer> printers = getPrinters();
+		Printer activePrinter = null;
+		for (Printer printer : printers) {
+			if (printer.isStarted()) {
+				activePrinter = printer;
+				break;
+			}
+		}
+		if (activePrinter == null) {
+			throw new NoPrinterFoundException();
+		}
+		
+		return activePrinter;
+	}	
  
     @ApiOperation(value="Returns the Printer specified by the printername.")
     @ApiResponses(value = {
