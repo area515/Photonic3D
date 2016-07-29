@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -19,6 +18,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -26,14 +27,25 @@ import javax.crypto.NoSuchPaddingException;
 import javax.naming.InvalidNameException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicHttpEntityEnclosingRequest;
+import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,6 +61,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class RendezvousClient {
     private static final Logger logger = LogManager.getLogger();
+    private static final Pattern REQUEST_LINE_PATTERN = Pattern.compile("([^ ]+) ([^ ]+) (.+)");
     
     private Map<Conversation, UserConnection> openConversations = new ConcurrentHashMap<>();
 	private static RendezvousClient defaultServer = null;
@@ -180,31 +193,69 @@ public class RendezvousClient {
 		return openConversations.get(new Conversation(request, response));
 	}
 	
-	public ByteBuffer sendRequestToRemote(UUID from, UUID to, String url, byte[] bodyOfRequest, long timeout, TimeUnit timeUnit) throws TimeoutException, NoSuchPaddingException, SignatureException, InvalidKeyException, CertificateExpiredException, CertificateNotYetValidException, InvalidNameException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, JsonProcessingException, NoSuchAlgorithmException, IOException, InterruptedException, TimeoutException, UserManagementException {
-		ResponseWaiter waiter = incoming.sendMessage(from, to, url, bodyOfRequest, timeout, timeUnit);
+	public HttpResponse sendRequestToRemote(UUID from, UUID to, HttpRequest bodyOfRequest, long timeout, TimeUnit timeUnit) throws TimeoutException, NoSuchPaddingException, SignatureException, InvalidKeyException, CertificateExpiredException, CertificateNotYetValidException, InvalidNameException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, JsonProcessingException, NoSuchAlgorithmException, IOException, InterruptedException, TimeoutException, UserManagementException, HttpException {
+		ResponseWaiter waiter = incoming.sendMessage(from, to, bodyOfRequest, timeout, timeUnit);
 		if (!waiter.await(timeout, timeUnit)) {
 			throw new TimeoutException("Timed out waiting for response");
 		}
 		
-		return waiter.getByteBuffer();
+		return waiter.buildResponse();
 	}
 	
-	public byte[] executeProxiedRequestFromRemote(UserConnection connection, String relativeURL, byte[] entity, int offset, int length) throws IOException {
-		logger.info("Remote user {} making request for: {}", connection.getRemoteUser(), relativeURL);
-		HttpUriRequest request;
-		if (entity == null) {
-			request = new HttpGet(schemaHostPort + relativeURL);
-		} else {
-			request = new HttpPost(schemaHostPort + relativeURL);
-			((HttpPost)request).setEntity(new ByteArrayEntity(entity, offset, length));
+	private HttpUriRequest parseRequestLine(String requestLine) throws IOException {
+		Matcher matcher = REQUEST_LINE_PATTERN.matcher(requestLine);
+		if (!matcher.matches()) {
+			throw new IOException("Requestline:" + requestLine + " doesn't match:" + REQUEST_LINE_PATTERN.pattern());
 		}
-		HttpResponse httpResponse = connection.getLocalClient().execute(request);
+		
+		String method = matcher.group(1);
+		String relativeURL = matcher.group(1);
+		HttpUriRequest request = null;
+		if (method.equals(HttpGet.METHOD_NAME)) {
+			request = new HttpGet(schemaHostPort + relativeURL);
+		} else if (method.equals(HttpDelete.METHOD_NAME)) {
+			request = new HttpDelete(schemaHostPort + relativeURL);
+		} else if (method.equals(HttpHead.METHOD_NAME)) {
+			request = new HttpHead(schemaHostPort + relativeURL);
+		} else if (method.equals(HttpOptions.METHOD_NAME)) {
+			request = new HttpOptions(schemaHostPort + relativeURL);
+		} else if (method.equals(HttpTrace.METHOD_NAME)) {
+			request = new HttpTrace(schemaHostPort + relativeURL);
+		} else if (method.equals(HttpPost.METHOD_NAME)) {
+			request = new HttpPost(schemaHostPort + relativeURL);
+		} else if (method.equals(HttpPut.METHOD_NAME)) {
+			request = new HttpPut(schemaHostPort + relativeURL);
+		} else if (method.equals(HttpPatch.METHOD_NAME)) {
+			request = new HttpPatch(schemaHostPort + relativeURL);
+		}
+		
+		return request;
+	}
+	
+	public byte[] executeProxiedRequestFromRemote(UserConnection connection, HttpRequest request) throws IOException {
+		logger.info("Remote user {} making request for: {}", connection.getRemoteUser(), request.getRequestLine());
+		HttpUriRequest uriRequest;
+		if (request instanceof HttpUriRequest) {
+			uriRequest = (HttpUriRequest)request;
+		} else {
+			uriRequest = parseRequestLine(request.getRequestLine() + "");
+			uriRequest.setHeaders(request.getAllHeaders());
+			if (request instanceof BasicHttpEntityEnclosingRequest) {
+				((HttpEntityEnclosingRequest)request).setEntity(((BasicHttpEntityEnclosingRequest)request).getEntity());
+			}
+		}
+		HttpResponse httpResponse = connection.getLocalClient().execute(uriRequest);
+		logger.info("Local response from web server: {} - {}", httpResponse.getStatusLine().getStatusCode(), httpResponse.getStatusLine().getReasonPhrase());
 		HttpEntity responseEntity = httpResponse.getEntity();
-
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		InputStream inputStream = null;
 		try {
 			inputStream = responseEntity.getContent();
+			outputStream.write((httpResponse + "\r\n").getBytes());
+			for (Header header : uriRequest.getAllHeaders()) {
+				outputStream.write((header.getName() + "=" + header.getValue() + "\r\n").getBytes());
+			}
+			outputStream.write("\r\n".getBytes());
 			IOUtils.copy(inputStream, outputStream);
 			return outputStream.toByteArray();
 		} finally {

@@ -2,6 +2,7 @@ package org.area515.resinprinter.test;
 
 import org.area515.resinprinter.gcode.FirmwareResponseSimulation;
 import org.area515.resinprinter.gcode.TestGCodeTemplating;
+import org.area515.resinprinter.http.TestByteSession;
 import org.area515.resinprinter.image.ConvertCWMaskToTransparencyMask;
 import org.area515.resinprinter.inkdetection.visual.CircleTest;
 import org.area515.resinprinter.inkdetection.visual.LineTest;
@@ -39,6 +40,7 @@ import org.junit.runners.Suite;
 	SerializeMessageAsJson.class,
 	RendezvousExchange.class,
 	TestGCodeTemplating.class,
+	TestByteSession.class,
 })
 
 public class FullTestSuite {
