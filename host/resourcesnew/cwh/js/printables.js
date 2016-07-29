@@ -17,7 +17,7 @@
 		this.handlePreviewError = function handlePreviewError() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
 			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);				
-			$http.get("/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension).success(
+			$http.get("/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "/" + controller.projectImage).success(
 				function (data) {
 
 				}).error(
