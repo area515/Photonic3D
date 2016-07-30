@@ -145,7 +145,11 @@ public class PrinterService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Printer getFirstAvailablePrinter() throws NoPrinterFoundException {
 		List<Printer> printers = getPrinters();
+		if (printers.isEmpty()) {
+			throw new NoPrinterFoundException("No Printers Found");
+		}
 		Printer activePrinter = null;
+
 		for (Printer printer : printers) {
 			if (printer.isStarted()) {
 				activePrinter = printer;
@@ -153,7 +157,7 @@ public class PrinterService {
 			}
 		}
 		if (activePrinter == null) {
-			throw new NoPrinterFoundException();
+			throw new NoPrinterFoundException("No Active Printers");
 		}
 		
 		return activePrinter;
