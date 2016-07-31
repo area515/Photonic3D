@@ -36,9 +36,9 @@
             "MonitorRight":11.36,
             "MonitorBottom":12.64,
             "UseMask":false
-         }
+         },
+         "PauseOnPrinterResponseRegEx": ".*door.*open.*"
       },
-      "PauseOnPrinterResponseRegEx": ".*door.*open.*",
       "slicingProfile":{  
          "gCodeHeader":"G91;\nM17;",
          "gCodeFooter":"M18",
