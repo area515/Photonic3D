@@ -38,6 +38,7 @@
             "UseMask":false
          }
       },
+      "PauseOnPrinterResponseRegEx": ".*door.*open.*",
       "slicingProfile":{  
          "gCodeHeader":"G91;\nM17;",
          "gCodeFooter":"M18",
