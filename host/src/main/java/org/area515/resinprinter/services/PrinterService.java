@@ -136,7 +136,7 @@ public class PrinterService {
 		return printers;
 	}
 
-    @ApiOperation(value="Lists all of the printers that are managed by Photonic 3D.")
+    @ApiOperation(value="Lists the first available printer.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.TODO),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
@@ -146,7 +146,7 @@ public class PrinterService {
 	public Printer getFirstAvailablePrinter() throws NoPrinterFoundException {
 		List<Printer> printers = getPrinters();
 		if (printers.isEmpty()) {
-			throw new NoPrinterFoundException("No Printers Found");
+			throw new NoPrinterFoundException("No printers found");
 		}
 		Printer activePrinter = null;
 
@@ -157,7 +157,7 @@ public class PrinterService {
 			}
 		}
 		if (activePrinter == null) {
-			throw new NoPrinterFoundException("No Active Printers");
+			throw new NoPrinterFoundException("No active printers");
 		}
 		
 		return activePrinter;
