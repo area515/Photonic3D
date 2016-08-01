@@ -197,18 +197,29 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			//instantiate new dataaid
 			DataAid dataAid = initializeDataAid(printJob);
 			
-			RenderingFileData stlData = new RenderingFileData();
-
-			boolean overrideNormals = dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule() == null?false:dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule();
-			stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, overrideNormals, new CloseOffMend());
-			stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(dataAid.xResolution), new Double(dataAid.yResolution));
-			printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
-
-			//Get the slicer queued up for the first image;
-			stlData.slicer.setZIndex(stlData.slicer.getZMinIndex());
-			Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
-			STLImageRenderer renderer = new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution);
-			BufferedImage image = renderer.call();
+			BufferedImage image;
+			
+			if (customizer.getOrigSliceCache() == null) {
+				RenderingFileData stlData = new RenderingFileData();
+	
+				boolean overrideNormals = dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule() == null?false:dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule();
+				stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, overrideNormals, new CloseOffMend());
+				stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(dataAid.xResolution), new Double(dataAid.yResolution));
+				printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
+	
+				//Get the slicer queued up for the first image;
+				stlData.slicer.setZIndex(stlData.slicer.getZMinIndex());
+				Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
+				STLImageRenderer renderer = new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution);
+				image = renderer.call();
+				
+				if (customizer.getAffineTransformSettings().isIdentity()) {
+					customizer.setOrigSliceCache(image);
+				}
+			} else {
+				image = applyImageTransforms(dataAid, customizer.getOrigSliceCache(),
+						customizer.getOrigSliceCache().getWidth(), customizer.getOrigSliceCache().getHeight());
+			}
 
 			if (projectImage) {
 				activePrinter.showImage(image);

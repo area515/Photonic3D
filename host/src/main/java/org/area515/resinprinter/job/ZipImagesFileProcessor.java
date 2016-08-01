@@ -170,26 +170,36 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 
 			//instantiate new dataaid
 			DataAid dataAid = initializeDataAid(printJob);
-
-			prepareEnvironment(jobFile, printJob);
+			BufferedImage image;
 			
-			SortedMap<String, File> imageFiles = findImages(jobFile);
-			
-			printJob.setTotalSlices(imageFiles.size());
-	
-			// performHeader(dataAid);
-	
-			Iterator<File> imgIter = imageFiles.values().iterator();
-	
-			// Preload first image then loop
-			if (!imgIter.hasNext()) {
-				throw new IOException("No Image Found");
+			if (customizer.getOrigSliceCache() == null) {
+				prepareEnvironment(jobFile, printJob);
+				
+				SortedMap<String, File> imageFiles = findImages(jobFile);
+				
+				printJob.setTotalSlices(imageFiles.size());
+		
+				// performHeader(dataAid);
+		
+				Iterator<File> imgIter = imageFiles.values().iterator();
+		
+				// Preload first image then loop
+				if (!imgIter.hasNext()) {
+					throw new IOException("No Image Found");
+				}
+				File imageFile = imgIter.next();
+				
+				StandaloneImageRenderer renderer = new StandaloneImageRenderer(dataAid, imageFile, this);
+				StandaloneImageData stdImage = renderer.call();
+				image = stdImage.getImage();
+				
+				if (customizer.getAffineTransformSettings().isIdentity()) {
+					customizer.setOrigSliceCache(image);
+				}
+			} else {
+				image = applyImageTransforms(dataAid, customizer.getOrigSliceCache(),
+						customizer.getOrigSliceCache().getWidth(), customizer.getOrigSliceCache().getHeight());
 			}
-			File imageFile = imgIter.next();
-			
-			StandaloneImageRenderer renderer = new StandaloneImageRenderer(dataAid, imageFile, this);
-			StandaloneImageData stdImage = renderer.call();
-			BufferedImage image = stdImage.getImage();
 
 			if (projectImage) {
 				activePrinter.showImage(image);

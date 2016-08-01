@@ -154,6 +154,10 @@ public class CustomizerService {
 		//throw new IllegalArgumentException("fail");
 		String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
 		// logger.debug("Add to customizers with key " + fileName + " and the customizer affineTransform is" + customizer.createAffineTransform());
+		
+		if (customizers.get(fileName) != null) {
+			customizer.setOrigSliceCache(customizers.get(fileName).getOrigSliceCache());
+		}
 		customizers.put(fileName, customizer);
 	}
 
@@ -180,7 +184,7 @@ public class CustomizerService {
 		}
 
 		logger.debug("projectImage is " + projectImage);
-			// String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
+		// String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
 		File file = new File(HostProperties.Instance().getUploadDir(), fileName);
 
 		PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
