@@ -151,7 +151,7 @@ public class MachineConfig implements Named {
 	public void setPauseOnPrinterResponseRegEx(String pauseOnPrinterResponseRegEx) {
 		this.pauseOnPrinterResponseRegEx = pauseOnPrinterResponseRegEx;
 	}
-	
+
 	@XmlTransient
 	public double getPlatformXSize() {
 		return platformXSize;

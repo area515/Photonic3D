@@ -2,24 +2,23 @@ package org.area515.resinprinter.security.keystore;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.area515.resinprinter.security.UserManagementFeature;
+import org.area515.resinprinter.server.Main;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.websocket.api.Session;
 
 public class TestServer extends HttpServlet {
 	private Server server;
 	private String testMessage;
 	
-	public TestServer(int testPort, String testMessage) throws Exception {
+	public TestServer(int testPort, String testMessage, UserManagementFeature loginService) throws Exception {
 		this.testMessage = testMessage;
 	    server = new Server(testPort);
         
@@ -28,7 +27,9 @@ public class TestServer extends HttpServlet {
         server.setHandler(context);
  
         context.addServlet(new ServletHolder(this),"/*");
- 
+        
+        Main.setupAuthentication(context, loginService);
+        
         server.start();
 	}
 
