@@ -1,6 +1,9 @@
 package org.area515.resinprinter.job;
 
-import java.awt.geom.AffineTransform; 
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+
+import com.fasterxml.jackson.annotation.JsonIgnore; 
 
 public class Customizer {
 	private String name;
@@ -8,14 +11,25 @@ public class Customizer {
 	private String printableName;
 	private String printableExtension;
 	private boolean supportsAffineTransformSettings;        //True means supported/False means not supported
-	private AffineTransformSettings affineTransformSettings;//null means it's not used event if this customizer does support the AffineTransform	
+	private AffineTransformSettings affineTransformSettings;//null means it's not used event if this customizer does support the AffineTransform
+	private BufferedImage origSliceCache = null;
 	
 	public static class AffineTransformSettings {
-		private Double xTranslate;//negative printerwidth for xflip
-		private Double yTranslate;//negative printerlength for yflip
-		private Double xScale;//-1 for xflip
-		private Double yScale;//-1 for yflip
+		private Double xTranslate = 0.0;//negative printerwidth for xflip
+		private Double yTranslate = 0.0;//negative printerlength for yflip
+		private Double xScale = 1.0;//-1 for xflip
+		private Double yScale = 1.0;//-1 for yflip
 		private String affineTransformScriptCalculator;//Ignore this for now
+		
+		@JsonIgnore
+		public boolean isIdentity() {
+			if (xTranslate == 0.0 && yTranslate == 0.0
+					&& xScale == 1.0 && yScale == 1.0) {
+				return true;
+			} else {
+				return false;
+			}
+		}
 		
 		public Double getXTranslate() {
 			return xTranslate;
@@ -113,5 +127,13 @@ public class Customizer {
 	}
 	public void setAffineTransformSettings(AffineTransformSettings affineTransformSettings) {
 		this.affineTransformSettings = affineTransformSettings;
+	}
+
+	public BufferedImage getOrigSliceCache() {
+		return origSliceCache;
+	}
+
+	public void setOrigSliceCache(BufferedImage origSliceCache) {
+		this.origSliceCache = origSliceCache;
 	}
 }

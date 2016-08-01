@@ -17,7 +17,7 @@
 		this.handlePreviewError = function handlePreviewError() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
 			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);				
-			$http.get("/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "/" + controller.projectImage).success(
+			$http.get("/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage).success(
 				function (data) {
 
 				}).error(
@@ -70,9 +70,9 @@
 				// do things with the currentCustomizer and get the png then set a variable like currentPreview to that png so that HTML page can display it
 				$http.post("/services/customizers/upsertCustomizer", parameter).success(
 					function (data) {
-						controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "/" + controller.projectImage;
+						controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage;
 						if (reload) {
-							controller.currentPreviewImg += '?decache=' + Math.random();
+							controller.currentPreviewImg += '&decache=' + Math.random();
 						}
 						// console.log("reached success while rendering first slice image, browser side");
 					}).error(

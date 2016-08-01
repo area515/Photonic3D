@@ -15,21 +15,18 @@ import java.util.Map;
 
 import javax.annotation.security.RolesAllowed;
 import javax.imageio.ImageIO;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
 import javax.ws.rs.POST;
 import javax.ws.rs.WebApplicationException;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
-import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.PrintJob;
@@ -53,7 +50,6 @@ public class CustomizerService {
     private static HashMap<String, Customizer> customizers = new HashMap<>();
     private static boolean projectImage = false;
     
-	//TODO: do we want this? getCustomizersByPrinterName(String printerName)
 
  //    @ApiOperation(value="Saves a Customizer into persistent storage.")
 	// @PUT
@@ -61,7 +57,6 @@ public class CustomizerService {
 	// @Produces(MediaType.APPLICATION_JSON)
 	// @Consumes(MediaType.APPLICATION_JSON)
 	// public MachineResponse saveCustomizer(Customizer cusomizer) {
-	// 	//TODO: Pretend this is implemented.
 	// 	return null;
 	// }
     
@@ -70,7 +65,6 @@ public class CustomizerService {
  //    @Path("delete/{customizerName}")
 	// @Produces(MediaType.APPLICATION_JSON)
 	// public MachineResponse deleteCustomizer(@PathParam("customizerName")String customizerName) {
-	// 	//TODO: Pretend this is implemented.
 	// 	return null;
 	// }
 	
@@ -108,7 +102,6 @@ public class CustomizerService {
  //    @Path("createTemplateCustomizer/{printableName}")
 	// @Produces(MediaType.APPLICATION_JSON)
 	// public Customizer createTemplateCustomizer(@PathParam("printableName")String printableName) {
-	// 	//TODO: Pretend this is implemented.
 	// 	return null;
 	// }
 
@@ -135,7 +128,6 @@ public class CustomizerService {
 	// }
 
 	public Customizer getCustomizer(String filename) {
-		// TODO: Do some work to get the basename of the file (just the printableName since those are the keys in the hashmap). Alternative is to store filenames as keys in hashmap
 		if (!(customizers.containsKey(filename))) {
 			// Fix handling of this error case (shouldn't happen)
 			throw new IllegalArgumentException("Could not find customizer for " + filename);
@@ -162,6 +154,10 @@ public class CustomizerService {
 		//throw new IllegalArgumentException("fail");
 		String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
 		// logger.debug("Add to customizers with key " + fileName + " and the customizer affineTransform is" + customizer.createAffineTransform());
+		
+		if (customizers.get(fileName) != null) {
+			customizer.setOrigSliceCache(customizers.get(fileName).getOrigSliceCache());
+		}
 		customizers.put(fileName, customizer);
 	}
 
@@ -178,9 +174,9 @@ public class CustomizerService {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
-	@Path("renderFirstSliceImage/{fileName}/{projectImage}")
+	@Path("renderFirstSliceImage/{fileName}")
 	@Produces("image/png")
-	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName, @PathParam("projectImage") boolean projectImage) throws NoPrinterFoundException, SliceHandlingException {
+	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName, @QueryParam("projectImage") boolean projectImage) throws NoPrinterFoundException, SliceHandlingException {
 		// logger.debug("Filename is " + fileName);
 		Customizer customizer = getCustomizer(fileName);
 		if (customizer == null) {
@@ -188,7 +184,7 @@ public class CustomizerService {
 		}
 
 		logger.debug("projectImage is " + projectImage);
-			// String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
+		// String fileName = customizer.getPrintableName() + "." + customizer.getPrintableExtension();
 		File file = new File(HostProperties.Instance().getUploadDir(), fileName);
 
 		PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
@@ -228,7 +224,6 @@ public class CustomizerService {
  //    @Path("renderSliceImage/{customizerName}/{currentSlice}")
  //    @Produces("image/png")
 	// public StreamingOutput renderImage(@PathParam("customizerName") String customizer, @PathParam("currentSlice")int currentSlice) {
-	// 	//TODO: Pretend this is implemented.
 	// 	return null;
 	// }
     
@@ -237,7 +232,6 @@ public class CustomizerService {
  //    @Path("testRenderSliceImage/{currentSlice}")
  //    @Produces("image/png")
 	// public StreamingOutput testRenderImage(Customizer customizer, @PathParam("currentSlice")int currentSlice) {
-	// 	//TODO: Pretend this is implemented.
 	// 	return null;
 	// }
 }

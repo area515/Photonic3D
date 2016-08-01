@@ -1,5 +1,6 @@
 package org.area515.resinprinter.security.keystore;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -18,12 +19,33 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.naming.InvalidNameException;
 
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpTrace;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.conn.DefaultHttpResponseParser;
+import org.apache.http.impl.io.DefaultHttpRequestParser;
+import org.apache.http.impl.io.DefaultHttpRequestWriter;
+import org.apache.http.message.BasicHttpEntityEnclosingRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.security.Friend;
@@ -44,9 +66,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @WebSocket()
 public class IncomingHttpTunnel {
     private static final Logger logger = LogManager.getLogger();
-
+    private static final Pattern HEADER_PATTERN = Pattern.compile("([^=]+)=(.*)");
+    
 	private Session session;
 	private RendezvousClient server;
+	//TODO: Unfortunately this isn't a good idea, we can't use this single socket asynchronously as it will eventually cause: Blocking message pending 10000 for BLOCKING
 	private Map<Long, ResponseWaiter> waiters = new ConcurrentHashMap<>();
 	
 	public class ResponseWaiter {
@@ -69,8 +93,12 @@ public class IncomingHttpTunnel {
 			latch.countDown();
 		}
 		
-		public ByteBuffer getByteBuffer() {
-			return ByteBuffer.wrap(content, offset, length);
+		public HttpResponse buildResponse() throws HttpException, IOException {
+			ByteSessionInputBuffer buffer = new ByteSessionInputBuffer(content, offset, length);
+			DefaultHttpResponseParser parser = new DefaultHttpResponseParser(buffer);
+			HttpResponse response = parser.parse();
+			response.setEntity(buffer.getRemainingEntity());
+			return response;
 		}
 	}
 	
@@ -103,16 +131,30 @@ public class IncomingHttpTunnel {
 		return connection;
     }
     
-    public ResponseWaiter sendMessage(UUID fromLocal, UUID toRemote, String url, byte[] body, long timeoutValue, TimeUnit timeoutUnit) throws InvalidKeyException, InvalidNameException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, JsonProcessingException, IOException, InterruptedException, TimeoutException, UserManagementException, CertificateExpiredException, CertificateNotYetValidException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException {
+    public ResponseWaiter sendMessage(UUID fromLocal, UUID toRemote, HttpRequest request, long timeoutValue, TimeUnit timeoutUnit) throws InvalidKeyException, HttpException, InvalidNameException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, JsonProcessingException, IOException, InterruptedException, TimeoutException, UserManagementException, CertificateExpiredException, CertificateNotYetValidException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException {
 		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
     	UserConnection connection = buildConnection(fromLocal, toRemote);
     	Long requestNumber = new Random().nextLong();
 		String requestNumberString = requestNumber + "\n";
 		
-		url += "\n";
-		ByteBuffer buffer = ByteBuffer.allocate(requestNumberString.length() + url.length() + body.length);
+		ByteSessionOutputBuffer sessionBuffer = new ByteSessionOutputBuffer();
+		DefaultHttpRequestWriter writer = new DefaultHttpRequestWriter(sessionBuffer);
+		writer.write(request);
+		
+		ByteArrayOutputStream entityOutput = null;
+		if (request instanceof HttpEntityEnclosingRequest) {
+			entityOutput = new ByteArrayOutputStream();
+			((HttpEntityEnclosingRequest)request).getEntity().writeTo(entityOutput);
+		}
+		
+		byte[] requestBytes = sessionBuffer.getByteArray();
+		ByteBuffer buffer = ByteBuffer.allocate(requestNumberString.length() + sessionBuffer.getLength() + (entityOutput == null?0:entityOutput.toByteArray().length));
 		buffer.put(requestNumberString.getBytes());
-		buffer.put(url.getBytes());
+		buffer.put(requestBytes, 0, sessionBuffer.getLength());
+		if (entityOutput != null) {
+			buffer.put(entityOutput.toByteArray());
+		}
+		
 		Message outMessage = connection.getCrypto().buildEncryptedMessage(buffer);
 		session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(outMessage)));
 		ResponseWaiter waiter = new ResponseWaiter();
@@ -191,35 +233,42 @@ public class IncomingHttpTunnel {
 		}
 		
 		//I don't think we have to call validate on Identity, because http execution will do it for us.
-		String relativeURL = null;		
-		int start = 0;
-		int lastStart = 0;
 		String requestOrResponse = null;
-		for (start = 0; start < content.length; start++) {
-			if (content[start] == 10) {
-				if (requestOrResponse == null) {
-					requestOrResponse = new String(content, 0, start);
-					
-					//Check to see if this was a response first
-					ResponseWaiter waiter = waiters.remove(Long.parseLong(requestOrResponse));
-					if (waiter != null) {
-						waiter.setResponse(content, start + 1, content.length - start - 1);
-						return;
-					}
+		int start = 0;
+		for (; content[start] != 10 && start < content.length; start++) {
+		}
+		
+		requestOrResponse = new String(content, 0, start).trim();
+		
+		//Check to see if this was a response first
+		ResponseWaiter waiter = waiters.remove(Long.parseLong(requestOrResponse));
+		if (waiter != null) {
+			waiter.setResponse(content, start + 1, content.length - start - 1);
+			return;
+		}
 
-					lastStart = start;
-				} else if (relativeURL == null) {
-					relativeURL = new String(content, lastStart + 1, start - lastStart - 1);
-					break;
-				}
-			}
+		//This message must be an http request
+		ByteSessionInputBuffer sessionBuffer = new ByteSessionInputBuffer(content, start + 1, content.length - start - 1);
+		DefaultHttpRequestParser parser = new DefaultHttpRequestParser(sessionBuffer);
+		HttpRequest request;
+		try {
+			request = (HttpRequest)parser.parse();
+		} catch (IOException | HttpException e) {
+			logger.error(e);
+			server.unauthenticatedMessage(inMessage);
+			return;
+		}
+		//HttpUriRequest request = parseRequestLine(requestLine);
+		//request.setHeaders(headers.toArray(new Header[headers.size()]));
+		if (request instanceof BasicHttpEntityEnclosingRequest) {
+			((BasicHttpEntityEnclosingRequest)request).setEntity(sessionBuffer.getRemainingEntity());
 		}
 		
 		//Add 1 to start in order to get past the \n
 		start++;
 		requestOrResponse += "\n";
 		try {
-			byte[] response = server.executeProxiedRequestFromRemote(connection, relativeURL, start == content.length?null:content, start, content.length - start);
+			byte[] response = server.executeProxiedRequestFromRemote(connection, request);
 			ByteBuffer buffer = ByteBuffer.allocate(requestOrResponse.length() + response.length);
 			buffer.put(requestOrResponse.getBytes());
 			buffer.put(response);
