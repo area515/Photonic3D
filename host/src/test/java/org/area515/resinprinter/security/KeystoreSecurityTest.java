@@ -61,8 +61,8 @@ public class KeystoreSecurityTest {
 		service1 = new KeystoreLoginService(user1Keystore, password, false);
 		service2 = new KeystoreLoginService(user2Keystore, password, false);
 		
-		PhotonicUser insertUser1 = new PhotonicUser(username1, password, null, username1 + "@stuff.com", new String[]{PhotonicUser.FULL_RIGHTS});
-		PhotonicUser insertUser2 = new PhotonicUser(username2, password, null, username2 + "@stuff.com", new String[]{PhotonicUser.FULL_RIGHTS});
+		PhotonicUser insertUser1 = new PhotonicUser(username1, password, null, username1 + "@stuff.com", new String[]{PhotonicUser.FULL_RIGHTS}, false);
+		PhotonicUser insertUser2 = new PhotonicUser(username2, password, null, username2 + "@stuff.com", new String[]{PhotonicUser.FULL_RIGHTS}, false);
 		
 		user1 = service1.update(insertUser1);
 		user2 = service2.update(insertUser2);
@@ -101,7 +101,7 @@ public class KeystoreSecurityTest {
 		
 		service1.start(null);
 		Assert.assertNull(service1.login(testUsername, testUsername, null));
-		PhotonicUser insertUser = new PhotonicUser(testUsername, testUsername, null, testUsername, new String[]{PhotonicUser.FULL_RIGHTS});
+		PhotonicUser insertUser = new PhotonicUser(testUsername, testUsername, null, testUsername, new String[]{PhotonicUser.FULL_RIGHTS}, false);
 		PhotonicUser user = service1.update(insertUser);
 		Assert.assertNotNull(user);
 		Assert.assertEquals(user.getName(), testUsername);

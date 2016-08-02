@@ -71,11 +71,11 @@ public class UserService {
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@DELETE
-	@Path("delete/{userId}")
+	@Path("deleteLocalUser/{userId}")
 	@Produces(MediaType.APPLICATION_JSON)
     public Response deleteUser(@PathParam("userId")String userId) {
 		try {
-			FeatureManager.getUserManagementFeature().remove(new PhotonicUser(null, null, UUID.fromString(userId), null, null));
+			FeatureManager.getUserManagementFeature().remove(new PhotonicUser(null, null, UUID.fromString(userId), null, null, false));
 			return Response.status(Status.OK).build();
 		} catch (UserManagementException e) {
 			logger.error(e);
@@ -124,7 +124,7 @@ public class UserService {
 
 		Map<String, FriendshipFeature> features = FeatureManager.getFriendshipFeatures();
 		FriendshipFeature friendshipFeature = features.get(friendshipFeatureName);
-		return friendshipFeature.sendFriendRequest(currentUser, new PhotonicUser(null, null, UUID.fromString(userId), null, null));
+		return friendshipFeature.sendFriendRequest(currentUser, new PhotonicUser(null, null, UUID.fromString(userId), null, null, true));
     }
     
     @ApiOperation(value = "Gets all of the remote users that have asked us to be friends.")

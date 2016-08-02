@@ -9,6 +9,7 @@ public class PhotonicUser implements Principal {
 	private String email;
 	private String[] roles;
 	private String credential;
+	private boolean remote;
 	
 	public static final String LISTENER = "listener";
 	public static final String FULL_RIGHTS = "admin";
@@ -17,13 +18,14 @@ public class PhotonicUser implements Principal {
 
 	private PhotonicUser() {
 	}
-	
-	public PhotonicUser(String simpleUserName, String credential, UUID userId, String email, String[] roles) {
+
+	public PhotonicUser(String simpleUserName, String credential, UUID userId, String email, String[] roles, boolean remote) {
 		this.simpleUserName = simpleUserName;
 		this.userId = userId;
 		this.email = email;
 		this.roles = roles;
 		this.credential = credential;
+		this.remote = remote;
 	}
 	
 	public void setRoles(String[] roles) {
@@ -45,6 +47,10 @@ public class PhotonicUser implements Principal {
 		return email;
 	}
 	
+	public Boolean isRemote() {
+		return remote;
+	}
+	
 	@Override
 	public String getName() {
 		return simpleUserName;
@@ -53,6 +59,7 @@ public class PhotonicUser implements Principal {
 	public String toString() {
 		return simpleUserName + "(" + getUserId() + ")";
 	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
