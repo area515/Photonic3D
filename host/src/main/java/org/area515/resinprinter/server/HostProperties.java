@@ -102,7 +102,8 @@ public class HostProperties {
 	private CountDownLatch hostReady = new CountDownLatch(1);
 	private String scriptEngineLanguage = null;
 	private String printerProfileRepo;
-	
+	private boolean useAuthentication;
+
 	//SSL settings:
 	private boolean useSSL;
 	private int printerHostPort;
@@ -127,7 +128,7 @@ public class HostProperties {
 			INSTANCE = new HostProperties();
 
 			//Put any calls here if they require an initialized HostProperties();
-			if (INSTANCE.useSSL) {
+			if (INSTANCE.isUseAuthentication()) {
 				//We do this to make sure that people can still login after our keystore migration
 				INSTANCE.migratePropertyUserUserManagementFeature(INSTANCE.getMergedProperties(), INSTANCE.securityRealmName);
 			}
@@ -152,7 +153,7 @@ public class HostProperties {
 		if (clientUsername != null) {
 			if (clientPassword != null) {
 				try {
-					PhotonicUser newUser = new PhotonicUser(clientUsername, clientPassword, null, null, new String[] {PhotonicUser.FULL_RIGHTS});
+					PhotonicUser newUser = new PhotonicUser(clientUsername, clientPassword, null, null, new String[] {PhotonicUser.FULL_RIGHTS}, false);
 					UserService.INSTANCE.createNewUser(newUser);
 					removeProperties(securityRealmName + ".clientUsername", securityRealmName + ".clientPassword");
 				} catch (UserManagementException e) {
@@ -274,6 +275,7 @@ public class HostProperties {
 		if (System.getProperty("overrideHostPort") != null) {
 			printerHostPort = Integer.parseInt(System.getProperty("overrideHostPort"));
 		}
+		useAuthentication = new Boolean(configurationProperties.getProperty("useAuthentication", "false"));
 		externallyAccessableName = configurationProperties.getProperty("externallyAccessableName");
 		sslKeypairPassword = configurationProperties.getProperty("keypairPassword");
 		sslKeystorePassword = configurationProperties.getProperty("keystorePassword");
@@ -501,6 +503,10 @@ public class HostProperties {
 	
 	public boolean isUseSSL() {
 		return useSSL;
+	}
+	
+	public boolean isUseAuthentication() {
+		return useAuthentication;
 	}
 
 	public String getForwardHeader() {

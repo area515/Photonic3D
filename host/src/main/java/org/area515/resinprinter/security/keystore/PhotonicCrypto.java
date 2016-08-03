@@ -150,7 +150,7 @@ public class PhotonicCrypto {
     	}
     	
     	Friend friend = new Friend();
-    	friend.setUser(new PhotonicUser(names[1], null, UUID.fromString(names[0]), null, new String[]{PhotonicUser.LOGIN, PhotonicUser.LISTENER}));
+    	friend.setUser(new PhotonicUser(names[1], null, UUID.fromString(names[0]), null, new String[]{PhotonicUser.LOGIN}, true));
     	friend.setFriendshipFeature(X509FriendshipFeature.FEATURE_NAME);
     	friend.setTrustData(new String[]{signBase64, encryptBase64});
 		return friend;
@@ -229,6 +229,10 @@ public class PhotonicCrypto {
 		IvParameterSpec iv = new IvParameterSpec(ivBytes);
     	conversationCipher.init(Cipher.DECRYPT_MODE, symKey, iv);
     	return conversationCipher.doFinal(message.getData());
+	}
+	
+	public boolean isDueForKeyExchange() {
+		return symKey == null || currentOffset > 100;
 	}
 	
 	public Message buildKeyExchange() throws InvalidNameException, CertificateExpiredException, CertificateNotYetValidException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {

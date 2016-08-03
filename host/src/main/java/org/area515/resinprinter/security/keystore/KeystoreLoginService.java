@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -40,6 +41,7 @@ import sun.security.x509.X509CertImpl;
 
 public class KeystoreLoginService implements UserManagementFeature<String[], PhotonicCrypto> {
     private static final Logger logger = LogManager.getLogger();	
+    private static final String PASSWORD_CHARS = "`1234567890-=~!@#$%^&*()_+qwertyuiop[]\\QWERTYUIOP{}|asdfghjkl;'ASDFGHJKL:\"zxcvbnm,./ZXCVBNM<>?";
     
     private File keyFile;
     private String keystorePassword;
@@ -72,13 +74,12 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 	}
 
 	@Override
-	//TODO: When a user is logged out we need to logout all of it's conversations in the RendezvousClient.
 	//TODO: Logout users after a certain period of inactivity?
 	public UserIdentity login(String username, Object credentials, ServletRequest request) {
 		Set<PhotonicUser> users = knownUsers.get(username);
 		
 		if (users == null) {
-			logger.error("No known users. It isn't possible to login to Photonic3d");
+			logger.error("No known users. It isn't possible to login to Photonic3d with username: " + username);
 			return null;
 		}
 		
@@ -86,12 +87,17 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 		PhotonicCrypto crypto = null;
 		for (PhotonicUser user : users) {
 			try {
-				crypto = KeystoreUtilities.getPhotonicCrypto(user, keyFile, credentials + "", keystorePassword, allowInsecureCommunications);
+				if (user.isRemote()) {
+					if (user.getCredential() != null && user.getCredential().equals(credentials + "")) {
+						crypto = KeystoreUtilities.getPhotonicCrypto(user, keyFile, null, keystorePassword, allowInsecureCommunications);
+						userFound = user;
+						break;
+					}
+				} else {
+					crypto = KeystoreUtilities.getPhotonicCrypto(user, keyFile, credentials + "", keystorePassword, allowInsecureCommunications);
+				}
 			} catch (InvalidNameException | IOException | GeneralSecurityException e) {
-				logger.info("There are at least two users that have the same username id1:" + 
-							user.getUserId() + " and id2:" + 
-							userFound.getUserId() + 
-							" (looking for userid with correct credentials)", e);
+				logger.info("Couldn't login with username:" + username + " userId:" + user.getUserId(), e);
 			}
 			if (crypto != null) {
 				if (userFound != null) {
@@ -114,6 +120,17 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 	}
 
 	private CryptoUserIdentity buildUserIdentity(PhotonicUser user, PhotonicCrypto crypto) {
+		byte[] newPassword = new byte[20];
+		if (user.isRemote()) {
+			Random random = new Random();
+			for (int t = 0; t < newPassword.length; t++) {
+				newPassword[t] = (byte)PASSWORD_CHARS.charAt(random.nextInt(PASSWORD_CHARS.length()));
+			}
+			
+			user = new PhotonicUser(user.getName(), new String(newPassword), user.getUserId(), user.getEmail(), user.getRoles(), true);
+			
+		}
+		
 		CryptoUserIdentity identity = new CryptoUserIdentity(crypto, new Subject(), user, user.getRoles());
 		return identity;
 	}
@@ -135,7 +152,9 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 
 	@Override
 	public void logout(UserIdentity user) {
+		//TODO: When a user is logged out we need to logout all of it's conversations in the RendezvousClient.
 		//TODO: When we logout, we should shut off all PhotonicCrypto connections to all remote users that were talking to this UserIdentity
+		//TODO: When we logout, we should make sure to remove all credentials from the credentialProvider
 		loggedInUsers.remove(user.getUserPrincipal());
 	}
 
@@ -174,7 +193,7 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 		try {
 			PhotonicCrypto crypto = null;
 			if (user.getUserId() != null) {
-				crypto = KeystoreUtilities.getPhotonicCrypto(user, keyFile, user.getCredential(), keystorePassword, allowInsecureCommunications);
+				crypto = KeystoreUtilities.getPhotonicCrypto(user, keyFile, user.isRemote()?null:user.getCredential(), keystorePassword, allowInsecureCommunications);
 			} else {
 				Date validTo = new Calendar.Builder()
 						.set(Calendar.YEAR, Calendar.getInstance().get(Calendar.YEAR) + 50)
@@ -190,7 +209,7 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 						allowInsecureCommunications);
 			}
 
-			user = new PhotonicUser(user.getName(), null, crypto.getLocalUserId(), user.getEmail(), user.getRoles());
+			user = new PhotonicUser(user.getName(), null, crypto.getLocalUserId(), user.getEmail(), user.getRoles(), user.isRemote());
 			saveRoles(user);
 			users.add(user);
 			DefaultUserIdentity identity = loggedInUsers.get(user);
@@ -276,6 +295,7 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 				knownUsers.put(user.getName(), users);
 			}
 			users.add(user);
+			logger.info("Keystore trusted remote:{}", user);
 			return crypto;
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidNameException
 				| UnrecoverableEntryException | IOException e) {
@@ -287,10 +307,20 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 	public CryptoUserIdentity loginRemote(PhotonicUser user) throws UserManagementException {
 		PhotonicCrypto crypto;
 		try {
-			crypto = KeystoreUtilities.getPhotonicCrypto(user, keyFile, null, keystorePassword, allowInsecureCommunications);
+			crypto = KeystoreUtilities.getPhotonicCrypto(user, keyFile, user.isRemote()?null:user.getCredential(), keystorePassword, allowInsecureCommunications);
 			CryptoUserIdentity identity = buildUserIdentity(user, crypto);
-			loggedInUsers.put(user, identity);
-			return identity;
+			Set<PhotonicUser> users = knownUsers.get(user.getName());
+			for (PhotonicUser currentUser : users) {
+				if (currentUser.getUserId().equals(user.getUserId())) {
+					//These lines ensure that the session password is setup in the identity
+					users.remove(user);
+					users.add((PhotonicUser)identity.getUserPrincipal());
+					logger.info("Keystore login from remote:{}", user);
+					return identity;
+				}
+			}
+			
+			throw new UserManagementException("Couldn't validate identity of user");
 		} catch (InvalidNameException | IOException | GeneralSecurityException e) {
 			throw new UserManagementException("Couldn't validate identity of user", e);
 		}
