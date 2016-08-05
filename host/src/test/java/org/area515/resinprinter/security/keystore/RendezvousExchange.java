@@ -13,7 +13,6 @@ import org.area515.resinprinter.security.Friend;
 import org.area515.resinprinter.security.PhotonicUser;
 import org.eclipse.jetty.util.security.Credential;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
@@ -43,7 +42,6 @@ public class RendezvousExchange {
 		}
 	}
 	
-	@Ignore
 	@Test
 	@PrepareForTest(NotificationManager.class)
 	public void messageExchange() throws Exception {
@@ -51,12 +49,12 @@ public class RendezvousExchange {
 		PowerMockito.mockStatic(NotificationManager.class, waiter);
 		
 		String password = "test";
-		int port = 2222;
-		int httpPort = 3333;
+		int httpPort1 = 1111;
+		int httpPort2 = 2222;
+		int wsPort = 3333;
 		String testMessage = "This is my test message";
 		
-		RendezvousPipe pipe = new RendezvousPipe(port);
-		TestServer httpServer = new TestServer(httpPort, testMessage);
+		RendezvousPipe pipe = new RendezvousPipe(wsPort);
 		
 		File user1Keystore = new File("user1.keystore");
 		File user2Keystore = new File("user2.keystore");
@@ -70,8 +68,11 @@ public class RendezvousExchange {
 		KeystoreLoginService service1 = new KeystoreLoginService(user1Keystore, password, false);
 		KeystoreLoginService service2 = new KeystoreLoginService(user2Keystore, password, false);
 		
-		PhotonicUser insertUser1 = new PhotonicUser(username1, password, null, username1 + "@stuff.com", new String[]{PhotonicUser.FULL_RIGHTS});
-		PhotonicUser insertUser2 = new PhotonicUser(username2, password, null, username2 + "@stuff.com", new String[]{PhotonicUser.FULL_RIGHTS});
+		TestServer httpServer1 = new TestServer(httpPort1, testMessage, service1);
+		TestServer httpServer2 = new TestServer(httpPort2, testMessage, service2);
+
+		PhotonicUser insertUser1 = new PhotonicUser(username1, password, null, username1 + "@stuff.com", new String[]{PhotonicUser.FULL_RIGHTS}, false);
+		PhotonicUser insertUser2 = new PhotonicUser(username2, password, null, username2 + "@stuff.com", new String[]{PhotonicUser.FULL_RIGHTS}, false);
 		
 		PhotonicUser user1 = service1.update(insertUser1);
 		PhotonicUser user2 = service2.update(insertUser2);
@@ -79,8 +80,8 @@ public class RendezvousExchange {
 		Assert.assertNotNull(service1.login(username1, Credential.getCredential(password), null));
 		Assert.assertNotNull(service2.login(username2, Credential.getCredential(password), null));
 		
-		RendezvousClient server1 = new RendezvousClient(user1Keystore, password, false, new URI("ws://127.0.0.1:" + port + "/httpTunnel"), new URI("http://127.0.0.1:" + httpPort), service1);
-		RendezvousClient server2 = new RendezvousClient(user2Keystore, password, false, new URI("ws://127.0.0.1:" + port + "/httpTunnel"), new URI("http://127.0.0.1:" + httpPort), service2);
+		RendezvousClient server1 = new RendezvousClient(user1Keystore, password, false, new URI("ws://127.0.0.1:" + wsPort + "/httpTunnel"), new URI("http://127.0.0.1:" + httpPort1), service1);
+		RendezvousClient server2 = new RendezvousClient(user2Keystore, password, false, new URI("ws://127.0.0.1:" + wsPort + "/httpTunnel"), new URI("http://127.0.0.1:" + httpPort2), service2);
 		
 		X509FriendshipFeature friendship1 = new X509FriendshipFeature(server1);
 		X509FriendshipFeature friendship2 = new X509FriendshipFeature(server2);
@@ -97,7 +98,7 @@ public class RendezvousExchange {
 		List<Friend> friendRequests2 = friendship2.getFriendRequests();
 		
 		Friend newFriendFor1 = friendRequests1.get(0);
-		Friend newFriendFor2 = friendRequests2.get(0);//TODO: This has been known to throw an IndexOutOfBoundsException!
+		Friend newFriendFor2 = friendRequests2.get(0);
 		
 		friendship1.acceptFriendRequest(newFriendFor1);
 		friendship2.acceptFriendRequest(newFriendFor2);
@@ -112,12 +113,6 @@ public class RendezvousExchange {
 		
 		HttpResponse bufferFrom1To2 = server1.sendRequestToRemote(user1.getUserId(), user2.getUserId(), getRequest, 20, TimeUnit.SECONDS);
 		HttpResponse bufferFrom2To1 = server2.sendRequestToRemote(user2.getUserId(), user1.getUserId(), getRequest, 20, TimeUnit.SECONDS);
-		bufferFrom1To2 = server1.sendRequestToRemote(user1.getUserId(), user2.getUserId(), getRequest, 20, TimeUnit.SECONDS);
-		bufferFrom2To1 = server2.sendRequestToRemote(user2.getUserId(), user1.getUserId(), getRequest, 20, TimeUnit.SECONDS);
-		bufferFrom1To2 = server1.sendRequestToRemote(user1.getUserId(), user2.getUserId(), getRequest, 20, TimeUnit.SECONDS);
-		bufferFrom2To1 = server2.sendRequestToRemote(user2.getUserId(), user1.getUserId(), getRequest, 20, TimeUnit.SECONDS);
-		bufferFrom1To2 = server1.sendRequestToRemote(user1.getUserId(), user2.getUserId(), getRequest, 20, TimeUnit.SECONDS);
-		bufferFrom2To1 = server2.sendRequestToRemote(user2.getUserId(), user1.getUserId(), getRequest, 20, TimeUnit.SECONDS);
 		
 		byte[] dataFrom1 = new byte[testMessage.length()];
 		byte[] dataFrom2 = new byte[testMessage.length()];
@@ -129,7 +124,8 @@ public class RendezvousExchange {
 		Assert.assertEquals(testMessage, new String(dataFrom2));
 		
 		pipe.close();
-		httpServer.close();
+		httpServer1.close();
+		httpServer2.close();
 	}
 }
 

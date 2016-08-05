@@ -858,12 +858,12 @@ public class PrinterService {
 	
     @ApiOperation(value="Tests out a script using the scripting language(likely javascript) specified in the config.properties via scriptEngineLanguage=[script language]"
     		+ "The returnType parameter passed to this method must match a known Java type or the following format: "
-    		+ "requestedJavaReturnTypeOfScript[printerVariableToShowInSeries(start,stop,increment),printerVariableToShowInRange(start,stop,increment)]"
+    		+ "requestedJavaReturnTypeOfScript[printerVariableToShowInSeries(start,stop,increment)printerVariableToShowInRange(start,stop,increment)]"
     		+ "Here are some examples: "
-    		+ "If your script expects an double return type you would use: java.lang.String "
+    		+ "If your script expects an double return type you would use: java.lang.Double "
     		+ "If your script does not expect a return value you would use: java.lang.Void "
     		+ "If your script wants to return chart data in a json array that describes how 'bulbHours' and 'CURSLICE' affect exposureTime you could use: "
-    		+ "java.lang.Double[CURSLICE(1,5,1)buildAreaMM(10000,20000,1000]")
+    		+ "java.lang.Double[CURSLICE(1,5,1)buildAreaMM(10000,20000,1000)]")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.TODO),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})

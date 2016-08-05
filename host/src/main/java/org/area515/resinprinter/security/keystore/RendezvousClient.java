@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -33,6 +34,9 @@ import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
@@ -42,10 +46,11 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.TargetAuthenticationStrategy;
 import org.apache.http.message.BasicHttpEntityEnclosingRequest;
-import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,14 +61,17 @@ import org.area515.resinprinter.security.UserManagementException;
 import org.area515.resinprinter.security.UserManagementFeature;
 import org.area515.resinprinter.security.keystore.IncomingHttpTunnel.ResponseWaiter;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.server.Main;
 
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class RendezvousClient {
     private static final Logger logger = LogManager.getLogger();
     private static final Pattern REQUEST_LINE_PATTERN = Pattern.compile("([^ ]+) ([^ ]+) (.+)");
+    private ConcurrentHashMap<Conversation, UserConnection> conversations = new ConcurrentHashMap<>();
     
-    private Map<Conversation, UserConnection> openConversations = new ConcurrentHashMap<>();
 	private static RendezvousClient defaultServer = null;
 	private HttpClientBuilder clientBuilder;
 	private IncomingHttpTunnel incoming;
@@ -73,6 +81,7 @@ public class RendezvousClient {
 	private boolean allowInsecureCommunications;
 	private UserManagementFeature userManagement;
 	private X509FriendshipFeature friendshipFeature;
+	private CredentialsProvider credentialProvider = new BasicCredentialsProvider();
 	
 	private static class Conversation {
 		private UUID first;
@@ -128,6 +137,10 @@ public class RendezvousClient {
 			URI schemaHostPort, 
 			UserManagementFeature userManagement) throws Exception {
 		this.clientBuilder = HttpClientBuilder.create();
+		this.clientBuilder.setTargetAuthenticationStrategy(TargetAuthenticationStrategy.INSTANCE);
+		this.clientBuilder.setUserAgent("Photonic3dRemoteClient");
+		this.clientBuilder.setDefaultCredentialsProvider(credentialProvider);
+		
 		this.schemaHostPort = schemaHostPort;
 		this.keyFile = keyFile;
 		this.keystorePassword = keystorePassword;
@@ -162,20 +175,29 @@ public class RendezvousClient {
 		return defaultServer;
 	}
 	
+	//TODO: Need some synchronization around key exchanges maybe?
 	public class UserConnection {
 		private PhotonicUser localUser;
 		private PhotonicUser remoteUser;
 		private PhotonicCrypto crypto;
 		private CloseableHttpClient localClient;
 		
-		public UserConnection(PhotonicUser localUser, PhotonicUser remoteUser, PhotonicCrypto crypto) {
+		//This should only be created when a successful connection has been authenticated
+		public UserConnection(PhotonicUser localUser, PhotonicUser remoteUser, PhotonicCrypto crypto, URI uri) {
 			this.localUser = localUser;
 			this.remoteUser = remoteUser;
 			this.crypto = crypto;
-			//TODO: setup auth in clientBuilder
 			this.localClient = clientBuilder.build();
-		}
 
+			credentialProvider.setCredentials(
+					new AuthScope(
+							uri.getHost(), 
+							uri.getPort(), 
+							HostProperties.Instance().getSecurityRealmName(),
+							Main.AUTHENTICATION_SCHEME), 
+					new UsernamePasswordCredentials(remoteUser.getName(), remoteUser.getCredential()));
+		}
+		
 		public PhotonicUser getRemoteUser() {
 			return remoteUser;
 		}
@@ -187,10 +209,6 @@ public class RendezvousClient {
 		public CloseableHttpClient getLocalClient() {
 			return localClient;
 		}
-	}
-	
-	public UserConnection getConnection(UUID request, UUID response) {
-		return openConversations.get(new Conversation(request, response));
 	}
 	
 	public HttpResponse sendRequestToRemote(UUID from, UUID to, HttpRequest bodyOfRequest, long timeout, TimeUnit timeUnit) throws TimeoutException, NoSuchPaddingException, SignatureException, InvalidKeyException, CertificateExpiredException, CertificateNotYetValidException, InvalidNameException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, JsonProcessingException, NoSuchAlgorithmException, IOException, InterruptedException, TimeoutException, UserManagementException, HttpException {
@@ -267,11 +285,11 @@ public class RendezvousClient {
 	}
 
 	public synchronized void close() {
-		for (UserConnection connection : openConversations.values()) {
+		for (UserConnection connection : conversations.values()) {
 			try {connection.localClient.close();} catch (IOException e) {}
 		}
 		
-		openConversations.clear();
+		conversations.clear();
 		incoming.close();
 	}
 	
@@ -282,7 +300,8 @@ public class RendezvousClient {
 	}
 
 	private PhotonicCrypto getLocalCrypto(UUID local, UUID remote) throws UserManagementException {
-		CryptoUserIdentity localIdentity = (CryptoUserIdentity)userManagement.getLoggedInIdentity(new PhotonicUser(null, null, local, null, null));
+		//CryptoUserIdentity localIdentity = (CryptoUserIdentity)userManagement.getLoggedInIdentity(new PhotonicUser(null, null, local, null, null, false));
+		CryptoUserIdentity localIdentity = (CryptoUserIdentity)userManagement.getLoggedInIdentity(userManagement.getUser(local));
 		if (localIdentity == null) {
 			throw new UserManagementException("A remote user attepted to login:" + remote + " but the local user:" + local + " wasn't logged in to accept the response.");
 		}
@@ -293,7 +312,7 @@ public class RendezvousClient {
 		}
 	}
 	
-	public UserConnection createOutgoingConnection(UUID fromLocal, UUID toRemote) throws UserManagementException {
+	private UserConnection createOutgoingConnection(UUID fromLocal, UUID toRemote) throws UserManagementException {
     	PhotonicUser fromLocalUser = userManagement.getUser(fromLocal);
     	PhotonicUser toRemoteUser = userManagement.getUser(toRemote);
     	PhotonicCrypto fromLocalCrypto = getLocalCrypto(fromLocal, toRemote);
@@ -304,20 +323,45 @@ public class RendezvousClient {
 			throw new UserManagementException("Couldn't create user:" + toRemoteUser, e);
 		}
     	fromLocalCrypto.setRemoteCrypto(toRemoteCrypto);
-    	UserConnection connection = new UserConnection(fromLocalUser, toRemoteUser, fromLocalCrypto);
-    	openConversations.put(new Conversation(fromLocal, toRemote), connection);
+    	UserConnection connection = new UserConnection(fromLocalUser, toRemoteUser, fromLocalCrypto, schemaHostPort);
+    	UserConnection oldConnection = conversations.putIfAbsent(new Conversation(fromLocal, toRemote), connection);
+    	if (oldConnection != null) {
+    		connection = oldConnection;
+    	}
+    	logger.info("Connection made from:{} to:{}", fromLocal, toRemote);
     	return connection;
 	}
 	
-    public UserConnection attemptLoginWithRemoteId(UUID fromRemote, UUID toLocal) throws UserManagementException {
+	//TODO: Creating remote logins should probably be in a different method than building connections
+	//TODO: this should only throw a UserManagementException not all of the rest of the exceptions
+    public UserConnection buildConnection(UUID local, UUID remote, boolean remoteLoginRequired) throws UserManagementException, JsonProcessingException, IOException, CertificateExpiredException, CertificateNotYetValidException, InvalidKeyException, InvalidNameException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+		UserConnection connection = conversations.get(new Conversation(local, remote));
+		if (connection == null) {
+			if (remoteLoginRequired) {
+				return attemptRemoteLogin(remote, local);
+			}
+			
+			connection = createOutgoingConnection(local, remote);
+		} else if (remoteLoginRequired && userManagement.getLoggedInIdentity(userManagement.getUser(remote)) == null) {
+			return attemptRemoteLogin(remote, local);
+		}
+		
+		return connection;
+    }
+
+    private UserConnection attemptRemoteLogin(UUID fromRemote, UUID toLocal) throws UserManagementException {
     	PhotonicUser fromRemoteUser = userManagement.getUser(fromRemote);
     	PhotonicUser toLocalUser = userManagement.getUser(toLocal);
     	CryptoUserIdentity fromRemoteIdentity = (CryptoUserIdentity)userManagement.loginRemote(fromRemoteUser);
 		
     	PhotonicCrypto toLocalCrypto = getLocalCrypto(toLocal, fromRemote);
     	toLocalCrypto.setRemoteCrypto(fromRemoteIdentity.getCrypto());
-    	UserConnection connection = new UserConnection(toLocalUser, fromRemoteUser, toLocalCrypto);
-    	openConversations.put(new Conversation(fromRemote, toLocal), connection);
+    	UserConnection connection = new UserConnection(toLocalUser, (PhotonicUser)fromRemoteIdentity.getUserPrincipal(), toLocalCrypto, schemaHostPort);
+    	UserConnection oldConnection = conversations.putIfAbsent(new Conversation(fromRemote, toLocal), connection);
+    	if (oldConnection != null) {
+    		connection = oldConnection;
+    	}
+    	logger.info("Connection(and remote login) made from:{} to:{}", fromRemote, toLocal);
     	return connection;
     }
     
@@ -326,7 +370,7 @@ public class RendezvousClient {
     }
     
     public Friend sendFriendRequest(UUID fromLocal, UUID toRemote) throws JsonProcessingException, IOException, InvalidNameException, GeneralSecurityException {
-    	CryptoUserIdentity localIdentity = (CryptoUserIdentity)userManagement.getLoggedInIdentity(new PhotonicUser(null, null, fromLocal, null, null));
+    	CryptoUserIdentity localIdentity = (CryptoUserIdentity)userManagement.getLoggedInIdentity(new PhotonicUser(null, null, fromLocal, null, null, false));
     	if (localIdentity == null) {
     		throw new InvalidNameException("Unkown local user: " + fromLocal);
     	}
@@ -338,5 +382,9 @@ public class RendezvousClient {
     
     public void sendAcceptFriendResponse(Friend friend) {
     	//TODO: We don't have a protocol for this yet...
+    }
+    
+    public String toString() {
+    	return keyFile + "";
     }
 }
