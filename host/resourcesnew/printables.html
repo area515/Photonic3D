@@ -109,12 +109,6 @@
 							</span>
 						</div>
 
-						<!-- form style="margin-bottom:10px;" class="col-sm-5">
-							<h5>Flip Image
-							<input type="checkbox" ng-model="printablesController.currentCustomizer.affineTransformSettings.yscale" ng-true-value="-1" ng-false-value="1" ng-change="printablesController.changeFlip()"> 
-							</h5>
-						</form> -->
-
 						<div class="list-group-item">
 							<i class="fa fa-2x fa-arrows pull-left"></i>
 							<h4>Positioning</h4>
@@ -146,6 +140,17 @@
 								<span>Reset</span>
 							</button>
 						</div>	
+
+						<div class="list-group-item">
+							<i class="fa fa-2x fa-database pull-left"></i>
+							<h4>Slicer</h4>
+							<button class="btn btn-primary" ng-click="printablesController.goToSlacer()">
+								<!-- <i class="fa fa-undo pull-left"></i>  -->
+								<b class="fa fa-external-link"></b> 
+								<span>Open SlAcer.js</span>
+							</button>
+						</div>	
+
 					</div>
 					<!-- End list group -->
 					<div class="panel-footer">

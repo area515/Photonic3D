@@ -194,6 +194,10 @@
 
 		}
 
+		this.goToSlacer = function goToSlacer() {
+			$location.path('/slacer')
+		};
+
 		this.changeTranslate = function changeTranslate(x, y) {
 			var currentCustomizer = controller.findCurrentCustomizer(controller.currentPrintable);
 			var affineTransformSettings = currentCustomizer.affineTransformSettings;
