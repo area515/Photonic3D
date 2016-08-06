@@ -216,7 +216,7 @@ public class JettySecurityUtils {
 				continue;
 			}
 			
-			users.add(new PhotonicUser(userIdAndName[1], null, UUID.fromString(userIdAndName[0]), null, null));
+			users.add(new PhotonicUser(userIdAndName[1], null, UUID.fromString(userIdAndName[0]), null, null, !keyStore.isKeyEntry(alias)));
 		}
 
 		return users;
@@ -312,34 +312,5 @@ public class JettySecurityUtils {
         https.setPort(HostProperties.Instance().getPrinterHostPort());//TODO: Why do we have to set this again!!!
             
         jettyServer.setConnectors(new Connector[]{https});
-
-        //All below is user based security
-        Constraint constraint = new Constraint();
-        constraint.setName( Constraint.__BASIC_AUTH );
-        constraint.setRoles( new String[]{ PhotonicUser.FULL_RIGHTS, PhotonicUser.LOGIN } );//Allows a login
-        constraint.setAuthenticate( true );
-     
-        ConstraintMapping mapping = new ConstraintMapping();
-        mapping.setConstraint( constraint );
-        mapping.setPathSpec( "/*" );
-        
-        UserManagementFeature loginService =  FeatureManager.getUserManagementFeature();
-        /*HashLoginService loginService = new HashLoginService();
-        loginService.putUser(
-        		HostProperties.Instance().getClientUsername(), 
-        		Credential.getCredential(HostProperties.Instance().getClientPassword()), new String[] { HostProperties.FULL_RIGHTS});*/
-        loginService.setName(HostProperties.Instance().getSecurityRealmName());
-        //loginService.start();
-        //OAuthLoginService OAuth2 AuthenticatorFactory ServletSecurityAnnotationHandler
-        //http://stackoverflow.com/questions/24591782/resteasy-support-for-jax-rs-rolesallowed
-        ConstraintSecurityHandler csh = new ConstraintSecurityHandler();
-        csh.setLoginService(loginService);
-        //FormAuthenticator d;
-        //csh.setAuthenticator(authenticator);
-        //csh.setAuthenticatorFactory(null);change above from BASIC to FORM and change this to a FormAuthenticator
-        csh.setConstraintMappings( new ConstraintMapping[]{ mapping } );
-        
-        context.setInitParameter("resteasy.role.based.security", String.valueOf(true));
-     	context.setSecurityHandler(csh);
 	}
 }

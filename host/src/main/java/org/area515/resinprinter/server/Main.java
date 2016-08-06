@@ -18,10 +18,14 @@ import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.plugin.FeatureManager;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.security.JettySecurityUtils;
+import org.area515.resinprinter.security.PhotonicUser;
+import org.area515.resinprinter.security.UserManagementFeature;
 import org.area515.resinprinter.services.PrinterService;
 import org.area515.resinprinter.stream.ProgressiveDownloadServlet;
 import org.area515.util.RedirectRegexRule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.DefaultHandler;
@@ -29,6 +33,7 @@ import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
@@ -41,6 +46,8 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 public class Main {
     private static final Logger logger = LogManager.getLogger();
+    
+    public static final String AUTHENTICATION_SCHEME = Constraint.__BASIC_AUTH;
 	public static ScheduledExecutorService GLOBAL_EXECUTOR = new ScheduledThreadPoolExecutor(3, new ThreadFactory() {
 		private AtomicInteger threads = new AtomicInteger();
 		@Override
@@ -50,6 +57,36 @@ public class Main {
 			return thread;
 		}
 	});
+	
+	public static void setupAuthentication(ServletContextHandler context, UserManagementFeature loginService) {
+        //All below is user based security
+        Constraint constraint = new Constraint();
+        constraint.setName(AUTHENTICATION_SCHEME);
+        constraint.setRoles(new String[]{PhotonicUser.FULL_RIGHTS, PhotonicUser.LOGIN});//Allows a login
+        constraint.setAuthenticate(true);
+     
+        ConstraintMapping mapping = new ConstraintMapping();
+        mapping.setConstraint(constraint);
+        mapping.setPathSpec("/*");
+        
+        /*HashLoginService loginService = new HashLoginService();
+        loginService.putUser(
+        		HostProperties.Instance().getClientUsername(), 
+        		Credential.getCredential(HostProperties.Instance().getClientPassword()), new String[] { HostProperties.FULL_RIGHTS});*/
+        loginService.setName(HostProperties.Instance().getSecurityRealmName());
+        //loginService.start();
+        //OAuthLoginService OAuth2 AuthenticatorFactory ServletSecurityAnnotationHandler
+        //http://stackoverflow.com/questions/24591782/resteasy-support-for-jax-rs-rolesallowed
+        ConstraintSecurityHandler csh = new ConstraintSecurityHandler();
+        csh.setLoginService(loginService);
+        //FormAuthenticator d;
+        //csh.setAuthenticator(authenticator);
+        //csh.setAuthenticatorFactory(null);change above from BASIC to FORM and change this to a FormAuthenticator
+        csh.setConstraintMappings( new ConstraintMapping[]{ mapping } );
+        
+        context.setInitParameter("resteasy.role.based.security", String.valueOf(true));
+     	context.setSecurityHandler(csh);
+	}
 	
 	public static void main(String[] args) throws Exception {
 		logger.info("=================================================================");
@@ -133,9 +170,14 @@ public class Main {
 			}
 		}
 		
-		//Determine if we are going to use SSL and user authentication
+		//Determine if we are going to use SSL
 		if (HostProperties.Instance().isUseSSL()) {
 			JettySecurityUtils.secureContext(externallyAccessableIP, serviceContext, server);
+		}
+		
+		//Determine if we are going to use user authentication
+		if (HostProperties.Instance().isUseAuthentication()) {
+			setupAuthentication(serviceContext, FeatureManager.getUserManagementFeature());
 		}
 		
 		URI startURI = new URI("http" + (HostProperties.Instance().isUseSSL()?"s://":"://") + externallyAccessableIP + ":" + port);

@@ -214,7 +214,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			return aid.printer.getStatus();
 		}
 		
-		if (aid.slicingProfile.getgCodeFooter() != null && aid.slicingProfile.getgCodeFooter().trim().length() == 0) {
+		if (aid.slicingProfile.getgCodeFooter() != null && aid.slicingProfile.getgCodeFooter().trim().length() > 0) {
 			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeFooter());
 		}
 		

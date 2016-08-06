@@ -36,13 +36,14 @@
             "MonitorRight":11.36,
             "MonitorBottom":12.64,
             "UseMask":false
-         }
+         },
+         "PauseOnPrinterResponseRegEx": ".*door.*open.*"
       },
       "slicingProfile":{  
-         "gCodeHeader":"G91;M17",
+         "gCodeHeader":"G91;\nM17;",
          "gCodeFooter":"M18",
          "gCodePreslice":null,
-         "gCodeLift":"G1 Z${ZLiftDist} F${ZLiftRate};G1 Z-${(ZLiftDist - LayerThickness)} F180;G4 S2;",
+         "gCodeLift":"G1 Z${ZLiftDist} F${ZLiftRate};\nG1 Z-${(ZLiftDist - LayerThickness)} F180;\nM17;\n;<delay> 1500;",
          "gCodeShutter":null,
          "zliftDistanceGCode":null,
          "zliftSpeedGCode":null,
@@ -66,8 +67,8 @@
          "LiftRetractRate":0.0,
          "FlipX":false,
          "FlipY":true,
-         "ZLiftDistanceCalculator":"var minLift = 4.5; var value = 8; if ($CURSLICE > $NumFirstLayers) { value = minLift + ((5.0/2880) * Math.pow($buildAreaMM,1);}value",
-         "ZLiftSpeedCalculator":"var value = 8.0; if ($CURSLICE > $NumFirstLayers) { value = 2.0 + (5.0/2880) * Math.pow($buildAreaMM,1);} value",
+         "ZLiftDistanceCalculator":"var minLift = 4.5;\nvar value = 8.0;\nif ($CURSLICE > $NumFirstLayers) {\nvalue = minLift  +  0.0015*Math.pow($buildAreaMM,1);\n}\nvalue",
+         "ZLiftSpeedCalculator":"var value = 50.0;\nif ($CURSLICE > $NumFirstLayers) {\nvalue = 100.0 - 0.02 * Math.pow($buildAreaMM,1);\n}\nvalue",
          "ProjectorGradientCalculator":null,
          "ExposureTimeCalculator":"var value = $FirstLayerTime;\nif ($CURSLICE > $NumFirstLayers) {\n\tvalue = $LayerTime\n}\nvalue",
          "SelectedInk":"Default",
@@ -95,5 +96,5 @@
    "currentSlicePauseTime":0,
    "status":"Ready",
    "printInProgress":false,
-   "printPaused":false
+   "printPaused":false,
 }
