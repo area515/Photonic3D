@@ -93,28 +93,6 @@
 		};
 
 		this.refreshPrintables = function refreshPrintables() {
-			// $http.get("/services/printables/list").success(
-   //      		function (data) {
-   //      			controller.printables = data;    			
-   //      			$http.get("services/customizers/list").success(
-   //      				function (data) {     					
-   //      					controller.customizers = data;
-   //               			controller.initializeCustomizers(function () { 
-   //               				var firstPrintable = controller.printables[0];
-   //               				if (firstPrintable !== undefined && firstPrintable !== null) {
-   //               					if (controller.currentPrintable === undefined || controller.currentPrintable === null) {
-   //               						controller.changeCurrentPrintable(firstPrintable); 		
-   //               					}
-   //               				}
-   //               			});           							
-   //      				});
-   //      			$http.get("services/customizers/getProjectImage").success(
-   //      				function (data) {
-   //      					// console.log("This is what we get from getProjectImage " + data);
-   //      					controller.projectImage = data;
-   //      				})
-   //      		}
-	  //       );
 	  		$http.get("services/printables/list").success(
 	  			function (data) {
 	  				controller.printables = data;
@@ -132,91 +110,6 @@
 	  					});
 	  			})
 		};
-
-		// this.initializeCustomizers = function initializeCustomizers(callback) {
-		// 	var length = controller.printables.length;
-		// 	for (var i = 0; i < length; i++) {
-		// 		var currPrint = controller.printables[i];
-		// 		var customizerName = currPrint.name + "." + currPrint.extension;
-		// 		if (!(customizerName in controller.customizers)) {		
-		// 			// console.log("Here is the customizer name that is not in controller.customizers " + customizerName);				  
-		// 		    // console.log("we do not have customizer for name: " + customizer.name);										
-		// 			var customizer = {
-		// 				name: customizerName,
-		// 				printerName: currPrint.printerName,
-		// 				printableName: currPrint.name,
-		// 				printableExtension: currPrint.extension,
-		// 				supportsAffineTransformSettings: true,
-		// 				affineTransformSettings: {
-		// 					// affineTransformScriptCalculator: null,
-		// 					xscale: 1,
-		// 					yscale: 1,
-		// 					xtranslate: 0,
-		// 					ytranslate: 0
-		// 				}
-		// 			};
-		// 			$http.post("/services/customizers/upsertCustomizer", customizer).success(
-		// 				function (data) {								
-		// 			}).error(
-  //   					function (data, status, headers, config, statusText) {					
- 	//         				$scope.$emit("HTTPError", {status:status, statusText:data});
-
-	 //        			});
-		// 			controller.customizers[customizerName] = customizer;
-		// 		}				
-		// 	}		
-		// 	callback();
-
-		// 	// Alternate approach by forcing the synchronous calls to be async (having a function that calls itself after the http request completes). We do this because we set the dictionary
-		// 	// values after the http request is completed. in the prior for-loop version, we take advantage of the synchronous call by setting dictionary values outside of the http request success callback.
-
-		// 				// var length = controller.printables.length;
-		// 	// var loop = function(counter, currPrint) {
-		// 	// 	if (counter === undefined) {
-		// 	// 		counter = 0;
-		// 	// 	}
-		// 	// 	if (counter >= length) {
-		// 	// 		callback();			
-		// 	// 		return;
-		// 	// 	}
-		// 	// 	if (currPrint === undefined || currPrint === null) {
-		// 	// 		return;
-		// 	// 	}
-
-		// 	// 	var customizerName = currPrint.name + "." + currPrint.extension;
-		// 	// 	// console.log(controller.customizers);
-		// 	// 	if (!(customizerName in controller.customizers)) {											
-		// 	// 		var customizer = {
-		// 	// 			name: customizerName,
-		// 	// 			printerName: currPrint.printerName,
-		// 	// 			printableName: currPrint.name,
-		// 	// 			printableExtension: currPrint.extension,
-		// 	// 			supportsAffineTransformSettings: true,
-		// 	// 			affineTransformSettings: {
-		// 	// 				// affineTransformScriptCalculator: null,
-		// 	// 				xscale: 1,
-		// 	// 				yscale: 1,
-		// 	// 				xtranslate: 0,
-		// 	// 				ytranslate: 0
-		// 	// 			}
-		// 	// 		};
-		// 	// 		$http.post("/services/customizers/upsertCustomizer", customizer).success(
-		// 	// 			function (data) {
-		// 	// 				controller.customizers[customizer.name] = customizer;	
-		// 	// 				counter ++;
-		// 	// 				loop(counter, controller.printables[counter]);								
-		// 	// 		}).error(
-  //  //  					function (data, status, headers, config, statusText) {					
- 	//  //        				$scope.$emit("HTTPError", {status:status, statusText:data});
-
-	 //  //       			});
-		// 	// 	} else {
-		// 	// 		counter ++;
-		// 	// 		loop(counter, controller.printables[counter]);
-		// 	// 	}
-		// 	// };
-		// 	// loop(0, controller.printables[0]);
-		// }
 
 		this.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(
 			function(data) {
@@ -257,12 +150,6 @@
 		this.setProjectImage = function setProjectImage(projectImage) {
 			controller.projectImage = projectImage;
 			controller.setPreview(true);
-			// $http.post("services/customizers/setProjectImage/" + projectImage).success(
-			// 	function (data) {
-			// 		// console.log("we set the project image");
-			// 		controller.projectImage = projectImage;
-			// 		controller.setPreview(true);
-			// 	})
 		}
 
 		this.isProjectImage = function isProjectImage() {
@@ -299,6 +186,10 @@
 			return true;				
 			}
 
+		}
+
+		this.goToSlacer = function goToSlacer() {
+			window.location = "/slacer";
 		}
 
 		this.changeTranslate = function changeTranslate(x, y) {
