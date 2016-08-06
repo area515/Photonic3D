@@ -10,17 +10,18 @@
 						<div class="row">
 							<div class="btn-group pull-right" >
 								<button class="btn btn-success" ng-disabled="printablesController.currentPrintable == null" ng-click="printablesController.printPrintable()" >
-									<i class="fa fa-print"></i>
+									<b class="fa fa-print"></b>
 									<span>Print</span>
 								</button>
 								<button class="btn btn-danger" ng-disabled="printablesController.currentPrintable == null" ng-click="printablesController.deletePrintable()">
-									<i class="fa fa-trash-o"></i> 
+									<b class="fa fa-trash-o"></b> 
 									<span>Remove</span>
 								</button>
 								<button class="btn btn-primary" ng-click="printablesController.showUpload()">
-									<i class="fa fa-upload"></i> 
+									<b class="fa fa-upload"></b> 
 									<span>Upload</span>
 								</button>
+								
 						    </div>
 						</div>
 					</div>
@@ -40,7 +41,11 @@
 						</a>
 					</div>
 					<div class="panel-footer">
-						<span ng-include="'cardFooter.html'"></span>
+						<button class="btn btn-primary btn-sm" ng-click="printablesController.goToSlacer()">
+							<b class="fa fa-external-link"></b> 
+							<span>Open SLAcer.js</span>
+						</button>
+						<small class="pull-right">Photonic3D v0.{{integerVersion}}</small>
 					</div>								
 				</div>
 			</div>
@@ -49,7 +54,7 @@
 			<!-- Preview Box -->
 			<div class="col-sm-7" id="preview"> 
 				<div class="preview-box"> 
-					<div class="panel panel-default" style="height:400px;">
+					<div class="panel panel-default" style="height:500px;">
 						<div ng-show="printablesController.showControls" class="panel-heading">
 							<i class="fa fa-2x fa-desktop pull-left"></i>
 							<h3 class="panel-title pull-left">Preview box for: {{printablesController.currentPrintable.name}}
@@ -141,15 +146,7 @@
 							</button>
 						</div>	
 
-						<div class="list-group-item">
-							<i class="fa fa-2x fa-database pull-left"></i>
-							<h4>Slicer</h4>
-							<button class="btn btn-primary" ng-click="printablesController.goToSlacer()">
-								<!-- <i class="fa fa-undo pull-left"></i>  -->
-								<b class="fa fa-external-link"></b> 
-								<span>Open SLAcer.js</span>
-							</button>
-						</div>	
+						
 
 					</div>
 					<!-- End list group -->
