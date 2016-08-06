@@ -133,7 +133,7 @@ public class PrintableService {
 	}
 
     @ApiOperation(value="Upload a printable file using multipart/form-data. "
-    		+ "After the upload is complete, the file will be checked against all known print processors to determine if it is sutable for printing.")
+    		+ "After the upload is complete, the file will be checked against all known print processors to determine if it is suitable for printing.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),

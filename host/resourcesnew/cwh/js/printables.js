@@ -150,12 +150,6 @@
 		this.setProjectImage = function setProjectImage(projectImage) {
 			controller.projectImage = projectImage;
 			controller.setPreview(true);
-			// $http.post("services/customizers/setProjectImage/" + projectImage).success(
-			// 	function (data) {
-			// 		// console.log("we set the project image");
-			// 		controller.projectImage = projectImage;
-			// 		controller.setPreview(true);
-			// 	})
 		}
 
 		this.isProjectImage = function isProjectImage() {
@@ -195,8 +189,8 @@
 		}
 
 		this.goToSlacer = function goToSlacer() {
-			$location.path('/slacer')
-		};
+			window.location = "/slacer";
+		}
 
 		this.changeTranslate = function changeTranslate(x, y) {
 			var currentCustomizer = controller.findCurrentCustomizer(controller.currentPrintable);
