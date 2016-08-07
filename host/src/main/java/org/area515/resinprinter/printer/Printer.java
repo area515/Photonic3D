@@ -11,7 +11,6 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.Insets;
 import java.awt.Point;
-import java.awt.PrintJob;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
@@ -76,12 +75,14 @@ public class Printer {
 	}
 	
 	//For jaxb/json
+	@SuppressWarnings("unused")
 	private Printer() {}
 	
 	public Printer(PrinterConfiguration configuration) throws InappropriateDeviceException {
 		this.configuration = configuration;
 		
 		try {
+			@SuppressWarnings("unchecked")
 			Class<GCodeControl> gCodeClass = (Class<GCodeControl>)Class.forName("org.area515.resinprinter.gcode." + configuration.getMachineConfig().getMotorsDriverConfig().getDriverType() + "GCodeControl");
 			gCodeControl = (GCodeControl)gCodeClass.getConstructors()[0].newInstance(this);
 		} catch (ClassNotFoundException e) {

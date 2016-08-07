@@ -3,7 +3,6 @@ package org.area515.resinprinter.job;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.List;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -131,7 +130,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 				logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
 				
 				//Cure the current image
-				dataAid.printer.showImage(image);
+				//dataAid.printer.showImage(image);
 				
 				//Get the next pointer in line to start rendering the image into
 				nextRenderingPointer = stlData.getNextRenderingPointer();
@@ -143,7 +142,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 				}
 				
 				//Performs all of the duties that are common to most print files
-				status = performPostSlice(dataAid);
+				status = performPostSlice(dataAid, image);
 				if (status != null) {
 					return status;
 				}
