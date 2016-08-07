@@ -25,7 +25,6 @@ import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.services.PrinterService;
-//import org.area515.util.Log4jTimer;
 
 import se.sawano.java.text.AlphanumericComparator;
 
