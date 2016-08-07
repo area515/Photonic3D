@@ -2,6 +2,7 @@ package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -126,7 +127,12 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		return null;
 	}
 	
+	
 	public JobStatus performPostSlice(DataAid aid) throws ExecutionException, InterruptedException, InappropriateDeviceException, ScriptException {
+		return this.performPostSlice(aid, null);
+	}
+	
+	public JobStatus performPostSlice(DataAid aid, BufferedImage sliceImage) throws ExecutionException, InterruptedException, InappropriateDeviceException, ScriptException {
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
@@ -143,6 +149,11 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 				aid.printJob.setExposureTime(value.intValue());
 			}
 		}
+
+		if (sliceImage != null) {
+			logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
+			aid.printer.showImage(sliceImage);
+		}
 		
 		if (aid.slicingProfile.getgCodeShutter() != null && aid.slicingProfile.getgCodeShutter().trim().length() > 0) {
 			aid.printer.setShutterOpen(true);
@@ -156,8 +167,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			aid.printer.setShutterOpen(false);
 			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeShutter());
 		}
-		
-		//Blank the screen in the case that our printer doesn't have a shutter
+
+		//Blank the screen
 		aid.printer.showBlankImage();
 		
 		logger.info("ExposureTime:{}", ()->Log4jTimer.completeTimer(EXPOSURE_TIMER));
