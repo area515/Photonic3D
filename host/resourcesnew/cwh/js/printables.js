@@ -189,7 +189,7 @@
 		}
 
 		this.goToSlacer = function goToSlacer() {
-			window.location = "/slacer";
+			window.open("/slacer");
 		}
 
 		this.changeTranslate = function changeTranslate(x, y) {
