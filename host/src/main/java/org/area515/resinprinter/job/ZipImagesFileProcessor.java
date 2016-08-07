@@ -17,7 +17,6 @@ import org.area515.resinprinter.job.render.StandaloneImageData;
 import org.area515.resinprinter.job.render.StandaloneImageRenderer;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.server.Main;
-import org.area515.util.Log4jTimer;
 
 import se.sawano.java.text.AlphanumericComparator;
 
@@ -102,11 +101,6 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 					StandaloneImageData imageData = prepareImage.get();
 					currentImageByJob.put(printJob, imageData);
 					
-					//Start the exposure timer
-					logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
-					
-					dataAid.printer.showImage(imageData.getImage());
-					
 					if (oldImage != null) {
 						oldImage.getImage().flush();
 					}
@@ -117,8 +111,14 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 					} else {
 						slicePending = false;
 					}
+
+					//Start the exposure timer
+					//logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
 					
-					status = performPostSlice(dataAid);
+					//dataAid.printer.showImage(imageData.getImage());
+					
+					status = performPostSlice(dataAid, imageData.getImage());
+
 					if (status != null) {
 						return status;
 					}

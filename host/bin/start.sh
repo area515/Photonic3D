@@ -2,6 +2,10 @@
 
 cpu=`uname -m`
 
+if [ -z "$HOME" ] || [ "$HOME" == "/" ]; then
+  HOME=~root
+fi
+
 DEFAULT_REPO="area515/Creation-Workshop-Host"
 CONFIG_PROPS="${HOME}/3dPrinters/config.properties"
 
