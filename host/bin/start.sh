@@ -2,8 +2,8 @@
 
 cpu=`uname -m`
 
-if [ -z "${HOME}" ] ; then
-  HOME=/root
+if [ -z "$HOME" ] || [ "$HOME" == "/" ]; then
+  HOME=~root
 fi
 
 DEFAULT_REPO="area515/Creation-Workshop-Host"
