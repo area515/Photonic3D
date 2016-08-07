@@ -129,10 +129,12 @@ public class Customizer {
 		this.affineTransformSettings = affineTransformSettings;
 	}
 
+	@JsonIgnore
 	public BufferedImage getOrigSliceCache() {
 		return origSliceCache;
 	}
 
+	@JsonIgnore
 	public void setOrigSliceCache(BufferedImage origSliceCache) {
 		this.origSliceCache = origSliceCache;
 	}
