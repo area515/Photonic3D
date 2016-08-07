@@ -94,14 +94,8 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 				image = applyImageTransforms(data, image, data.xResolution, data.yResolution);
 				//applyBulbMask(data, graphics, data.xResolution, data.yResolution);
 				
-				//Start the exposure timer
-				logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
-
-				data.printer.showImage(image);
-				printCube.currentImage = image;
-				
 				//Performs all of the duties that are common to most print files
-				status = performPostSlice(data);
+				status = printImageAndPerformPostProcessing(data, printCube.currentImage = image);
 				if (status != null) {
 					return status;
 				}

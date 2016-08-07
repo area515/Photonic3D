@@ -12,9 +12,11 @@ public class PhotonicUser implements Principal {
 	private boolean remote;
 	
 	public static final String LISTENER = "listener";
+	public static final String REMOTE_EXECUTION = "remoteExecution";
 	public static final String FULL_RIGHTS = "admin";
 	public static final String LOGIN = "login";
 	public static final String USER_ADMIN = "userAdmin";
+	public static final String CHAT = "chat";
 
 	private PhotonicUser() {
 	}

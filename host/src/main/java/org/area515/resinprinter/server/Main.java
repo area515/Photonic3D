@@ -135,7 +135,7 @@ public class Main {
         ServletContextHandler serviceContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		serviceContext.setContextPath("/services");
 		ServletHolder servicesHolder = new ServletHolder(new HttpServletDispatcher());
-		servicesHolder.setInitParameter("javax.ws.rs.Application",ApplicationConfig.class.getName());
+		servicesHolder.setInitParameter("javax.ws.rs.Application", ApplicationConfig.class.getName());
 		serviceContext.addServlet(servicesHolder, "/*");
 		
         // For Raspberry Pi video

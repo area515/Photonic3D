@@ -126,7 +126,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 					
 					//dataAid.printer.showImage(imageData.getImage());
 					
-					status = performPostSlice(dataAid, imageData.getImage());
+					status = printImageAndPerformPostProcessing(dataAid, imageData.getImage());
 
 					if (status != null) {
 						return status;
