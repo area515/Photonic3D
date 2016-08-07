@@ -127,7 +127,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 				stlData.setCurrentRenderingPointer(nextRenderingPointer);
 				
 				//Start the exposure timer
-				logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
+				// logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
 				
 				//Cure the current image
 				//dataAid.printer.showImage(image);
