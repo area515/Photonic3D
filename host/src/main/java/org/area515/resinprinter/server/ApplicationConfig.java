@@ -13,6 +13,7 @@ import org.area515.resinprinter.services.MediaService;
 import org.area515.resinprinter.services.PrintJobService;
 import org.area515.resinprinter.services.PrintableService;
 import org.area515.resinprinter.services.PrinterService;
+import org.area515.resinprinter.services.RemoteService;
 import org.area515.resinprinter.services.SettingsService;
 import org.area515.resinprinter.services.UserService;
 import org.area515.util.ExceptionMarshaller;
@@ -25,22 +26,7 @@ import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 public class ApplicationConfig extends Application{
-
-//	private static Set services = new HashSet(); 
-//	 public  ApplicationConfig() {     
-//	   // initialize restful services   
-//	   services.add(new RfidService());  
-//	 }
-//	 @Override
-//	 public  Set getSingletons() {
-//	  return services;
-//	 }  
-//	 public  static Set getServices() {  
-//	  return services;
-//	 } 
-	
 	private Set<Object> singletons = new HashSet<Object>();
-    //private Set<Class<?>> classes = new HashSet<Class<?>>();
 
     public ApplicationConfig() {
     	BeanConfig beanConfig = new BeanConfig();
@@ -63,6 +49,7 @@ public class ApplicationConfig extends Application{
     	singletons.add(MediaService.INSTANCE);
     	singletons.add(CustomizerService.INSTANCE);
     	singletons.add(UserService.INSTANCE);
+    	singletons.add(RemoteService.INSTANCE);
     }
 
     public JacksonJaxbJsonProvider buildJacksonJaxbJsonProvider() {

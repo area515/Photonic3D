@@ -21,7 +21,10 @@ import io.swagger.annotations.SwaggerDefinition;
 						+ " <li><a href=\"#/printables\">printables:</a> This service allows you to manage all printable files in Phontonic3d."
 						+ " <li><a href=\"#/media\">media:</a> This service performs all media based activities related to imaging, live streaming and video. "
 						+ "Currently progressive download of video is performed in the <b class=\"code\">org.area515.resinprinter.stream.ProgressiveDownloadServlet</b>. "
-						+ "Eventually those capabilities will be moved to this service once a permanent oauth model has been put into place."
+						+ "Eventually those capabilities will be moved to this service once a permanent oauth model has been put into place.</li>"
+						+ " <li><a href=\"#/remote\">remote:</a> This service allows you to securely execute any restful method on a remote instance of Photonic3d by prefixing the following path to the front of the call you'd like to remotely execute: "
+						+ "<b class=\"code\">remote/execute/{userIdOfRemoteUser}/</b>. "
+						+ "The full security prerequisites are detailed in the restful method descriptions below.</b>"
 						+ "</ul>",
 				contact = @Contact(name = "Wes Gilster", email = "wesgilster@gmail.com", url = "http://www.photonic3d.com"),
                 version = "",

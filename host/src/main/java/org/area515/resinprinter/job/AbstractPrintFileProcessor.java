@@ -127,16 +127,15 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		return null;
 	}
 	
-	
-	public JobStatus performPostSlice(DataAid aid) throws ExecutionException, InterruptedException, InappropriateDeviceException, ScriptException {
-		return this.performPostSlice(aid, null);
-	}
-	
-	public JobStatus performPostSlice(DataAid aid, BufferedImage sliceImage) throws ExecutionException, InterruptedException, InappropriateDeviceException, ScriptException {
+	public JobStatus printImageAndPerformPostProcessing(DataAid aid, BufferedImage sliceImage) throws ExecutionException, InterruptedException, InappropriateDeviceException, ScriptException {
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
 
+		if (sliceImage == null) {
+			throw new IllegalStateException("You must specify a sliceImage to display");
+		}
+		
 		//Start but don't wait for a potentially heavy weight operation to determine if we are out of ink.
 		if (aid.inkDetector != null) {
 			aid.inkDetector.startMeasurement();
@@ -150,10 +149,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			}
 		}
 
-		if (sliceImage != null) {
-			logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
-			aid.printer.showImage(sliceImage);
-		}
+		logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
+		aid.printer.showImage(sliceImage);
 		
 		if (aid.slicingProfile.getgCodeShutter() != null && aid.slicingProfile.getgCodeShutter().trim().length() > 0) {
 			aid.printer.setShutterOpen(true);
