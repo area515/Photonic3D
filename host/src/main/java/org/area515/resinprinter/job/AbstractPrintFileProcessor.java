@@ -294,28 +294,34 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			throw new IllegalStateException("BufferedImage is null");
 		}
 
-		BufferedImage after = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		// if(aid.affineTransform.getScaleY() == -1) { 
-		// 	aid.affineTransform.translate(0., -height);
-		// }
-		// after.getMinX() + i
-		// aid.affineTransform.translate(img.getMinX() - after.getMinX(), img.getMinY() - after.getMinY());
-		double yOff = -(height - (aid.affineTransform.getScaleY()*height))/2;
-		double xOff = -(width - (aid.affineTransform.getScaleX()*width))/2;
-		aid.affineTransform.translate(xOff, yOff);
-		AffineTransformOp transOp = 
-		   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
-		after = transOp.filter(img, after);	
-		for (int y = 0; y < height; y++) {
-		    for (int x = 0; x < width; x++) {
-		          //image.setRGB(x, y, Color.black);
-		          if (after.getRGB(x, y) == 0) {
-		          	// after.setRGB(x, y, -16777216);
-		          	after.setRGB(x, y, Color.black.getRGB());
-		          }
-		    }
+		BufferedImage after = img;
+		
+		if (!aid.affineTransform.isIdentity()) {
+			after = new BufferedImage(width, height, img.getType());
+			
+			((Graphics2D)img.getGraphics()).setBackground(Color.black);
+			((Graphics2D)after.getGraphics()).setBackground(Color.black);
+			
+			double yOff = -(height - (aid.affineTransform.getScaleY()*height))/2;
+			double xOff = -(width - (aid.affineTransform.getScaleX()*width))/2;
+			aid.affineTransform.translate(xOff, yOff);
+			AffineTransformOp transOp = 
+			   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
+			after = transOp.filter(img, after);
+			
+			/*
+			for (int y = 0; y < height; y++) {
+			    for (int x = 0; x < width; x++) {
+			          //image.setRGB(x, y, Color.black);
+			          if (after.getRGB(x, y) == 0) {
+			          	// after.setRGB(x, y, -16777216);
+			          	after.setRGB(x, y, Color.black.getRGB());
+			          }
+			    }
+			
+			*/
 		}
-		//System.out.println("affineTranform's yscale = " + aid.affineTransform.getScaleY());
+
 		applyBulbMask(aid, (Graphics2D)after.getGraphics(), width, height);
 		return after;
 
