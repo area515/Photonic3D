@@ -120,7 +120,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 				logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
 				
 				//Cure the current image
-				dataAid.printer.showImage(image);
+				//dataAid.printer.showImage(image);
 				
 				//Get the next pointer in line to start rendering the image into
 				nextRenderingPointer = stlData.getNextRenderingPointer();
@@ -132,7 +132,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 				}
 				
 				//Performs all of the duties that are common to most print files
-				status = performPostSlice(dataAid);
+				status = performPostSlice(dataAid, image);
 				if (status != null) {
 					return status;
 				}
