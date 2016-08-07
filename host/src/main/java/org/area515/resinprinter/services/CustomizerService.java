@@ -175,7 +175,7 @@ public class CustomizerService {
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("renderFirstSliceImage/{fileName}")
-	@Produces("image/png")
+	@Produces("image/jpeg")
 	public StreamingOutput renderFirstSliceImage(@PathParam("fileName") String fileName, @QueryParam("projectImage") boolean projectImage) throws NoPrinterFoundException, SliceHandlingException {
 		// logger.debug("Filename is " + fileName);
 		Customizer customizer = getCustomizer(fileName);
@@ -200,12 +200,12 @@ public class CustomizerService {
 					@Override
 					public void write(OutputStream output) throws IOException, WebApplicationException {
 						try {
-							ImageIO.write(img, "PNG", output);
+							ImageIO.write(img, "JPG", output);
 
 							logger.debug("Writing the img");
 						} catch (IOException e) {
 								//System.out.println("failed writing");
-							throw new IOException("We can't write the image");
+							throw e;
 						}
 					}
 				};

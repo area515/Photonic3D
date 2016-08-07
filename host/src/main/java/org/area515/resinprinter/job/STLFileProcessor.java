@@ -194,7 +194,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			printJob.setCustomizer(customizer);
 
 			//instantiate new dataaid
-			DataAid dataAid = initializeDataAid(printJob);
+			DataAid dataAid = new DataAid(printJob, false);
 			
 			BufferedImage image;
 			
@@ -213,6 +213,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 				image = renderer.call();
 				
 				if (customizer.getAffineTransformSettings().isIdentity()) {
+					image = convertTo3BGR(image);
 					customizer.setOrigSliceCache(image);
 				}
 			} else {

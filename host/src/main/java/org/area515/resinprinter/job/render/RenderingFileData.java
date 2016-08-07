@@ -34,7 +34,7 @@ public class RenderingFileData {
 	public void initialize(Object imageToBuild, int width, int height) {
 		ImageData imageData = imageSync.get(imageToBuild);
 		if (imageData == null) {
-			imageData = new ImageData(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE), 0.0);
+			imageData = new ImageData(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB), 0.0);
 			imageSync.put(imageToBuild, imageData);
 		}
 	}

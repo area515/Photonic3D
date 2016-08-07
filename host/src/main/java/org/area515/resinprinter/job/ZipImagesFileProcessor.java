@@ -19,6 +19,7 @@ import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 
 import org.apache.commons.io.FileUtils;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.render.StandaloneImageData;
 import org.area515.resinprinter.job.render.StandaloneImageRenderer;
 import org.area515.resinprinter.printer.SlicingProfile;
@@ -168,7 +169,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 			printJob.setCustomizer(customizer);
 
 			//instantiate new dataaid
-			DataAid dataAid = initializeDataAid(printJob);
+			DataAid dataAid = new DataAid(printJob, false);
 			BufferedImage image;
 			
 			if (customizer.getOrigSliceCache() == null) {
@@ -193,6 +194,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 				image = stdImage.getImage();
 				
 				if (customizer.getAffineTransformSettings().isIdentity()) {
+					image = convertTo3BGR(image);
 					customizer.setOrigSliceCache(image);
 				}
 			} else {

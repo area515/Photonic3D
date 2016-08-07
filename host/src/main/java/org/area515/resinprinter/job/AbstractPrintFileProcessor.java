@@ -23,6 +23,9 @@ import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.Log4jTimer;
 import org.area515.util.TemplateEngine;
+
+import com.jcraft.jsch.Buffer;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.Customizer;
@@ -51,10 +54,18 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 
 		//should have affine transform matrix calculated here 
 		//store Affine Transform Object here
-		
+
 		public DataAid(PrintJob printJob) throws InappropriateDeviceException {
+			this(printJob, true);
+		}
+
+		
+		public DataAid(PrintJob printJob, boolean createScriptEngine) throws InappropriateDeviceException {
 			this.printJob = printJob;
-			scriptEngine = HostProperties.Instance().buildScriptEngine();
+			
+			if (createScriptEngine) {
+				scriptEngine = HostProperties.Instance().buildScriptEngine();
+			}
 			printer = printJob.getPrinter();
 			printJob.setStartTime(System.currentTimeMillis());
 		    configuration = printer.getConfiguration();
@@ -293,8 +304,6 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 	}
 
-
-
 	//public void applyImageTransforms(DataAid aid, BufferedImage bi, int width, int height) throws ScriptException {
 	public BufferedImage applyImageTransforms(DataAid aid, BufferedImage img, int width, int height) throws ScriptException {
 		if (aid == null) {
@@ -334,7 +343,11 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 
 		applyBulbMask(aid, (Graphics2D)after.getGraphics(), width, height);
 		return after;
-
-		
+	}
+	
+	protected BufferedImage convertTo3BGR(BufferedImage input) {
+		BufferedImage output = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+		output.getGraphics().drawImage(input, 0, 0, null);
+		return output;
 	}
 }
