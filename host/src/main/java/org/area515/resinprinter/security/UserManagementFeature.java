@@ -4,6 +4,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.area515.resinprinter.plugin.Feature;
+import org.area515.resinprinter.util.security.Friend;
+import org.area515.resinprinter.util.security.PhotonicUser;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.UserIdentity;
 

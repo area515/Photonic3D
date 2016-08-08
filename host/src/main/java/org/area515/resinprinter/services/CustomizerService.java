@@ -39,7 +39,7 @@ import org.area515.util.PrintFileFilter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.area515.resinprinter.security.PhotonicUser;
+import org.area515.resinprinter.util.security.PhotonicUser;
 
 @Api(value="customizers")
 @RolesAllowed(PhotonicUser.FULL_RIGHTS)

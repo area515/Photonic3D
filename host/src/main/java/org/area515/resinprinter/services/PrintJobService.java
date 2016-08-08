@@ -35,9 +35,9 @@ import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.resinprinter.stl.Triangle3d;
+import org.area515.resinprinter.util.security.PhotonicUser;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;

@@ -55,13 +55,15 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.plugin.FeatureManager;
-import org.area515.resinprinter.security.Friend;
-import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.security.UserManagementException;
 import org.area515.resinprinter.security.UserManagementFeature;
 import org.area515.resinprinter.security.keystore.IncomingHttpTunnel.ResponseWaiter;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
+import org.area515.resinprinter.util.security.Friend;
+import org.area515.resinprinter.util.security.Message;
+import org.area515.resinprinter.util.security.PhotonicCrypto;
+import org.area515.resinprinter.util.security.PhotonicUser;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -169,7 +171,7 @@ public class RendezvousClient {
 					rendezvousServerWebSocketAddress, 
 					schemaHostPort, 
 					FeatureManager.getUserManagementFeature());
-			defaultServer.setX509FriendshipFeature((X509FriendshipFeature)FeatureManager.getFriendshipFeatures().get(X509FriendshipFeature.FEATURE_NAME));
+			defaultServer.setX509FriendshipFeature((X509FriendshipFeature)FeatureManager.getFriendshipFeatures().get(PhotonicCrypto.FEATURE_NAME));
 		}
 		
 		return defaultServer;

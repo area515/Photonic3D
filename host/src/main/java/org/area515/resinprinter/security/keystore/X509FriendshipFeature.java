@@ -14,16 +14,15 @@ import javax.naming.InvalidNameException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.notification.NotificationManager;
-import org.area515.resinprinter.security.Friend;
 import org.area515.resinprinter.security.FriendshipFeature;
-import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.security.UserManagementException;
+import org.area515.resinprinter.util.security.Friend;
+import org.area515.resinprinter.util.security.PhotonicCrypto;
+import org.area515.resinprinter.util.security.PhotonicUser;
 
 public class X509FriendshipFeature implements FriendshipFeature {
     private static final Logger logger = LogManager.getLogger();	
-	public static final String FEATURE_NAME = "Make friends through X509";
-	
-    private RendezvousClient server;
+	private RendezvousClient server;
     private Map<UUID, Friend> remotesAskingToBeFriends = new ConcurrentHashMap<>();
     private Map<UUID, List<PhotonicUser>> localsAskingToBeFriends = new ConcurrentHashMap<>();
     
@@ -41,7 +40,7 @@ public class X509FriendshipFeature implements FriendshipFeature {
 
 	@Override
 	public String getName() {
-		return FEATURE_NAME;
+		return PhotonicCrypto.FEATURE_NAME;
 	}
 
 	void addRemoteFriendRequest(Friend friend) {

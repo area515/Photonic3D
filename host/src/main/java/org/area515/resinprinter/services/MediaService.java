@@ -33,9 +33,9 @@ import javax.ws.rs.core.StreamingOutput;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
+import org.area515.resinprinter.util.security.PhotonicUser;
 import org.area515.util.Log4jTimer;
 
 import com.coremedia.iso.boxes.Container;

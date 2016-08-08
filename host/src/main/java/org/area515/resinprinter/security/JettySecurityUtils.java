@@ -35,13 +35,11 @@ import javax.naming.ldap.Rdn;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.plugin.FeatureManager;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
-import org.area515.resinprinter.services.UserService;
+import org.area515.resinprinter.util.security.LdapUtils;
+import org.area515.resinprinter.util.security.PhotonicUser;
 import org.eclipse.jetty.http.HttpVersion;
-import org.eclipse.jetty.security.ConstraintMapping;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -50,7 +48,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import sun.security.x509.AlgorithmId;
@@ -121,7 +118,7 @@ public class JettySecurityUtils {
 		keyGen.initialize(2048, random);
 		
 		KeyPair keyPair = keyGen.generateKeyPair();
-		String[] userIdAndName = getUserIdAndName(fullyQualifiedDN.toString());
+		String[] userIdAndName = LdapUtils.getUserIdAndName(fullyQualifiedDN.toString());
 		if (userIdAndName[0] != null) {
 			throw new InvalidNameException("The uid component of the ldapname cannot be set in the fullQualifiedDN");
 		}
@@ -167,22 +164,6 @@ public class JettySecurityUtils {
 		saveKeystore(keyFile, keyStore, keystorePassword);
 	}
 	
-	public static String[] getUserIdAndName(String fullyQualifiedDN) throws InvalidNameException {
-		LdapName ldapName = new LdapName(fullyQualifiedDN);
-		String[] names = new String[3];
-		for (Rdn rdn : ldapName.getRdns()) {
-			if (rdn.getType().equalsIgnoreCase("cn")) {
-				names[1] = rdn.getValue() + "";
-			} else if (rdn.getType().equalsIgnoreCase("uid")) {
-				names[0] = rdn.getValue() + "";
-			} else if (rdn.getType().equalsIgnoreCase("mail")) {
-				names[2] = rdn.getValue() + "";
-			}
-		}
-		
-		return names;
-	}
-	
 	public static Set<PhotonicUser> getAllUsers(File keyFile, String keystorePassword) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
 		FileInputStream outputStream = new FileInputStream(keyFile);
 		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -195,7 +176,7 @@ public class JettySecurityUtils {
 			X509Certificate cert = (X509Certificate)keyStore.getCertificate(alias);
 			String[] userIdAndName = null;
 			try {
-				userIdAndName = getUserIdAndName(cert.getSubjectDN().getName());
+				userIdAndName = LdapUtils.getUserIdAndName(cert.getSubjectDN().getName());
 			} catch (InvalidNameException e) {
 				logger.error("Couldn't parse name from keystore:" + cert.getSubjectDN().getName(), e);
 				continue;

@@ -1,4 +1,4 @@
-package org.area515.resinprinter.security.keystore;
+package org.area515.resinprinter.notification.security;
 
 import java.io.File;
 import java.net.URI;
@@ -12,6 +12,7 @@ import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.notification.Notifier;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.security.keystore.RendezvousClient;
 import org.area515.resinprinter.slice.StlError;
 
 public class RendezvousServerNotifier implements Notifier {

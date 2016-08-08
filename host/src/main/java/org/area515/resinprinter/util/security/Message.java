@@ -1,4 +1,4 @@
-package org.area515.resinprinter.security.keystore;
+package org.area515.resinprinter.util.security;
 
 import java.util.UUID;
 
