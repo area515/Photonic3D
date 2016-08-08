@@ -29,10 +29,10 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.plugin.FeatureManager;
-import org.area515.resinprinter.security.Friend;
 import org.area515.resinprinter.security.FriendshipFeature;
-import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.security.UserManagementException;
+import org.area515.resinprinter.util.security.Friend;
+import org.area515.resinprinter.util.security.PhotonicUser;
 
 @Api(value="users")
 @RolesAllowed({PhotonicUser.FULL_RIGHTS, PhotonicUser.USER_ADMIN})

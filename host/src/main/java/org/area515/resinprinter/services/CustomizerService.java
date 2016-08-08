@@ -16,7 +16,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
-import org.area515.resinprinter.security.PhotonicUser;
+import org.area515.resinprinter.util.security.PhotonicUser;
 
 @Api(value="customizers")
 @RolesAllowed(PhotonicUser.FULL_RIGHTS)

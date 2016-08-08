@@ -53,10 +53,10 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.security.UserManagementException;
 import org.area515.resinprinter.security.keystore.RendezvousClient;
-import org.area515.resinprinter.security.keystore.X509FriendshipFeature;
+import org.area515.resinprinter.util.security.PhotonicCrypto;
+import org.area515.resinprinter.util.security.PhotonicUser;
 import org.jboss.resteasy.core.Headers;
 
 @Api(value="remote")
@@ -72,7 +72,7 @@ public class RemoteService {
 			+ " <div class='code'>A different user(remote user) must exist on the remote instance of Photonic 3D.</div>"
 			+ " <div class='code'>The local user must have been given the <b class=\"code\">login</b>, <b class=\"code\">userAdmin</b> & <b class=\"code\">remoteExecution</b> roles.</div>"
 			+ " <div class='code'>The remote user must have been given the <b class=\"code\">login</b> & <b class=\"code\">userAdmin</b> roles.</div>"
-			+ " <div class='code'>The local user must send a friend request using the \"" + X509FriendshipFeature.FEATURE_NAME + "\" feature to the remote user.</div>"
+			+ " <div class='code'>The local user must send a friend request using the \"" + PhotonicCrypto.FEATURE_NAME + "\" feature to the remote user.</div>"
 			+ " <div class='code'>The remote user must accept the friend request from the local user.</div>"
 			+ " <div class='code'>The remote user must must give the <b class=\"code\">login</b> role to their new friend(the local user).</div>"
 			+ " <div class='code'>The remote user must must give any other role to their new friend(the local user) that coresponds with the restful function they would like to grant access.</div>"

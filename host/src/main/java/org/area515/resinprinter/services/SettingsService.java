@@ -13,10 +13,10 @@ import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
 
-import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.server.CwhEmailSettings;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.util.security.PhotonicUser;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

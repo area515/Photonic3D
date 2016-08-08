@@ -3,7 +3,7 @@ package org.area515.resinprinter.security;
 import java.io.IOException;
 import java.util.UUID;
 
-import org.area515.resinprinter.security.keystore.Message;
+import org.area515.resinprinter.util.security.Message;
 import org.junit.Assert;
 import org.junit.Test;
 

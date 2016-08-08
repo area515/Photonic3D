@@ -20,7 +20,9 @@ import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 
 import org.area515.resinprinter.security.JettySecurityUtils;
-import org.area515.resinprinter.security.PhotonicUser;
+import org.area515.resinprinter.util.security.LdapUtils;
+import org.area515.resinprinter.util.security.PhotonicCrypto;
+import org.area515.resinprinter.util.security.PhotonicUser;
 
 public class KeystoreUtilities {
 	public static PhotonicCrypto generateRSAKeypairsForUserAndPossiblyKeystore(LdapName fullyQualifiedUserDN, Date endDate, File keyFile, String keypairPassword, String keystorePassword, boolean allowInsecureCommunications) throws IOException, GeneralSecurityException, InvalidNameException {
@@ -34,7 +36,7 @@ public class KeystoreUtilities {
 		
 		LdapName newUserDN = new LdapName(fullyQualifiedUserDN.getRdns());
 		PrivateKeyEntry signatureData = JettySecurityUtils.generateCertAndKeyPair(newUserDN, endDate);
-		String[] userIdAndName = JettySecurityUtils.getUserIdAndName(newUserDN.toString());
+		String[] userIdAndName = LdapUtils.getUserIdAndName(newUserDN.toString());
 		keyStore.setKeyEntry(userIdAndName[0] + "S", signatureData.getPrivateKey(), keypairPassword.toCharArray(), new Certificate[]{signatureData.getCertificate()});
 		PrivateKeyEntry encryptionData = JettySecurityUtils.generateCertAndKeyPair(fullyQualifiedUserDN, endDate);
 		keyStore.setKeyEntry(userIdAndName[0] + "E", encryptionData.getPrivateKey(), keypairPassword.toCharArray(), new Certificate[]{encryptionData.getCertificate()});

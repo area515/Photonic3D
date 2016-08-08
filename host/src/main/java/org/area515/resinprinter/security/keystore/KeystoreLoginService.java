@@ -26,12 +26,13 @@ import javax.servlet.ServletRequest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.security.Friend;
 import org.area515.resinprinter.security.JettySecurityUtils;
-import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.security.UserManagementException;
 import org.area515.resinprinter.security.UserManagementFeature;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.util.security.Friend;
+import org.area515.resinprinter.util.security.PhotonicCrypto;
+import org.area515.resinprinter.util.security.PhotonicUser;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.DefaultUserIdentity;
 import org.eclipse.jetty.security.IdentityService;

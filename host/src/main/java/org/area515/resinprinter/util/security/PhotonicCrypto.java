@@ -1,4 +1,4 @@
-package org.area515.resinprinter.security.keystore;
+package org.area515.resinprinter.util.security;
 
 import java.nio.ByteBuffer;
 import java.security.InvalidAlgorithmParameterException;
@@ -30,12 +30,6 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.naming.InvalidNameException;
 
-import org.area515.resinprinter.security.Friend;
-import org.area515.resinprinter.security.JettySecurityUtils;
-import org.area515.resinprinter.security.PhotonicSecurityProvider;
-import org.area515.resinprinter.security.PhotonicUser;
-import org.area515.resinprinter.security.SHA1PRNG;
-
 import sun.security.x509.X509CertImpl;
 
 public class PhotonicCrypto {
@@ -62,6 +56,7 @@ public class PhotonicCrypto {
 	private SecureRandom consistentRandom;
 	private boolean allowInsecureCommunication;
 	private Map<Integer, byte[]> outOfOrderIvs = new HashMap<>();
+	public static final String FEATURE_NAME = "Make friends through X509";
 
 	public PhotonicCrypto(Entry signer, Entry decryptor, boolean allowInsecureCommunication) throws CertificateExpiredException, CertificateNotYetValidException, CertificateEncodingException, InvalidNameException {
 		this.allowInsecureCommunication = allowInsecureCommunication;
@@ -100,7 +95,7 @@ public class PhotonicCrypto {
 	}
 
 	private void validateUIDOfVerifier() throws InvalidNameException, CertificateEncodingException {
-		String[] userIdAndName = JettySecurityUtils.getUserIdAndName(verifier.getSubjectDN().getName());
+		String[] userIdAndName = LdapUtils.getUserIdAndName(verifier.getSubjectDN().getName());
 		if (!UUID.fromString(userIdAndName[0]).equals(UUID.nameUUIDFromBytes(verifier.getPublicKey().getEncoded()))) {
 			throw new InvalidNameException(BAD_UUID);
 		}
@@ -140,7 +135,7 @@ public class PhotonicCrypto {
 		X509CertImpl sign = new X509CertImpl(Base64.getDecoder().decode(signBase64));
 		X509CertImpl encrypt = new X509CertImpl(Base64.getDecoder().decode(encryptBase64));
 		
-    	String[] names = JettySecurityUtils.getUserIdAndName(sign.getSubjectDN().getName());
+    	String[] names = LdapUtils.getUserIdAndName(sign.getSubjectDN().getName());
     	if (!names[0].equals(message.getFrom().toString())) {
     		throw new InvalidNameException("User:" + names[1] + " sent a friend request with userId:" + names[0] + " on cert which doesn't match userId:" + message.getFrom() + " from which it came");
     	}
@@ -151,7 +146,7 @@ public class PhotonicCrypto {
     	
     	Friend friend = new Friend();
     	friend.setUser(new PhotonicUser(names[1], null, UUID.fromString(names[0]), null, new String[]{PhotonicUser.LOGIN}, true));
-    	friend.setFriendshipFeature(X509FriendshipFeature.FEATURE_NAME);
+    	friend.setFriendshipFeature(PhotonicCrypto.FEATURE_NAME);
     	friend.setTrustData(new String[]{signBase64, encryptBase64});
 		return friend;
 	}
@@ -240,9 +235,9 @@ public class PhotonicCrypto {
 			throw new SignatureException("This crypto is not capable of signing messages.");
 		}
 		Message keyMessage = new Message();
-		String[] userIdAndName = JettySecurityUtils.getUserIdAndName(remoteCrypto.verifier.getSubjectDN().getName());
+		String[] userIdAndName = LdapUtils.getUserIdAndName(remoteCrypto.verifier.getSubjectDN().getName());
 		keyMessage.setTo(UUID.fromString(userIdAndName[0]));
-		userIdAndName = JettySecurityUtils.getUserIdAndName(((X509Certificate)signer.getCertificate()).getSubjectDN().getName());
+		userIdAndName = LdapUtils.getUserIdAndName(((X509Certificate)signer.getCertificate()).getSubjectDN().getName());
 		keyMessage.setFrom(UUID.fromString(userIdAndName[0]));
 		keyMessage.setEncryptionAlgorithm("RSA");
 		
@@ -281,9 +276,9 @@ public class PhotonicCrypto {
 		}
 		
 		Message keyMessage = new Message();
-		String[] userIdAndName = JettySecurityUtils.getUserIdAndName(remoteCrypto.verifier.getSubjectDN().getName());
+		String[] userIdAndName = LdapUtils.getUserIdAndName(remoteCrypto.verifier.getSubjectDN().getName());
 		keyMessage.setTo(UUID.fromString(userIdAndName[0]));
-		userIdAndName = JettySecurityUtils.getUserIdAndName(((X509Certificate)signer.getCertificate()).getSubjectDN().getName());
+		userIdAndName = LdapUtils.getUserIdAndName(((X509Certificate)signer.getCertificate()).getSubjectDN().getName());
 		keyMessage.setFrom(UUID.fromString(userIdAndName[0]));
 
 		currentOffset++;
@@ -304,9 +299,9 @@ public class PhotonicCrypto {
 		}
 		
 		Message keyMessage = new Message();
-		String[] userIdAndName = JettySecurityUtils.getUserIdAndName(remoteCrypto.verifier.getSubjectDN().getName());
+		String[] userIdAndName = LdapUtils.getUserIdAndName(remoteCrypto.verifier.getSubjectDN().getName());
 		keyMessage.setTo(UUID.fromString(userIdAndName[0]));
-		userIdAndName = JettySecurityUtils.getUserIdAndName(((X509Certificate)signer.getCertificate()).getSubjectDN().getName());
+		userIdAndName = LdapUtils.getUserIdAndName(((X509Certificate)signer.getCertificate()).getSubjectDN().getName());
 		keyMessage.setFrom(UUID.fromString(userIdAndName[0]));
 		keyMessage.setData(data);
 		return keyMessage;
