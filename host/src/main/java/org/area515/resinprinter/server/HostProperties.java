@@ -121,7 +121,8 @@ public class HostProperties {
 	private String[] imagingCommand;
 	private String[] dumpStackTraceCommand;
 	private String[] rebootCommand;
-
+	
+	private ScriptEngine sharedScriptEngine;
 	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
@@ -147,6 +148,15 @@ public class HostProperties {
 		return configurationProperties;
 	}
 	
+	/**
+	 * ScriptEngines can be used multithreaded, except that they should not share Bindings
+	 * 
+	 * @return the sharedScriptEngine
+	 */
+	public ScriptEngine getSharedScriptEngine() {
+		return this.sharedScriptEngine;
+	}
+
 	private void migratePropertyUserUserManagementFeature(Properties configurationProperties, String securityRealmName) {
 		String clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", null);
 		String clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", null);
@@ -180,7 +190,7 @@ public class HostProperties {
 			logger.info("Couldn't make machine directory. No write access or disk full?" );
 			throw new IllegalArgumentException("Couldn't make machine directory. No write access or disk full?");
 		}
-
+		
 		Properties configurationProperties = getMergedProperties();
 		printDirString = configurationProperties.getProperty("printdir");
 		uploadDirString = configurationProperties.getProperty("uploaddir");
@@ -334,6 +344,8 @@ public class HostProperties {
 				throw new IllegalArgumentException("Couldn't create upload directory", e);
 			}
 		}
+		
+		this.sharedScriptEngine = this.buildScriptEngine();
 	}
 
 	private Properties getClasspathProperties() {

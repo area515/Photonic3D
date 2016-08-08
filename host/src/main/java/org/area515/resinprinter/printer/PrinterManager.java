@@ -133,15 +133,7 @@ public class PrinterManager {
 			}
 			DisplayManager.Instance().assignDisplay(printer, graphicsDevice);
 			logger.debug("Assigned display:{} to:{}", graphicsDevice, printer);
-			
-			String firmwareComportId = printer.getConfiguration().getMachineConfig().getMotorsDriverConfig().getComPortSettings().getPortName();
-			SerialCommunicationsPort firmwarePort = SerialManager.Instance().getSerialDevice(firmwareComportId);
-			if (firmwarePort == null) {
-				throw new JobManagerException("Couldn't find communications device called:" + firmwareComportId);
-			}
-			SerialManager.Instance().assignSerialPortToFirmware(printer, firmwarePort);
-			logger.debug("Assigned 3dprinter firmware:{} to:{}", firmwarePort, printer);
-			
+
 			ComPortSettings settings = printer.getConfiguration().getMachineConfig().getMonitorDriverConfig().getComPortSettings();
 			if (settings != null && settings.getPortName() != null) {
 				String projectorComportId = settings.getPortName();
@@ -151,6 +143,14 @@ public class PrinterManager {
 					logger.debug("Assigned projector:{} to:{}", projectorPort, printer);
 				}
 			}
+			
+			String firmwareComportId = printer.getConfiguration().getMachineConfig().getMotorsDriverConfig().getComPortSettings().getPortName();
+			SerialCommunicationsPort firmwarePort = SerialManager.Instance().getSerialDevice(firmwareComportId);
+			if (firmwarePort == null) {
+				throw new JobManagerException("Couldn't find communications device called:" + firmwareComportId);
+			}
+			SerialManager.Instance().assignSerialPortToFirmware(printer, firmwarePort);
+			logger.debug("Assigned 3dprinter firmware:{} to:{}", firmwarePort, printer);
 			
 			printersByName.put(printer.getName(), printer);
 			printer.setStarted(true);
