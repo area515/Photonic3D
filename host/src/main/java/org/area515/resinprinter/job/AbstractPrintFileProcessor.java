@@ -6,7 +6,6 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.geom.AffineTransform; 
 import java.awt.image.AffineTransformOp;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
