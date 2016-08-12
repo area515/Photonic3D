@@ -2,3 +2,17 @@
 .cwh-text-opacity_50 { opacity: .50 }
 .cwh-text-large-area { margin: 0px !important; height: 200px!important; width:600px !important;}
 .cwh-input-smallbox { padding: 3px 3px; width: 15%}
+
+.bootcards-container,
+.container .bootcards-cards,
+.container .bootcards-list {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  height: 100%; }
+  
+html, body {
+  /*overflow-y: scroll;*/
+  overflow-y: hidden;
+  height: 100%;
+  -webkit-overflow-scrolling: touch; }
