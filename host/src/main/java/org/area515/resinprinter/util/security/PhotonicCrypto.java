@@ -332,16 +332,16 @@ public class PhotonicCrypto {
 	}
 	
 	public Message buildEncryptedMessage(ByteBuffer buffer) throws InvalidNameException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, NoSuchAlgorithmException {
+		if (keyCreatorIV == null || keyReceiverIV == null) {
+			throw new InvalidKeyException("You need to perform a key exchange with this crypto before you use it");
+		}
+		
 		Message keyMessage = new Message();
 		String[] userIdAndName = LdapUtils.getUserIdAndName(remoteCrypto.verifier.getSubjectDN().getName());
 		keyMessage.setTo(UUID.fromString(userIdAndName[0]));
 		userIdAndName = LdapUtils.getUserIdAndName(((X509Certificate)signer.getCertificate()).getSubjectDN().getName());
 		keyMessage.setFrom(UUID.fromString(userIdAndName[0]));
 
-		if (keyCreatorIV == null || keyReceiverIV == null) {
-			throw new InvalidKeyException("You need to perform a key exchange with this crypto before you use it");
-		}
-		
 		byte[] ivBytes = new byte[IV_LENGTH];
 		synchronized (lockSync) {
 			InitializationVectorControl properControl = isKeyCreator?keyCreatorIV:keyReceiverIV;
