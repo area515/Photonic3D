@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -30,14 +31,20 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.naming.InvalidNameException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import sun.security.x509.X509CertImpl;
 
 public class PhotonicCrypto {
-	private static final int IV_LENGTH = 16;
+    private static final Logger logger = LogManager.getLogger();
+
+    private static final int IV_LENGTH = 16;
 	private static final int AES_KEY_SIZE = 16;
 	private static final String PUBLIC_CERT_REQUEST = "X509CertsBase64NewLine";
 	private static final String BAD_UUID = "Uid of subject on certifiate didn't match expected uuid of public key.";
 	private static final PhotonicSecurityProvider SHA1PRNG_PROVIDER = new PhotonicSecurityProvider();
+	public static final String FEATURE_NAME = "Make friends through X509";
 	
 	//Local User
 	private PrivateKeyEntry decryptor;
@@ -50,14 +57,47 @@ public class PhotonicCrypto {
 	private PhotonicCrypto remoteCrypto;
 	
 	//ConversationState
-	private Cipher conversationCipher;
+	private ThreadLocal<Cipher> conversationCypher = new ThreadLocal<Cipher>();
+	private Boolean lockSync = new Boolean(true);//TODO: synchronize around key changes if we are going to stream video. TLS probably never even does a key change...
 	private SecretKeySpec symKey;
-	private int currentOffset;
-	private SecureRandom consistentRandom;
 	private boolean allowInsecureCommunication;
-	private Map<Integer, byte[]> outOfOrderIvs = new HashMap<>();
-	public static final String FEATURE_NAME = "Make friends through X509";
+	private boolean isKeyCreator;
+	private InitializationVectorControl keyCreatorIV;
+	private InitializationVectorControl keyReceiverIV;
+	
+	public static class InitializationVectorControl {
+		private Map<Integer, byte[]> ivs = new HashMap<>();
+		private SecureRandom random;
+		private int offset;
+		
+		public InitializationVectorControl(byte[] seed) throws NoSuchAlgorithmException {
+			this.random = SecureRandom.getInstance("SHA1PRNG", SHA1PRNG_PROVIDER);
+			this.random.setSeed(seed);
+			this.offset = 0;
+		}
+		
+		public byte[] getNextAvailableIV(int findIv) {
+			byte[] ivBytes = null;
+			for (; offset < findIv; offset++) {
+				ivBytes = new byte[IV_LENGTH];
+				random.nextBytes(ivBytes);
+				ivs.put(offset + 1, ivBytes);
+			}
 
+			return ivs.remove(findIv);
+		}
+		
+		public int getNextAvailableIV(byte[] ivBytes) {
+			offset++;
+			random.nextBytes(ivBytes);
+			return offset;
+		}
+		
+		public String toString() {
+			return "offset:" + offset + " ivs:" + ivs.keySet();
+		}
+	}
+	
 	public PhotonicCrypto(Entry signer, Entry decryptor, boolean allowInsecureCommunication) throws CertificateExpiredException, CertificateNotYetValidException, CertificateEncodingException, InvalidNameException {
 		this.allowInsecureCommunication = allowInsecureCommunication;
 		if (decryptor instanceof PrivateKeyEntry) {
@@ -151,6 +191,16 @@ public class PhotonicCrypto {
 		return friend;
 	}
 	
+	private Cipher getConversationCipher() throws NoSuchPaddingException, NoSuchAlgorithmException {
+		Cipher cipher = conversationCypher.get();
+		if (cipher == null) {
+			cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+			conversationCypher.set(cipher);
+		}
+		
+		return cipher;
+	}
+	
 	public byte[] getData(Message message) throws NoSuchAlgorithmException, CertificateExpiredException, CertificateNotYetValidException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
 		//If there is a signature, check it!
 		byte[] signature = message.getSignature();
@@ -189,45 +239,48 @@ public class PhotonicCrypto {
 			decrypt.init(Cipher.DECRYPT_MODE, decryptor.getPrivateKey());
 			String ivAndKey = new String(decrypt.doFinal(message.getData()));
 			int newLineSep = ivAndKey.indexOf("\n");
-			if (newLineSep > 0) {
-				consistentRandom = SecureRandom.getInstance("SHA1PRNG", SHA1PRNG_PROVIDER);
-				consistentRandom.setSeed(Base64.getDecoder().decode(ivAndKey.substring(0, newLineSep)));
-				currentOffset = 0;
-			}
-			if (newLineSep < ivAndKey.length()) {
-		        symKey = new SecretKeySpec(Base64.getDecoder().decode(ivAndKey.substring(newLineSep + 1)), "AES");
+			synchronized (lockSync) {
+				if (newLineSep > 0) {
+					byte[] keyCreatorSeed = Base64.getDecoder().decode(ivAndKey.substring(0, newLineSep));
+					byte[] keyReceiverSeed = Base64.getDecoder().decode(ivAndKey.substring(0, newLineSep));
+					keyReceiverSeed[0]++;
+					keyCreatorIV = new InitializationVectorControl(keyCreatorSeed);
+					keyReceiverIV = new InitializationVectorControl(keyReceiverSeed);
+				}
+				if (newLineSep < ivAndKey.length()) {
+			        symKey = new SecretKeySpec(Base64.getDecoder().decode(ivAndKey.substring(newLineSep + 1)), "AES");
+				}
+				isKeyCreator = false;
 			}
 	        
-	        conversationCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+			getConversationCipher();
 	        return null;
 		}
 		
 		//TODO: At this point we treat the message.getEncryptionAlgorithm() as AES encryption. Should I check it?
 		
 		//It must be a data message
-		if (consistentRandom == null) {
+		if (keyCreatorIV == null || keyReceiverIV == null) {
 			throw new InvalidKeyException("You need to perform a key exchange with this crypto before you use it");
 		}
-		
+
 		byte[] ivBytes = null;
-		for (; currentOffset < message.getIvOffset(); currentOffset++) {
-			ivBytes = new byte[IV_LENGTH];
-			consistentRandom.nextBytes(ivBytes);
-			outOfOrderIvs.put(currentOffset + 1, ivBytes);
-		}
-		
-		ivBytes = outOfOrderIvs.remove(message.getIvOffset());
-		if (ivBytes == null) {
-			throw new InvalidAlgorithmParameterException("Old iv offset specified. Replay attack?");
+		synchronized (lockSync) {
+			InitializationVectorControl properControl = isKeyCreator?keyReceiverIV:keyCreatorIV;
+			ivBytes = properControl.getNextAvailableIV(message.getIvOffset());
+			if (ivBytes == null) {
+				throw new InvalidAlgorithmParameterException("Old iv offset specified. Replay attack?");
+			}
 		}
 		
 		IvParameterSpec iv = new IvParameterSpec(ivBytes);
-    	conversationCipher.init(Cipher.DECRYPT_MODE, symKey, iv);
-    	return conversationCipher.doFinal(message.getData());
+		Cipher cipher = getConversationCipher();
+		cipher.init(Cipher.DECRYPT_MODE, symKey, iv);
+    	return cipher.doFinal(message.getData());
 	}
 	
 	public boolean isDueForKeyExchange() {
-		return symKey == null || currentOffset > 100;
+		return symKey == null || keyCreatorIV == null || keyReceiverIV == null || keyCreatorIV.offset > 100 || keyReceiverIV.offset > 100;
 	}
 	
 	public Message buildKeyExchange() throws InvalidNameException, CertificateExpiredException, CertificateNotYetValidException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
@@ -244,11 +297,11 @@ public class PhotonicCrypto {
 		remoteCrypto.encryptor.checkValidity(new Date());
 		KeyGenerator keyGen = KeyGenerator.getInstance("AES");
 		keyGen.init(AES_KEY_SIZE * 8);
-		byte[] ivBytes = keyGen.generateKey().getEncoded();
+		byte[] keyCreatorSeed = keyGen.generateKey().getEncoded();
 		byte[] keyBytes = keyGen.generateKey().getEncoded();
 		Cipher encrypt=Cipher.getInstance("RSA");
 		encrypt.init(Cipher.ENCRYPT_MODE, remoteCrypto.encryptor.getPublicKey());
-		encrypt.update(Base64.getEncoder().encode(ivBytes));
+		encrypt.update(Base64.getEncoder().encode(keyCreatorSeed));
 		encrypt.update(new byte[]{10});
 		byte[] ivAndKey = encrypt.doFinal(Base64.getEncoder().encode(keyBytes));
 		keyMessage.setData(ivAndKey);
@@ -262,34 +315,46 @@ public class PhotonicCrypto {
 		sig.update(keyMessage.getData());
 		keyMessage.setSignature(sig.sign());
 		
-		currentOffset = 0;
-		consistentRandom = SecureRandom.getInstance("SHA1PRNG", SHA1PRNG_PROVIDER);
-		consistentRandom.setSeed(ivBytes);
-	    symKey = new SecretKeySpec(keyBytes, "AES");
-    	conversationCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+		synchronized (lockSync) {
+			byte[] keyReceiverSeed = new byte[keyCreatorSeed.length];
+			System.arraycopy(keyCreatorSeed, 0, keyReceiverSeed, 0, keyCreatorSeed.length);
+			keyReceiverSeed[0]++;
+
+			keyCreatorIV = new InitializationVectorControl(keyCreatorSeed);
+			keyReceiverIV = new InitializationVectorControl(keyReceiverSeed);
+
+			isKeyCreator = true;
+			symKey = new SecretKeySpec(keyBytes, "AES");
+		}
+
+    	getConversationCipher();
 		return keyMessage;
 	}
 	
-	public Message buildEncryptedMessage(ByteBuffer buffer) throws InvalidNameException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		if (consistentRandom == null) {
-			throw new InvalidKeyException("You need to perform a key exchange with this crypto before you use it");
-		}
-		
+	public Message buildEncryptedMessage(ByteBuffer buffer) throws InvalidNameException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, NoSuchAlgorithmException {
 		Message keyMessage = new Message();
 		String[] userIdAndName = LdapUtils.getUserIdAndName(remoteCrypto.verifier.getSubjectDN().getName());
 		keyMessage.setTo(UUID.fromString(userIdAndName[0]));
 		userIdAndName = LdapUtils.getUserIdAndName(((X509Certificate)signer.getCertificate()).getSubjectDN().getName());
 		keyMessage.setFrom(UUID.fromString(userIdAndName[0]));
 
-		currentOffset++;
+		if (keyCreatorIV == null || keyReceiverIV == null) {
+			throw new InvalidKeyException("You need to perform a key exchange with this crypto before you use it");
+		}
+		
 		byte[] ivBytes = new byte[IV_LENGTH];
-		consistentRandom.nextBytes(ivBytes);
+		synchronized (lockSync) {
+			InitializationVectorControl properControl = isKeyCreator?keyCreatorIV:keyReceiverIV;
+			int currentOffset = properControl.getNextAvailableIV(ivBytes);
+			keyMessage.setIvOffset(currentOffset);
+		}
+		
 		IvParameterSpec iv = new IvParameterSpec(ivBytes);
 		keyMessage.setEncryptionAlgorithm("AES/CBC/PKCS5PADDING");
-		keyMessage.setIvOffset(currentOffset);
 		
-    	conversationCipher.init(Cipher.ENCRYPT_MODE, symKey, iv);
-    	keyMessage.setData(conversationCipher.doFinal(buffer.array()));
+		Cipher cipher = getConversationCipher();
+		cipher.init(Cipher.ENCRYPT_MODE, symKey, iv);
+    	keyMessage.setData(cipher.doFinal(buffer.array()));
     	return keyMessage;
 	}
 	
