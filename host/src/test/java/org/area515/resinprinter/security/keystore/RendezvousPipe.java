@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.server.ServerEndpoint;
 
@@ -19,7 +20,7 @@ import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 @ServerEndpoint(value="/httpTunnel")
 @WebSocket
 public class RendezvousPipe {
-	private static List<Session> sessions = new ArrayList<Session>();
+	private static List<Session> sessions = new ArrayList<>();
 	private Server server;
 	
 	public RendezvousPipe() {
@@ -48,6 +49,7 @@ public class RendezvousPipe {
 	}
 
     @OnWebSocketMessage
+    @OnMessage
     public void onMessage(Session session, byte buf[], int offset, int length) throws IOException {
     	for (Session otherSession : sessions) {
     		if (otherSession.getRemoteAddress().getPort() != session.getRemoteAddress().getPort()) {

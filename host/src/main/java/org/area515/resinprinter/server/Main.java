@@ -18,10 +18,10 @@ import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.plugin.FeatureManager;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.security.JettySecurityUtils;
-import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.security.UserManagementFeature;
 import org.area515.resinprinter.services.PrinterService;
 import org.area515.resinprinter.stream.ProgressiveDownloadServlet;
+import org.area515.resinprinter.util.security.PhotonicUser;
 import org.area515.util.RedirectRegexRule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -135,7 +135,7 @@ public class Main {
         ServletContextHandler serviceContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		serviceContext.setContextPath("/services");
 		ServletHolder servicesHolder = new ServletHolder(new HttpServletDispatcher());
-		servicesHolder.setInitParameter("javax.ws.rs.Application",ApplicationConfig.class.getName());
+		servicesHolder.setInitParameter("javax.ws.rs.Application", ApplicationConfig.class.getName());
 		serviceContext.addServlet(servicesHolder, "/*");
 		
         // For Raspberry Pi video

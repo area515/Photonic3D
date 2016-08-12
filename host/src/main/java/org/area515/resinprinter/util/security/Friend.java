@@ -1,4 +1,5 @@
-package org.area515.resinprinter.security;
+package org.area515.resinprinter.util.security;
+
 
 public class Friend<T> {
 	private PhotonicUser user;

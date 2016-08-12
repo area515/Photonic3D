@@ -4,6 +4,7 @@ import java.security.Principal;
 
 import javax.security.auth.Subject;
 
+import org.area515.resinprinter.util.security.PhotonicCrypto;
 import org.eclipse.jetty.security.DefaultUserIdentity;
 
 public class CryptoUserIdentity extends DefaultUserIdentity {

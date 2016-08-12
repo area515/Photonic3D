@@ -1,6 +1,7 @@
 package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 
 import javax.script.ScriptException;
 
@@ -27,6 +28,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PowerMockIgnore("javax.management.*")
 @RunWith(PowerMockRunner.class)
 public class AbstractPrintFileProcessorTest {
+	private BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_4BYTE_ABGR);
+	
 	public static PrintJob createTestPrintJob(PrintFileProcessor processor) throws InappropriateDeviceException, Exception {
 		PrintJob printJob = Mockito.mock(PrintJob.class);
 		Printer printer = Mockito.mock(Printer.class);
@@ -76,7 +79,7 @@ public class AbstractPrintFileProcessorTest {
 		} catch (IllegalStateException e) {
 		}
 		try {
-			processor.performPostSlice(aid);
+			processor.printImageAndPerformPostProcessing(aid, image);
 			Assert.fail("Failed to throw IllegalStateException.");
 		} catch (IllegalStateException e) {
 		}
@@ -105,7 +108,7 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn("var mm = $buildAreaMM * 2;mm");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
 		DataAid aid = processor.initializeDataAid(printJob);
-		processor.performPostSlice(aid);
+		processor.printImageAndPerformPostProcessing(aid, image);
 	}
 
 	@Test
@@ -116,7 +119,7 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
 		DataAid aid = processor.initializeDataAid(printJob);
 		try {
-			processor.performPostSlice(aid);
+			processor.printImageAndPerformPostProcessing(aid, image);
 		} catch (IllegalArgumentException e) {
 			Assert.assertEquals("The result of your lift distance script needs to evaluate to an instance of java.lang.Number", e.getMessage());
 		}
@@ -130,7 +133,7 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
 		DataAid aid = processor.initializeDataAid(printJob);
 		try {
-			processor.performPostSlice(aid);
+			processor.printImageAndPerformPostProcessing(aid, image);
 		} catch (IllegalArgumentException e) {
 			Assert.assertEquals("The result of your lift distance script needs to evaluate to an instance of java.lang.Number", e.getMessage());
 		}
@@ -146,14 +149,14 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(whenBuilAreaMMCalled).thenReturn(null);
 		DataAid aid = processor.initializeDataAid(printJob);
 		try {
-			processor.performPostSlice(aid);
+			processor.printImageAndPerformPostProcessing(aid, image);
 			Assert.fail("Must throw InappropriateDeviceException");
 		} catch (InappropriateDeviceException e) {
 			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(1)).getBuildAreaMM(Mockito.any(PrintJob.class));
 		}
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getZLiftDistanceGCode()).thenReturn("G99 ${1 + buildAreaMM * 2} ;dependent on buildArea");
 		try {
-			processor.performPostSlice(aid);
+			processor.printImageAndPerformPostProcessing(aid, image);
 			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(5)).getBuildAreaMM(Mockito.any(PrintJob.class));
 		} catch (InappropriateDeviceException e) {
 			Assert.fail("Should not throw InappropriateDeviceException");
@@ -169,7 +172,7 @@ public class AbstractPrintFileProcessorTest {
 		Double whenBuilAreaMMCalled = printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class));
 		DataAid aid = processor.initializeDataAid(printJob);
 		try {
-			processor.performPostSlice(aid);
+			processor.printImageAndPerformPostProcessing(aid, image);
 			Assert.fail("Must throw InappropriateDeviceException");
 		} catch (InappropriateDeviceException e) {
 			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(2)).getBuildAreaMM(Mockito.any(PrintJob.class));
@@ -202,6 +205,6 @@ public class AbstractPrintFileProcessorTest {
 				return (String)invocation.getArguments()[0];
 			}
 		});
-		processor.performPostSlice(aid);
+		processor.printImageAndPerformPostProcessing(aid, image);
 	}
 }

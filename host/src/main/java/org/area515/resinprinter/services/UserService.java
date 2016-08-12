@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -28,10 +29,10 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.plugin.FeatureManager;
-import org.area515.resinprinter.security.Friend;
 import org.area515.resinprinter.security.FriendshipFeature;
-import org.area515.resinprinter.security.PhotonicUser;
 import org.area515.resinprinter.security.UserManagementException;
+import org.area515.resinprinter.util.security.Friend;
+import org.area515.resinprinter.util.security.PhotonicUser;
 
 @Api(value="users")
 @RolesAllowed({PhotonicUser.FULL_RIGHTS, PhotonicUser.USER_ADMIN})
@@ -40,6 +41,84 @@ public class UserService {
     private static final Logger logger = LogManager.getLogger();
 
 	public static UserService INSTANCE = new UserService();
+	private ConcurrentHashMap<UUID, List<Message>> transientMessages = new ConcurrentHashMap<>();
+	
+	public class Message {
+		private PhotonicUser fromUser;
+		private PhotonicUser toUser;
+		private String message;
+		
+		public Message(PhotonicUser fromUser, PhotonicUser toUser, String message) {
+			this.fromUser = fromUser;
+			this.toUser = toUser;
+			this.message = message;
+		}
+
+		public PhotonicUser getFromUser() {
+			return fromUser;
+		}
+		public void setFromUser(PhotonicUser fromUser) {
+			this.fromUser = fromUser;
+		}
+
+		public PhotonicUser getToUser() {
+			return toUser;
+		}
+		public void setToUser(PhotonicUser toUser) {
+			this.toUser = toUser;
+		}
+
+		public String getMessage() {
+			return message;
+		}
+		public void setMessage(String message) {
+			this.message = message;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getOuterType().hashCode();
+			result = prime * result + ((fromUser == null) ? 0 : fromUser.hashCode());
+			result = prime * result + ((message == null) ? 0 : message.hashCode());
+			result = prime * result + ((toUser == null) ? 0 : toUser.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Message other = (Message) obj;
+			if (!getOuterType().equals(other.getOuterType()))
+				return false;
+			if (fromUser == null) {
+				if (other.fromUser != null)
+					return false;
+			} else if (!fromUser.equals(other.fromUser))
+				return false;
+			if (message == null) {
+				if (other.message != null)
+					return false;
+			} else if (!message.equals(other.message))
+				return false;
+			if (toUser == null) {
+				if (other.toUser != null)
+					return false;
+			} else if (!toUser.equals(other.toUser))
+				return false;
+			return true;
+		}
+
+		private UserService getOuterType() {
+			return UserService.this;
+		}
+	}
 	
     @ApiOperation(value = "Gets all local users and trusted remote users(friends) of this Photonic3d installation.")
     @ApiResponses(value = {
@@ -83,7 +162,7 @@ public class UserService {
 		}
     }
     
-    @ApiOperation(value = "Creates(trusts) a new remote Photonic 3d user. "
+    @ApiOperation(value = "Trusts a new remote Photonic 3d user as a new friend. "
     		+ "A 'Friend' in Photonic3d is nothing more than a remote user that has been given rights to perform actions on your printer.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
@@ -144,4 +223,85 @@ public class UserService {
 		
 		return allFriends;
     }
+    
+    @RolesAllowed({PhotonicUser.FULL_RIGHTS, PhotonicUser.USER_ADMIN, PhotonicUser.CHAT})
+    @ApiOperation(value = "Creates a transient P2P message that will be gone when Photonic 3d restarts.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR)})
+	@GET
+	@Path("createMessage/{toUserId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void createMessage(
+    		String messageString,
+    		@PathParam("toUserId")
+    		String toUserId,
+    		@Context HttpServletRequest request) throws UserManagementException {
+		PhotonicUser fromUser = (PhotonicUser)request.getUserPrincipal();
+		if (fromUser == null) {
+			throw new UserManagementException("You have to be logged in to chat.");
+		}
+		
+		PhotonicUser toUser = FeatureManager.getUserManagementFeature().getUser(UUID.fromString(toUserId));
+		if (toUser.isRemote()) {
+			throw new UserManagementException("To send this message to a remote user, append 'services/remote/execute/" + toUserId + "/' to the front of your restful request.");
+		}
+		
+		List<Message> messages = new ArrayList<Message>();
+		List<Message> oldMessages = transientMessages.putIfAbsent(toUser.getUserId(), messages);
+		if (oldMessages != null) {
+			messages = oldMessages;
+		}
+		
+		Message message = new Message(fromUser, toUser, messageString);
+		messages.add(message);
+    }
+    
+    @RolesAllowed({PhotonicUser.FULL_RIGHTS, PhotonicUser.USER_ADMIN, PhotonicUser.CHAT})
+    @ApiOperation(value = "Removes a P2P message from the transient message store, making sure the caller was the original sender.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR)})
+	@GET
+	@Path("removeMessage")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void removeMessage(
+    		Message messageToRemove,
+    		@Context HttpServletRequest request) throws UserManagementException {
+    	
+		PhotonicUser fromUser = (PhotonicUser)request.getUserPrincipal();
+		if (fromUser == null) {
+			throw new UserManagementException("You have to be logged in to chat.");
+		}
+		
+		if (!fromUser.equals(messageToRemove.getFromUser())) {
+			throw new UserManagementException("You can't remove a message that wasn't from you");
+		}
+		
+		List<Message> messages = transientMessages.get(messageToRemove.getToUser().getUserId());
+		if (messages == null) {
+			return;
+		}
+		
+		messages.remove(messageToRemove);
+    }
+
+    @RolesAllowed({PhotonicUser.FULL_RIGHTS, PhotonicUser.USER_ADMIN, PhotonicUser.CHAT})
+    @ApiOperation(value = "Removes a P2P message from the transient message store, making sure the caller was the original sender.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR)})
+	@GET
+	@Path("getMessages")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public List<Message> getMessages(@Context HttpServletRequest request) throws UserManagementException {
+    	
+		PhotonicUser user = (PhotonicUser)request.getUserPrincipal();
+		if (user == null) {
+			throw new UserManagementException("You have to be logged in to chat.");
+		}
+
+		return transientMessages.get(user.getUserId());
+    }
+
 }

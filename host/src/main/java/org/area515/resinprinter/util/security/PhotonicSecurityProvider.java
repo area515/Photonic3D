@@ -1,4 +1,4 @@
-package org.area515.resinprinter.security;
+package org.area515.resinprinter.util.security;
 
 import java.security.Provider;
 

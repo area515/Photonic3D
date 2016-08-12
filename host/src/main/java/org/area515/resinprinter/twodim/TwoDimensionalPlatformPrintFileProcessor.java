@@ -98,12 +98,6 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 				//Now that the image has been rendered, we can make the switch to use the pointer that we were using while we were rendering
 				printState.setCurrentRenderingPointer(nextRenderingPointer);
 				
-				//Start the exposure timer
-				logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
-				
-				//Cure the current image
-				dataAid.printer.showImage(image);
-				
 				//Get the next pointer in line to start rendering the image into
 				nextRenderingPointer = printState.getNextRenderingPointer();
 				
@@ -115,7 +109,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 				}
 
 				//Performs all of the duties that are common to most print files
-				status = performPostSlice(dataAid);
+				status = printImageAndPerformPostProcessing(dataAid, image);
 				if (status != null) {
 					return status;
 				}
