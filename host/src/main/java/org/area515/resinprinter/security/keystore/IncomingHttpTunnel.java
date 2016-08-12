@@ -105,7 +105,7 @@ public class IncomingHttpTunnel {
 		session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(message)));
 		//TODO: Someday we should wait for an accept friend response from the remote.
     }
-     
+    
     public void sendKeyExchange(PhotonicCrypto crypto) throws CertificateExpiredException, CertificateNotYetValidException, InvalidKeyException, InvalidNameException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, JsonProcessingException, IOException {
 		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
     	Message message = crypto.buildKeyExchange();
@@ -143,7 +143,9 @@ public class IncomingHttpTunnel {
 		}
 		
 		Message outMessage = connection.getCrypto().buildEncryptedMessage(buffer);
-		session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(outMessage)));
+		synchronized (session.getRemote()) {
+			session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(outMessage)));
+		}
 		ResponseWaiter waiter = new ResponseWaiter();
 		waiters.put(requestNumber, waiter);
 		return waiter;
@@ -277,7 +279,7 @@ public class IncomingHttpTunnel {
 			buffer.put(response);
 			Message outMessage = connection.getCrypto().buildEncryptedMessage(buffer);
 			session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(outMessage)));
-		} catch (IOException | InvalidNameException | InvalidAlgorithmParameterException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) {
+		} catch (IOException | InvalidNameException | InvalidAlgorithmParameterException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | NoSuchAlgorithmException e) {
 			logger.error(e);
 		}
     }
