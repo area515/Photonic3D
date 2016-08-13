@@ -146,7 +146,7 @@ public class PrinterService {
 	public Printer getFirstAvailablePrinter() throws NoPrinterFoundException {
 		List<Printer> printers = getPrinters();
 		if (printers.isEmpty()) {
-			throw new NoPrinterFoundException("No printers found");
+			throw new NoPrinterFoundException("No printers found.");
 		}
 		Printer activePrinter = null;
 
@@ -157,7 +157,7 @@ public class PrinterService {
 			}
 		}
 		if (activePrinter == null) {
-			throw new NoPrinterFoundException("No active printers");
+			throw new NoPrinterFoundException("No active printers.");
 		}
 		
 		return activePrinter;

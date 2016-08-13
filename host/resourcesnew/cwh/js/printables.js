@@ -59,7 +59,7 @@
 			return customizer;
 		}
 
-		this.setPreview = function setPreview(reload) {
+		this.setPreview = function setPreview() {
 			// var parameter = controller.currentCustomizer;
 			// console.log(parameter);
 			if (controller.currentPrintable !== null && controller.currentPrintable !== undefined) {
@@ -71,9 +71,8 @@
 				$http.post("/services/customizers/upsertCustomizer", parameter).success(
 					function (data) {
 						controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage;
-						if (reload) {
-							controller.currentPreviewImg += '&decache=' + Math.random();
-						}
+						controller.currentPreviewImg += '?_=' + Math.random();
+						// controller.currentPreviewImg += '?_=' + JSON.stringify(parameter.affineTransformSettings).replace(/\"/g, "");
 						// console.log("reached success while rendering first slice image, browser side");
 					}).error(
 	    				function (data, status, headers, config, statusText) {
@@ -89,7 +88,7 @@
 			controller.errorMsg = "";
 			this.showControls = true;
 			this.projectImage = false;
-			this.setPreview(true);		
+			this.setPreview();		
 		};
 
 		this.refreshPrintables = function refreshPrintables() {
@@ -144,12 +143,12 @@
 				var affineTransformSettings = currentCustomizer.affineTransformSettings;
 				affineTransformSettings.yscale = y;
 			}
-			this.setPreview(true);
+			this.setPreview();
 		}
 
 		this.setProjectImage = function setProjectImage(projectImage) {
 			controller.projectImage = projectImage;
-			controller.setPreview(true);
+			controller.setPreview();
 		}
 
 		this.isProjectImage = function isProjectImage() {
@@ -173,7 +172,7 @@
 			var affineTransformSettings = currentCustomizer.affineTransformSettings;
 			affineTransformSettings.xtranslate = 0;
 			affineTransformSettings.ytranslate = 0;
-			this.setPreview(true);
+			this.setPreview();
 		}
 
 		this.isNotModified = function isNotModified() {
@@ -198,7 +197,7 @@
 
 			affineTransformSettings.xtranslate += affineTransformSettings.xscale * x;
 			affineTransformSettings.ytranslate += affineTransformSettings.yscale * y;
-			this.setPreview(true);
+			this.setPreview();
 		}
 
 		this.printPrintable = function printPrintable() {
