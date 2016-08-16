@@ -59,6 +59,7 @@ import org.area515.resinprinter.security.keystore.IncomingHttpTunnel.ResponseWai
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.util.security.Friend;
+import org.area515.resinprinter.util.security.KeystoreUtilities;
 import org.area515.resinprinter.util.security.Message;
 import org.area515.resinprinter.util.security.PhotonicCrypto;
 import org.area515.resinprinter.util.security.PhotonicUser;

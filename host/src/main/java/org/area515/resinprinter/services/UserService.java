@@ -125,7 +125,7 @@ public class UserService {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
-	@Path("list")
+	@Path("users/list")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Set<PhotonicUser> getKnownUsers() {
     	return FeatureManager.getUserManagementFeature().getUsers();
@@ -137,7 +137,7 @@ public class UserService {
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@POST
-	@Path("create")
+	@Path("users")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public PhotonicUser createNewUser(PhotonicUser user) throws UserManagementException {
@@ -150,7 +150,7 @@ public class UserService {
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@DELETE
-	@Path("deleteLocalUser/{userId}")
+	@Path("users/{userId}")
 	@Produces(MediaType.APPLICATION_JSON)
     public Response deleteUser(@PathParam("userId")String userId) {
 		try {
@@ -169,7 +169,7 @@ public class UserService {
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@POST
-	@Path("friend")
+	@Path("friends/trust")
 	@Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response trustUser(Friend friend) {
@@ -189,7 +189,7 @@ public class UserService {
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@POST
-	@Path("requestFriendshipAndWait/{friendshipFeature}/{userIdToSendRequest}")
+	@Path("friends/requestFriendship/{friendshipFeature}/{userIdToSendRequest}")
 	@Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Friend sendTrustRequest(
@@ -212,7 +212,7 @@ public class UserService {
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
-	@Path("waitingFriendRequests")
+	@Path("friends/requests/list")
 	@Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public List<Friend> getPotentialFriends() throws UserManagementException {
@@ -230,7 +230,7 @@ public class UserService {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR)})
 	@GET
-	@Path("createMessage/{toUserId}")
+	@Path("messages/create/{toUserId}")
     @Consumes(MediaType.APPLICATION_JSON)
     public void createMessage(
     		String messageString,
@@ -263,7 +263,7 @@ public class UserService {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR)})
 	@GET
-	@Path("removeMessage")
+	@Path("messages/remove")
     @Consumes(MediaType.APPLICATION_JSON)
     public void removeMessage(
     		Message messageToRemove,
@@ -292,7 +292,7 @@ public class UserService {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR)})
 	@GET
-	@Path("getMessages")
+	@Path("messages/list")
     @Consumes(MediaType.APPLICATION_JSON)
     public List<Message> getMessages(@Context HttpServletRequest request) throws UserManagementException {
     	

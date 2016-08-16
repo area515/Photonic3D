@@ -37,6 +37,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.util.security.KeystoreUtilities;
 import org.area515.resinprinter.util.security.LdapUtils;
 import org.area515.resinprinter.util.security.PhotonicUser;
 import org.eclipse.jetty.http.HttpVersion;
@@ -65,68 +66,6 @@ import sun.security.x509.X509CertInfo;
 public class JettySecurityUtils {
     private static final Logger logger = LogManager.getLogger();
 
-	private static X509Certificate generateX509Certificate(LdapName dn, KeyPair pair, Date to, String algorithm) throws GeneralSecurityException, IOException {
-		PrivateKey privkey = pair.getPrivate();
-		X509CertInfo info = new X509CertInfo();
-		Date from = new Date();
-		CertificateValidity interval = new CertificateValidity(from, to);
-		BigInteger sn = new BigInteger(64, SecureRandom.getInstance("SHA1PRNG"));
-		X500Name owner = new X500Name(dn.toString());
-
-		info.set(X509CertInfo.VALIDITY, interval);
-		info.set(X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(sn));
-		try {
-			info.set(X509CertInfo.SUBJECT, new CertificateSubjectName(owner));
-			info.set(X509CertInfo.ISSUER, new CertificateIssuerName(owner));
-		} catch (CertificateException e) {
-			info.set(X509CertInfo.SUBJECT, owner);
-			info.set(X509CertInfo.ISSUER, owner);
-		}
-		info.set(X509CertInfo.KEY, new CertificateX509Key(pair.getPublic()));
-		info.set(X509CertInfo.VERSION, new CertificateVersion(CertificateVersion.V3));
-		//info.set(X509CertInfo.DN_NAME, dn);
-
-		//TODO: Technically I should be specifying key usage requirements to prevent key confusion attacks
-		/*CertificateExtensions ext = new CertificateExtensions();
-        ext.set(sun.security.x509.SubjectKeyIdentifierExtension.NAME,
-                new SubjectKeyIdentifierExtension(
-                new KeyIdentifier(pair.getPublic()).getIdentifier()));
-        info.set(X509CertInfo.EXTENSIONS, ext);*/
-		//1.3.6.1.5.5.7.3.2 client auth
-		//1.3.6.1.5.5.7.3.1 server auth
-		//1.2.840.113549.1.1.X RSA Encryption
-		//1.2.840.113549.2.X Signing Algorithms
-		//AlgorithmId algo = new AlgorithmId(AlgorithmId.DH_oid);
-		AlgorithmId algo = new AlgorithmId(AlgorithmId.sha256WithRSAEncryption_oid);
-		info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(algo));
-
-		// Sign the cert to identify the algorithm that's used.
-		X509CertImpl cert = new X509CertImpl(info);
-		cert.sign(privkey, algorithm);
-		
-		// Update the algorithm, and resign.
-		algo = (AlgorithmId) cert.get(X509CertImpl.SIG_ALG);
-		info.set(CertificateAlgorithmId.NAME + "." + CertificateAlgorithmId.ALGORITHM, algo);
-		cert = new X509CertImpl(info);
-		cert.sign(privkey, algorithm);
-		return cert;
-	}
-	
-	public static PrivateKeyEntry generateCertAndKeyPair(LdapName fullyQualifiedDN, Date endDate) throws GeneralSecurityException, IOException, InvalidNameException {
-		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-		keyGen.initialize(2048, random);
-		
-		KeyPair keyPair = keyGen.generateKeyPair();
-		String[] userIdAndName = LdapUtils.getUserIdAndName(fullyQualifiedDN.toString());
-		if (userIdAndName[0] != null) {
-			throw new InvalidNameException("The uid component of the ldapname cannot be set in the fullQualifiedDN");
-		}
-		
-		fullyQualifiedDN.add(new Rdn("uid", UUID.nameUUIDFromBytes(keyPair.getPublic().getEncoded()).toString()));
-		X509Certificate cert = generateX509Certificate(fullyQualifiedDN, keyPair, endDate, "SHA256withRSA");
-		return new PrivateKeyEntry(keyPair.getPrivate(), new Certificate[]{cert});
-	}
 	
 	public static LdapName buildFullyQualifiedDN(String cn, String dc) throws InvalidNameException {
 		HostInformation info = HostProperties.Instance().loadHostInformation();
@@ -142,17 +81,6 @@ public class JettySecurityUtils {
 		return new LdapName(rdn);
 	}
 	
-	public static void saveKeystore(File keyFile, KeyStore keyStore, String keystorePassword) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-		FileOutputStream outputStream = new FileOutputStream(keyFile);
-		try {
-			keyStore.store(outputStream, keystorePassword.toCharArray());
-		} finally {
-			try {
-				outputStream.close();
-			} catch (IOException e) {}
-		}
-	}
-	
 	public static void removeKeysForUser(UUID userId, File keyFile, String keystorePassword) throws IOException, GeneralSecurityException {
 		FileInputStream outputStream = new FileInputStream(keyFile);
 		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -161,7 +89,7 @@ public class JettySecurityUtils {
 		keyStore.deleteEntry(userId + "E");
 		keyStore.deleteEntry(userId + "S");
 		
-		saveKeystore(keyFile, keyStore, keystorePassword);
+		KeystoreUtilities.saveKeystore(keyFile, keyStore, keystorePassword);
 	}
 	
 	public static Set<PhotonicUser> getAllUsers(File keyFile, String keystorePassword) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
@@ -212,10 +140,10 @@ public class JettySecurityUtils {
 			keyStore.load(null, null);
 		}
 		
-		PrivateKeyEntry data = generateCertAndKeyPair(fullyQualifiedDN, endDate);
+		PrivateKeyEntry data = KeystoreUtilities.generateCertAndKeyPair(fullyQualifiedDN, endDate);
 		keyStore.setKeyEntry(keyPairAlias, data.getPrivateKey(), keypairPassword.toCharArray(), new Certificate[]{data.getCertificate()});
 		
-		saveKeystore(keyFile, keyStore, keystorePassword);
+		KeystoreUtilities.saveKeystore(keyFile, keyStore, keystorePassword);
 	}
 
 	public static boolean isCertificateAndPrivateKeyAvailable(File keyFile, String privateAndCertKeyAlias, String privateKeyPassword, String keystorePassword) {
