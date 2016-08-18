@@ -8,6 +8,12 @@
 					<i class="fa fa-stack-3x fa-2x fa-ban text-danger cwh-text-opacity_50" ng-hide="printerControlsController.currentPrinter.started"></i>
 				</span>
 				<h4 class="pull-left">Printer Controls: {{printerControlsController.currentPrinter.configuration.name}} </h4>
+				<div class="btn-group pull-right">
+					<button class="btn btn-primary" ng-click="printerControlsController.returnToPrinterList()">
+						<i class="fa fa-undo"></i> 
+						<span>Return to Printer List</span>
+					</button>
+				</div>
 			</div>
 			<div class="list-group">
 				<div class="list-group-item">

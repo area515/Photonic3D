@@ -9,16 +9,22 @@
 		this.loadingFontsMessage = "--- Loading fonts from server ---"
 		this.loadingProfilesMessage = "--- Loading slicing profiles from server ---"
 		this.loadingMachineConfigMessage = "--- Loading machine configurations from server ---"
+		this.autodirect = $location.search().autodirect;
 		function refreshSelectedPrinter(printerList) {
         	var foundPrinter = false;
-        	
+        	var printerListSize = printerList.length;
+
         	for (printer of printerList) {
+        		if (printerListSize == 1 && controller.autodirect != 'disabled') {
+	    			controller.currentPrinter = printer;
+	    			controller.gotoPrinterControls();
+	    			foundPrinter = true;
+    			}
         		if (controller.currentPrinter != null && printer.configuration.name === controller.currentPrinter.configuration.name) {
         			controller.currentPrinter = printer;
         			foundPrinter = true;
         		}
         	}
-        	
         	if (!foundPrinter) {
         		controller.currentPrinter = null;
         	}

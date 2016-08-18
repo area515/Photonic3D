@@ -134,6 +134,7 @@
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		})
+	        $location.path("/printJobsPage")
 		}
 
 		this.changeFlip = function changeFlip(y) {
@@ -211,6 +212,7 @@
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		})
+			$location.path("/printJobsPage");
 		};
 		this.deletePrintable = function deletePrintable() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
