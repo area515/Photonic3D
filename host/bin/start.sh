@@ -21,7 +21,7 @@ fi
 if [ -z "$1" ]; then
 	repo=${DEFAULT_REPO}
 else
-	if [[ $1 =~ .*Creation-Workshop-Host.* ]]; then
+	if [[ $1 =~ .*Creation-Workshop-Host.* ]] || [[ $1 =~ .*Photonic3D.* ]]; then
 		repo=$1
 	else
 		repo="$1/Creation-Workshop-Host"
