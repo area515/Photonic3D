@@ -12,18 +12,31 @@
 		this.autodirect = $location.search().autodirect;
 		function refreshSelectedPrinter(printerList) {
         	var foundPrinter = false;
-        	var printerListSize = printerList.length;
-
-        	for (printer of printerList) {
-        		if (printerListSize == 1 && controller.autodirect != 'disabled') {
-	    			controller.currentPrinter = printer;
-	    			controller.gotoPrinterControls();
-	    			foundPrinter = true;
-    			}
-        		if (controller.currentPrinter != null && printer.configuration.name === controller.currentPrinter.configuration.name) {
-        			controller.currentPrinter = printer;
-        			foundPrinter = true;
-        		}
+        	if (printerList.length == 1 && printerList[0].started && controller.autodirect != 'disabled') {
+        		controller.currentPrinter = printer;
+        		controller.gotoPrinterControls();
+        		foundPrinter = true;
+        	} else {
+        		var printersStarted = 0;
+        		var currPrinter = null;
+	        	for (printer of printerList) {
+	        		if (printersStarted > 1) {
+	        			break;
+	        		}
+	        		if (printer.started) {
+	        			printersStarted += 1;
+	        			currPrinter = printer;
+	        		}
+	        		if (controller.currentPrinter != null && printer.configuration.name === controller.currentPrinter.configuration.name) {
+	        			controller.currentPrinter = printer;
+	        			foundPrinter = true;
+	        		}
+	        	}
+	        	if (printersStarted == 1 && controller.autodirect != 'disabled') {
+	        		controller.currentPrinter = currPrinter;
+	        		controller.gotoPrinterControls();
+	        		foundPrinter = true;
+	        	}
         	}
         	if (!foundPrinter) {
         		controller.currentPrinter = null;

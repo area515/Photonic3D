@@ -57,7 +57,6 @@
 		};
 		
 		this.returnToPrinterList = function returnToPrinterList() {
-			console.log("potato");
 			$location.path('/printersPage').search({autodirect: 'disabled'});
 		}
 
