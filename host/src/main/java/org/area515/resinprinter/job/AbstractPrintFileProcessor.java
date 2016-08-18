@@ -24,8 +24,6 @@ import org.area515.resinprinter.slice.StlError;
 import org.area515.util.Log4jTimer;
 import org.area515.util.TemplateEngine;
 
-import com.jcraft.jsch.Buffer;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.Customizer;
@@ -79,7 +77,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			// Set the affine transform given the customizer from the printJob
 			Customizer customizer = printJob.getCustomizer();
 			if (customizer != null) {
-				setAffineTransform(customizer);
+				this.affineTransform = customizer.createAffineTransform(xResolution, yResolution);
 			}
 			
 			//This file processor requires an ink configuration
@@ -89,13 +87,6 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			
 			//TODO: how do I integrate slicingProfile.getLiftDistance()
 			sliceHeight = inkConfiguration.getSliceHeight();
-		}
-
-		//MOVE THIS TO CUSTOMIZER. 
-		//
-		//probably take affine transform from printer template & customizer's in future.
-		public void setAffineTransform(Customizer customizer) {
-			this.affineTransform = customizer.createAffineTransform();
 		}
 	}
 	
@@ -318,9 +309,6 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			((Graphics2D)img.getGraphics()).setBackground(Color.black);
 			((Graphics2D)after.getGraphics()).setBackground(Color.black);
 			
-			double yOff = -(height - (aid.affineTransform.getScaleY()*height))/2;
-			double xOff = -(width - (aid.affineTransform.getScaleX()*width))/2;
-			aid.affineTransform.translate(xOff, yOff);
 			AffineTransformOp transOp = 
 			   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
 			after = transOp.filter(img, after);

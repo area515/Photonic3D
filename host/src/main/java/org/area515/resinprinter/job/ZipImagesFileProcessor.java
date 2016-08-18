@@ -110,7 +110,9 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 					currentImageByJob.put(printJob, imageData);
 					
 					if (oldImage != null) {
-						oldImage.getImage().flush();
+						synchronized (oldImage) {
+							oldImage.getImage().flush();
+						}
 					}
 					
 					if (imgIter.hasNext()) {
