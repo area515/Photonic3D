@@ -13,6 +13,7 @@
 		this.errorMsg = "";
 
 		this.projectImage = false;
+		this.loading = false;
 
 		this.handlePreviewError = function handlePreviewError() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
@@ -70,6 +71,7 @@
 						controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage;
 						var jsonString = JSON.stringify(parameter.affineTransformSettings).replace(/\"/g, "");
 						controller.currentPreviewImg += '?decache=' + encodeURIComponent(jsonString);
+						controller.loading = false;
 						// console.log("reached success while rendering first slice image, browser side");
 					}).error(
 	    				function (data, status, headers, config, statusText) {
@@ -161,7 +163,6 @@
 			}
 			return false;				
 			}
-
 		}
 
 		this.resetTranslation = function resetTranslation() {
@@ -202,7 +203,7 @@
 			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);
 	        $http.post("/services/printables/print/" + printableName + "." + printableExtension).success(
 	        		function (data) {
-	        			controller.refreshPrintables();
+	        			// controller.refreshPrintables();
 	        			//$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrintables, afterErrorFunction:null});
 	        		}).error(
     				function (data, status, headers, config, statusText) {
@@ -285,7 +286,6 @@
 				link: function(scope, element, attrs) {
 					
 					var pc = scope.printablesController;
-
 					element.bind('error', function() {
 						pc.handlePreviewError();
 						scope.$apply();
