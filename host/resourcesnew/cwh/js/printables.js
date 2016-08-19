@@ -60,23 +60,19 @@
 		}
 
 		this.setPreview = function setPreview() {
-			// var parameter = controller.currentCustomizer;
-			// console.log(parameter);
 			if (controller.currentPrintable !== null && controller.currentPrintable !== undefined) {
 				var printableName = encodeURIComponent(controller.currentPrintable.name);
 				var printableExtension = encodeURIComponent(controller.currentPrintable.extension);	
 
 				var parameter = controller.findCurrentCustomizer(controller.currentPrintable);	
-				// do things with the currentCustomizer and get the png then set a variable like currentPreview to that png so that HTML page can display it
 				$http.post("/services/customizers/upsertCustomizer", parameter).success(
 					function (data) {
 						controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage;
-						controller.currentPreviewImg += '?_=' + Math.random();
-						// controller.currentPreviewImg += '?_=' + JSON.stringify(parameter.affineTransformSettings).replace(/\"/g, "");
+						var jsonString = JSON.stringify(parameter.affineTransformSettings).replace(/\"/g, "");
+						controller.currentPreviewImg += '?decache=' + encodeURIComponent(jsonString);
 						// console.log("reached success while rendering first slice image, browser side");
 					}).error(
 	    				function (data, status, headers, config, statusText) {
-	    					// console.log("up in here set preview failure");
 	 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 		        		});
 
