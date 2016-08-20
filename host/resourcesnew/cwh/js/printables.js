@@ -13,7 +13,7 @@
 		this.errorMsg = "";
 
 		this.projectImage = false;
-		this.loading = false;
+		// this.loading = false;
 
 		this.handlePreviewError = function handlePreviewError() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
@@ -71,7 +71,7 @@
 						controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage;
 						var jsonString = JSON.stringify(parameter.affineTransformSettings).replace(/\"/g, "");
 						controller.currentPreviewImg += '?decache=' + encodeURIComponent(jsonString);
-						controller.loading = false;
+						// controller.loading = false;
 						// console.log("reached success while rendering first slice image, browser side");
 					}).error(
 	    				function (data, status, headers, config, statusText) {
