@@ -17,7 +17,7 @@
 
 		this.handlePreviewError = function handlePreviewError() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
-			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);				
+			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);		
 			$http.get("/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage).success(
 				function (data) {
 
@@ -70,7 +70,7 @@
 					function (data) {
 						controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage;
 						var jsonString = JSON.stringify(parameter.affineTransformSettings).replace(/\"/g, "");
-						controller.currentPreviewImg += '?decache=' + encodeURIComponent(jsonString);
+						controller.currentPreviewImg += '&decache=' + encodeURIComponent(jsonString);
 						// controller.loading = false;
 						// console.log("reached success while rendering first slice image, browser side");
 					}).error(
