@@ -12,6 +12,8 @@
 		this.currentBuildPhoto = {width: 500, height: 500, url: null};
 		this.currentBuildVideo = {width: 100, height: 100, url: null};
 		this.currentBuildLiveStream = {url: null, clientId: Math.random()}
+
+		this.loading = false;
 		
 		function refreshSelectedPrintJob(printJobList) {
         	var foundPrintJob = false;
@@ -63,6 +65,7 @@
 	        		})
 	    }
 		this.stopPrintJob = function stopPrintJob() {
+			controller.loading = true;
 			var printJobId = encodeURIComponent(controller.currentPrintJob.id);
 	        $http.post("/services/printJobs/stopJob/" + printJobId).success(function (data) {
 	        			if (data.response) {
@@ -70,8 +73,10 @@
 	        			} else {
 		        			$scope.$emit("MachineResponse", {machineResponse: data, successFunction:null, afterErrorFunction:null});
 	        			}
+	        			controller.loading = false;
 	        		}).error(function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
+ 	        			controller.loading = false;
 	        		})
 	    }
 		this.changeCurrentPrintJob = function changeCurrentPrintJob(newPrintJob) {

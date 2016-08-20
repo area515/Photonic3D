@@ -215,7 +215,7 @@ public class CustomizerService {
 				throw e;
 			}
 		} else {
-			throw new IllegalArgumentException("Incorrect file type. Cannot display preview for non STL and ZIP files as of now");
+			throw new IllegalArgumentException("Incorrect file type: " + customizer.getPrintableExtension() + ". Can only display preview for STL and ZIP of images for now.");
 		}
 	}
 	

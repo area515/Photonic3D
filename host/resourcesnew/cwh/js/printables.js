@@ -13,6 +13,7 @@
 		this.errorMsg = "";
 
 		this.projectImage = false;
+		// this.loading = false;
 
 		this.handlePreviewError = function handlePreviewError() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
@@ -59,25 +60,21 @@
 			return customizer;
 		}
 
-		this.setPreview = function setPreview(reload) {
-			// var parameter = controller.currentCustomizer;
-			// console.log(parameter);
+		this.setPreview = function setPreview() {
 			if (controller.currentPrintable !== null && controller.currentPrintable !== undefined) {
 				var printableName = encodeURIComponent(controller.currentPrintable.name);
 				var printableExtension = encodeURIComponent(controller.currentPrintable.extension);	
 
 				var parameter = controller.findCurrentCustomizer(controller.currentPrintable);	
-				// do things with the currentCustomizer and get the png then set a variable like currentPreview to that png so that HTML page can display it
 				$http.post("/services/customizers/upsertCustomizer", parameter).success(
 					function (data) {
 						controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage;
-						if (reload) {
-							controller.currentPreviewImg += '&decache=' + Math.random();
-						}
+						var jsonString = JSON.stringify(parameter.affineTransformSettings).replace(/\"/g, "");
+						controller.currentPreviewImg += '?decache=' + encodeURIComponent(jsonString);
+						// controller.loading = false;
 						// console.log("reached success while rendering first slice image, browser side");
 					}).error(
 	    				function (data, status, headers, config, statusText) {
-	    					// console.log("up in here set preview failure");
 	 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 		        		});
 
@@ -89,7 +86,7 @@
 			controller.errorMsg = "";
 			this.showControls = true;
 			this.projectImage = false;
-			this.setPreview(true);		
+			this.setPreview();		
 		};
 
 		this.refreshPrintables = function refreshPrintables() {
@@ -135,6 +132,7 @@
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		})
+	        $location.path("/printJobsPage")
 		}
 
 		this.changeFlip = function changeFlip(y) {
@@ -144,12 +142,12 @@
 				var affineTransformSettings = currentCustomizer.affineTransformSettings;
 				affineTransformSettings.yscale = y;
 			}
-			this.setPreview(true);
+			this.setPreview();
 		}
 
 		this.setProjectImage = function setProjectImage(projectImage) {
 			controller.projectImage = projectImage;
-			controller.setPreview(true);
+			controller.setPreview();
 		}
 
 		this.isProjectImage = function isProjectImage() {
@@ -165,7 +163,6 @@
 			}
 			return false;				
 			}
-
 		}
 
 		this.resetTranslation = function resetTranslation() {
@@ -173,7 +170,7 @@
 			var affineTransformSettings = currentCustomizer.affineTransformSettings;
 			affineTransformSettings.xtranslate = 0;
 			affineTransformSettings.ytranslate = 0;
-			this.setPreview(true);
+			this.setPreview();
 		}
 
 		this.isNotModified = function isNotModified() {
@@ -198,7 +195,7 @@
 
 			affineTransformSettings.xtranslate += affineTransformSettings.xscale * x;
 			affineTransformSettings.ytranslate += affineTransformSettings.yscale * y;
-			this.setPreview(true);
+			this.setPreview();
 		}
 
 		this.printPrintable = function printPrintable() {
@@ -206,12 +203,13 @@
 			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);
 	        $http.post("/services/printables/print/" + printableName + "." + printableExtension).success(
 	        		function (data) {
-	        			controller.refreshPrintables();
+	        			// controller.refreshPrintables();
 	        			//$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrintables, afterErrorFunction:null});
 	        		}).error(
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		})
+			$location.path("/printJobsPage");
 		};
 		this.deletePrintable = function deletePrintable() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
@@ -288,7 +286,6 @@
 				link: function(scope, element, attrs) {
 					
 					var pc = scope.printablesController;
-
 					element.bind('error', function() {
 						pc.handlePreviewError();
 						scope.$apply();

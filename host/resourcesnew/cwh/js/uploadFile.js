@@ -36,9 +36,7 @@
 		    		});
 		}
 		
-		$scope.uploadFile = function uploadFile() {
-			$uibModalInstance.close();
-			
+		$scope.uploadFile = function uploadFile() {			
 			//TODO: we shouldn't do this here! There needs to be validations on the form!!!
 			if ($scope.fileToUpload == null) {
 				$rootScope.$emit("MachineResponse", {machineResponse: {"command":"File Upload", "message":"Select a file first!"}, successFunction:null, afterErrorFunction:null});
@@ -66,11 +64,22 @@
 		    			$scope.errorMsg = response.status + ': ' + response.data;
 		    	}
 		    );
-	
 		    $scope.fileToUpload.upload.progress(function (evt) {
-		      $scope.fileToUpload.progress = Math.min(100, parseInt(100.0 * evt.loaded / evt.total));
+		    	$scope.fileToUpload.progress = Math.min(100, parseInt(100.0 * evt.loaded / evt.total));   
+		      	var percent = $scope.fileToUpload.progress;
+		      	if (percent <= 100) {
+		      		$('.progress-bar').animate({
+		      			width: percent + "%"
+		      		}, 1)
+			      	// $(".progress-bar").css('width', percent);
+			      	$(".progress-bar").html(percent + "%");
+			      	// if (percent == 100) {
+			     		// $uibModalInstance.close();
+			      	// }
+		      	}
 		    });
 		}
+
 		
 		if ($scope.supportedFileTypes == null) {
 			$http.get("/services/machine/supportedFileTypes").success(
