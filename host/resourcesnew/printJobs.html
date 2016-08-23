@@ -19,8 +19,7 @@
 									<span>Continue</span>
 								</a>
 								<a class="btn btn-danger" ng-show="printJobsController.currentPrintJob.printInProgress" ng-click="printJobsController.stopPrintJob()">
-									<i ng-show="!printJobsController.loading" class="fa fa-stop"></i> 
-									<i ng-show="printJobsController.loading" class='fa fa-refresh fa-spin'></i> 
+									<i id="stop-btn" class="fa fa-stop"></i> 
 									<span>Stop</span>
 								</a>
 						    </div>
