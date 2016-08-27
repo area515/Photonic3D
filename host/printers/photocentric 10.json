@@ -96,5 +96,5 @@
    "currentSlicePauseTime":0,
    "status":"Ready",
    "printInProgress":false,
-   "printPaused":false,
+   "printPaused":false
 }
