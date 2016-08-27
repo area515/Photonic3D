@@ -85,7 +85,7 @@ public class KeystoreUtilities {
 		//AlgorithmId algo = new AlgorithmId(AlgorithmId.DH_oid);
 		AlgorithmId algo = new AlgorithmId(AlgorithmId.sha256WithRSAEncryption_oid);
 		info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(algo));
-
+		
 		// Sign the cert to identify the algorithm that's used.
 		X509CertImpl cert = new X509CertImpl(info);
 		cert.sign(privkey, algorithm);
