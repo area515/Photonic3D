@@ -12,8 +12,8 @@ import javax.websocket.server.ServerContainer;
 
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.security.keystore.KeystoreLoginService;
-import org.area515.resinprinter.security.keystore.KeystoreUtilities;
 import org.area515.resinprinter.util.security.Friend;
+import org.area515.resinprinter.util.security.KeystoreUtilities;
 import org.area515.resinprinter.util.security.Message;
 import org.area515.resinprinter.util.security.PhotonicCrypto;
 import org.area515.resinprinter.util.security.PhotonicUser;

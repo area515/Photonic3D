@@ -226,9 +226,13 @@ public abstract class GCodeControl {
 				if (gcode != null) {
 					Matcher matcher = gCodePattern.matcher(gcode);
 					if (matcher.matches()) {
-						buffer.append(sendGcodeAndRespectPrinter(printJob, matcher.group(1)));
-						if (matcher.group(2) != null) {
-							parseCommentCommand(matcher.group(2));
+						String singleGCode = matcher.group(1);
+						String comment = matcher.group(2);
+						if (singleGCode != null && singleGCode.trim().length() > 0) {
+							buffer.append(sendGcodeAndRespectPrinter(printJob, singleGCode));
+						}
+						if (comment != null) {
+							parseCommentCommand(comment);
 						}
 					}
 				}

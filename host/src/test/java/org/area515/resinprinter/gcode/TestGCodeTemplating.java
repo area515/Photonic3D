@@ -36,7 +36,7 @@ public class TestGCodeTemplating {
 							break;
 						case 3:
 						case 4:
-							Assert.assertEquals("", invocation.getArguments()[1]);
+							Assert.fail("Photocentric firmware can't take empty strings");
 							break;
 					}
 					count++;

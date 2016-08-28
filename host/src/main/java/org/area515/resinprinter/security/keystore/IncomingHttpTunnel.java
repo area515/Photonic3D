@@ -58,7 +58,6 @@ public class IncomingHttpTunnel {
     
 	private Session session;
 	private RendezvousClient server;
-	//TODO: Unfortunately this isn't a good idea, we can't use this single socket asynchronously as it will eventually cause: Blocking message pending 10000 for BLOCKING
 	private Map<Long, ResponseWaiter> waiters = new ConcurrentHashMap<>();
 	
 	public class ResponseWaiter {
