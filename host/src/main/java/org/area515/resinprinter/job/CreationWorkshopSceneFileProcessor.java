@@ -119,8 +119,6 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 							BufferedImage newImage = ImageIO.read(imageFile);
 							newImage = applyImageTransforms(aid, newImage, newImage.getWidth(), newImage.getHeight());
 							// applyBulbMask(aid, (Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
-							//applyImageTransforms(aid, (Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
-							applyImageTransforms(aid, newImage, newImage.getWidth(), newImage.getHeight());
 							currentlyDisplayedImage.put(printJob, newImage);
 							logger.info("Show picture: {}", imageFilename);
 							
