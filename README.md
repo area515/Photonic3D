@@ -13,10 +13,9 @@ The server is capable of printing a variety of formats, including:
 
 Raspberry Pi Usage
 -------------------------------------------------------------------------------  
-If you have a brand new dedicated Raspberry Pi, there is a flashable Jessie Lite based image that you can use to quickly get started. Take a look at the [area515/OctoPi repo on Github](https://github.com/area515/OctoPi) for the download link and installation instructions.
+If you have a brand new dedicated Raspberry Pi, there is a flashable Jessie Lite based image that you can use to quickly get started. Download the [Kudo3D fork's image](http://d359hvxwrop0le.cloudfront.net/kudo3d-image.zip) and then take a look at the [image install docs at photonic3d.com](https://wiki.photonic3d.com/doku.php?id=raspberry_pi) for the installation instructions.
 
-If you have an existing running Raspberry Pi with Raspbian, you can add Photonic3D to it with an easy bootstrap script that will download and install everything you need. This path is [documented in our wiki](https://github.com/area515/Creation-Workshop-Host/wiki/Raspberry-Pi-Manual-Setup-Instructions), and there is a [YouTube video that demonstrates it](https://www.youtube.com/watch?v=ng1Sj2ktWhU).
-
+If you have an existing Raspberry Pi, follow the Linux install instructions below.
 
 User Interface Examples
 -------------------------------------------------------------------------------  
@@ -79,12 +78,19 @@ sudo chmod 777 start.sh
 sudo ./start.sh WesGilster
 ```
 
+Latest Kudo3D Fork (or other forks named Photonic3D):
+```
+sudo wget https://github.com/Kudo3D/Photonic3D/raw/master/host/bin/start.sh
+sudo chmod 777 start.sh
+sudo ./start.sh Kudo3D/Photonic3D
+```
+
 Photonic3D will be installed into `/opt/cwh` and an init script will be added to `/etc/init.d` to launch the server on boot.
 
 Windows Installation Quickstart
 ------------------------------------------
 * Download the latest stable or development version: 
- * [Stable repo Github Releases](https://github.com/area515/Creation-Workshop-Host/releases) or [Development repo Github Releases](https://github.com/WesGilster/Creation-Workshop-Host/releases)  
+ * [Stable repo Github Releases](https://github.com/area515/Creation-Workshop-Host/releases) or [Development repo Github Releases](https://github.com/WesGilster/Creation-Workshop-Host/releases) or [Kudo3D repo Github Releases](https://github.com/Kudo3D/Photonic3D/releases) 
 * Unzip the zip file into the directory of your choice.
 * Double click on `start.bat`.
 

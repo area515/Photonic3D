@@ -25,7 +25,7 @@ import com.google.common.io.ByteStreams;
 
 public class IOUtilities {
     private static final Logger logger = LogManager.getLogger();
-	public static int CPU_LIMITING_DELAY = 300;
+	public static int CPU_LIMITING_DELAY = 100;
 	public static int NATIVE_COMMAND_TIMEOUT = 10000;
 	
 	public static enum SearchStyle {

@@ -9,16 +9,35 @@
 		this.loadingFontsMessage = "--- Loading fonts from server ---"
 		this.loadingProfilesMessage = "--- Loading slicing profiles from server ---"
 		this.loadingMachineConfigMessage = "--- Loading machine configurations from server ---"
+		this.autodirect = $location.search().autodirect;
 		function refreshSelectedPrinter(printerList) {
         	var foundPrinter = false;
-        	
-        	for (printer of printerList) {
-        		if (controller.currentPrinter != null && printer.configuration.name === controller.currentPrinter.configuration.name) {
-        			controller.currentPrinter = printer;
-        			foundPrinter = true;
-        		}
+        	if (printerList.length == 1 && printerList[0].started && controller.autodirect != 'disabled') {
+        		controller.currentPrinter = printer;
+        		controller.gotoPrinterControls();
+        		foundPrinter = true;
+        	} else {
+        		var printersStarted = 0;
+        		var currPrinter = null;
+	        	for (printer of printerList) {
+	        		if (printersStarted > 1) {
+	        			break;
+	        		}
+	        		if (printer.started) {
+	        			printersStarted += 1;
+	        			currPrinter = printer;
+	        		}
+	        		if (controller.currentPrinter != null && printer.configuration.name === controller.currentPrinter.configuration.name) {
+	        			controller.currentPrinter = printer;
+	        			foundPrinter = true;
+	        		}
+	        	}
+	        	if (printersStarted == 1 && controller.autodirect != 'disabled') {
+	        		controller.currentPrinter = currPrinter;
+	        		controller.gotoPrinterControls();
+	        		foundPrinter = true;
+	        	}
         	}
-        	
         	if (!foundPrinter) {
         		controller.currentPrinter = null;
         	}
@@ -36,24 +55,28 @@
     			$scope.$emit("MachineResponse", {machineResponse: {command:command, message:message, successFunction:null, afterErrorFunction:null}});
 		        return;
 			}
-
 			var printerName = encodeURIComponent(targetPrinter.configuration.name);
 			if (postTargetPrinter) {
-		        $http.post(service, targetPrinter).success(
-		        		function (data) {
-		        			$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrinters, afterErrorFunction:null});
-		        		}).error(
-	    				function (data, status, headers, config, statusText) {
-	 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
-		        		})
+			   $http.post(service, targetPrinter).then(
+	       			function(response) {
+	       			}, 
+	       			function(response) {
+ 	        			$scope.$emit("HTTPError", {status:response.status, statusText:response.data});
+	       		}).then(function() {
+	       			    $('#start-btn').attr('class', 'fa fa-play');
+	        			$('#stop-btn').attr('class', 'fa fa-stop');
+	       		});
 		    } else {
-		        $http.get(service + printerName).success(
-		        		function (data) {
-		        			$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrinters, afterErrorFunction:null});
-		        		}).error(
-	    				function (data, status, headers, config, statusText) {
-	 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
-		        		})
+		       $http.get(service + printerName).then(
+		       		function(response) {
+		        		$scope.$emit("MachineResponse", {machineResponse: response.data, successFunction:refreshPrinters, afterErrorFunction:null});
+		       		}, 
+		       		function(response) {
+	 	        		$scope.$emit("HTTPError", {status:response.status, statusText:response.data});
+		       		}).then(function() {
+		       			    $('#start-btn').attr('class', 'fa fa-play');
+		        			$('#stop-btn').attr('class', 'fa fa-stop');
+		       		});
 			}
 		}
 		
@@ -139,10 +162,12 @@
 		}
 
 		this.startCurrentPrinter = function startCurrentPrinter() {
+			$('#start-btn').attr('class', 'fa fa-refresh fa-spin');
 			executeActionAndRefreshPrinters("Start Printer", "No printer selected to start.", '/services/printers/start/', controller.currentPrinter, false);
 		}
 		
 		this.stopCurrentPrinter = function stopCurrentPrinter() {
+			$('#stop-btn').attr('class', 'fa fa-refresh fa-spin');			
 			executeActionAndRefreshPrinters("Stop Printer", "No printer selected to Stop.", '/services/printers/stop/', controller.currentPrinter, false);
 		}
 		

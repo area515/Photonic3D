@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class HexCodeBasedProjector implements ProjectorModel {
     private static final Logger logger = LogManager.getLogger();
-	public static final int PROJECTOR_TIMEOUT = 5000;
+	public static final int PROJECTOR_TIMEOUT = 500;
 	
 	public static enum Conversion {
 		BigEndian,
@@ -46,7 +46,7 @@ public class HexCodeBasedProjector implements ProjectorModel {
 				return hex;
 			}
 			
-			ScriptEngine engine = HostProperties.Instance().buildScriptEngine();
+			ScriptEngine engine = HostProperties.Instance().getSharedScriptEngine();
 			try {
 				Object value = engine.eval(script);
 				if (value == null) {

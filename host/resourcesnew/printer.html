@@ -3,11 +3,11 @@
 		<h3 class="panel-title pull-left">Basic Printer Setup</h3>
 	    <div class="btn-group pull-right">
 			<button class="btn btn-success" ng-disabled="printersController.currentPrinter.started" ng-click="printersController.startCurrentPrinter()">
-				<i class="fa fa-play"></i> 
+				<i id="start-btn" class="fa fa-play"></i> 
 				<span>Start</span>
 			</button>
 			<button class="btn btn-danger" ng-disabled="!printersController.currentPrinter.started" ng-click="printersController.stopCurrentPrinter()">
-				<i class="fa fa-stop"></i> 
+				<i id="stop-btn" class="fa fa-stop"></i> 
 				<span>Stop</span>
 			</button>
 			<button class="btn btn-primary" ng-disabled="!printersController.currentPrinter.started" ng-click="printersController.gotoPrinterControls()" >

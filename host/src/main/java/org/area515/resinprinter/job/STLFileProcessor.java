@@ -10,21 +10,31 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
+import java.io.*;
+import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.exception.SliceHandlingException;
+import org.area515.resinprinter.exception.NoPrinterFoundException;
+
 import org.area515.resinprinter.job.render.RenderingFileData;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.SlicingProfile;
+import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.CloseOffMend;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.resinprinter.slice.ZSlicer;
 import org.area515.resinprinter.stl.Triangle3d;
+import org.area515.resinprinter.services.PrinterService;
+
 import org.area515.util.Log4jTimer;
 
-public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> {
+public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> implements Previewable {
 	public static String STL_OVERHEAD = "stlOverhead";
+
 	private static final Logger logger = LogManager.getLogger();
 	private Map<PrintJob, RenderingFileData> dataByPrintJob = new HashMap<PrintJob, RenderingFileData>();
 
@@ -141,6 +151,103 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			return performFooter(dataAid);
 		} finally {
 			dataByPrintJob.remove(printJob);
+		}
+	}
+	//This method takes in an STL file and produces the first slice of the file
+	public BufferedImage previewSlice(Customizer customizer, File jobFile, boolean projectImage) throws NoPrinterFoundException, SliceHandlingException {
+
+		//find the first activePrinter
+		String printerName = customizer.getPrinterName();
+		Printer activePrinter = null;
+		if (printerName == null || printerName.isEmpty()) {
+			//if customizer doesn't have a printer stored, set first active printer as printer
+			// List<Printer> printers = PrinterService.INSTANCE.getPrinters();
+			// for (Printer printer : printers) {
+			// 	if (printer.isStarted()) {
+			// 		activePrinter = printer;
+			// 		break;
+			// 	}
+			// }
+			try {
+				activePrinter = PrinterService.INSTANCE.getFirstAvailablePrinter();				
+			} catch (NoPrinterFoundException e) {
+				throw new NoPrinterFoundException("No printers found for slice preview. You must have a started printer or specify a valid printer in the Customizer.");
+			}
+
+		} else {
+			try {
+				activePrinter = PrinterService.INSTANCE.getPrinter(printerName);
+			} catch (InappropriateDeviceException e) {
+				logger.warn("Could not locate printer {}", printerName, e);
+			}
+		}
+		
+
+		// if (activePrinter == null) {
+		// 	throw new NoPrinterFoundException("No printers found for slice preview. You must have a started printer or specify a valid printer in the Customizer.");
+		// }
+
+		try {
+			//instantiate a new print job based on the jobFile and set its printer to activePrinter
+			PrintJob printJob = new PrintJob(jobFile);
+			printJob.setPrinter(activePrinter);
+			printJob.setCustomizer(customizer);
+
+			//instantiate new dataaid
+			DataAid dataAid = new DataAid(printJob, false);
+			
+			BufferedImage image;
+			
+			if (customizer.getOrigSliceCache() == null) {
+				RenderingFileData stlData = new RenderingFileData();
+	
+				boolean overrideNormals = dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule() == null?false:dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule();
+				stlData.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, overrideNormals, new CloseOffMend());
+				stlData.slicer.loadFile(new FileInputStream(printJob.getJobFile()), new Double(dataAid.xResolution), new Double(dataAid.yResolution));
+				printJob.setTotalSlices(stlData.slicer.getZMaxIndex() - stlData.slicer.getZMinIndex());
+	
+				//Get the slicer queued up for the first image;
+				stlData.slicer.setZIndex(stlData.slicer.getZMinIndex());
+				Object nextRenderingPointer = stlData.getCurrentRenderingPointer();
+				STLImageRenderer renderer = new STLImageRenderer(dataAid, this, stlData, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution);
+				image = renderer.call();
+				
+				if (customizer.getAffineTransformSettings().isIdentity()) {
+					image = convertTo3BGR(image);
+					customizer.setOrigSliceCache(image);
+				}
+			} else {
+				image = applyImageTransforms(dataAid, customizer.getOrigSliceCache(),
+						customizer.getOrigSliceCache().getWidth(), customizer.getOrigSliceCache().getHeight());
+			}
+
+			if (projectImage) {
+				activePrinter.showImage(image);
+			} else {
+				activePrinter.showBlankImage();
+			}
+
+			return image;
+
+		} catch (NegativeArraySizeException e) {
+			logger.error(e);
+			throw new SliceHandlingException(e);
+		} catch (InappropriateDeviceException e) {
+			// Thrown if ink configuration is null
+			logger.warn(e);
+			throw new SliceHandlingException(e);
+		} catch (FileNotFoundException e) {
+			// Should not occur because this method shouldn't be able to be called without having a file selected.
+			logger.error(e);
+			throw new SliceHandlingException(e);
+		} catch (IOException e) {
+			// Also should not occur because previewSlice shouldn't be able to be called without having a file selected.
+			logger.error(e);
+			throw new SliceHandlingException(e);
+		} catch (ScriptException e) {
+			// Thrown if there is a problem with the bulb mask script, or any other script
+			logger.warn(e);
+			throw new SliceHandlingException(e);
 		}
 	}
 
