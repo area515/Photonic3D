@@ -48,6 +48,7 @@ import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.job.Printable;
+import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
@@ -132,7 +133,7 @@ public class PrintableService {
 	}
 
     @ApiOperation(value="Upload a printable file using multipart/form-data. "
-    		+ "After the upload is complete, the file will be checked against all known print processors to determine if it is sutable for printing.")
+    		+ "After the upload is complete, the file will be checked against all known print processors to determine if it is suitable for printing.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
@@ -152,6 +153,10 @@ public class PrintableService {
 	@POST
 	@Path("/print/{filename}")
 	public PrintJob print(@PathParam("filename")String fileName) {
+		return print(fileName, false);
+	}
+
+	public PrintJob print(String fileName, boolean useCustomizer) {
 		boolean atLeastOnePrinterStarted = false;
 		List<Printer> printers = PrinterService.INSTANCE.getPrinters();
 		for (Printer printer : printers) {
@@ -159,12 +164,19 @@ public class PrintableService {
 				atLeastOnePrinterStarted = true;
 			}
 			if (printer.isStarted() && !printer.isPrintInProgress()) {
-				MachineResponse response = PrinterService.INSTANCE.print(fileName, printer.getName());
+				MachineResponse response;
+				if (useCustomizer) {
+					response = PrinterService.INSTANCE.print(fileName, printer.getName(), useCustomizer);
+				} else {
+					response = PrinterService.INSTANCE.print(fileName, printer.getName());				
+				}
+
 				if (response.getResponse()) {
 					return PrintJobService.INSTANCE.getById(response.getMessage());
 				} else {
 					throw new IllegalArgumentException(response.getMessage());
-				}
+				}					
+
 			}
 		}
 		if (!atLeastOnePrinterStarted) {

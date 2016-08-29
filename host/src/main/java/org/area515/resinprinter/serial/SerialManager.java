@@ -34,8 +34,10 @@ public class SerialManager {
 	}
 	
 	/** Milliseconds to block while waiting for port open */
-	public static final int TIME_OUT = 2000;
-	public static final int CPU_LIMITING_DELAY = 200;
+	public static final int READ_TIME_OUT = 1000;
+	public static final int READ_CHITCHAT_TIME_OUT = 1500;
+	public static final int OPEN_TIME_OUT = 1000;
+	public static final int CPU_LIMITING_DELAY = 100;
 	
 	public static class DetectedResources {
 		SerialCommunicationsPort comPort;
@@ -94,7 +96,7 @@ public class SerialManager {
 			logger.debug("Merged settings from projector:{} and attempting detection with: {}", model.getDefaultComPortSettings(), newSettings);
 				
 			try {
-				currentIdentifier.open(AUTO_DETECT_PROJECTOR, TIME_OUT, newSettings);
+				currentIdentifier.open(AUTO_DETECT_PROJECTOR, OPEN_TIME_OUT, newSettings);
 				if (model.autodetect(currentIdentifier)) {
 					resources = new DetectedResources();
 					resources.model = model;
@@ -121,16 +123,16 @@ public class SerialManager {
 	public boolean is3dFirmware(SerialCommunicationsPort currentIdentifier, ComPortSettings newComPortSettings) {
 		try {
 			logger.debug("Attempting 3dprinter firmware detection on:{}", newComPortSettings);
-			currentIdentifier.open(AUTO_DETECT_3D_FIRMWARE, TIME_OUT, newComPortSettings);
+			currentIdentifier.open(AUTO_DETECT_3D_FIRMWARE, OPEN_TIME_OUT, newComPortSettings);
 			
 			//Marlin and other firmware sends garbage on a new connect.
-			String chitChat = IOUtilities.readWithTimeout(currentIdentifier, TIME_OUT, CPU_LIMITING_DELAY);
+			String chitChat = IOUtilities.readWithTimeout(currentIdentifier, READ_CHITCHAT_TIME_OUT, CPU_LIMITING_DELAY);
 			logger.debug("Chitchat was:{} from:{}", chitChat, newComPortSettings);
 			
 			//Send an absolute positioning gcode and determine if the other end responds with an ok. If so, it's probably 3dFirmware.
 			currentIdentifier.write("G91\r\n".getBytes());
 			
-			String detection = IOUtilities.readWithTimeout(currentIdentifier, TIME_OUT, CPU_LIMITING_DELAY);
+			String detection = IOUtilities.readWithTimeout(currentIdentifier, READ_TIME_OUT, CPU_LIMITING_DELAY);
 			String lines[] = detection.split("\n");
 			if (lines.length == 0) {
 				logger.debug("No data received from:{}", newComPortSettings);
@@ -252,7 +254,7 @@ public class SerialManager {
 		}
 
 		try {
-			identifier.open(printer.getName(), TIME_OUT, resources.settings);
+			identifier.open(printer.getName(), OPEN_TIME_OUT, resources.settings);
 			printer.setProjectorSerialPort(identifier);
 			printer.setProjectorModel(resources.model);
 			
@@ -277,7 +279,7 @@ public class SerialManager {
 		}
 
 		try {
-			identifier.open(printer.getName(), TIME_OUT, resources.settings);
+			identifier.open(printer.getName(), OPEN_TIME_OUT, resources.settings);
 			printer.setPrinterFirmwareSerialPort(identifier);
 			
 			logger.info("Completed assignment of firmware using serialPort:{} with settings:{} to printer:{}", identifier, resources.settings, printer);

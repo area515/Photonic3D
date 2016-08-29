@@ -64,7 +64,14 @@ public class AbstractPrintFileProcessorTest {
 		PrintJob printJob = createTestPrintJob(processor);
 		DataAid aid = null;
 		try {
+			//applyimagetransform
 			processor.applyBulbMask(aid, null, 0, 0);
+			Assert.fail("Failed to throw IllegalStateException.");
+		} catch (IllegalStateException e) {
+		}
+		try {
+			//applyimagetransform
+			processor.applyImageTransforms(aid, null, 0, 0);
 			Assert.fail("Failed to throw IllegalStateException.");
 		} catch (IllegalStateException e) {
 		}
@@ -98,7 +105,10 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getProjectorGradientCalculator()).thenReturn("var mm = $buildAreaMM * 2;java.awt.Color.ORANGE");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
 		DataAid aid = processor.initializeDataAid(printJob);
+		//apply image transform
 		processor.applyBulbMask(aid, graphics, 0, 0);
+//		processor.applyImageTransforms(aid, graphics, 0, 0);
+		//processor.applyImageTransforms(aid, null, 0, 0);
 	}
 
 	@Test

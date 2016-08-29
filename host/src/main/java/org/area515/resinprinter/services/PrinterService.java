@@ -36,10 +36,12 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.job.InkDetector;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
+import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.render.StubPrintFileProcessor;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.ComPortSettings;
@@ -133,6 +135,33 @@ public class PrinterService {
 		
 		return printers;
 	}
+
+    @ApiOperation(value="Lists the first available printer.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.TODO),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@GET
+	@Path("getFirstAvailablePrinter")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Printer getFirstAvailablePrinter() throws NoPrinterFoundException {
+		List<Printer> printers = getPrinters();
+		if (printers.isEmpty()) {
+			throw new NoPrinterFoundException("No printers found.");
+		}
+		Printer activePrinter = null;
+
+		for (Printer printer : printers) {
+			if (printer.isStarted()) {
+				activePrinter = printer;
+				break;
+			}
+		}
+		if (activePrinter == null) {
+			throw new NoPrinterFoundException("No active printers.");
+		}
+		
+		return activePrinter;
+	}	
  
     @ApiOperation(value="Returns the Printer specified by the printername.")
     @ApiResponses(value = {
@@ -749,6 +778,10 @@ public class PrinterService {
 	@Path("startJob/{fileName}/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MachineResponse print(@PathParam("fileName") String fileName, @PathParam("printername") String printername) {
+		return print(fileName, printername, false);
+	}
+
+	public MachineResponse print(String fileName, String printername, boolean useCustomizer) {
 		Printer printer = PrinterManager.Instance().getPrinter(printername);
 		if (printer == null) {
 			return new MachineResponse("start", false, "Printer not started:" + printername);
@@ -766,12 +799,17 @@ public class PrinterService {
 		// Delete and Create handled in jobManager
 		PrintJob printJob = null;
 		try {
-			printJob = PrintJobManager.Instance().createJob(selectedFile, printer);
+			if (useCustomizer) {
+				printJob = PrintJobManager.Instance().createJob(selectedFile, printer, useCustomizer);
+			} else {
+				printJob = PrintJobManager.Instance().createJob(selectedFile, printer);				
+			}
+
 			return new MachineResponse("start", true, printJob.getId() + "");
 		} catch (JobManagerException | AlreadyAssignedException e) {
 		    logger.error("Error starting job:" + fileName + " printer:" + printername, e);
 			return new MachineResponse("start", false, e.getMessage());
-		}
+		}		
 	}
 	
 	private List<ChartData> getChartData(String seriesString) {

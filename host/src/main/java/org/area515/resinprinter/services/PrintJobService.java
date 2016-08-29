@@ -33,6 +33,7 @@ import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
+import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.resinprinter.stl.Triangle3d;

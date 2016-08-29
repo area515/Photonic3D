@@ -101,7 +101,7 @@ public class ProjectorOutput {
 		projector.getDefaultComPortSettings().setPortName(identifiers[portIndex]);
 		
 		SerialCommunicationsPort port = new JSSCCommPort();
-		port.open("ProjectorOutputTest", SerialManager.TIME_OUT, projector.getDefaultComPortSettings());
+		port.open("ProjectorOutputTest", SerialManager.OPEN_TIME_OUT, projector.getDefaultComPortSettings());
 
 		while (true) {
 			System.out.println("0. On Hex");

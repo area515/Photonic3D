@@ -2,7 +2,10 @@ package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.awt.geom.AffineTransform; 
+import java.awt.image.AffineTransformOp;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -20,8 +23,10 @@ import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.Log4jTimer;
 import org.area515.util.TemplateEngine;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.job.Customizer;
 
 public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProcessor<G,E>{
 	private static final Logger logger = LogManager.getLogger();
@@ -43,10 +48,22 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		public InkDetector inkDetector;
 		public long currentSliceTime;
 		public Paint maskPaint;
-		
+		public AffineTransform affineTransform = new AffineTransform();
+
+		//should have affine transform matrix calculated here 
+		//store Affine Transform Object here
+
 		public DataAid(PrintJob printJob) throws InappropriateDeviceException {
+			this(printJob, true);
+		}
+
+		
+		public DataAid(PrintJob printJob, boolean createScriptEngine) throws InappropriateDeviceException {
 			this.printJob = printJob;
-			scriptEngine = HostProperties.Instance().buildScriptEngine();
+			
+			if (createScriptEngine) {
+				scriptEngine = HostProperties.Instance().buildScriptEngine();
+			}
 			printer = printJob.getPrinter();
 			printJob.setStartTime(System.currentTimeMillis());
 		    configuration = printer.getConfiguration();
@@ -56,6 +73,12 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			yPixelsPerMM = slicingProfile.getDotsPermmY();
 			xResolution = slicingProfile.getxResolution();
 			yResolution = slicingProfile.getyResolution();
+
+			// Set the affine transform given the customizer from the printJob
+			Customizer customizer = printJob.getCustomizer();
+			if (customizer != null) {
+				this.affineTransform = customizer.createAffineTransform(xResolution, yResolution);
+			}
 			
 			//This file processor requires an ink configuration
 			if (inkConfiguration == null) {
@@ -244,7 +267,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			throw new IllegalArgumentException("The result of your " + calculationName + " needs to evaluate to an instance of java.lang.Number");
 		}
 	}
-	
+
 	public void applyBulbMask(DataAid aid, Graphics2D g2, int width, int height) throws ScriptException {
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
@@ -267,5 +290,49 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		} catch (ClassCastException e) {
 			throw new IllegalArgumentException("The result of your bulb mask script needs to evaluate to an instance of java.awt.Paint");
 		}
+	}
+
+	//public void applyImageTransforms(DataAid aid, BufferedImage bi, int width, int height) throws ScriptException {
+	public BufferedImage applyImageTransforms(DataAid aid, BufferedImage img, int width, int height) throws ScriptException {
+		if (aid == null) {
+			throw new IllegalStateException("initializeDataAid must be called before this method");
+		}
+		if (img == null) {
+			throw new IllegalStateException("BufferedImage is null");
+		}
+
+		BufferedImage after = img;
+		
+		if (!aid.affineTransform.isIdentity()) {
+			after = new BufferedImage(width, height, img.getType());
+			
+			((Graphics2D)img.getGraphics()).setBackground(Color.black);
+			((Graphics2D)after.getGraphics()).setBackground(Color.black);
+			
+			AffineTransformOp transOp = 
+			   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
+			after = transOp.filter(img, after);
+			
+			/*
+			for (int y = 0; y < height; y++) {
+			    for (int x = 0; x < width; x++) {
+			          //image.setRGB(x, y, Color.black);
+			          if (after.getRGB(x, y) == 0) {
+			          	// after.setRGB(x, y, -16777216);
+			          	after.setRGB(x, y, Color.black.getRGB());
+			          }
+			    }
+			
+			*/
+		}
+
+		applyBulbMask(aid, (Graphics2D)after.getGraphics(), width, height);
+		return after;
+	}
+	
+	protected BufferedImage convertTo3BGR(BufferedImage input) {
+		BufferedImage output = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+		output.getGraphics().drawImage(input, 0, 0, null);
+		return output;
 	}
 }

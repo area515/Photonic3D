@@ -148,7 +148,7 @@ public abstract class GCodeControl {
     public String readWelcomeChitChat() throws IOException {
 		try {
 			StringBuilder builder = new StringBuilder();
-			builder.append(IOUtilities.readWithTimeout(getPrinter().getPrinterFirmwareSerialPort(), SerialManager.TIME_OUT, SerialManager.CPU_LIMITING_DELAY));
+			builder.append(IOUtilities.readWithTimeout(getPrinter().getPrinterFirmwareSerialPort(), SerialManager.READ_TIME_OUT, SerialManager.CPU_LIMITING_DELAY));
 			builder.append(executeSetAbsolutePositioning());
 			return builder.toString();
 		} catch (InterruptedException e) {

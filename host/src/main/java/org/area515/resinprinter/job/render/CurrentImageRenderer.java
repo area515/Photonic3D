@@ -36,8 +36,18 @@ public abstract class CurrentImageRenderer implements Callable<BufferedImage> {
 			BufferedImage image = data.getCurrentImage();
 			Graphics2D graphics = (Graphics2D)image.getGraphics();
 			renderImage(image, graphics, imageData);
-			processor.applyBulbMask(aid, graphics, width, height);
-			return data.getCurrentImage();
+			// processor.applyBulbMask(aid, graphics, width, height);
+			BufferedImage after = processor.applyImageTransforms(aid, image, width, height);
+			// Lock currentLock = data.getCurrentLock();
+			// currentLock.lock();
+			// try {
+			// 	image.setData(after.getData());
+			// } finally {
+			// 	currentLock.unlock();
+			// }
+			
+			//processor.applyImageTransforms(aid, image, width, height);
+			return after;
 		} finally {
 			lock.unlock();
 		}

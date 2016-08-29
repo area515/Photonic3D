@@ -9,6 +9,8 @@ fi
 DEFAULT_REPO="area515/Creation-Workshop-Host"
 CONFIG_PROPS="${HOME}/3dPrinters/config.properties"
 
+echo "Local Config: $CONFIG_PROPS"
+
 if [ -f ${CONFIG_PROPS} ]; then
   CONFIG_REPO=$(grep '^updateRepo' "${CONFIG_PROPS}" | cut -d= -f 2 | awk '$1=$1')
   if [[ ${CONFIG_REPO} ]]; then
