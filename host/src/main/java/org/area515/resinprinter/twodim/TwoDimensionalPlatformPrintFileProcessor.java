@@ -14,14 +14,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobStatus;
+import org.area515.resinprinter.job.Previewable;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.render.RenderingFileData;
 import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.services.PrinterService;
-import org.area515.util.Log4jTimer;
 
-public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends AbstractPrintFileProcessor<T,E> {
+public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends AbstractPrintFileProcessor<T,E> implements Previewable {
     private static final Logger logger = LogManager.getLogger();
 	private Map<PrintJob, TwoDimensionalPrintState> twoDimensionalPrintDataByJob = new HashMap<PrintJob, TwoDimensionalPrintState>();
 	

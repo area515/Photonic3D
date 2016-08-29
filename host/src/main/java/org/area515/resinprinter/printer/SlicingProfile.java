@@ -29,6 +29,8 @@ public class SlicingProfile implements Named {
         private Double extrusionHeightMM;
         @XmlElement(name="PlatformCalculator")
         private String platformCalculator;
+        @XmlElement(name="EdgeDetectionDisabled")
+        private Boolean edgeDetectionDisabled;
         
         @XmlTransient
 		public Font getFont() {
@@ -44,6 +46,14 @@ public class SlicingProfile implements Named {
 		}
 		public void setPlatformHeightMM(Double platformHeightMM) {
 			this.platformHeightMM = platformHeightMM;
+		}
+		
+		@XmlTransient
+		public Boolean isEdgeDetectionDisabled() {
+			return edgeDetectionDisabled;
+		}
+		public void setEdgeDetectionDisabled(Boolean edgeDetectionDisabled) {
+			this.edgeDetectionDisabled = edgeDetectionDisabled;
 		}
 		
 		@XmlTransient

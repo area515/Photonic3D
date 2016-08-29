@@ -172,6 +172,9 @@
 			if (printable.printFileProcessor.friendlyName === 'Simple Text') {
 				return "fa-bold";
 			}
+			if (printable.printFileProcessor.friendlyName === 'Scalable Vector Graphics') {
+				return "fa-puzzle-piece";
+			}
 			return "fa-question-circle";
 		}
 		

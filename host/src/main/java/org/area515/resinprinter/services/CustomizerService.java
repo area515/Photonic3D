@@ -170,34 +170,33 @@ public class CustomizerService {
 		File file = new File(HostProperties.Instance().getUploadDir(), fileName);
 
 		PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
-		if (processor instanceof Previewable) {
-			AbstractPrintFileProcessor previewableProcessor = (AbstractPrintFileProcessor) processor;
-			try {
-				BufferedImage img = previewableProcessor.buildPreviewSlice(customizer, file, (Previewable)processor, projectImage);
+		if (!(processor instanceof Previewable)) {
+			throw new IllegalArgumentException(processor.getFriendlyName() + " files don't support image preview.");
+		}
+		
+		AbstractPrintFileProcessor previewableProcessor = (AbstractPrintFileProcessor) processor;
+		try {
+			BufferedImage img = previewableProcessor.buildPreviewSlice(customizer, file, (Previewable)processor, projectImage);
 
-				logger.debug("just got the bufferedimg from previewSlice");
+			logger.debug("just got the bufferedimg from previewSlice");
 
+			StreamingOutput stream = new StreamingOutput() {
+				@Override
+				public void write(OutputStream output) throws IOException, WebApplicationException {
+					try {
+						ImageIO.write(img, "JPG", output);
 
-				StreamingOutput stream = new StreamingOutput() {
-					@Override
-					public void write(OutputStream output) throws IOException, WebApplicationException {
-						try {
-							ImageIO.write(img, "JPG", output);
-
-							logger.debug("Writing the img");
-						} catch (IOException e) {
-								//System.out.println("failed writing");
-							throw e;
-						}
+						logger.debug("Writing the img");
+					} catch (IOException e) {
+							//System.out.println("failed writing");
+						throw e;
 					}
-				};
-				return stream;
-			} catch (NoPrinterFoundException|SliceHandlingException |IllegalArgumentException e) {
-				// Loggers already warned or had error messages so just throw these up the stack
-				throw e;
-			}
-		} else {
-			throw new IllegalArgumentException("Incorrect file type: " + customizer.getPrintableExtension() + ". Can only display preview for STL and ZIP of images for now.");
+				}
+			};
+			return stream;
+		} catch (NoPrinterFoundException|SliceHandlingException |IllegalArgumentException e) {
+			// Loggers already warned or had error messages so just throw these up the stack
+			throw e;
 		}
 	}
 	

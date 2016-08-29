@@ -64,7 +64,7 @@
 				var printableName = encodeURIComponent(controller.currentPrintable.name);
 				var printableExtension = encodeURIComponent(controller.currentPrintable.extension);	
 
-				var parameter = controller.findCurrentCustomizer(controller.currentPrintable);	
+				var parameter = controller.findCurrentCustomizer(controller.currentPrintable);
 				$http.post("/services/customizers/upsertCustomizer", parameter).success(
 					function (data) {
 						controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage;
@@ -272,6 +272,9 @@
 			}
 			if (printable.printFileProcessor.friendlyName === 'Simple Text') {
 				return "fa-bold";
+			}
+			if (printable.printFileProcessor.friendlyName === 'Scalable Vector Graphics') {
+				return "fa-puzzle-piece";
 			}
 			return "fa-question-circle";
 		};

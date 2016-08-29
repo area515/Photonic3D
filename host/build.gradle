@@ -25,6 +25,8 @@ dependencies {
     exclude module: 'jsr311-api'
   }
 
+  compile 'org.apache.xmlgraphics:xmlgraphics-commons:1.5'
+  compile 'org.apache.xmlgraphics:batik-transcoder:1.8'
   compile 'com.sun.mail:javax.mail:1.5.5'
   compile 'se.sawano.java:alphanumeric-comparator:1.4.1'
   compile 'org.fourthline.cling:cling-core:2.0.1'

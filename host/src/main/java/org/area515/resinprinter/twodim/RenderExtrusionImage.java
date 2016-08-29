@@ -15,7 +15,7 @@ public class RenderExtrusionImage extends CurrentImageRenderer {
 	public RenderExtrusionImage(DataAid aid, AbstractPrintFileProcessor<?,?> processor, RenderingFileData data, Object imageIndexToBuild, int width, int height) {
 		super(aid, processor, data, imageIndexToBuild, width, height);
 	}
-
+	
 	@Override
 	public void renderImage(BufferedImage image, Graphics2D graphics, ImageData imageData) {
 		int centerX = width / 2;

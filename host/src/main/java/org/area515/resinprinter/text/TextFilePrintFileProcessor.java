@@ -9,14 +9,25 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+
+import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.job.STLImageRenderer;
+import org.area515.resinprinter.job.render.RenderingFileData;
+import org.area515.resinprinter.slice.CloseOffMend;
+import org.area515.resinprinter.slice.ZSlicer;
+import org.area515.resinprinter.twodim.RenderExtrusionImage;
 import org.area515.resinprinter.twodim.TwoDimensionalPlatformPrintFileProcessor;
+import org.area515.resinprinter.twodim.TwoDimensionalPlatformPrintFileProcessor.TwoDimensionalPrintState;
 
 public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileProcessor<Object, Object> {
     private static final Logger logger = LogManager.getLogger();
@@ -69,17 +80,21 @@ public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileP
 	public boolean acceptsFile(File processingFile) {
 		return processingFile.getName().toLowerCase().endsWith("txt");
 	}
-
-	@Override
-	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException {
+	
+	private void readTextDataFromFile(TextData textData, File processingFile, PrintJob printJob) throws JobManagerException {
 		try (BufferedReader reader = new BufferedReader(new FileReader(processingFile))) {
-			TextData textData = new TextData();
 			textData.lines = reader.lines().toArray();
-			createTwoDimensionalPrintState(printJob, textData);
 		} catch (IOException e) {
 			logger.error("IO error while reading file:" + processingFile, e);
 			throw new JobManagerException("There was a problem reading this file.");
 		}
+	}
+	
+	@Override
+	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException {
+		TextData textData = new TextData();
+		readTextDataFromFile(textData, processingFile, printJob);
+		createTwoDimensionalPrintState(printJob, textData);
 	}
 
 	@Override
@@ -100,5 +115,24 @@ public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileP
 	@Override
 	public String getFriendlyName() {
 		return "Simple Text";
+	}
+
+	@Override
+	public BufferedImage renderPreviewImage(final org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid dataAid) throws SliceHandlingException {
+		try {
+			//We need to avoid caching images outside of the Customizer cache or we will fill up memory quick
+			TextData data = new TextData() {
+				@Override
+				public BufferedImage getCachedExtrusionImage() {
+					return super.buildExtrusionImage(dataAid);
+				}
+			};
+			readTextDataFromFile(data, dataAid.printJob.getJobFile(), dataAid.printJob);
+			data.setCurrentRenderingPointer(Boolean.TRUE);
+			RenderExtrusionImage extrusion = new RenderExtrusionImage(dataAid, this, data, Boolean.TRUE, dataAid.xResolution, dataAid.yResolution);
+			return extrusion.call();
+		} catch (JobManagerException | ScriptException e) {
+			throw new SliceHandlingException(e);
+		}
 	}
 }

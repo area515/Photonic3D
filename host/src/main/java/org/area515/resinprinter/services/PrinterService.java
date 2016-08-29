@@ -447,6 +447,7 @@ public class PrinterService {
 		settings.setPlatformCalculator("platformGraphics.fillRoundRect(centerX - (extrusionX / 2), centerY - (extrusionY / 2), extrusionX, extrusionY, 50, 50);");
 		settings.setExtrusionHeightMM(1.5);
 		settings.setPlatformHeightMM(1.5);
+		settings.setEdgeDetectionDisabled(false);
 		
 		slicingProfile.setTwoDimensionalSettings(settings);
 		slicingProfile.setInkConfigs(configs);
