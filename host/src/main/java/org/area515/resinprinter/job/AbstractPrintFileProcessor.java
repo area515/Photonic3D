@@ -295,18 +295,14 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			throw new IllegalStateException("BufferedImage is null");
 		}
 
-		BufferedImage after = img;
+		BufferedImage after = new BufferedImage(width, height, img.getType());
+			
+		((Graphics2D)img.getGraphics()).setBackground(Color.black);
+		((Graphics2D)after.getGraphics()).setBackground(Color.black);
 		
-		if (!aid.affineTransform.isIdentity()) {
-			after = new BufferedImage(width, height, img.getType());
-			
-			((Graphics2D)img.getGraphics()).setBackground(Color.black);
-			((Graphics2D)after.getGraphics()).setBackground(Color.black);
-			
-			AffineTransformOp transOp = new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
-			after = transOp.filter(img, after);
-		}
-
+		AffineTransformOp transOp = new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
+		after = transOp.filter(img, after);
+		
 		applyBulbMask(aid, (Graphics2D)after.getGraphics(), width, height);
 		return after;
 	}
