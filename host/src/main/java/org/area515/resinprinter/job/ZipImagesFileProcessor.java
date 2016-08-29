@@ -170,7 +170,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 			printJob.setCustomizer(customizer);
 
 			//instantiate new dataaid
-			DataAid dataAid = new DataAid(printJob, false);
+			DataAid dataAid = new DataAid(printJob);
 			BufferedImage image;
 			
 			if (customizer.getOrigSliceCache() == null) {

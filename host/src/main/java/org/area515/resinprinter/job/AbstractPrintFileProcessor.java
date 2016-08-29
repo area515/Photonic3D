@@ -54,16 +54,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		//store Affine Transform Object here
 
 		public DataAid(PrintJob printJob) throws InappropriateDeviceException {
-			this(printJob, true);
-		}
-
-		
-		public DataAid(PrintJob printJob, boolean createScriptEngine) throws InappropriateDeviceException {
 			this.printJob = printJob;
-			
-			if (createScriptEngine) {
-				scriptEngine = HostProperties.Instance().buildScriptEngine();
-			}
+			this.scriptEngine = HostProperties.Instance().buildScriptEngine();
 			printer = printJob.getPrinter();
 			printJob.setStartTime(System.currentTimeMillis());
 		    configuration = printer.getConfiguration();

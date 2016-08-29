@@ -192,9 +192,10 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			PrintJob printJob = new PrintJob(jobFile);
 			printJob.setPrinter(activePrinter);
 			printJob.setCustomizer(customizer);
-
+			printJob.setPrintFileProcessor(this);
+			
 			//instantiate new dataaid
-			DataAid dataAid = new DataAid(printJob, false);
+			DataAid dataAid = new DataAid(printJob);
 			
 			BufferedImage image;
 			
