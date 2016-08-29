@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
+
 import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,8 +18,8 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
-
 import org.apache.commons.io.FileUtils;
+import org.area515.resinprinter.job.render.CurrentImageRenderer;
 import org.area515.resinprinter.job.render.StandaloneImageData;
 import org.area515.resinprinter.job.render.StandaloneImageRenderer;
 import org.area515.resinprinter.printer.SlicingProfile;
@@ -141,94 +142,33 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 		}
 	}
 
-	synchronized public BufferedImage previewSlice(Customizer customizer, File jobFile, boolean projectImage) throws NoPrinterFoundException, SliceHandlingException {
-
-		//find the first activePrinter
-		String printerName = customizer.getPrinterName();
-		Printer activePrinter = null;
-		if (printerName == null || printerName.isEmpty()) {
-			//if customizer doesn't have a printer stored, set first active printer as printer
-			try {
-				activePrinter = PrinterService.INSTANCE.getFirstAvailablePrinter();				
-			} catch (NoPrinterFoundException e) {
-				throw new NoPrinterFoundException("No printers found for slice preview. You must have a started printer or specify a valid printer in the Customizer.");
-			}
-			
-		} else {
-			try {
-				activePrinter = PrinterService.INSTANCE.getPrinter(printerName);
-			} catch (InappropriateDeviceException e) {
-				logger.warn("Could not locate printer {}", printerName, e);
-			}
-		}
-
+	@Override
+	public BufferedImage renderPreviewImage(DataAid dataAid) throws SliceHandlingException {
 		try {
-			//instantiate a new print job based on the jobFile and set its printer to activePrinter
-
-			PrintJob printJob = new PrintJob(jobFile);
-			printJob.setPrinter(activePrinter);
-			printJob.setCustomizer(customizer);
-			printJob.setPrintFileProcessor(this);
-
-			//instantiate new dataaid
-			DataAid dataAid = new DataAid(printJob);
-			BufferedImage image;
+			prepareEnvironment(dataAid.printJob.getJobFile(), dataAid.printJob);
 			
-			if (customizer.getOrigSliceCache() == null) {
-				prepareEnvironment(jobFile, printJob);
-				
-				SortedMap<String, File> imageFiles = findImages(jobFile);
-				
-				printJob.setTotalSlices(imageFiles.size());
-		
-				// performHeader(dataAid);
-		
-				Iterator<File> imgIter = imageFiles.values().iterator();
-		
-				// Preload first image then loop
-				if (!imgIter.hasNext()) {
-					throw new IOException("No Image Found");
-				}
-				File imageFile = imgIter.next();
-				
-				StandaloneImageRenderer renderer = new StandaloneImageRenderer(dataAid, imageFile, this);
-				StandaloneImageData stdImage = renderer.call();
-				image = stdImage.getImage();
-				
-				if (customizer.getAffineTransformSettings().isIdentity()) {
-					image = convertTo3BGR(image);
-					customizer.setOrigSliceCache(image);
-				}
-			} else {
-				image = applyImageTransforms(dataAid, customizer.getOrigSliceCache(),
-						customizer.getOrigSliceCache().getWidth(), customizer.getOrigSliceCache().getHeight());
+			SortedMap<String, File> imageFiles = findImages(dataAid.printJob.getJobFile());
+			
+			dataAid.printJob.setTotalSlices(imageFiles.size());
+	
+			// performHeader(dataAid);
+	
+			Iterator<File> imgIter = imageFiles.values().iterator();
+	
+			// Preload first image then loop
+			if (!imgIter.hasNext()) {
+				throw new IOException("No Image Found");
 			}
-
-			if (projectImage) {
-				activePrinter.showImage(image);
-			} else {
-				activePrinter.showBlankImage();
-			}
-
-			return image;
-		} catch (InappropriateDeviceException e) {
-			// Thrown if ink configuration is null
-			logger.warn(e);
-			throw new SliceHandlingException(e);
-		} catch (IOException e) {
-			// Also should not occur because previewSlice shouldn't be able to be called without having a file selected.
-			logger.error(e);
-			throw new SliceHandlingException(e);
-		} catch (ScriptException e) {
-			// Thrown if there is a problem with the bulb mask script, or any other script
-			logger.warn(e);
-			throw new SliceHandlingException(e);
-		} catch (JobManagerException e) {
-			logger.warn(e);
+			File imageFile = imgIter.next();
+			
+			StandaloneImageRenderer renderer = new StandaloneImageRenderer(dataAid, imageFile, this);
+			StandaloneImageData stdImage = renderer.call();
+			return stdImage.getImage();
+		} catch (IOException | ScriptException | JobManagerException e) {
 			throw new SliceHandlingException(e);
 		}
 	}
-	
+
 	@Override
 	public String getFriendlyName() {
 		return "Zip of Slice Images";

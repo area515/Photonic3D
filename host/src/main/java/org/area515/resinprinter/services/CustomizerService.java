@@ -5,7 +5,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +18,6 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.WebApplicationException;
-
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
@@ -27,6 +25,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.PrintJob;
@@ -35,10 +34,8 @@ import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.util.PrintFileFilter;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.area515.resinprinter.util.security.PhotonicUser;
 
 @Api(value="customizers")
@@ -189,9 +186,9 @@ public class CustomizerService {
 
 		PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
 		if (processor instanceof Previewable) {
-			Previewable previewableProcessor = (Previewable) processor;
+			AbstractPrintFileProcessor previewableProcessor = (AbstractPrintFileProcessor) processor;
 			try {
-				BufferedImage img = previewableProcessor.previewSlice(customizer, file, projectImage);
+				BufferedImage img = previewableProcessor.buildPreviewSlice(customizer, file, (Previewable)processor, projectImage);
 
 				logger.debug("just got the bufferedimg from previewSlice");
 

@@ -1,11 +1,12 @@
 package org.area515.resinprinter.job;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Paint;
-import java.awt.Color;
-import java.awt.image.BufferedImage;
-import java.awt.geom.AffineTransform; 
+import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -13,20 +14,21 @@ import java.util.concurrent.ExecutionException;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.exception.NoPrinterFoundException;
+import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.services.PrinterService;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.Log4jTimer;
 import org.area515.util.TemplateEngine;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.job.Customizer;
 
 public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProcessor<G,E>{
 	private static final Logger logger = LogManager.getLogger();
@@ -301,21 +303,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			((Graphics2D)img.getGraphics()).setBackground(Color.black);
 			((Graphics2D)after.getGraphics()).setBackground(Color.black);
 			
-			AffineTransformOp transOp = 
-			   new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
+			AffineTransformOp transOp = new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
 			after = transOp.filter(img, after);
-			
-			/*
-			for (int y = 0; y < height; y++) {
-			    for (int x = 0; x < width; x++) {
-			          //image.setRGB(x, y, Color.black);
-			          if (after.getRGB(x, y) == 0) {
-			          	// after.setRGB(x, y, -16777216);
-			          	after.setRGB(x, y, Color.black.getRGB());
-			          }
-			    }
-			
-			*/
 		}
 
 		applyBulbMask(aid, (Graphics2D)after.getGraphics(), width, height);
@@ -326,5 +315,59 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		BufferedImage output = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
 		output.getGraphics().drawImage(input, 0, 0, null);
 		return output;
+	}
+	
+	public BufferedImage buildPreviewSlice(Customizer customizer, File jobFile, Previewable previewable, boolean projectImage) throws NoPrinterFoundException, SliceHandlingException {
+		//find the first activePrinter
+		String printerName = customizer.getPrinterName();
+		Printer activePrinter = null;
+		if (printerName == null || printerName.isEmpty()) {
+			//if customizer doesn't have a printer stored, set first active printer as printer
+			try {
+				activePrinter = PrinterService.INSTANCE.getFirstAvailablePrinter();				
+			} catch (NoPrinterFoundException e) {
+				throw new NoPrinterFoundException("No printers found for slice preview. You must have a started printer or specify a valid printer in the Customizer.");
+			}
+			
+		} else {
+			try {
+				activePrinter = PrinterService.INSTANCE.getPrinter(printerName);
+			} catch (InappropriateDeviceException e) {
+				logger.warn("Could not locate printer {}", printerName, e);
+			}
+		}
+
+		try {
+			//instantiate a new print job based on the jobFile and set its printer to activePrinter
+			PrintJob printJob = new PrintJob(jobFile);
+			printJob.setPrinter(activePrinter);
+			printJob.setCustomizer(customizer);
+			printJob.setPrintFileProcessor(this);
+			
+			//instantiate new dataaid
+			DataAid dataAid = initializeDataAid(printJob);
+			BufferedImage image;
+			
+			if (customizer.getOrigSliceCache() == null) {
+				image = previewable.renderPreviewImage(dataAid);
+				if (customizer.getAffineTransformSettings().isIdentity()) {
+					image = convertTo3BGR(image);
+					customizer.setOrigSliceCache(image);
+				}
+			} else {
+				image = applyImageTransforms(dataAid, customizer.getOrigSliceCache(),
+						customizer.getOrigSliceCache().getWidth(), customizer.getOrigSliceCache().getHeight());
+			}
+
+			if (projectImage) {
+				activePrinter.showImage(image);
+			} else {
+				activePrinter.showBlankImage();
+			}
+
+			return image;
+		} catch (InappropriateDeviceException | ScriptException e) {
+			throw new SliceHandlingException(e);
+		}
 	}
 }
