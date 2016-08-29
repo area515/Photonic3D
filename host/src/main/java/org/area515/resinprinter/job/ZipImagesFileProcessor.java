@@ -168,6 +168,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 			PrintJob printJob = new PrintJob(jobFile);
 			printJob.setPrinter(activePrinter);
 			printJob.setCustomizer(customizer);
+			printJob.setPrintFileProcessor(this);
 
 			//instantiate new dataaid
 			DataAid dataAid = new DataAid(printJob);
