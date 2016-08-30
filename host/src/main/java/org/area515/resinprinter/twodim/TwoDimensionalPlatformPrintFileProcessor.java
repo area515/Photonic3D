@@ -83,7 +83,9 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 			
 			printState.cacheExtrusionImage(dataAid);
 			Object nextRenderingPointer = printState.getCurrentRenderingPointer();
-			Future<BufferedImage> currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution, totalPlatformSlices));
+			Future<BufferedImage> currentImage = platformSlices > 0?
+					Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution, totalPlatformSlices)):
+					Main.GLOBAL_EXECUTOR.submit(new RenderExtrusionImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
 			while (platformSlices > 0 || extrusionSlices > 0) {
 				
 				//Performs all of the duties that are common to most print files
