@@ -50,6 +50,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		public InkDetector inkDetector;
 		public long currentSliceTime;
 		public Paint maskPaint;
+		public boolean performTransforms;
 		public AffineTransform affineTransform = new AffineTransform();
 
 		//should have affine transform matrix calculated here 
@@ -67,7 +68,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			yPixelsPerMM = slicingProfile.getDotsPermmY();
 			xResolution = slicingProfile.getxResolution();
 			yResolution = slicingProfile.getyResolution();
-
+			this.performTransforms = true;
+			
 			// Set the affine transform given the customizer from the printJob
 			Customizer customizer = printJob.getCustomizer();
 			if (customizer != null) {
@@ -286,7 +288,6 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 	}
 
-	//public void applyImageTransforms(DataAid aid, BufferedImage bi, int width, int height) throws ScriptException {
 	public BufferedImage applyImageTransforms(DataAid aid, BufferedImage img, int width, int height) throws ScriptException {
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
@@ -295,6 +296,10 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			throw new IllegalStateException("BufferedImage is null");
 		}
 
+		if (!aid.performTransforms) {
+			return img;
+		}
+		
 		BufferedImage after = new BufferedImage(width, height, img.getType());
 			
 		((Graphics2D)img.getGraphics()).setBackground(Color.black);
@@ -345,16 +350,16 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			BufferedImage image;
 			
 			if (customizer.getOrigSliceCache() == null) {
+				dataAid.performTransforms = false;
 				image = previewable.renderPreviewImage(dataAid);
+				dataAid.performTransforms = true;
 				if (customizer.getAffineTransformSettings().isIdentity()) {
 					image = convertTo3BGR(image);
 					customizer.setOrigSliceCache(image);
 				}
-			} else {
-				image = applyImageTransforms(dataAid, customizer.getOrigSliceCache(),
-						customizer.getOrigSliceCache().getWidth(), customizer.getOrigSliceCache().getHeight());
 			}
-
+			
+			image = applyImageTransforms(dataAid, customizer.getOrigSliceCache(), customizer.getOrigSliceCache().getWidth(), customizer.getOrigSliceCache().getHeight());
 			if (projectImage) {
 				activePrinter.showImage(image);
 			} else {
