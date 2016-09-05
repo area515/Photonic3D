@@ -115,7 +115,7 @@ public class CustomizerService {
 			throw new IllegalArgumentException("Printer must be started");
 		}
 
-		if (printer.isPrintActive()) {
+		if (printer.isPrintInProgress()) {
 			throw new IllegalArgumentException("Printer can't preview while print is active!");
 		}
 
@@ -127,6 +127,7 @@ public class CustomizerService {
 		
 		AbstractPrintFileProcessor previewableProcessor = (AbstractPrintFileProcessor) processor;
 		BufferedImage img = previewableProcessor.buildPreviewSlice(customizer, file, (Previewable)processor);
+		printer.setStatus(printer.getStatus());//This is to make sure the slicenumber is reset.
 		printer.showImage(img);
 	}
 	

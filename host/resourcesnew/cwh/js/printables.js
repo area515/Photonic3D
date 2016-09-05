@@ -57,7 +57,9 @@
 										yscale: 1,
 										rotation:0,
 										xtranslate: 0,
-										ytranslate: 0
+										ytranslate: 0,
+										xshear: 0,
+										yshear: 0
 									}
 								};
 						} else {
@@ -139,6 +141,12 @@
 			this.saveCustomizer();
 		}
 		
+		this.changeShear = function changeShear(x, y) {	
+			controller.currentCustomizer.affineTransformSettings.xshear += x;
+			controller.currentCustomizer.affineTransformSettings.yshear += y;
+			this.saveCustomizer();
+		}
+		
 		this.changeRotation = function changeRotation(rotation) {
 			controller.currentCustomizer.affineTransformSettings.rotation += rotation;
 			this.saveCustomizer();
@@ -159,6 +167,8 @@
 			affineTransformSettings.ytranslate = 0;
 			affineTransformSettings.xscale = 1.0;
 			affineTransformSettings.yscale = 1.0;
+			affineTransformSettings.xshear = 0.0;
+			affineTransformSettings.yshear = 0.0;
 			affineTransformSettings.rotation = 0;
 			this.saveCustomizer();
 		}

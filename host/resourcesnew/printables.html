@@ -142,15 +142,38 @@
 							<h4>Rotation</h4>
 							<h6>Degrees: {{printablesController.currentCustomizer.affineTransformSettings.rotation}}</h6>
 							<span class="btn-group" >
-								<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeRotation(-.5)">.5</b> 
-								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeRotation(-.1)">.1</a>
-								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeRotation(-.01)">.01</a>
-								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeRotation(.01)">.01</a>
-								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeRotation(.1)">.1</a>
-								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeRotation(.5)">.5</a>
+								<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeRotation(-20)">20</b> 
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeRotation(-10)">10</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeRotation(-1)">1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeRotation(1)">1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeRotation(10)">10</a>
+								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeRotation(20)">20</a>
 							</span>
 						</div>
 
+						<div class="list-group-item">
+							<i class="fa fa-2x fa-italic pull-left"></i>
+							<h4>Shear</h4>
+							<h6>Y tilt: {{printablesController.currentCustomizer.affineTransformSettings.yshear}}</h6>
+							<span class="btn-group" >
+								<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeShear(0, .5)">.5</b> 
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeShear(0, .1)">.1</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeShear(0, .01)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeShear(0, -.01)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeShear(0, -.1)">.1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeShear(0, -.5)">.5</a>
+							</span>					
+							<h6>X tilt: {{printablesController.currentCustomizer.affineTransformSettings.xshear}}</h6>
+							<span class="btn-group" >
+								<b class="btn btn-sm btn-danger fa fa-angle-double-left" ng-click="printablesController.changeShear(.5, 0)">.5</b> 
+								<a class="btn btn-sm btn-danger fa fa-angle-left" ng-click="printablesController.changeShear(.1, 0)">.1</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-left" ng-click="printablesController.changeShear(.01, 0)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeShear(-.01, 0)">-.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeShear(-.1, 0)">-.1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-double-right" ng-click="printablesController.changeShear(-.5, 0)">-.5</a>
+							</span>
+						</div>			
+					
 						<div class="list-group-item">
 							<i class="fa fa-2x fa-arrows pull-left"></i>
 							<h4>Position</h4>
@@ -172,6 +195,7 @@
 								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeTranslate(10, 0)"> 10</a>
 								<a class="btn btn-sm btn-success fa fa-angle-double-right" ng-click="printablesController.changeTranslate(100, 0)">100</a>
 							</span>
+							
 							<button class="btn btn-danger" ng-click="printablesController.resetTranslation()">
 								<!-- <i class="fa fa-undo pull-left"></i>  -->
 								<b class="fa fa-undo"></b> 

@@ -28,7 +28,9 @@ public class Customizer {
 		private Double xTranslate = 0.0;//negative printerwidth for xflip
 		private Double yTranslate = 0.0;//negative printerlength for yflip
 		private Double xScale = 1.0;//-1 for xflip
-		private Double yScale = 1.0;//-1 for yflip
+		private Double yScale = 1.0;//-1 for yflip		
+		private Double xShear = 0.0;
+		private Double yShear = 0.0;
 		private Double rotation = 0.0;
 		private String affineTransformScriptCalculator;//Ignore this for now
 		
@@ -77,6 +79,20 @@ public class Customizer {
 			this.rotation = rotation;
 		}
 
+		public Double getXShear() {
+			return xShear;
+		}
+		public void setXShear(Double xShear) {
+			this.xShear = xShear;
+		}
+
+		public Double getYShear() {
+			return yShear;
+		}
+		public void setYShear(Double yShear) {
+			this.yShear = yShear;
+		}
+
 		public String getAffineTransformScriptCalculator() {
 			return affineTransformScriptCalculator;
 		}
@@ -86,7 +102,8 @@ public class Customizer {
 
 		public AffineTransform createAffineTransform(double width, double height) {
 			AffineTransform affineTransform = new AffineTransform();
-			affineTransform.rotate(rotation, width/2, height/2);
+			affineTransform.shear(this.xShear, this.yShear);
+			affineTransform.rotate(Math.toRadians(this.rotation), width/2, height/2);
 			affineTransform.translate(this.xTranslate, this.yTranslate);
 			affineTransform.scale(this.xScale, this.yScale);
 			return affineTransform;
