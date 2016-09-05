@@ -91,10 +91,15 @@
 						</h3>
 						<div class="row">
 							<div class="btn-group pull-right" >
-							<button class="btn btn-success" ng-click="printablesController.printWithCustomizer()">
-									<i class="fa fa-print"></i> 
-									<span>Print with Customizations</span>	
-							</button>
+								<button class="btn btn-success" ng-click="printablesController.printWithCustomizer()">
+										<i class="fa fa-print"></i> 
+										<span>Print with Customizations</span>	
+								</button>
+								<button class="btn btn-danger" ng-click="printablesController.resetTranslation()">
+									<!-- <i class="fa fa-undo pull-left"></i>  -->
+									<b class="fa fa-undo"></b> 
+									<span>Reset</span>
+								</button>							
 							</div>
 						</div>
 					</div>
@@ -156,21 +161,21 @@
 							<h4>Shear</h4>
 							<h6>Y tilt: {{printablesController.currentCustomizer.affineTransformSettings.yshear}}</h6>
 							<span class="btn-group" >
-								<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeShear(0, .5)">.5</b> 
-								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeShear(0, .1)">.1</a>
-								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeShear(0, .01)">.01</a>
-								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeShear(0, -.01)">.01</a>
-								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeShear(0, -.1)">.1</a>
-								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeShear(0, -.5)">.5</a>
+								<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeShear(0, -.5)">.5</b> 
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeShear(0, -.1)">.1</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeShear(0, -.01)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeShear(0, .01)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeShear(0, .1)">.1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeShear(0, .5)">.5</a>
 							</span>					
 							<h6>X tilt: {{printablesController.currentCustomizer.affineTransformSettings.xshear}}</h6>
 							<span class="btn-group" >
-								<b class="btn btn-sm btn-danger fa fa-angle-double-left" ng-click="printablesController.changeShear(.5, 0)">.5</b> 
-								<a class="btn btn-sm btn-danger fa fa-angle-left" ng-click="printablesController.changeShear(.1, 0)">.1</a>
-								<a class="btn btn-sm btn-danger fa fa-angle-left" ng-click="printablesController.changeShear(.01, 0)">.01</a>
-								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeShear(-.01, 0)">-.01</a>
-								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeShear(-.1, 0)">-.1</a>
-								<a class="btn btn-sm btn-success fa fa-angle-double-right" ng-click="printablesController.changeShear(-.5, 0)">-.5</a>
+								<b class="btn btn-sm btn-danger fa fa-angle-double-left" ng-click="printablesController.changeShear(-.5, 0)">.5</b> 
+								<a class="btn btn-sm btn-danger fa fa-angle-left" ng-click="printablesController.changeShear(-.1, 0)">.1</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-left" ng-click="printablesController.changeShear(-.01, 0)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeShear(.01, 0)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeShear(.1, 0)">.1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-double-right" ng-click="printablesController.changeShear(.5, 0)">.5</a>
 							</span>
 						</div>			
 					
@@ -195,12 +200,6 @@
 								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeTranslate(10, 0)"> 10</a>
 								<a class="btn btn-sm btn-success fa fa-angle-double-right" ng-click="printablesController.changeTranslate(100, 0)">100</a>
 							</span>
-							
-							<button class="btn btn-danger" ng-click="printablesController.resetTranslation()">
-								<!-- <i class="fa fa-undo pull-left"></i>  -->
-								<b class="fa fa-undo"></b> 
-								<span>Reset</span>
-							</button>
 						</div>
 					</div>
 					<!-- End list group -->
