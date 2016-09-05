@@ -8,6 +8,7 @@ import org.area515.resinprinter.inkdetection.visual.CircleTest;
 import org.area515.resinprinter.inkdetection.visual.LineTest;
 import org.area515.resinprinter.inkdetection.visual.TestVisualPrintMaterialDetector;
 import org.area515.resinprinter.job.AbstractPrintFileProcessorTest;
+import org.area515.resinprinter.job.TestCustomizer;
 import org.area515.resinprinter.network.LinuxNetworkManagerTest;
 import org.area515.resinprinter.printer.DetectFirmwareMock;
 import org.area515.resinprinter.projector.HexCodeBasedProjectorTesting;
@@ -41,6 +42,7 @@ import org.junit.runners.Suite;
 	RendezvousExchange.class,
 	TestGCodeTemplating.class,
 	TestByteSession.class,
+	TestCustomizer.class,
 })
 
 public class FullTestSuite {

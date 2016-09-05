@@ -1,6 +1,4 @@
 		<div class="row">
-			
-
 			<!-- Printables -->
 			<div class="col-sm-5 bootcards-list" id="list">
 				<div class="panel panel-default">
@@ -52,19 +50,19 @@
 			<!-- End Printables -->
 
 			<!-- Preview Box -->
-			<div class="col-sm-7" id="preview"> 
+			<div class="col-sm-7" id="preview" ng-show="printablesController.currentPrintable">
 				<div class="preview-box"> 
-					<div class="panel panel-default" style="height:500px;">
-						<div ng-show="printablesController.showControls" class="panel-heading">
+					<div class="panel panel-default">
+						<div class="panel-heading">
 							<i class="fa fa-2x fa-desktop pull-left"></i>
 							<h3 class="panel-title pull-left">Preview box for: {{printablesController.currentPrintable.name}}
 							</h3>
 							<span class="btn-group pull-right" >
-								<a class="btn btn-success btn-sm" ng-click="printablesController.setProjectImage(true)" ng-disabled="!printablesController.isProjectImage()">
+								<a class="btn btn-success btn-sm" ng-click="printablesController.setProjectImage(true)" ng-disabled="printablesController.projectImage || printablesController.errorMsg">
 									<b class="fa fa-sun-o"></b> 
 									<b class="cwh-text-indent">Project Image On Printer</b>
 								</a>
-								<a class="btn btn-danger btn-sm" ng-click="printablesController.setProjectImage(false)" ng-disabled="printablesController.isProjectImage()">
+								<a class="btn btn-danger btn-sm" ng-click="printablesController.setProjectImage(false)" ng-disabled="!printablesController.projectImage || printablesController.errorMsg">
 									<b class="cwh-text-indent">Disable</b>
 								</a>
 							</span>
@@ -74,9 +72,10 @@
 							</div>
 						</div>
 						<div class="panel-body">
-							<p> <b>{{printablesController.errorMsg}}</b> </p>
-							<!-- <i ng-show="printablesController.loading" class="fa fa-5x fa-refresh fa-spin"></i> -->
-							<img ng-show="printablesController.showControls" ng-src="{{printablesController.currentPreviewImg}}" handle-error class="img-responsive" style="width:100%; height:100%;"/>
+							<i class="pull-left fa fa-exclamation-triangle" ng-show="printablesController.errorMsg">
+								<b>{{printablesController.errorMsg}}</b>
+							</i>
+							<img ng-show="!printablesController.errorMsg" ng-src="{{printablesController.currentPreviewImg}}" handle-error class="img-responsive" style="width:100%; height:100%;"/>
 						</div>
 					</div>
 				</div>
@@ -84,7 +83,7 @@
 			<!-- End Preview Box -->
 
 			<!-- Customizer -->
-			<div class="col-sm-7 bootcards-list pull-right" id="controls" ng-show="printablesController.showControls">
+			<div class="col-sm-7 bootcards-list pull-right" id="controls" ng-show="!printablesController.errorMsg && printablesController.currentPrintable">
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<i class="fa fa-2x fa-magic pull-left"></i>
@@ -101,24 +100,61 @@
 					</div>
 					<div class="list-group">
 						<div class="list-group-item">
-							<i class="fa fa-2x fa-exchange fa-rotate-90 pull-left"></i>
-							<h4>Flip Image</h4>
+							<i class="fa fa-2x fa-asl-interpreting pull-left"></i>
+							<h4>Flip</h4>
 							<span class="btn-group" >
-								<a class="btn btn-danger btn-sm" ng-click="printablesController.changeFlip(1)" ng-disabled="!printablesController.isFlipped()">
-									<b class="fa fa-toggle-off"></b> 
-									<b class="cwh-text-indent">Off</b>
+								<a class="btn btn-success btn-sm" ng-click="printablesController.flipY()">
+									<b class="fa fa-exchange fa-rotate-90"></b> 
+									<b class="cwh-text-indent">Vertical</b>
 								</a>
-								<a class="btn btn-success btn-sm" ng-click="printablesController.changeFlip(-1)" ng-disabled="printablesController.isFlipped()">
-									<b class="fa fa-toggle-on"></b> 
-									<b class="cwh-text-indent">On</b>
+								<a class="btn btn-success btn-sm" ng-click="printablesController.flipX()">
+									<b class="fa fa-exchange"></b> 
+									<b class="cwh-text-indent">Horizontal</b>
 								</a>
 							</span>
 						</div>
 
 						<div class="list-group-item">
+				 			<i class="fa fa-2x fa-superscript pull-left"></i>						
+							<h4>Scale</h4>
+							<h6>Scale Y: {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</h6>
+							<span class="btn-group" >
+								<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeScale(0, -.5)">.5</b> 
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(0, -.1)">.1</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(0, -.01)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(0, .01)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(0, .1)">.1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeScale(0, .5)">.5</a>
+							</span>					
+							<h6>Scale X: {{printablesController.currentCustomizer.affineTransformSettings.xscale}}</h6>
+							<span class="btn-group" >
+								<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeScale(-.5, 0)">.5</b> 
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(-.1, 0)">.1</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(-.01, 0)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(.01, 0)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(.1, 0)">.1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeScale(.5, 0)">.5</a>
+							</span>
+						</div>
+
+						<div class="list-group-item">
+				 			<i class="fa fa-2x fa-repeat pull-left"></i>						
+							<h4>Rotation</h4>
+							<h6>Degrees: {{printablesController.currentCustomizer.affineTransformSettings.rotation}}</h6>
+							<span class="btn-group" >
+								<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeRotation(-.5)">.5</b> 
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeRotation(-.1)">.1</a>
+								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeRotation(-.01)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeRotation(.01)">.01</a>
+								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeRotation(.1)">.1</a>
+								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeRotation(.5)">.5</a>
+							</span>
+						</div>
+
+						<div class="list-group-item">
 							<i class="fa fa-2x fa-arrows pull-left"></i>
-							<h4>Positioning</h4>
-							<h6>Translate image on Y axis: {{printablesController.findCurrentCustomizer(printablesController.currentPrintable).affineTransformSettings.ytranslate}}</h6>
+							<h4>Position</h4>
+							<h6>Translate image on Y axis: {{printablesController.currentCustomizer.affineTransformSettings.ytranslate}}</h6>
 							<span class="btn-group" >
 								<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeTranslate(0, 100)"> 100</b> 
 								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeTranslate(0, 10)"> 10</a>
@@ -127,7 +163,7 @@
 								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeTranslate(0, -10)"> 10</a>
 								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeTranslate(0, -100)"> 100</a>
 							</span>					
-							<h6>Translate image on X axis: {{printablesController.findCurrentCustomizer(printablesController.currentPrintable).affineTransformSettings.xtranslate}}</h6>
+							<h6>Translate image on X axis: {{printablesController.currentCustomizer.affineTransformSettings.xtranslate}}</h6>
 							<span class="btn-group" >
 								<b class="btn btn-sm btn-danger fa fa-angle-double-left" ng-click="printablesController.changeTranslate(-100, 0)"> 100</b> 
 								<a class="btn btn-sm btn-danger fa fa-angle-left" ng-click="printablesController.changeTranslate(-10, 0)"> 10</a>
@@ -136,15 +172,12 @@
 								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeTranslate(10, 0)"> 10</a>
 								<a class="btn btn-sm btn-success fa fa-angle-double-right" ng-click="printablesController.changeTranslate(100, 0)">100</a>
 							</span>
-							<button class="btn btn-danger" ng-disabled="printablesController.isNotModified()" ng-click="printablesController.resetTranslation()">
+							<button class="btn btn-danger" ng-click="printablesController.resetTranslation()">
 								<!-- <i class="fa fa-undo pull-left"></i>  -->
 								<b class="fa fa-undo"></b> 
 								<span>Reset</span>
 							</button>
-						</div>	
-
-						
-
+						</div>
 					</div>
 					<!-- End list group -->
 					<div class="panel-footer">

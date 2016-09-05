@@ -153,10 +153,6 @@ public class PrintableService {
 	@POST
 	@Path("/print/{filename}")
 	public PrintJob print(@PathParam("filename")String fileName) {
-		return print(fileName, false);
-	}
-
-	public PrintJob print(String fileName, boolean useCustomizer) {
 		boolean atLeastOnePrinterStarted = false;
 		List<Printer> printers = PrinterService.INSTANCE.getPrinters();
 		for (Printer printer : printers) {
@@ -165,11 +161,7 @@ public class PrintableService {
 			}
 			if (printer.isStarted() && !printer.isPrintInProgress()) {
 				MachineResponse response;
-				if (useCustomizer) {
-					response = PrinterService.INSTANCE.print(fileName, printer.getName(), useCustomizer);
-				} else {
-					response = PrinterService.INSTANCE.print(fileName, printer.getName());				
-				}
+				response = PrinterService.INSTANCE.print(fileName, printer.getName());	
 
 				if (response.getResponse()) {
 					return PrintJobService.INSTANCE.getById(response.getMessage());

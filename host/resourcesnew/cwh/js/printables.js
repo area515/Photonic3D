@@ -3,107 +3,85 @@
 	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket) {
 		controller = this;
 		
+		this.externalState = Math.random();//This state has the potential to wipe out the entire cache of the underlying system
 		this.currentPrintable = null;
 		this.currentCustomizer = null;
+		this.currentPrinter = null;
 		this.supportedFileTypes = null;
-
 		this.currentPreviewImg = null;
-   
-		this.customizers = {};
-		this.errorMsg = "";
-
+		this.errorMsg = null;
 		this.projectImage = false;
-
+		
 		this.handlePreviewError = function handlePreviewError() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
-			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);		
-			$http.get("/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage).success(
+			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);
+			$http.get("/services/customizers/renderPreviewImage/" + controller.currentCustomizer.name + "?_=" + controller.currentCustomizer.cacheId).success(
 				function (data) {
-
+					controller.errorMsg = null;
 				}).error(
 				function (data, status, headers, config, statusText) {
-					// $scope.$emit("HTTPError", {status:status, statusText:data});
-					controller.errorMsg = "Error: " + data;
-					controller.showControls = false;
+					controller.errorMsg = data;
 				});
 		}
 
-		this.createTemplateCustomizer = function createTemplateCustomizer(printable) {
-			var customizerName = printable.name + "." + printable.extension;
-			var customizer = {
-				name: customizerName,
-				printerName: printable.printerName,
-				printableName: printable.name,
-				printableExtension: printable.extension,
-				supportsAffineTransformSettings: true,
-				affineTransformSettings: {
-					// affineTransformScriptCalculator: null,
-					xscale: 1,
-					yscale: 1,
-					xtranslate: 0,
-					ytranslate: 0
-				}
-			};
-			return customizer;
-		}
-
-		this.findCurrentCustomizer = function findCurrentCustomizer(printable) {
-			if (printable === null) {
-				return null;
-			}
-			var customizer = controller.customizers[printable.name + "." + printable.extension];
-			if (customizer === null || customizer === undefined) {
-				customizer = controller.createTemplateCustomizer(printable);
-				controller.customizers[printable.name + "." + printable.extension] = customizer;
-			} 
-			return customizer;
-		}
-
-		this.setPreview = function setPreview() {
-			if (controller.currentPrintable !== null && controller.currentPrintable !== undefined) {
-				var printableName = encodeURIComponent(controller.currentPrintable.name);
-				var printableExtension = encodeURIComponent(controller.currentPrintable.extension);	
-
-				var parameter = controller.findCurrentCustomizer(controller.currentPrintable);
-				$http.post("/services/customizers/upsertCustomizer", parameter).success(
-					function (data) {
-						controller.currentPreviewImg = "/services/customizers/renderFirstSliceImage/" + printableName + "." + printableExtension + "?projectImage=" + controller.projectImage;
-						var jsonString = JSON.stringify(parameter.affineTransformSettings).replace(/\"/g, "");
-						controller.currentPreviewImg += '&decache=' + encodeURIComponent(jsonString);
-						// console.log("reached success while rendering first slice image, browser side");
-					}).error(
-	    				function (data, status, headers, config, statusText) {
-	 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
-		        		});
-
+		this.saveCustomizer = function saveCustomizer() {
+			if (controller.currentPrintable != null && controller.currentCustomizer != null) {
+				$http.post("/services/customizers/upsert", controller.currentCustomizer).success(function (data) {
+						controller.currentPreviewImg = "/services/customizers/renderPreviewImage/" + controller.currentCustomizer.name + "?_=" + data.cacheId;
+					}).error(function (data, status, headers, config, statusText) {
+ 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
+	        		});
 			}
 		};
 
 		this.changeCurrentPrintable = function changeCurrentPrintable(newPrintable) {
+			var newCustomizerName = newPrintable.name + "." + newPrintable.extension + "." + controller.currentPrinter.configuration.name;
+			if (controller.currentPrintable != null && newPrintable.name == controller.currentPrintable.name && newPrintable.extension == controller.currentPrintable.extension) {
+				return;
+			}
+			
 			controller.currentPrintable = newPrintable;
-			controller.errorMsg = "";
-			this.showControls = true;
-			this.projectImage = false;
-			this.setPreview();		
+			controller.errorMsg = null;
+			$http.get("services/customizers/get/" + newCustomizerName + "?externalState=" + controller.externalState).success(
+					function (data) {
+						if (data == "") {
+							controller.currentCustomizer = {
+									name: newCustomizerName,
+									printerName: controller.currentPrinter.configuration.name,
+									printableName: newPrintable.name,
+									printableExtension: newPrintable.extension,
+									supportsAffineTransformSettings: true,
+									externalImageAffectingState:controller.externalState,
+									affineTransformSettings: {
+										xscale: 1,
+										yscale: 1,
+										rotation:0,
+										xtranslate: 0,
+										ytranslate: 0
+									}
+								};
+						} else {
+							controller.currentCustomizer = data;
+							controller.currentCustomizer.externalImageAffectingState = controller.externalState;
+						}
+						
+						//We probably don't need to save the customizer here but we do it in case the externalState changed
+						controller.saveCustomizer();
+					});
 		};
 
 		this.refreshPrintables = function refreshPrintables() {
 	  		$http.get("services/printables/list").success(
 	  			function (data) {
 	  				controller.printables = data;
-	  				$http.get("services/customizers/list").success(
-	  					function (data) {
-	  						controller.customizers = data;
-	  						var firstPrintable = controller.printables[0];
-	  						if (firstPrintable === undefined || firstPrintable === null) {
-	  							this.showControls = false;
-                 			} else {
-                 				if (controller.currentPrintable === undefined || controller.currentPrintable === null) {
-                 					controller.changeCurrentPrintable(firstPrintable); 		
-                 				}
-                 			}
-	  					});
 	  			})
+		};
+		
+		this.refreshCurrentPrinter = function refreshCurrentPrinter() {
+			$http.get("services/printers/getFirstAvailablePrinter").success(
+	  			function (data) {
+	  				controller.currentPrinter = data;
+	  			});
 		};
 
 		this.hostSocket = cwhWebSocket.connect("services/hostNotification", $scope).onJsonContent(
@@ -119,68 +97,70 @@
 		}
 
 		this.printWithCustomizer = function printWithCustomizer() {
-			// TODO: API Call to CustomizerService.print() and handle printing w/ customizer
-			var printableName = encodeURIComponent(controller.currentPrintable.name);
-			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);
-	        $http.post("/services/customizers/print/" + printableName + "." + printableExtension).success(
+			var customizerName = encodeURIComponent(controller.currentCustomizer.name);
+	        $http.post("/services/printers/startJob/" + customizerName).success(
 	        		function (data) {
-	        			//controller.refreshPrintables();
-	        			//$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrintables, afterErrorFunction:null});
+	        	        $location.path("/printJobsPage")
 	        		}).error(
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		})
-	        $location.path("/printJobsPage")
 		}
 
-		this.changeFlip = function changeFlip(y) {
-			var currentCustomizer = controller.findCurrentCustomizer(controller.currentPrintable);
-			if (currentCustomizer !== null) {
-				//customizer returns a json object. js side only knows api
-				var affineTransformSettings = currentCustomizer.affineTransformSettings;
-				affineTransformSettings.yscale = y;
+		this.flipY = function flipY() {
+			var incrementor = controller.currentPrinter.configuration.machineConfig.MonitorDriverConfig.DLP_Y_Res;
+			if (controller.currentCustomizer.affineTransformSettings.yscale < 0) {
+				incrementor *= -1;
 			}
-			this.setPreview();
+			controller.currentCustomizer.affineTransformSettings.ytranslate += incrementor;			
+			controller.currentCustomizer.affineTransformSettings.yscale = -controller.currentCustomizer.affineTransformSettings.yscale;
+			this.saveCustomizer();
 		}
-
+		
+		this.flipX = function flipX() {
+			var incrementor = controller.currentPrinter.configuration.machineConfig.MonitorDriverConfig.DLP_X_Res;
+			if (controller.currentCustomizer.affineTransformSettings.xscale < 0) {
+				incrementor *= -1;
+			}
+			controller.currentCustomizer.affineTransformSettings.xtranslate += incrementor;			
+			controller.currentCustomizer.affineTransformSettings.xscale = -controller.currentCustomizer.affineTransformSettings.xscale;
+			this.saveCustomizer();
+		}
+		
+		this.changeScale = function changeScale(x, y) {	
+			controller.currentCustomizer.affineTransformSettings.xscale += x;
+			controller.currentCustomizer.affineTransformSettings.yscale += y;
+			if (controller.currentCustomizer.affineTransformSettings.xscale == 0) {
+				controller.currentCustomizer.affineTransformSettings.xscale = .01;
+			}
+			if (controller.currentCustomizer.affineTransformSettings.yscale == 0) {
+				controller.currentCustomizer.affineTransformSettings.yscale = .01;
+			}
+			this.saveCustomizer();
+		}
+		
+		this.changeRotation = function changeRotation(rotation) {
+			controller.currentCustomizer.affineTransformSettings.rotation += rotation;
+			this.saveCustomizer();
+		}
+		
 		this.setProjectImage = function setProjectImage(projectImage) {
 			controller.projectImage = projectImage;
-			controller.setPreview();
-		}
-
-		this.isProjectImage = function isProjectImage() {
-			return !(controller.projectImage);
-		}
-
-		this.isFlipped = function isFlipped() {
-			if (controller.currentPrintable !== null) {
-			var currentCustomizer = controller.findCurrentCustomizer(controller.currentPrintable);
-			var affineTransformSettings = currentCustomizer.affineTransformSettings;
-			if (affineTransformSettings.yscale == -1) {
-				return true;
-			}
-			return false;				
+			if (projectImage) {
+				$http.get("services/customizers/projectCustomizerOnPrinter/" + encodeURIComponent(controller.currentCustomizer.name));
+			} else {
+				$http.get("services/printers/showBlankScreen/" + encodeURIComponent(controller.currentPrinter.configuration.name));
 			}
 		}
 
 		this.resetTranslation = function resetTranslation() {
-			var currentCustomizer = controller.findCurrentCustomizer(controller.currentPrintable);
-			var affineTransformSettings = currentCustomizer.affineTransformSettings;
+			var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
 			affineTransformSettings.xtranslate = 0;
 			affineTransformSettings.ytranslate = 0;
-			this.setPreview();
-		}
-
-		this.isNotModified = function isNotModified() {
-			if (controller.currentPrintable !== null) {
-			var currentCustomizer = controller.findCurrentCustomizer(controller.currentPrintable);
-			var affineTransformSettings = currentCustomizer.affineTransformSettings;
-			if (affineTransformSettings.xtranslate !== 0 || affineTransformSettings.ytranslate !== 0) {
-				return false;
-			}					
-			return true;				
-			}
-
+			affineTransformSettings.xscale = 1.0;
+			affineTransformSettings.yscale = 1.0;
+			affineTransformSettings.rotation = 0;
+			this.saveCustomizer();
 		}
 
 		this.goToSlacer = function goToSlacer() {
@@ -188,53 +168,42 @@
 		}
 
 		this.changeTranslate = function changeTranslate(x, y) {
-			var currentCustomizer = controller.findCurrentCustomizer(controller.currentPrintable);
-			var affineTransformSettings = currentCustomizer.affineTransformSettings;
+			var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
 
-			affineTransformSettings.xtranslate += affineTransformSettings.xscale * x;
-			affineTransformSettings.ytranslate += affineTransformSettings.yscale * y;
-			this.setPreview();
+			affineTransformSettings.xtranslate += x;
+			affineTransformSettings.ytranslate += y;
+			this.saveCustomizer();
 		}
 
 		this.printPrintable = function printPrintable() {
-			var printableName = encodeURIComponent(controller.currentPrintable.name);
-			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);
-	        $http.post("/services/printables/print/" + printableName + "." + printableExtension).success(
+			var printableName = encodeURIComponent(controller.currentPrintable.name + "." + controller.currentPrintable.extension);
+	        $http.post("/services/printables/print/" + printableName).success(
 	        		function (data) {
-	        			// controller.refreshPrintables();
-	        			//$scope.$emit("MachineResponse", {machineResponse: data, successFunction:refreshPrintables, afterErrorFunction:null});
+	        			$location.path("/printJobsPage");
 	        		}).error(
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		})
-			$location.path("/printJobsPage");
 		};
+		
 		this.deletePrintable = function deletePrintable() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
 			var printableExtension = encodeURIComponent(controller.currentPrintable.extension);
 			var fileName = printableName + "." + printableExtension;
-	        $http.delete("/services/printables/delete/" + fileName).success(
-	        		function (data) {
-	        			$http.delete("services/customizers/removeCustomizer/" + fileName).success(
-	        				function (data) {
-	        			        delete controller.customizers[printableName + "." + printableExtension];			
+			var customizerName = encodeURIComponent(controller.currentPrintable.name);
+	        $http.delete("/services/printables/delete/" + fileName).success(function (data) {
+	        			$http.delete("services/customizers/delete/" + customizerName).success(function (data) {			
 	        				    controller.refreshPrintables();
 	        					controller.currentPrintable = null;
-	        				}).error(
-	        				function (data, status, headers, config, statusText) {
-	        					$scope.$emit("HTTPError", {status:status, statusText:data});
-	        				})
-	        			//$scope.$emit("MachineResponse", {machineResponse: data, successFunction:null, afterErrorFunction:null});
-	        		}).error(
-    				function (data, status, headers, config, statusText) {
- 	        			$scope.$emit("HTTPError", {status:status, statusText:data});
-	        		})
-
-
-	        this.refreshPrintables();
+	        					controller.currentCustomizer = null;
+        				}).error(function (data, status, headers, config, statusText) {
+        					$scope.$emit("HTTPError", {status:status, statusText:data});
+        				})
+    		}).error(function (data, status, headers, config, statusText) {
+    			$scope.$emit("HTTPError", {status:status, statusText:data});
+    		})
 	    };
-
-
+	    
 		//TODO: When we get an upload complete message, we need to refresh file list...
 		this.showUpload = function showUpload() {
 			var fileChosenModal = $uibModal.open({
@@ -249,11 +218,10 @@
 		        	getRestfulURLUploadURL: function () {return function (filename, url) {return "services/printables/uploadviaurl/" + encodeURIComponent(filename) + "/" + encodeURIComponent(url);}}
 		        }
 			});
-			this.refreshPrintables();
 			
-			//fileChosenModal.result.then(function (savedPrinter) {$scope.savePrinter(savedPrinter, newPrinter)});
+			fileChosenModal.result.then(function (uploadedPrintable) {this.refreshPrintables()});
 		};
-		
+	  			
 		this.getPrintableIconClass = function getPrintableIconClass(printable) {
 			if (printable.printFileProcessor.friendlyName === 'Image') {
 				return "fa-photo";
@@ -277,10 +245,12 @@
 				return "fa-puzzle-piece";
 			}
 			return "fa-question-circle";
-		};
+		};//*/
 
 		this.refreshPrintables();
+		this.refreshCurrentPrinter();
 	}]);
+
 
 	cwhApp.directive('handleError', function() {
 			return {
@@ -295,6 +265,4 @@
 				}
 			};
 		});
-
-
 })();

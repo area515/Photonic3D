@@ -83,11 +83,7 @@ public class PrintJobManager {
 		return new ArrayList<PrintJob>(printJobsByJobId.values());
 	}
 	
-	public PrintJob createJob(File job, final Printer printer) throws JobManagerException, AlreadyAssignedException  {
-		return createJob(job, printer, false);
-	}
-
-	public PrintJob createJob(File job, final Printer printer, boolean useCustomizer) throws JobManagerException, AlreadyAssignedException {
+	public PrintJob createJob(File job, final Printer printer, Customizer customizer) throws JobManagerException, AlreadyAssignedException  {
 		final PrintJob newJob = new PrintJob(job);
 		PrintJob otherJob = printJobsByJobId.putIfAbsent(newJob.getId(), newJob);
 
@@ -105,12 +101,12 @@ public class PrintJobManager {
 			throw new JobManagerException("The selected job is not a file");
 		}
 
-		if (useCustomizer) {
-			newJob.setCustomizer(CustomizerService.INSTANCE.getCustomizer(job.getName()));
+		if (customizer != null) {
+			newJob.setCustomizer(CustomizerService.INSTANCE.getCustomizer(job.getName(), customizer.getExternalImageAffectingState()));
 			logger.info(newJob.getCustomizer());
 		}
 		
-		//Why are these being set?
+		//TODO: These should be set by customizer
 		newJob.setCurrentSlice(0);
 		newJob.setTotalSlices(0);
 

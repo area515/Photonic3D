@@ -318,7 +318,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		return output;
 	}
 	
-	public BufferedImage buildPreviewSlice(Customizer customizer, File jobFile, Previewable previewable, boolean projectImage) throws NoPrinterFoundException, SliceHandlingException {
+	public BufferedImage buildPreviewSlice(Customizer customizer, File jobFile, Previewable previewable) throws NoPrinterFoundException, SliceHandlingException {
 		//find the first activePrinter
 		String printerName = customizer.getPrinterName();
 		Printer activePrinter = null;
@@ -347,9 +347,9 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			
 			//instantiate new dataaid
 			DataAid dataAid = initializeDataAid(printJob);
-			BufferedImage image;
+			BufferedImage image = customizer.getOrigSliceCache();
 			
-			if (customizer.getOrigSliceCache() == null) {
+			if (image == null) {
 				dataAid.performTransforms = false;
 				image = previewable.renderPreviewImage(dataAid);
 				dataAid.performTransforms = true;
@@ -359,13 +359,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 				}
 			}
 			
-			image = applyImageTransforms(dataAid, customizer.getOrigSliceCache(), customizer.getOrigSliceCache().getWidth(), customizer.getOrigSliceCache().getHeight());
-			if (projectImage) {
-				activePrinter.showImage(image);
-			} else {
-				activePrinter.showBlankImage();
-			}
-
+			image = applyImageTransforms(dataAid, image, image.getWidth(), image.getHeight());
 			return image;
 		} catch (InappropriateDeviceException | ScriptException e) {
 			throw new SliceHandlingException(e);

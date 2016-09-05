@@ -171,14 +171,14 @@ public class PrinterService {
 	@Path("get/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Printer getPrinter(@PathParam("printername") String printerName) throws InappropriateDeviceException {
-	Printer printer = PrinterManager.Instance().getPrinter(printerName);
-	if (printer == null) {
-		PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
-		if (currentConfiguration == null) {
-			throw new InappropriateDeviceException("No printer with that name:" + printerName);
+		Printer printer = PrinterManager.Instance().getPrinter(printerName);
+		if (printer == null) {
+			PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
+			if (currentConfiguration == null) {
+				throw new InappropriateDeviceException("No printer with that name:" + printerName);
 			}
-			
-			printer = new Printer(currentConfiguration);
+				
+				printer = new Printer(currentConfiguration);
 		}
 		 
 		return printer;
@@ -779,40 +779,47 @@ public class PrinterService {
 	@Path("startJob/{fileName}/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MachineResponse print(@PathParam("fileName") String fileName, @PathParam("printername") String printername) {
-		return print(fileName, printername, false);
+    	return startPrintJob(printername, fileName, null);
+    }
+    
+    @ApiOperation(value="Attempt to start a print by specifying the name of the Customizer. ")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@POST
+	@Path("startJob/{customizerName}")
+    @Produces(MediaType.APPLICATION_JSON)
+	public MachineResponse printWithCustomizer(@PathParam("customizerName") String customizerName) {
+    	Customizer customizer = CustomizerService.INSTANCE.getCustomizer(customizerName, null);
+    	return startPrintJob(customizer.getPrinterName(), customizer.getPrintableName() + "." + customizer.getPrintableExtension(), customizer);
 	}
 
-	public MachineResponse print(String fileName, String printername, boolean useCustomizer) {
-		Printer printer = PrinterManager.Instance().getPrinter(printername);
+    public MachineResponse startPrintJob(String printerName, String printableName, Customizer customizer) {
+		Printer printer = PrinterManager.Instance().getPrinter(printerName);
 		if (printer == null) {
-			return new MachineResponse("start", false, "Printer not started:" + printername);
+			return new MachineResponse("start", false, "Printer not started:" + printerName);
 		}
 		
 		//Printer must have been calibrated before it can print
 		if (HostProperties.Instance().isForceCalibrationOnFirstUse() && !printer.getConfiguration().isCalibrated()) {
-		    logger.error("Printer:{} can't print because it wasn't calibrated", printername);
-			return new MachineResponse("startPrinter", false, "Printer:" + printername + " must be calibrated before it's first use.");
+		    logger.error("Printer:{} can't print because it wasn't calibrated", printerName);
+			return new MachineResponse("startPrinter", false, "Printer:" + printerName + " must be calibrated before it's first use.");
 		}
 		
 		// Create job
-		File selectedFile = new File(HostProperties.Instance().getUploadDir(), fileName); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
+		File selectedFile = new File(HostProperties.Instance().getUploadDir(), printableName); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
 		
 		// Delete and Create handled in jobManager
 		PrintJob printJob = null;
 		try {
-			if (useCustomizer) {
-				printJob = PrintJobManager.Instance().createJob(selectedFile, printer, useCustomizer);
-			} else {
-				printJob = PrintJobManager.Instance().createJob(selectedFile, printer);				
-			}
-
+			printJob = PrintJobManager.Instance().createJob(selectedFile, printer, customizer);
 			return new MachineResponse("start", true, printJob.getId() + "");
 		} catch (JobManagerException | AlreadyAssignedException e) {
-		    logger.error("Error starting job:" + fileName + " printer:" + printername, e);
+		    logger.error("Error starting job:" + printableName + " printer:" + printerName, e);
 			return new MachineResponse("start", false, e.getMessage());
 		}		
 	}
-	
+
 	private List<ChartData> getChartData(String seriesString) {
 		List<ChartData> seriesData = new ArrayList<ChartData>();
 		Matcher matcher = Pattern.compile("([^\\(]+)\\(([^\\)]+)\\)").matcher(seriesString);
