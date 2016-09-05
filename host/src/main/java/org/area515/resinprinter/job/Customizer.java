@@ -102,9 +102,9 @@ public class Customizer {
 
 		public AffineTransform createAffineTransform(double width, double height) {
 			AffineTransform affineTransform = new AffineTransform();
+			affineTransform.translate(this.xTranslate, this.yTranslate);
 			affineTransform.shear(this.xShear, this.yShear);
 			affineTransform.rotate(Math.toRadians(this.rotation), width/2, height/2);
-			affineTransform.translate(this.xTranslate, this.yTranslate);
 			affineTransform.scale(this.xScale, this.yScale);
 			return affineTransform;
 		} 
