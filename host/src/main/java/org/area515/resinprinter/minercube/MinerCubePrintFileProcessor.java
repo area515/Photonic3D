@@ -155,4 +155,9 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 	public String getFriendlyName() {
 		return "Maze Cube";
 	}
+
+	@Override
+	public boolean isThreeDimensionalGeometryAvailable() {
+		return false;
+	}
 }

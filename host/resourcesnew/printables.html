@@ -108,38 +108,55 @@
 							<i class="fa fa-2x fa-asl-interpreting pull-left"></i>
 							<h4>Flip</h4>
 							<span class="btn-group" >
-								<a class="btn btn-success btn-sm" ng-click="printablesController.flipY()">
+								<a class="btn btn-success btn-sm" ng-model="printablesController.currentCustomizer.affineTransformSettings.yflip" uib-btn-checkbox ng-click="printablesController.saveCustomizer()">
 									<b class="fa fa-exchange fa-rotate-90"></b> 
 									<b class="cwh-text-indent">Vertical</b>
 								</a>
-								<a class="btn btn-success btn-sm" ng-click="printablesController.flipX()">
+								<a class="btn btn-success btn-sm" ng-model="printablesController.currentCustomizer.affineTransformSettings.xflip" uib-btn-checkbox ng-click="printablesController.saveCustomizer()">
 									<b class="fa fa-exchange"></b> 
 									<b class="cwh-text-indent">Horizontal</b>
 								</a>
+								<!--<label class="btn btn-primary fa fa-exchange fa-rotate-90" ng-model="printablesController.currentCustomizer.affineTransformSettings.yflip" uib-btn-checkbox ng-click="printablesController.saveCustomizer()">Vertical</label>
+	        					<label class="btn btn-primary fa fa-exchange" ng-model="printablesController.currentCustomizer.affineTransformSettings.xflip" uib-btn-checkbox ng-click="printablesController.saveCustomizer()">Horizontal</label>-->
 							</span>
 						</div>
-
+						
 						<div class="list-group-item">
 				 			<i class="fa fa-2x fa-superscript pull-left"></i>						
 							<h4>Scale</h4>
-							<h6>Scale Y: {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</h6>
-							<span class="btn-group" >
-								<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeScale(0, -.5)">.5</b> 
-								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(0, -.1)">.1</a>
-								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(0, -.01)">.01</a>
-								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(0, .01)">.01</a>
-								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(0, .1)">.1</a>
-								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeScale(0, .5)">.5</a>
-							</span>					
-							<h6>Scale X: {{printablesController.currentCustomizer.affineTransformSettings.xscale}}</h6>
-							<span class="btn-group" >
-								<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeScale(-.5, 0)">.5</b> 
-								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(-.1, 0)">.1</a>
-								<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(-.01, 0)">.01</a>
-								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(.01, 0)">.01</a>
-								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(.1, 0)">.1</a>
-								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeScale(.5, 0)">.5</a>
-							</span>
+							<div ng-show="!printablesController.currentPrintable.printFileProcessor.threeDimensionalGeometryAvailable">
+								<h6>Scale Y: {{printablesController.currentCustomizer.affineTransformSettings.yscale}}</h6>
+								<span class="btn-group" >
+									<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeScale(0, -.5, 0)">.5</b> 
+									<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(0, -.1, 0)">.1</a>
+									<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(0, -.01, 0)">.01</a>
+									<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(0, .01, 0)">.01</a>
+									<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(0, .1, 0)">.1</a>
+									<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeScale(0, .5, 0)">.5</a>
+								</span>	
+							</div>
+							<div ng-show="!printablesController.currentPrintable.printFileProcessor.threeDimensionalGeometryAvailable">
+								<h6>Scale X: {{printablesController.currentCustomizer.affineTransformSettings.xscale}}</h6>
+								<span class="btn-group" >
+									<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeScale(-.5, 0, 0)">.5</b> 
+									<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(-.1, 0, 0)">.1</a>
+									<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(-.01, 0, 0)">.01</a>
+									<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(.01, 0, 0)">.01</a>
+									<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(.1, 0, 0)">.1</a>
+									<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeScale(.5, 0, 0)">.5</a>
+								</span>
+							</div>
+							<div ng-show="printablesController.currentPrintable.printFileProcessor.threeDimensionalGeometryAvailable">
+								<h6>3d Scale: {{printablesController.currentCustomizer.zscale}}</h6>
+								<span class="btn-group" >
+									<b class="btn btn-sm btn-danger fa fa-angle-double-down" ng-click="printablesController.changeScale(-.5, -.5, -.5)">.5</b> 
+									<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(-.1, -.1, -.1)">.1</a>
+									<a class="btn btn-sm btn-danger fa fa-angle-down" ng-click="printablesController.changeScale(-.01, -.01, -.01)">.01</a>
+									<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(.01, .01, .01)">.01</a>
+									<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeScale(.1, .1, .1)">.1</a>
+									<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeScale(.5, .5, .5)">.5</a>
+								</span>
+							</div>
 						</div>
 
 						<div class="list-group-item">

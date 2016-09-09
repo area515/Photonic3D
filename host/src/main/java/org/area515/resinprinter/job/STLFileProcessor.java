@@ -3,7 +3,6 @@ package org.area515.resinprinter.job;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,27 +11,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
-import java.io.*;
 
 import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.SliceHandlingException;
-import org.area515.resinprinter.exception.NoPrinterFoundException;
-import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
-import org.area515.resinprinter.job.render.CurrentImageRenderer;
 import org.area515.resinprinter.job.render.RenderingFileData;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.SlicingProfile;
-import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.CloseOffMend;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.resinprinter.slice.ZSlicer;
 import org.area515.resinprinter.stl.Triangle3d;
-import org.area515.resinprinter.services.PrinterService;
 import org.area515.util.Log4jTimer;
 
 public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> implements Previewable {
@@ -88,11 +80,17 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			DataAid dataAid = initializeDataAid(printJob);
 			RenderingFileData stlData = new RenderingFileData();
 			dataByPrintJob.put(printJob, stlData);
-			
+			double zScale = 1.0;
+			Customizer customizer = dataAid.printJob.getCustomizer();
+			if (customizer != null) {
+				if (customizer.getZScale() != null) {
+					zScale = customizer.getZScale();
+				}
+			}
 			boolean overrideNormals = dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule() == null?false:dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule();
-			stlData.slicer = new ZSlicer(1, 
-					dataAid.xPixelsPerMM, 
-					dataAid.yPixelsPerMM, 
+			stlData.slicer = new ZSlicer(zScale, 
+					dataAid.xPixelsPerMM / zScale, 
+					dataAid.yPixelsPerMM / zScale, 
 					dataAid.sliceHeight, 
 					dataAid.sliceHeight / 2, 
 					true, 
@@ -225,5 +223,10 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		}
 		
 		return new HashSet<>(data.slicer.getStlErrors());
+	}
+
+	@Override
+	public boolean isThreeDimensionalGeometryAvailable() {
+		return true;
 	}
 }

@@ -98,7 +98,7 @@ public class CustomizerService {
 		customizersByName.invalidate(customizerName);
 	}
 
-	@ApiOperation(value="Displays a slice of a printable based on the Customizer to the printer/projector light source")
+	@ApiOperation(value="Displays a slice of a printable based on the Customizer to the printer light source")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
         @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})

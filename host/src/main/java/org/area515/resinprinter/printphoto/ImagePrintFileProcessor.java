@@ -143,4 +143,9 @@ public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProc
 			throw new SliceHandlingException(e);
 		}
 	}
+
+	@Override
+	public boolean isThreeDimensionalGeometryAvailable() {
+		return false;
+	}
 }

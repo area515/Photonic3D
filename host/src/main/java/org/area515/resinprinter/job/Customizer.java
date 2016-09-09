@@ -22,6 +22,7 @@ public class Customizer {
 	private AffineTransformSettings affineTransformSettings;//null means it's not used event if this customizer does support the AffineTransform
 	private String externalImageAffectingState;
 	private SoftReference<BufferedImage> origSliceCache = null;
+	private Double zScale = 1.0;
 	private String cacheId;
 	
 	public static class AffineTransformSettings {
@@ -32,6 +33,8 @@ public class Customizer {
 		private Double xShear = 0.0;
 		private Double yShear = 0.0;
 		private Double rotation = 0.0;
+		private Boolean xFlip = false;
+		private Boolean yFlip = false;
 		private String affineTransformScriptCalculator;//Ignore this for now
 		
 		@JsonIgnore
@@ -72,6 +75,20 @@ public class Customizer {
 			this.yScale = yScale;
 		}
 		
+		public Boolean getXFlip() {
+			return xFlip;
+		}
+		public void setXFlip(Boolean xFlip) {
+			this.xFlip = xFlip;
+		}
+		
+		public Boolean getYFlip() {
+			return yFlip;
+		}
+		public void setYFlip(Boolean yFlip) {
+			this.yFlip = yFlip;
+		}
+		
 		public Double getRotation() {
 			return rotation;
 		}
@@ -101,11 +118,21 @@ public class Customizer {
 		}
 
 		public AffineTransform createAffineTransform(double width, double height) {
+			AffineTransform firstTransform = null;
+			if (this.xFlip || this.yFlip) {
+				firstTransform = new AffineTransform();
+				firstTransform.translate(xFlip?width:0, yFlip?height:0);
+				firstTransform.scale(xFlip?-1:1, yFlip?-1:1);
+			}
+			
 			AffineTransform affineTransform = new AffineTransform();
 			affineTransform.translate(this.xTranslate, this.yTranslate);
 			affineTransform.shear(this.xShear, this.yShear);
 			affineTransform.rotate(Math.toRadians(this.rotation), width/2, height/2);
 			affineTransform.scale(this.xScale, this.yScale);
+			if (firstTransform != null) {
+				affineTransform.concatenate(firstTransform);
+			}
 			return affineTransform;
 		} 
 		
@@ -130,6 +157,13 @@ public class Customizer {
 		this.name = name;
 	}
 	
+	public Double getZScale() {
+		return zScale;
+	}
+	public void setZScale(Double zScale) {
+		this.zScale = zScale;
+	}
+
 	public String getPrinterName() {
 		return printerName;
 	}

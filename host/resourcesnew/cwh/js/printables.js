@@ -52,7 +52,10 @@
 									printableExtension: newPrintable.extension,
 									supportsAffineTransformSettings: true,
 									externalImageAffectingState:controller.externalState,
+									zscale: 1,
 									affineTransformSettings: {
+										yflip: false,
+										xflip: false,
 										xscale: 1,
 										yscale: 1,
 										rotation:0,
@@ -108,8 +111,8 @@
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		})
 		}
-
-		this.flipY = function flipY() {
+		
+		/*this.flipY = function flipY() {
 			var incrementor = controller.currentPrinter.configuration.machineConfig.MonitorDriverConfig.DLP_Y_Res;
 			if (controller.currentCustomizer.affineTransformSettings.yscale < 0) {
 				incrementor *= -1;
@@ -127,16 +130,20 @@
 			controller.currentCustomizer.affineTransformSettings.xtranslate += incrementor;			
 			controller.currentCustomizer.affineTransformSettings.xscale = -controller.currentCustomizer.affineTransformSettings.xscale;
 			this.saveCustomizer();
-		}
+		}*/
 		
-		this.changeScale = function changeScale(x, y) {	
+		this.changeScale = function changeScale(x, y, z) {	
 			controller.currentCustomizer.affineTransformSettings.xscale += x;
 			controller.currentCustomizer.affineTransformSettings.yscale += y;
-			if (controller.currentCustomizer.affineTransformSettings.xscale == 0) {
+			controller.currentCustomizer.zscale += z;
+			if (controller.currentCustomizer.affineTransformSettings.xscale <= 0) {
 				controller.currentCustomizer.affineTransformSettings.xscale = .01;
 			}
-			if (controller.currentCustomizer.affineTransformSettings.yscale == 0) {
+			if (controller.currentCustomizer.affineTransformSettings.yscale <= 0) {
 				controller.currentCustomizer.affineTransformSettings.yscale = .01;
+			}
+			if (controller.currentCustomizer.zscale <= 0) {
+				controller.currentCustomizer.zscale = .01;
 			}
 			this.saveCustomizer();
 		}
@@ -162,6 +169,8 @@
 		}
 
 		this.resetTranslation = function resetTranslation() {
+			controller.currentCustomizer.zscale = 1.0;
+			
 			var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
 			affineTransformSettings.xtranslate = 0;
 			affineTransformSettings.ytranslate = 0;
@@ -169,6 +178,8 @@
 			affineTransformSettings.yscale = 1.0;
 			affineTransformSettings.xshear = 0.0;
 			affineTransformSettings.yshear = 0.0;
+			affineTransformSettings.xflip = false;
+			affineTransformSettings.yflip = false;
 			affineTransformSettings.rotation = 0;
 			this.saveCustomizer();
 		}

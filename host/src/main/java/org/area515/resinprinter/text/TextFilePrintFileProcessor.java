@@ -135,4 +135,9 @@ public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileP
 			throw new SliceHandlingException(e);
 		}
 	}
+
+	@Override
+	public boolean isThreeDimensionalGeometryAvailable() {
+		return false;
+	}
 }

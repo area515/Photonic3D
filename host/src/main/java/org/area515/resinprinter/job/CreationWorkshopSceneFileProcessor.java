@@ -373,4 +373,9 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	public String getFriendlyName() {
 		return "Creation Workshop Scene";
 	}
+
+	@Override
+	public boolean isThreeDimensionalGeometryAvailable() {
+		return false;
+	}
 }
