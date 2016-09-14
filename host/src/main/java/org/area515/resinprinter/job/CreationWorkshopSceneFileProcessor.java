@@ -1,6 +1,5 @@
 package org.area515.resinprinter.job;
 
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,6 +26,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
@@ -64,9 +64,14 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	}
 	
 	@Override
+	public DataAid createDataAid(PrintJob printJob) throws JobManagerException {
+		return new DataAid(printJob);//TODO: This should use RenderingCache some day
+	}
+
+	@Override
 	public JobStatus processFile(final PrintJob printJob) throws Exception {
 		File gCodeFile = findGcodeFile(printJob.getJobFile());
-		DataAid aid = initializeDataAid(printJob);
+		DataAid aid = initializeJobCacheWithDataAid(printJob);
 		
 		Printer printer = printJob.getPrinter();
 		BufferedReader stream = null;
@@ -117,7 +122,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 							String imageFilename = FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png";
 							File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
 							BufferedImage newImage = ImageIO.read(imageFile);
-							newImage = applyImageTransforms(aid, newImage, newImage.getWidth(), newImage.getHeight());
+							newImage = applyImageTransforms(aid, newImage);
 							// applyBulbMask(aid, (Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
 							currentlyDisplayedImage.put(printJob, newImage);
 							logger.info("Show picture: {}", imageFilename);

@@ -4,35 +4,25 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
 
 import javax.script.ScriptException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.SliceHandlingException;
-import org.area515.resinprinter.exception.NoPrinterFoundException;
-import org.apache.commons.io.FileUtils;
-import org.area515.resinprinter.job.render.CurrentImageRenderer;
-import org.area515.resinprinter.job.render.StandaloneImageData;
-import org.area515.resinprinter.job.render.StandaloneImageRenderer;
-import org.area515.resinprinter.printer.SlicingProfile;
-import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.job.render.RenderedData;
 import org.area515.resinprinter.server.Main;
-import org.area515.resinprinter.services.PrinterService;
+import org.area515.resinprinter.twodim.SimpleImageRenderer;
 
 import se.sawano.java.text.AlphanumericComparator;
 
 public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor implements Previewable {
 	private static final Logger logger = LogManager.getLogger();
-
-	private Map<PrintJob, StandaloneImageData> currentImageByJob = new HashMap<>();
 
 	@Override
 	public String[] getFileExtensions() {
@@ -52,36 +42,9 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 	}
 	
 	@Override
-	public Double getBuildAreaMM(PrintJob printJob) {
-		StandaloneImageData curSliceImg = currentImageByJob.get(printJob);
-		if (curSliceImg == null) {
-			return null;
-		}
-		
-		SlicingProfile slicingProfile = printJob.getPrinter().getConfiguration().getSlicingProfile();
-		return curSliceImg.getArea() / (slicingProfile.getDotsPermmX() * slicingProfile.getDotsPermmY());
-	}
-	
-	@Override
-	public BufferedImage getCurrentImage(PrintJob printJob) {
-		StandaloneImageData data = currentImageByJob.get(printJob);
-		if (data == null) {
-			return null;
-		}
-		
-		synchronized (data) {
-			BufferedImage currentImage = data.getImage();
-			if (currentImage == null)
-				return null;
-			
-			return currentImage.getSubimage(0, 0, currentImage.getWidth(), currentImage.getHeight());
-		}
-	}
-
-	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
 		try {
-			DataAid dataAid = initializeDataAid(printJob);
+			DataAid dataAid = initializeJobCacheWithDataAid(printJob);
 	
 			SortedMap<String, File> imageFiles = findImages(printJob.getJobFile());
 			
@@ -95,8 +58,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 			if (imgIter.hasNext()) {
 				File imageFile = imgIter.next();
 				
-				Future<StandaloneImageData> prepareImage =
-						Main.GLOBAL_EXECUTOR.submit(new StandaloneImageRenderer(dataAid, imageFile, this));
+				Future<RenderedData> prepareImage = Main.GLOBAL_EXECUTOR.submit(new SimpleImageRenderer(dataAid, this, imageFile));
 				boolean slicePending = true;
 				
 				do {
@@ -106,28 +68,14 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 						return status;
 					}
 					
-					StandaloneImageData oldImage = currentImageByJob.get(printJob);
-					StandaloneImageData imageData = prepareImage.get();
-					currentImageByJob.put(printJob, imageData);
-					
-					if (oldImage != null) {
-						synchronized (oldImage) {
-							oldImage.getImage().flush();
-						}
-					}
-					
+					RenderedData imageData = prepareImage.get();
 					if (imgIter.hasNext()) {
 						imageFile = imgIter.next();
-						prepareImage = Main.GLOBAL_EXECUTOR.submit(new StandaloneImageRenderer(dataAid, imageFile, this));
+						prepareImage = Main.GLOBAL_EXECUTOR.submit(new SimpleImageRenderer(dataAid, this, imageFile));
 					} else {
 						slicePending = false;
 					}
 
-					//Start the exposure timer
-					//logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
-					
-					//dataAid.printer.showImage(imageData.getImage());
-					
 					status = printImageAndPerformPostProcessing(dataAid, imageData.getImage());
 
 					if (status != null) {
@@ -138,7 +86,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 			
 			return performFooter(dataAid);
 		} finally {
-			currentImageByJob.remove(printJob);
+			clearDataAid(printJob);
 		}
 	}
 
@@ -161,8 +109,8 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 			}
 			File imageFile = imgIter.next();
 			
-			StandaloneImageRenderer renderer = new StandaloneImageRenderer(dataAid, imageFile, this);
-			StandaloneImageData stdImage = renderer.call();
+			SimpleImageRenderer renderer = new SimpleImageRenderer(dataAid, this, imageFile);
+			RenderedData stdImage = renderer.call();
 			return stdImage.getImage();
 		} catch (IOException | ScriptException | JobManagerException e) {
 			throw new SliceHandlingException(e);

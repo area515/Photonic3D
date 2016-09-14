@@ -8,8 +8,11 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
@@ -19,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.exception.SliceHandlingException;
+import org.area515.resinprinter.job.render.RenderingCache;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
@@ -33,7 +37,7 @@ import org.area515.util.TemplateEngine;
 public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProcessor<G,E>{
 	private static final Logger logger = LogManager.getLogger();
 	public static final String EXPOSURE_TIMER = "exposureTime";
-	//TODO: Instead of having each implementation keep it's own state in it's own hashtable, we should be doing all of that work in here...
+	private Map<PrintJob, DataAid> renderingCacheByPrintJob = new HashMap<>();
 	
 	public static class DataAid {
 		public ScriptEngine scriptEngine;
@@ -50,13 +54,14 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		public InkDetector inkDetector;
 		public long currentSliceTime;
 		public Paint maskPaint;
-		public boolean performTransforms;
+		public boolean optimizeWithPreviewMode;
 		public AffineTransform affineTransform = new AffineTransform();
+		public RenderingCache cache = new RenderingCache();
 
 		//should have affine transform matrix calculated here 
 		//store Affine Transform Object here
 
-		public DataAid(PrintJob printJob) throws InappropriateDeviceException {
+		public DataAid(PrintJob printJob) throws JobManagerException {
 			this.printJob = printJob;
 			this.scriptEngine = HostProperties.Instance().buildScriptEngine();
 			printer = printJob.getPrinter();
@@ -68,7 +73,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			yPixelsPerMM = slicingProfile.getDotsPermmY();
 			xResolution = slicingProfile.getxResolution();
 			yResolution = slicingProfile.getyResolution();
-			this.performTransforms = true;
+			this.optimizeWithPreviewMode = false;
 			
 			// Set the affine transform given the customizer from the printJob
 			Customizer customizer = printJob.getCustomizer();
@@ -78,7 +83,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			
 			//This file processor requires an ink configuration
 			if (inkConfiguration == null) {
-				throw new InappropriateDeviceException("Your printer doesn't have a selected ink configuration.");
+				throw new JobManagerException("Your printer doesn't have a selected ink configuration.");
 			}
 			
 			//TODO: how do I integrate slicingProfile.getLiftDistance()
@@ -86,8 +91,45 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 	}
 	
-	public DataAid initializeDataAid(PrintJob printJob) throws InappropriateDeviceException {
-		return new DataAid(printJob);
+	@Override
+	public Double getBuildAreaMM(PrintJob printJob) {
+		DataAid aid = getDataAid(printJob);
+		if (aid == null) {
+			return null;
+		}
+		
+		Double area = aid.cache.getCurrentArea();
+		if (area == null) {
+			return null;
+		}
+		
+		return aid.cache.getCurrentArea() / (aid.xPixelsPerMM * aid.yPixelsPerMM);
+	}
+	
+	@Override
+	public BufferedImage getCurrentImage(PrintJob printJob) {
+		DataAid data = getDataAid(printJob);
+		if (data == null) {
+			return null;
+		}
+		
+		ReentrantLock lock = data.cache.getCurrentLock();
+		lock.lock();
+		try {
+			BufferedImage currentImage = data.cache.getCurrentImage();
+			if (currentImage == null)
+				return null;
+			
+			return currentImage.getSubimage(0, 0, currentImage.getWidth(), currentImage.getHeight());
+		} finally {
+			lock.unlock();
+		}
+	}
+	
+	public final DataAid initializeJobCacheWithDataAid(PrintJob printJob) throws InappropriateDeviceException, JobManagerException {
+		DataAid aid = createDataAid(printJob);
+		renderingCacheByPrintJob.put(printJob, aid);
+		return aid;
 	}
 	
 	public void performHeader(DataAid aid) throws InappropriateDeviceException, IOException {
@@ -288,7 +330,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 	}
 
-	public BufferedImage applyImageTransforms(DataAid aid, BufferedImage img, int width, int height) throws ScriptException {
+	public BufferedImage applyImageTransforms(DataAid aid, BufferedImage img) throws ScriptException {
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
@@ -296,11 +338,11 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			throw new IllegalStateException("BufferedImage is null");
 		}
 
-		if (!aid.performTransforms) {
+		if (aid.optimizeWithPreviewMode) {
 			return img;
 		}
 		
-		BufferedImage after = new BufferedImage(width, height, img.getType());
+		BufferedImage after = new BufferedImage(aid.xResolution, aid.yResolution, img.getType());
 			
 		((Graphics2D)img.getGraphics()).setBackground(Color.black);
 		((Graphics2D)after.getGraphics()).setBackground(Color.black);
@@ -308,7 +350,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		AffineTransformOp transOp = new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
 		after = transOp.filter(img, after);
 		
-		applyBulbMask(aid, (Graphics2D)after.getGraphics(), width, height);
+		applyBulbMask(aid, (Graphics2D)after.getGraphics(), aid.xResolution, aid.yResolution);
 		return after;
 	}
 	
@@ -346,23 +388,35 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			printJob.setPrintFileProcessor(this);
 			
 			//instantiate new dataaid
-			DataAid dataAid = initializeDataAid(printJob);
+			DataAid dataAid = createDataAid(printJob); //TODO: Eventually we should just use the internal cache inside the dataAid
 			BufferedImage image = customizer.getOrigSliceCache();
 			
 			if (image == null) {
-				dataAid.performTransforms = false;
+				dataAid.optimizeWithPreviewMode = true;
 				image = previewable.renderPreviewImage(dataAid);
-				dataAid.performTransforms = true;
+				dataAid.optimizeWithPreviewMode = false;
 				if (customizer.getAffineTransformSettings().isIdentity()) {
 					image = convertTo3BGR(image);
 					customizer.setOrigSliceCache(image);
 				}
 			}
 			
-			image = applyImageTransforms(dataAid, image, image.getWidth(), image.getHeight());
+			image = applyImageTransforms(dataAid, image);
 			return image;
-		} catch (InappropriateDeviceException | ScriptException e) {
+		} catch (ScriptException | JobManagerException e) {
 			throw new SliceHandlingException(e);
 		}
+	}
+	
+	public DataAid createDataAid(PrintJob printJob) throws JobManagerException {
+		return new DataAid(printJob);
+	}
+
+	public DataAid getDataAid(PrintJob job) {
+		return renderingCacheByPrintJob.get(job);
+	}
+	
+	public void clearDataAid(PrintJob job) {
+		renderingCacheByPrintJob.remove(job);
 	}
 }

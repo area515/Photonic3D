@@ -22,7 +22,6 @@ import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.server.Main;
-import org.area515.util.Log4jTimer;
 
 public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Object,Object> {
     private static final Logger logger = LogManager.getLogger();
@@ -57,9 +56,14 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 	}
 
 	@Override
+	public DataAid createDataAid(PrintJob printJob) throws JobManagerException {
+		return new DataAid(printJob);
+	}
+
+	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
 		try {
-			DataAid data = initializeDataAid(printJob);
+			DataAid data = initializeJobCacheWithDataAid(printJob);
 			
 			//Everything needs to be setup in the dataByPrintJob before we start the header
 			performHeader(data);
@@ -81,7 +85,7 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 					return status;
 				}
 				
-				BufferedImage image = new BufferedImage(data.xResolution, data.yResolution, BufferedImage.TYPE_INT_ARGB_PRE);
+				BufferedImage image = new BufferedImage(data.xResolution, data.yResolution, BufferedImage.TYPE_4BYTE_ABGR);
 				Graphics2D graphics = (Graphics2D)image.getGraphics();
 				graphics.setColor(Color.black);
 				graphics.fillRect(0, 0, data.xResolution, data.yResolution);
@@ -91,7 +95,7 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 					graphics.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
 				}
 
-				image = applyImageTransforms(data, image, data.xResolution, data.yResolution);
+				image = applyImageTransforms(data, image);
 				//applyBulbMask(data, graphics, data.xResolution, data.yResolution);
 				
 				//Performs all of the duties that are common to most print files

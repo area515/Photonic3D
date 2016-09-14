@@ -940,18 +940,20 @@ public class ZSlicer {
  
 		if (imageOffsetX == null) {
 			if (buildPlatformXPixels != null) {
-				imageOffsetX = (buildPlatformXPixels / 2) - (stlFile.getWidth() / precisionScaler * pixelsPerMMX / 2)
+				imageOffsetX = (buildPlatformXPixels / 2) 
+						- (stlFile.getWidth() / precisionScaler * pixelsPerMMX / 2)
 						- (stlFile.getXmin() / precisionScaler * pixelsPerMMX);
 			} else {
-				imageOffsetX = 0.0;
+				imageOffsetX = -stlFile.getXmin() / precisionScaler * pixelsPerMMX;
 			}
 		}
 		if (imageOffsetY == null) {
 			if (buildPlatformYPixels != null) {
-				imageOffsetY = (buildPlatformYPixels / 2) - (stlFile.getHeight() / precisionScaler * pixelsPerMMY / 2)
+				imageOffsetY = (buildPlatformYPixels / 2) 
+						- (stlFile.getHeight() / precisionScaler * pixelsPerMMY / 2)
 						- (stlFile.getYmin() / precisionScaler * pixelsPerMMY);
 			} else {
-				imageOffsetY = 0.0;
+				imageOffsetY = -stlFile.getYmin() / precisionScaler * pixelsPerMMY;
 			}
 		}
 		logger.info("Load file stop:{}", ()->Log4jTimer.completeTimer("fileLoadTime"));
@@ -983,7 +985,15 @@ public class ZSlicer {
 	public double getStlScale() {
 		return stlScale;
 	}
-
+	
+	public double getWidthPixels() {
+		return stlFile.getWidth() * pixelsPerMMX;
+	}
+	
+	public double getHeightPixels() {
+		return stlFile.getHeight() * pixelsPerMMX;
+	}
+	
 	public int getZMinIndex() {
 		return (int)Math.ceil(stlFile.getZmin() / precisionScaler / sliceResolution - zOffset);
 	}

@@ -31,6 +31,8 @@ public class SlicingProfile implements Named {
         private String platformCalculator;
         @XmlElement(name="EdgeDetectionDisabled")
         private Boolean edgeDetectionDisabled;
+        @XmlElement(name="ScaleImageToFitPrintArea")
+        private Boolean scaleImageToFitPrintArea;
         
         @XmlTransient
 		public Font getFont() {
@@ -70,6 +72,14 @@ public class SlicingProfile implements Named {
 		}
 		public void setPlatformCalculator(String platformCalculator) {
 			this.platformCalculator = platformCalculator;
+		}
+		
+		@XmlTransient
+		public Boolean isScaleImageToFitPrintArea() {
+			return scaleImageToFitPrintArea;
+		}
+		public void setScaleImageToFitPrintArea(Boolean scaleImageToFitPrintArea) {
+			this.scaleImageToFitPrintArea = scaleImageToFitPrintArea;
 		}
     }
     

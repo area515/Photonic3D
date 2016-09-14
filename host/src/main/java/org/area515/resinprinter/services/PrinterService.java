@@ -448,6 +448,7 @@ public class PrinterService {
 		settings.setExtrusionHeightMM(1.5);
 		settings.setPlatformHeightMM(1.5);
 		settings.setEdgeDetectionDisabled(false);
+		settings.setScaleImageToFitPrintArea(true);
 		
 		slicingProfile.setTwoDimensionalSettings(settings);
 		slicingProfile.setInkConfigs(configs);

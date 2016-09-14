@@ -1,91 +1,60 @@
 package org.area515.resinprinter.twodim;
 
-import java.awt.Font;
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
+import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.Future;
-import java.util.concurrent.locks.ReentrantLock;
 
+import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
+import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.Previewable;
 import org.area515.resinprinter.job.PrintJob;
-import org.area515.resinprinter.job.render.RenderingFileData;
+import org.area515.resinprinter.job.render.RenderedData;
+import org.area515.resinprinter.job.render.RenderingCache;
 import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
 import org.area515.resinprinter.server.Main;
-import org.area515.resinprinter.services.PrinterService;
 
 public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends AbstractPrintFileProcessor<T,E> implements Previewable {
     private static final Logger logger = LogManager.getLogger();
-	private Map<PrintJob, TwoDimensionalPrintState> twoDimensionalPrintDataByJob = new HashMap<PrintJob, TwoDimensionalPrintState>();
 	
-	public static abstract class TwoDimensionalPrintState extends RenderingFileData {
-		private BufferedImage twoDimensionalImage;
-		
-		public abstract BufferedImage buildExtrusionImage(DataAid aid) throws ExecutionException, InterruptedException;
-		
-		public BufferedImage getCachedExtrusionImage() {
-			return twoDimensionalImage;
-		}
-		
-		public void cacheExtrusionImage(DataAid aid) throws ExecutionException, InterruptedException {
-			this.twoDimensionalImage = buildExtrusionImage(aid);
-		}
+	public DataAid createDataAid(PrintJob printJob) throws JobManagerException {
+		return new DataAid(printJob);
 	}
 	
 	@Override
-	public BufferedImage getCurrentImage(PrintJob printJob) {
-		TwoDimensionalPrintState printState = twoDimensionalPrintDataByJob.get(printJob);
-		if (printState == null) {
-			return null;
-		}
-		
-		ReentrantLock lock = printState.getCurrentLock();
-		lock.lock();
+	public void prepareEnvironment(final File processingFile, final PrintJob printJob) throws JobManagerException {
+		DataAid aid;
 		try {
-			BufferedImage currentImage = printState.getCurrentImage();
-			if (currentImage == null)
-				return null;
-			
-			return currentImage.getSubimage(0, 0, currentImage.getWidth(), currentImage.getHeight());
-		} finally {
-			lock.unlock();
+			aid = initializeJobCacheWithDataAid(printJob);
+			createRenderer(aid, this, Boolean.TRUE);
+		} catch (InappropriateDeviceException e) {
+			throw new JobManagerException("Couldn't create job", e);
 		}
-	}
-
-	@Override
-	public Double getBuildAreaMM(PrintJob printJob) {
-		//TODO: this should call functions from within the org.area515.resinprinter.job.render.StandaloneImageRenderer but need to be pipelined with futures first!
-		return null;
-	}
-	
-	public void createTwoDimensionalPrintState(PrintJob printJob, TwoDimensionalPrintState state) {
-		twoDimensionalPrintDataByJob.put(printJob, state);
 	}
 	
 	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
-		DataAid dataAid = initializeDataAid(printJob);
+		DataAid dataAid = getDataAid(printJob);
 		try {
 			performHeader(dataAid);
 			
-			TwoDimensionalPrintState printState = twoDimensionalPrintDataByJob.get(printJob);
 			int platformSlices = getSuggestedPlatformLayerCount(dataAid);
 			int totalPlatformSlices = platformSlices;
 			int extrusionSlices = getSuggested2DExtrusionLayerCount(dataAid);
 			printJob.setTotalSlices(platformSlices + extrusionSlices);
-			
-			printState.cacheExtrusionImage(dataAid);
+			RenderingCache printState = dataAid.cache;
 			Object nextRenderingPointer = printState.getCurrentRenderingPointer();
-			Future<BufferedImage> currentImage = platformSlices > 0?
-					Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution, totalPlatformSlices)):
-					Main.GLOBAL_EXECUTOR.submit(new RenderExtrusionImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
+			Future<RenderedData> currentImage = platformSlices > 0?
+					Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, nextRenderingPointer, totalPlatformSlices)):
+					Main.GLOBAL_EXECUTOR.submit(createRenderer(dataAid, this, nextRenderingPointer));
 			while (platformSlices > 0 || extrusionSlices > 0) {
 				
 				//Performs all of the duties that are common to most print files
@@ -95,7 +64,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 				}
 				
 				//Wait until the image has been properly rendered. Most likely, it's already done though...
-				BufferedImage image = currentImage.get();
+				BufferedImage image = currentImage.get().getImage();
 				
 				//Now that the image has been rendered, we can make the switch to use the pointer that we were using while we were rendering
 				printState.setCurrentRenderingPointer(nextRenderingPointer);
@@ -105,9 +74,9 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 				
 				//Render the next image while we are waiting for the current image to cure
 				if (platformSlices > 0) {
-					currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution, totalPlatformSlices));
+					currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, nextRenderingPointer, totalPlatformSlices));
 				} else if (extrusionSlices > 1) {
-					currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderExtrusionImage(dataAid, this, printState, nextRenderingPointer, dataAid.xResolution, dataAid.yResolution));
+					currentImage = Main.GLOBAL_EXECUTOR.submit(createRenderer(dataAid, this, nextRenderingPointer));
 				}
 
 				//Performs all of the duties that are common to most print files
@@ -125,7 +94,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 			
 			return performFooter(dataAid);
 		} finally {
-			twoDimensionalPrintDataByJob.remove(dataAid.printJob);
+			clearDataAid(dataAid.printJob);
 		}
 	}
 	
@@ -159,21 +128,16 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 		return (int)Math.round(extrusionHeight / aid.inkConfiguration.getSliceHeight());
 	}
 	
-	public Font buildFont(DataAid data) {
-		TwoDimensionalSettings cwhTwoDim = data.slicingProfile.getTwoDimensionalSettings();
-		org.area515.resinprinter.printer.SlicingProfile.Font cwhFont = cwhTwoDim != null?cwhTwoDim.getFont():new org.area515.resinprinter.printer.SlicingProfile.Font();
-		if (cwhFont == null) {
-			cwhFont = PrinterService.DEFAULT_FONT;
+
+	@Override
+	public BufferedImage renderPreviewImage(final DataAid aid) throws SliceHandlingException {
+		try {
+			TwoDimensionalImageRenderer extrusion = createRenderer(aid, this, Boolean.TRUE);
+			return extrusion.call().getImage();
+		} catch (JobManagerException | ScriptException | IOException e) {
+			throw new SliceHandlingException(e);
 		}
-		
-		if (cwhFont.getName() == null) {
-			cwhFont.setName(PrinterService.DEFAULT_FONT.getName());
-		}
-		
-		if (cwhFont.getSize() == 0) {
-			cwhFont.setSize(PrinterService.DEFAULT_FONT.getSize());
-		}
-		
-		return new Font(cwhFont.getName(), Font.PLAIN, cwhFont.getSize());
 	}
+	
+	public abstract TwoDimensionalImageRenderer createRenderer(DataAid aid, AbstractPrintFileProcessor<?,?> processor, Object imageIndexToBuild);
 }
