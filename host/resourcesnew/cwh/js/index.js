@@ -7,7 +7,7 @@
 		}]);
 		cwhApp.factory('cacheControl', function() {
 	        return {
-	        	previewExternalStateId:Math.random();
+	        	previewExternalStateId:Math.random(),
 	            clearPreviewExternalState: function() {
 	        		this.previewExternalStateId = Math.random();
 	            }
