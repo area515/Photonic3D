@@ -77,13 +77,13 @@ public abstract class TwoDimensionalImageRenderer extends CurrentImageRenderer {
 		}
 		
 		Boolean edgeDetectionDisabled = printJob.getPrinter().getConfiguration().getSlicingProfile().getTwoDimensionalSettings().isEdgeDetectionDisabled();
-		if (edgeDetectionDisabled != null && !edgeDetectionDisabled) {
+		if (edgeDetectionDisabled == null || !edgeDetectionDisabled) {
 			CannyEdgeDetector8BitGray edgeDetector = new CannyEdgeDetector8BitGray();
 			edgeDetector.setLowThreshold(.01f);
 			edgeDetector.setHighThreshold(3f);
 			edgeDetector.setSourceImage(image);
 			edgeDetector.process();
-			return edgeDetector.getEdgesImage();
+			image = edgeDetector.getEdgesImage();
 		}
 		
 		return image;

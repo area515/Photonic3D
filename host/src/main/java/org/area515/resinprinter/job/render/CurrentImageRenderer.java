@@ -52,7 +52,7 @@ public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 		return renderedImage;
 	}
 	
-	public RenderedData call() throws ScriptException, JobManagerException, IOException {
+	public RenderedData call() throws JobManagerException {
 		long startTime = System.currentTimeMillis();
 		Lock lock = aid.cache.getSpecificLock(imageIndexToBuild);
 		lock.lock();
@@ -69,15 +69,15 @@ public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 				logger.info("Loaded {}  with {} non-black pixels in {}ms", imageIndexToBuild, pixelArea, System.currentTimeMillis()-startTime);
 			}
 			return imageData;
-		} catch (ScriptException | JobManagerException | IOException e) {
+		} catch (ScriptException e) {
 			logger.error(e);
-			throw e;
+			throw new JobManagerException("Unable to render image", e);
 		} finally {
 			lock.unlock();
 		}
 	}
 	
-	abstract public BufferedImage renderImage(BufferedImage image) throws ScriptException, IOException, JobManagerException;
+	abstract public BufferedImage renderImage(BufferedImage image) throws JobManagerException;
 
 	/**
 	 * Compute the number of non-black pixels in an image as a measure of its

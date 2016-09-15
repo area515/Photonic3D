@@ -19,7 +19,7 @@ public class LinuxNetworkManager implements NetworkManager {
 		parseActions.add(new ParseAction(new String[]{"scan\n"}, "[\\s\r]*<\\d+>\\s*CTRL-EVENT-SCAN-RESULTS\\s*", SearchStyle.RepeatUntilMatch));
 		parseActions.add(new ParseAction(new String[]{""}, "\\s*>", SearchStyle.RepeatUntilMatch));
 		parseActions.add(new ParseAction(new String[]{"scan_results\n"}, "bssid.*", SearchStyle.RepeatUntilMatch));
-		parseActions.add(new ParseAction(new String[]{""}, "\\s*([A-Fa-f0-9:]+)\\s+(\\d+)\\s+(\\d+)\\s+([\\[\\]\\+\\-\\w]+)\\t(.+)", SearchStyle.RepeatWhileMatching));
+		parseActions.add(new ParseAction(new String[]{""}, "\\s*([A-Fa-f0-9:]+)\\s+(-?\\d+)\\s+(-?\\d+)\\s+([\\[\\]\\+\\-\\w]+)\\t(.+)", SearchStyle.RepeatWhileMatching));
 		
 		List<String[]> output = IOUtilities.communicateWithNativeCommand(parseActions, "^>|\n", true, null, nicName);
 		for (String[] lines : output) {

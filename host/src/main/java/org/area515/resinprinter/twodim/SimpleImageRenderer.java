@@ -7,6 +7,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
+import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.render.CurrentImageRenderer;
 
@@ -16,7 +17,11 @@ public class SimpleImageRenderer extends CurrentImageRenderer {
 	}
 
 	@Override
-	public BufferedImage renderImage(BufferedImage image) throws IOException {
-		return ImageIO.read((File)imageIndexToBuild);
+	public BufferedImage renderImage(BufferedImage image) throws JobManagerException {
+		try {
+			return ImageIO.read((File)imageIndexToBuild);
+		} catch (IOException e) {
+			throw new JobManagerException("Unable to read image:" + imageIndexToBuild, e);
+		}
 	}
 }

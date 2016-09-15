@@ -1,11 +1,12 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("PrintersController", ['$scope', '$http', '$location', '$anchorScroll', '$uibModal', function ($scope, $http, $location, $anchorScroll, $uibModal) {
+	cwhApp.controller("PrintersController", ['$scope', '$http', '$location', '$anchorScroll', '$uibModal', 'cacheControl', function ($scope, $http, $location, $anchorScroll, $uibModal, cacheControl) {
 		controller = this;
 		var PRINTERS_DIRECTORY = "printers";
 		var BRANCH = "master";
 		var REPO = $scope.repo;
 		
+		cacheControl.clearPreviewExternalState();
 		this.loadingFontsMessage = "--- Loading fonts from server ---"
 		this.loadingProfilesMessage = "--- Loading slicing profiles from server ---"
 		this.loadingMachineConfigMessage = "--- Loading machine configurations from server ---"

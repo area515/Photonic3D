@@ -1,9 +1,8 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket) {
+	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', 'cacheControl', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket, cacheControl) {
 		controller = this;
 		
-		this.externalState = Math.random();//This state has the potential to wipe out the entire cache of the underlying system
 		this.currentPrintable = null;
 		this.currentCustomizer = null;
 		this.currentPrinter = null;
@@ -42,7 +41,7 @@
 			
 			controller.currentPrintable = newPrintable;
 			controller.errorMsg = null;
-			$http.get("services/customizers/get/" + newCustomizerName + "?externalState=" + controller.externalState).success(
+			$http.get("services/customizers/get/" + newCustomizerName + "?externalState=" + cacheControl.previewExternalStateId).success(
 					function (data) {
 						if (data == "") {
 							controller.currentCustomizer = {
@@ -51,7 +50,7 @@
 									printableName: newPrintable.name,
 									printableExtension: newPrintable.extension,
 									supportsAffineTransformSettings: true,
-									externalImageAffectingState:controller.externalState,
+									externalImageAffectingState:cacheControl.previewExternalStateId,
 									zscale: 1,
 									affineTransformSettings: {
 										yflip: false,
@@ -67,7 +66,7 @@
 								};
 						} else {
 							controller.currentCustomizer = data;
-							controller.currentCustomizer.externalImageAffectingState = controller.externalState;
+							controller.currentCustomizer.externalImageAffectingState = cacheControl.previewExternalStateId;
 						}
 						
 						//We probably don't need to save the customizer here but we do it in case the externalState changed

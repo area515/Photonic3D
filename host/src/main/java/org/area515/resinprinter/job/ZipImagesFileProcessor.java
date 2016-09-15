@@ -112,7 +112,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 			SimpleImageRenderer renderer = new SimpleImageRenderer(dataAid, this, imageFile);
 			RenderedData stdImage = renderer.call();
 			return stdImage.getImage();
-		} catch (IOException | ScriptException | JobManagerException e) {
+		} catch (IOException | JobManagerException e) {
 			throw new SliceHandlingException(e);
 		}
 	}

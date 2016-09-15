@@ -68,11 +68,15 @@ public class CustomizerService {
 		Customizer customizer = customizersByName.getIfPresent(customizerName);
 		if (customizer != null) {
 			customizer.setExternalImageAffectingState(externalState);
+			if (!customizer.getExternalImageAffectingState().equals(externalState)) {
+				customizer.setOrigSliceCache(null);
+				//TODO: start building image in a background task before the client asks for it!
+			}
 		}
 		
 		return customizer;
 	}
-
+    
 	@ApiOperation(value="Save Customizer.")
 	@POST
 	@Path("upsert")
@@ -83,8 +87,8 @@ public class CustomizerService {
 			//If the image was affected by some external state other than the customizer(e.g. calibration), trash the cache.
 			if (customizer.getExternalImageAffectingState().equals(oldCustomizer.getExternalImageAffectingState())) {
 				customizer.setOrigSliceCache(oldCustomizer.getOrigSliceCache());
-				//TODO: start building image in a background task before the client asks for it!
 			}
+			//else TODO: start building image in a background task before the client asks for it!
 		}
 		
 		customizersByName.put(customizer.getName(), customizer);

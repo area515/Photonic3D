@@ -49,7 +49,7 @@ public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileP
 		try {
 			TextImageRenderer extrusion = new TextImageRenderer(dataAid, this, Boolean.TRUE);
 			return extrusion.call().getImage();
-		} catch (JobManagerException | ScriptException | IOException e) {
+		} catch (JobManagerException e) {
 			throw new SliceHandlingException(e);
 		}
 	}

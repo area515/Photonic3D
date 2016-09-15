@@ -52,9 +52,14 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 			printJob.setTotalSlices(platformSlices + extrusionSlices);
 			RenderingCache printState = dataAid.cache;
 			Object nextRenderingPointer = printState.getCurrentRenderingPointer();
-			Future<RenderedData> currentImage = platformSlices > 0?
-					Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, nextRenderingPointer, totalPlatformSlices)):
-					Main.GLOBAL_EXECUTOR.submit(createRenderer(dataAid, this, nextRenderingPointer));
+			Future<RenderedData> currentImage = null;
+			TwoDimensionalImageRenderer platformSizeInitializer = null;
+			if (platformSlices > 0) {
+				platformSizeInitializer = createRenderer(dataAid, this, nextRenderingPointer);
+				Main.GLOBAL_EXECUTOR.submit(new PlatformImageRenderer(dataAid, this, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer));
+			} else {
+				Main.GLOBAL_EXECUTOR.submit(createRenderer(dataAid, this, nextRenderingPointer));
+			}
 			while (platformSlices > 0 || extrusionSlices > 0) {
 				
 				//Performs all of the duties that are common to most print files
@@ -74,7 +79,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 				
 				//Render the next image while we are waiting for the current image to cure
 				if (platformSlices > 0) {
-					currentImage = Main.GLOBAL_EXECUTOR.submit(new RenderPlatformImage(dataAid, this, nextRenderingPointer, totalPlatformSlices));
+					currentImage = Main.GLOBAL_EXECUTOR.submit(new PlatformImageRenderer(dataAid, this, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer));
 				} else if (extrusionSlices > 1) {
 					currentImage = Main.GLOBAL_EXECUTOR.submit(createRenderer(dataAid, this, nextRenderingPointer));
 				}
@@ -134,7 +139,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 		try {
 			TwoDimensionalImageRenderer extrusion = createRenderer(aid, this, Boolean.TRUE);
 			return extrusion.call().getImage();
-		} catch (JobManagerException | ScriptException | IOException e) {
+		} catch (JobManagerException e) {
 			throw new SliceHandlingException(e);
 		}
 	}

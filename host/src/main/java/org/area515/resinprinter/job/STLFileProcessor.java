@@ -140,7 +140,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			Object nextRenderingPointer = dataAid.cache.getCurrentRenderingPointer();
 			STLImageRenderer renderer = new STLImageRenderer(dataAid, this, nextRenderingPointer);
 			return renderer.call().getImage();
-		} catch (IOException | ScriptException | JobManagerException e) {
+		} catch (IOException | JobManagerException e) {
 			throw new SliceHandlingException(e);
 		}
 	}

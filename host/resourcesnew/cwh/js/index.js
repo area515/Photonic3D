@@ -5,6 +5,15 @@
 		        return new Date(1970, 0, 1).setMilliseconds(milliseconds);
 		    };
 		}]);
+		cwhApp.factory('cacheControl', function() {
+	        return {
+	        	previewExternalStateId:Math.random();
+	            clearPreviewExternalState: function() {
+	        		this.previewExternalStateId = Math.random();
+	            }
+	        };
+	    });
+
 		cwhApp.config(['$routeProvider', '$locationProvider', '$httpProvider', function($routeProvider, $locationProvider, $httpProvider) {
 		    if (!$httpProvider.defaults.headers.get) {
 		        $httpProvider.defaults.headers.get = {};    
