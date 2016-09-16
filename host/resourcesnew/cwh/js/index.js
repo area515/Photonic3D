@@ -1,5 +1,6 @@
 (function() {
 		var cwhApp = angular.module('cwhApp', ['ui.bootstrap', 'ngRoute', 'cwh.comport', 'cwh.spinner', 'cwh.webSocket', 'cwh.testscript', 'ngFileUpload', 'ngAnimate', 'chart.js', 'printJobModelViewer']);
+		var firstCacheId = new Date().toDateString();
 		cwhApp.filter('secondsToDateTime', [function() {
 		    return function(milliseconds) {
 		        return new Date(1970, 0, 1).setMilliseconds(milliseconds);
@@ -7,7 +8,7 @@
 		}]);
 		cwhApp.factory('cacheControl', function() {
 	        return {
-	        	previewExternalStateId:Math.random(),
+	        	previewExternalStateId:firstCacheId,
 	            clearPreviewExternalState: function() {
 	        		this.previewExternalStateId = Math.random();
 	            }

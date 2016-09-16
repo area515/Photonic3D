@@ -237,6 +237,7 @@ public class Customizer {
 	@JsonIgnore
 	public void setOrigSliceCache(BufferedImage origSliceCache) {
 		if (origSliceCache == null) {
+			this.origSliceCache = null;
 			return;
 		}
 		

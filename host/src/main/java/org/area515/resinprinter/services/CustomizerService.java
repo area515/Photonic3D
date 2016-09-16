@@ -67,11 +67,11 @@ public class CustomizerService {
 	public Customizer getCustomizer(@PathParam("customizerName")String customizerName, @QueryParam("externalState") String externalState) {
 		Customizer customizer = customizersByName.getIfPresent(customizerName);
 		if (customizer != null) {
-			customizer.setExternalImageAffectingState(externalState);
 			if (!customizer.getExternalImageAffectingState().equals(externalState)) {
 				customizer.setOrigSliceCache(null);
 				//TODO: start building image in a background task before the client asks for it!
 			}
+			customizer.setExternalImageAffectingState(externalState);
 		}
 		
 		return customizer;
