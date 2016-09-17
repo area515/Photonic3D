@@ -12,6 +12,7 @@ public interface PrintFileProcessor<G,E> {
 	public JobStatus processFile(PrintJob printJob) throws Exception;
 	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException;
 	public void cleanupEnvironment(File processingFile) throws JobManagerException;
+	public boolean isThreeDimensionalGeometryAvailable();
 	public G getGeometry(PrintJob printJob) throws JobManagerException;
 	public E getErrors(PrintJob printJob) throws JobManagerException;
 }

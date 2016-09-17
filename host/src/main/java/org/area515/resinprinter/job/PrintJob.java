@@ -48,6 +48,8 @@ public class PrintJob {
 	private CountDownLatch futureJobStatusAssigned = new CountDownLatch(1);
 	private Map<String, CompiledScript> scriptsByName = new HashMap<>();
 
+	private Customizer customizer;
+
 	public PrintJob(File jobFile) {
 		this.jobFile = jobFile;
 	}
@@ -109,6 +111,14 @@ public class PrintJob {
 	}
 	public Printer getPrinter() {
 		return printer;
+	}
+
+	public void setCustomizer(Customizer customizer) {
+		this.customizer = customizer;
+	}
+
+	public Customizer getCustomizer() {
+		return customizer;
 	}
 	
 	@XmlTransient

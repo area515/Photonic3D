@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -47,10 +48,12 @@ import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.job.Printable;
+import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
+import org.area515.resinprinter.util.security.PhotonicUser;
 import org.area515.util.PrintFileFilter;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -58,6 +61,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import com.google.common.io.ByteStreams;
 
 @Api(value="printables")
+@RolesAllowed(PhotonicUser.FULL_RIGHTS)
 @Path("printables")
 public class PrintableService {
     private static final Logger logger = LogManager.getLogger();
@@ -129,7 +133,7 @@ public class PrintableService {
 	}
 
     @ApiOperation(value="Upload a printable file using multipart/form-data. "
-    		+ "After the upload is complete, the file will be checked against all known print processors to determine if it is sutable for printing.")
+    		+ "After the upload is complete, the file will be checked against all known print processors to determine if it is suitable for printing.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
@@ -156,12 +160,15 @@ public class PrintableService {
 				atLeastOnePrinterStarted = true;
 			}
 			if (printer.isStarted() && !printer.isPrintInProgress()) {
-				MachineResponse response = PrinterService.INSTANCE.print(fileName, printer.getName());
+				MachineResponse response;
+				response = PrinterService.INSTANCE.print(fileName, printer.getName());	
+
 				if (response.getResponse()) {
 					return PrintJobService.INSTANCE.getById(response.getMessage());
 				} else {
 					throw new IllegalArgumentException(response.getMessage());
-				}
+				}					
+
 			}
 		}
 		if (!atLeastOnePrinterStarted) {

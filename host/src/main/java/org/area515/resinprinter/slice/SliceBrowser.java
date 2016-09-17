@@ -250,6 +250,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			 sliceResolution,
 			 0d,
 			 false,
+			 false, 
 			 new CloseOffMend());
 		try {
 			newSlicer.loadFile(new FileInputStream(new File(loadStlText.getText())), tools.getBuildPlatformX(), tools.getBuildPlatformY());

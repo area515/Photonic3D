@@ -19,6 +19,7 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.security.RolesAllowed;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.ws.rs.Consumes;
@@ -35,10 +36,12 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.job.InkDetector;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
+import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.render.StubPrintFileProcessor;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.ComPortSettings;
@@ -56,9 +59,11 @@ import org.area515.resinprinter.serial.ConsoleCommPort;
 import org.area515.resinprinter.serial.SerialManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.services.TestingResult.ChartData;
+import org.area515.resinprinter.util.security.PhotonicUser;
 import org.area515.util.TemplateEngine;
 
 @Api(value="printers")
+@RolesAllowed(PhotonicUser.FULL_RIGHTS)
 @Path("printers")
 public class PrinterService {
     private static final Logger logger = LogManager.getLogger();
@@ -130,6 +135,33 @@ public class PrinterService {
 		
 		return printers;
 	}
+
+    @ApiOperation(value="Lists the first available printer.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.TODO),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@GET
+	@Path("getFirstAvailablePrinter")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Printer getFirstAvailablePrinter() throws NoPrinterFoundException {
+		List<Printer> printers = getPrinters();
+		if (printers.isEmpty()) {
+			throw new NoPrinterFoundException("No printers found.");
+		}
+		Printer activePrinter = null;
+
+		for (Printer printer : printers) {
+			if (printer.isStarted()) {
+				activePrinter = printer;
+				break;
+			}
+		}
+		if (activePrinter == null) {
+			throw new NoPrinterFoundException("No active printers.");
+		}
+		
+		return activePrinter;
+	}	
  
     @ApiOperation(value="Returns the Printer specified by the printername.")
     @ApiResponses(value = {
@@ -139,14 +171,14 @@ public class PrinterService {
 	@Path("get/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Printer getPrinter(@PathParam("printername") String printerName) throws InappropriateDeviceException {
-	Printer printer = PrinterManager.Instance().getPrinter(printerName);
-	if (printer == null) {
-		PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
-		if (currentConfiguration == null) {
-			throw new InappropriateDeviceException("No printer with that name:" + printerName);
+		Printer printer = PrinterManager.Instance().getPrinter(printerName);
+		if (printer == null) {
+			PrinterConfiguration currentConfiguration = HostProperties.Instance().getPrinterConfiguration(printerName);
+			if (currentConfiguration == null) {
+				throw new InappropriateDeviceException("No printer with that name:" + printerName);
 			}
-			
-			printer = new Printer(currentConfiguration);
+				
+				printer = new Printer(currentConfiguration);
 		}
 		 
 		return printer;
@@ -415,6 +447,8 @@ public class PrinterService {
 		settings.setPlatformCalculator("platformGraphics.fillRoundRect(centerX - (extrusionX / 2), centerY - (extrusionY / 2), extrusionX, extrusionY, 50, 50);");
 		settings.setExtrusionHeightMM(1.5);
 		settings.setPlatformHeightMM(1.5);
+		settings.setEdgeDetectionDisabled(false);
+		settings.setScaleImageToFitPrintArea(true);
 		
 		slicingProfile.setTwoDimensionalSettings(settings);
 		slicingProfile.setInkConfigs(configs);
@@ -746,31 +780,47 @@ public class PrinterService {
 	@Path("startJob/{fileName}/{printername}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MachineResponse print(@PathParam("fileName") String fileName, @PathParam("printername") String printername) {
-		Printer printer = PrinterManager.Instance().getPrinter(printername);
+    	return startPrintJob(printername, fileName, null);
+    }
+    
+    @ApiOperation(value="Attempt to start a print by specifying the name of the Customizer. ")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@POST
+	@Path("startJob/{customizerName}")
+    @Produces(MediaType.APPLICATION_JSON)
+	public MachineResponse printWithCustomizer(@PathParam("customizerName") String customizerName) {
+    	Customizer customizer = CustomizerService.INSTANCE.getCustomizer(customizerName, null);
+    	return startPrintJob(customizer.getPrinterName(), customizer.getPrintableName() + "." + customizer.getPrintableExtension(), customizer);
+	}
+
+    public MachineResponse startPrintJob(String printerName, String printableName, Customizer customizer) {
+		Printer printer = PrinterManager.Instance().getPrinter(printerName);
 		if (printer == null) {
-			return new MachineResponse("start", false, "Printer not started:" + printername);
+			return new MachineResponse("start", false, "Printer not started:" + printerName);
 		}
 		
 		//Printer must have been calibrated before it can print
 		if (HostProperties.Instance().isForceCalibrationOnFirstUse() && !printer.getConfiguration().isCalibrated()) {
-		    logger.error("Printer:{} can't print because it wasn't calibrated", printername);
-			return new MachineResponse("startPrinter", false, "Printer:" + printername + " must be calibrated before it's first use.");
+		    logger.error("Printer:{} can't print because it wasn't calibrated", printerName);
+			return new MachineResponse("startPrinter", false, "Printer:" + printerName + " must be calibrated before it's first use.");
 		}
 		
 		// Create job
-		File selectedFile = new File(HostProperties.Instance().getUploadDir(), fileName); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
+		File selectedFile = new File(HostProperties.Instance().getUploadDir(), printableName); //should already be done by marshalling: java.net.URLDecoder.decode(name, "UTF-8"));//name);
 		
 		// Delete and Create handled in jobManager
 		PrintJob printJob = null;
 		try {
-			printJob = PrintJobManager.Instance().createJob(selectedFile, printer);
+			printJob = PrintJobManager.Instance().createJob(selectedFile, printer, customizer);
 			return new MachineResponse("start", true, printJob.getId() + "");
 		} catch (JobManagerException | AlreadyAssignedException e) {
-		    logger.error("Error starting job:" + fileName + " printer:" + printername, e);
+		    logger.error("Error starting job:" + printableName + " printer:" + printerName, e);
 			return new MachineResponse("start", false, e.getMessage());
-		}
+		}		
 	}
-	
+
 	private List<ChartData> getChartData(String seriesString) {
 		List<ChartData> seriesData = new ArrayList<ChartData>();
 		Matcher matcher = Pattern.compile("([^\\(]+)\\(([^\\)]+)\\)").matcher(seriesString);
@@ -817,12 +867,12 @@ public class PrinterService {
 	
     @ApiOperation(value="Tests out a script using the scripting language(likely javascript) specified in the config.properties via scriptEngineLanguage=[script language]"
     		+ "The returnType parameter passed to this method must match a known Java type or the following format: "
-    		+ "requestedJavaReturnTypeOfScript[printerVariableToShowInSeries(start,stop,increment),printerVariableToShowInRange(start,stop,increment)]"
+    		+ "requestedJavaReturnTypeOfScript[printerVariableToShowInSeries(start,stop,increment)printerVariableToShowInRange(start,stop,increment)]"
     		+ "Here are some examples: "
-    		+ "If your script expects an double return type you would use: java.lang.String "
+    		+ "If your script expects an double return type you would use: java.lang.Double "
     		+ "If your script does not expect a return value you would use: java.lang.Void "
     		+ "If your script wants to return chart data in a json array that describes how 'bulbHours' and 'CURSLICE' affect exposureTime you could use: "
-    		+ "java.lang.Double[CURSLICE(1,5,1)buildAreaMM(10000,20000,1000]")
+    		+ "java.lang.Double[CURSLICE(1,5,1)buildAreaMM(10000,20000,1000)]")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.TODO),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})

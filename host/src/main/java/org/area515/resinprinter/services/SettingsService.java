@@ -2,6 +2,7 @@ package org.area515.resinprinter.services;
 
 import java.util.List;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -11,9 +12,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
+
 import org.area515.resinprinter.server.CwhEmailSettings;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.util.security.PhotonicUser;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -21,6 +24,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 @Api(value="settings")
+@RolesAllowed(PhotonicUser.FULL_RIGHTS)
 @Path("settings")
 public class SettingsService {
 	public static SettingsService INSTANCE = new SettingsService();

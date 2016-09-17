@@ -2,10 +2,26 @@
 
 cpu=`uname -m`
 
+if [ -z "$HOME" ] || [ "$HOME" == "/" ]; then
+  HOME=~root
+fi
+
+DEFAULT_REPO="area515/Creation-Workshop-Host"
+CONFIG_PROPS="${HOME}/3dPrinters/config.properties"
+
+echo "Local Config: $CONFIG_PROPS"
+
+if [ -f ${CONFIG_PROPS} ]; then
+  CONFIG_REPO=$(grep '^updateRepo' "${CONFIG_PROPS}" | cut -d= -f 2 | awk '$1=$1')
+  if [[ ${CONFIG_REPO} ]]; then
+    DEFAULT_REPO="${CONFIG_REPO}"
+  fi
+fi
+
 if [ -z "$1" ]; then
-	repo="area515/Creation-Workshop-Host"
+	repo=${DEFAULT_REPO}
 else
-	if [[ $1 =~ .*Creation-Workshop-Host.* ]]; then
+	if [[ $1 =~ .*Creation-Workshop-Host.* ]] || [[ $1 =~ .*Photonic3D.* ]]; then
 		repo=$1
 	else
 		repo="$1/Creation-Workshop-Host"
@@ -143,7 +159,7 @@ if [ ! -f "/etc/init.d/cwhservice" ]; then
 fi
 
 echo Determinging if one time install has occurred
-performedOneTimeInstall=$(grep performedOneTimeInstall ~/3dPrinters/config.properties | awk -F= '{print $2}')
+performedOneTimeInstall=$(grep performedOneTimeInstall ${CONFIG_PROPS} | awk -F= '{print $2}')
 if [ -f "oneTimeInstall.sh" -a [${performedOneTimeInstall} != "true"] ]; then
 	./oneTimeInstall.sh
 fi
@@ -155,13 +171,13 @@ fi
 if [ "$2" == "debug" ]; then
 	pkill -9 -f "org.area515.resinprinter.server.Main"
 	echo "Starting printer host server($2)"
-	java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Dlog4j.configurationFile=debuglog4j2.properties -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
+	java -Xmx512m -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Dlog4j.configurationFile=debuglog4j2.properties -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
 elif [ "$2" == "TestKit" ]; then
 	pkill -9 -f "org.area515.resinprinter.test.HardwareCompatibilityTestSuite"
 	echo Starting test kit
-	java -Dlog4j.configurationFile=testlog4j2.properties -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.junit.runner.JUnitCore org.area515.resinprinter.test.HardwareCompatibilityTestSuite &
+	java -Xmx512m -Dlog4j.configurationFile=testlog4j2.properties -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.junit.runner.JUnitCore org.area515.resinprinter.test.HardwareCompatibilityTestSuite &
 else
 	pkill -9 -f "org.area515.resinprinter.server.Main"
 	echo Starting printer host server
-	java -Dlog4j.configurationFile=log4j2.properties -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
+	java -Xmx512m -Dlog4j.configurationFile=log4j2.properties -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
 fi

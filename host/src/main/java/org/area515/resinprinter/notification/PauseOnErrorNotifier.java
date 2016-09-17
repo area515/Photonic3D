@@ -1,6 +1,7 @@
 package org.area515.resinprinter.notification;
 
 import java.io.File;
+import java.net.URI;
 import java.util.List;
 
 import javax.websocket.server.ServerContainer;
@@ -13,7 +14,7 @@ import org.area515.resinprinter.slice.StlError;
 
 public class PauseOnErrorNotifier implements Notifier {
 	@Override
-	public void register(ServerContainer container) throws InappropriateDeviceException {
+	public void register(URI uri, ServerContainer container) throws InappropriateDeviceException {
 	}
 
 	@Override
@@ -53,6 +54,12 @@ public class PauseOnErrorNotifier implements Notifier {
 	public Long getTimeOfLastClientPing() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void remoteMessageReceived(String message) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

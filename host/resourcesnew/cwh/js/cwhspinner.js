@@ -4,7 +4,7 @@ angular.module('cwh.spinner', []).directive('cwhSpinner', function() {
         template: 	'<span class="input-group-btn">' +
 						'<a class="btn btn-primary" ng-click="goClick()">Go</a>' +
         			'</span>' +
-        			'<input type="text" class="form-control" ng-keyup="setModel()" placeholder="placeholder">' +
+        			'<input type="text" step="0.01" class="form-control" ng-keyup="setModel()" placeholder="placeholder">' +
         			'<span class="input-group-addon input-large btn btn-success" ng-click="increment()">+</span>' + 
         			'<span class="input-group-addon input-large btn btn-danger" ng-click="decrement()">-</span>',
         scope: { },

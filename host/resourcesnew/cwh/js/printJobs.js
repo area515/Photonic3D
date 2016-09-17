@@ -12,7 +12,7 @@
 		this.currentBuildPhoto = {width: 500, height: 500, url: null};
 		this.currentBuildVideo = {width: 100, height: 100, url: null};
 		this.currentBuildLiveStream = {url: null, clientId: Math.random()}
-		
+
 		function refreshSelectedPrintJob(printJobList) {
         	var foundPrintJob = false;
         	
@@ -63,6 +63,7 @@
 	        		})
 	    }
 		this.stopPrintJob = function stopPrintJob() {
+			$('#stop-btn').attr('class', 'fa fa-refresh fa-spin');
 			var printJobId = encodeURIComponent(controller.currentPrintJob.id);
 	        $http.post("/services/printJobs/stopJob/" + printJobId).success(function (data) {
 	        			if (data.response) {
@@ -70,8 +71,10 @@
 	        			} else {
 		        			$scope.$emit("MachineResponse", {machineResponse: data, successFunction:null, afterErrorFunction:null});
 	        			}
+	        			$('#stop-btn').attr('class', 'fa fa-stop');
 	        		}).error(function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
+ 	        			$('#stop-btn').attr('class', 'fa fa-stop');
 	        		})
 	    }
 		this.changeCurrentPrintJob = function changeCurrentPrintJob(newPrintJob) {
@@ -168,6 +171,9 @@
 			}
 			if (printable.printFileProcessor.friendlyName === 'Simple Text') {
 				return "fa-bold";
+			}
+			if (printable.printFileProcessor.friendlyName === 'Scalable Vector Graphics') {
+				return "fa-puzzle-piece";
 			}
 			return "fa-question-circle";
 		}

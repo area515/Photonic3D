@@ -1,6 +1,7 @@
 package org.area515.resinprinter.notification;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -20,7 +21,7 @@ public class NotificationManager {
     private static final Logger logger = LogManager.getLogger();
 	private static List<Notifier> notifiers = null;
 	
-	public static void start(ServerContainer container) {
+	public static void start(URI uri, ServerContainer container) {
 		if (notifiers != null) {
 			return;
 		}
@@ -31,7 +32,7 @@ public class NotificationManager {
 			Notifier notifier;
 			try {
 				notifier = currentClass.newInstance();
-				notifier.register(container);
+				notifier.register(uri, container);
 				notifiers.add(notifier);
 			} catch (InstantiationException | IllegalAccessException | InappropriateDeviceException e) {
 				logger.error("Couldn't start Notifier", e);
@@ -80,6 +81,10 @@ public class NotificationManager {
 	}
 	
 	public static void hostSettingsChanged() {
+		if (notifiers == null) {
+			return;
+		}
+		
 		for (Notifier currentNotifier : notifiers) {
 			currentNotifier.hostSettingsChanged();
 		}
@@ -101,5 +106,15 @@ public class NotificationManager {
 		}
 		
 		return latestPing;
+	}
+	
+	public static void remoteMessageReceived(String remoteMessage) {
+		if (notifiers == null) {
+			return;
+		}
+		
+		for (Notifier currentNotifier : notifiers) {
+			currentNotifier.remoteMessageReceived(remoteMessage);
+		}
 	}
 }

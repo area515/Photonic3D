@@ -29,6 +29,10 @@ public class SlicingProfile implements Named {
         private Double extrusionHeightMM;
         @XmlElement(name="PlatformCalculator")
         private String platformCalculator;
+        @XmlElement(name="EdgeDetectionDisabled")
+        private Boolean edgeDetectionDisabled;
+        @XmlElement(name="ScaleImageToFitPrintArea")
+        private Boolean scaleImageToFitPrintArea;
         
         @XmlTransient
 		public Font getFont() {
@@ -47,6 +51,14 @@ public class SlicingProfile implements Named {
 		}
 		
 		@XmlTransient
+		public Boolean isEdgeDetectionDisabled() {
+			return edgeDetectionDisabled;
+		}
+		public void setEdgeDetectionDisabled(Boolean edgeDetectionDisabled) {
+			this.edgeDetectionDisabled = edgeDetectionDisabled;
+		}
+		
+		@XmlTransient
 		public Double getExtrusionHeightMM() {
 			return extrusionHeightMM;
 		}
@@ -60,6 +72,14 @@ public class SlicingProfile implements Named {
 		}
 		public void setPlatformCalculator(String platformCalculator) {
 			this.platformCalculator = platformCalculator;
+		}
+		
+		@XmlTransient
+		public Boolean isScaleImageToFitPrintArea() {
+			return scaleImageToFitPrintArea;
+		}
+		public void setScaleImageToFitPrintArea(Boolean scaleImageToFitPrintArea) {
+			this.scaleImageToFitPrintArea = scaleImageToFitPrintArea;
 		}
     }
     

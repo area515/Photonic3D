@@ -21,10 +21,10 @@ public class DetectFirmwareMock {
 		String grblOk = "ok\r\n";
 		SerialCommunicationsPort serialPort = Mockito.mock(SerialCommunicationsPort.class);
 		Mockito.when(serialPort.read())
-			.thenAnswer(new SerialPortReadDelayedAnswer(SerialManager.TIME_OUT, grblChitChat.getBytes()))
-			.thenAnswer(new SerialPortReadDelayedAnswer(SerialManager.TIME_OUT, null))
-			.thenAnswer(new SerialPortReadDelayedAnswer(SerialManager.TIME_OUT, grblOk.getBytes()))
-			.thenAnswer(new SerialPortReadDelayedAnswer(SerialManager.TIME_OUT, null));
+			.thenAnswer(new SerialPortReadDelayedAnswer(SerialManager.READ_CHITCHAT_TIME_OUT, grblChitChat.getBytes()))
+			.thenAnswer(new SerialPortReadDelayedAnswer(SerialManager.READ_CHITCHAT_TIME_OUT, null))
+			.thenAnswer(new SerialPortReadDelayedAnswer(SerialManager.READ_CHITCHAT_TIME_OUT, grblOk.getBytes()))
+			.thenAnswer(new SerialPortReadDelayedAnswer(SerialManager.READ_CHITCHAT_TIME_OUT, null));
 		ComPortSettings comPort = Mockito.mock(ComPortSettings.class);
 		 
 		Assert.assertTrue(SerialManager.Instance().is3dFirmware(serialPort, comPort));

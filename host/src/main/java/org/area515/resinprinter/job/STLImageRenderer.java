@@ -5,18 +5,24 @@ import java.awt.image.BufferedImage;
 
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.render.CurrentImageRenderer;
-import org.area515.resinprinter.job.render.RenderingFileData;
-import org.area515.resinprinter.job.render.RenderingFileData.ImageData;
 
 public class STLImageRenderer extends CurrentImageRenderer {
-	public STLImageRenderer(DataAid aid, AbstractPrintFileProcessor<?,?> processor, RenderingFileData data, Object imageIndexToBuild, int width, int height) {
-		super(aid, processor, data, imageIndexToBuild, width, height);
+	public STLImageRenderer(DataAid aid, AbstractPrintFileProcessor<?,?> processor, Object imageIndexToBuild) {
+		super(aid, processor, imageIndexToBuild);
 	}
 
 	@Override
-	public void renderImage(BufferedImage image, Graphics2D g2, ImageData imageData) {
-		data.slicer.colorizePolygons(null, null);
-		data.slicer.paintSlice(g2);
-		imageData.setArea((double)data.slicer.getBuildArea());
+	public BufferedImage renderImage(BufferedImage imageToDisplay) {
+		STLDataAid aid = (STLDataAid)this.aid;
+		aid.slicer.colorizePolygons(null, null);
+		if (imageToDisplay == null) {
+			imageToDisplay = buildLargestImageBetweenPrinterAndRenderedImage((int)aid.slicer.getWidthPixels(), (int)aid.slicer.getHeightPixels());
+		}
+		
+		Graphics2D g2 = (Graphics2D)imageToDisplay.getGraphics();
+		aid.slicer.paintSlice(g2);
+		
+		//imageToDisplay.setArea((double)aid.slicer.getBuildArea());//TODO: This won't work if affine transforms are applied afterwards!
+		return imageToDisplay;
 	}
 }

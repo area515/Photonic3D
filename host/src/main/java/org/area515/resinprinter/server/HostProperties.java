@@ -47,8 +47,12 @@ import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.projector.HexCodeBasedProjector;
 import org.area515.resinprinter.projector.ProjectorModel;
+import org.area515.resinprinter.security.UserManagementException;
+import org.area515.resinprinter.security.keystore.KeystoreLoginService;
 import org.area515.resinprinter.serial.RXTXSynchronousReadBasedCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
+import org.area515.resinprinter.services.UserService;
+import org.area515.resinprinter.util.security.PhotonicUser;
 import org.area515.util.IOUtilities;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -57,8 +61,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class HostProperties {
     private static final Logger logger = LogManager.getLogger();
-	public static String FULL_RIGHTS = "adminRole";
-
+    
 	public static String PROFILES_EXTENSION = ".slicing";
 	public File PROFILES_DIR = new File(System.getProperty("user.home"), "Profiles");
 	public static String MACHINE_EXTENSION = ".machine";
@@ -81,6 +84,7 @@ public class HostProperties {
 	private List<PrintFileProcessor> printFileProcessors = new ArrayList<PrintFileProcessor>();
 	private Class<SerialCommunicationsPort> serialPortClass;
 	private Class<NetworkManager> networkManagerClass;
+	
 	private int versionNumber;
 	private String releaseTagName;
 	private List<String> visibleCards;
@@ -89,20 +93,19 @@ public class HostProperties {
 	private CountDownLatch hostReady = new CountDownLatch(1);
 	private String scriptEngineLanguage = null;
 	private String printerProfileRepo;
-	
+	private boolean useAuthentication;
+
 	//SSL settings:
 	private boolean useSSL;
 	private int printerHostPort;
-	private File keystoreFile;
-	private String keypairPassword;
-	private String keystorePassword;
+	private File sslKeystoreFile;
+	private String sslKeypairPassword;
+	private String sslKeystorePassword;
+	private File userKeystoreFile;
+	private String userKeystorePassword;
 	private String securityRealmName;
 	//Optional SSL settings:
 	private String externallyAccessableName;
-	
-	//This is for authentication
-	private String clientUsername;
-	private String clientPassword;
 	
 	//These are OS specific commands
 	private String[] streamingCommand;
@@ -110,10 +113,19 @@ public class HostProperties {
 	private String[] dumpStackTraceCommand;
 	private String[] rebootCommand;
 	
+	private ScriptEngine sharedScriptEngine;
+	
 	public synchronized static HostProperties Instance() {
 		if (INSTANCE == null) {
 			INSTANCE = new HostProperties();
+
+			//Put any calls here if they require an initialized HostProperties();
+			if (INSTANCE.isUseAuthentication()) {
+				//We do this to make sure that people can still login after our keystore migration
+				INSTANCE.migratePropertyUserUserManagementFeature(INSTANCE.getMergedProperties(), INSTANCE.securityRealmName);
+			}
 		}
+		
 		return INSTANCE;
 	}
 	
@@ -125,6 +137,35 @@ public class HostProperties {
 		}
 		
 		return configurationProperties;
+	}
+	
+	/**
+	 * ScriptEngines can be used multithreaded, except that they should not share Bindings
+	 * 
+	 * @return the sharedScriptEngine
+	 */
+	public ScriptEngine getSharedScriptEngine() {
+		return this.sharedScriptEngine;
+	}
+
+	private void migratePropertyUserUserManagementFeature(Properties configurationProperties, String securityRealmName) {
+		String clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", null);
+		String clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", null);
+		if (clientUsername != null) {
+			if (clientPassword != null) {
+				try {
+					PhotonicUser newUser = new PhotonicUser(clientUsername, clientPassword, null, null, new String[] {PhotonicUser.FULL_RIGHTS}, false);
+					UserService.INSTANCE.createNewUser(newUser);
+					removeProperties(securityRealmName + ".clientUsername", securityRealmName + ".clientPassword");
+				} catch (UserManagementException e) {
+					logger.error("Couldn't migrate user", e);
+				}
+			} else {
+				removeProperties(securityRealmName + ".clientUsername");
+			}
+		} else if (clientPassword != null) {
+			removeProperties(securityRealmName + ".clientPassword");
+		}
 	}
 	
 	private HostProperties() {
@@ -140,7 +181,7 @@ public class HostProperties {
 			logger.info("Couldn't make machine directory. No write access or disk full?" );
 			throw new IllegalArgumentException("Couldn't make machine directory. No write access or disk full?");
 		}
-
+		
 		Properties configurationProperties = getMergedProperties();
 		printDirString = configurationProperties.getProperty("printdir");
 		uploadDirString = configurationProperties.getProperty("uploaddir");
@@ -212,22 +253,36 @@ public class HostProperties {
 			logger.error("Failed to load NetworkManagerImplementation:{}", networkManagerName);
 		}
 
+		String userManagementFeature = null;
+		try {
+			userManagementFeature = configurationProperties.getProperty("UserManagementFeatureImplementation", KeystoreLoginService.class.getName());
+			Class<Feature> userManagementFeatureClass = (Class<Feature>)Class.forName(userManagementFeature);
+			featureClasses.add(userManagementFeatureClass);
+		} catch (ClassNotFoundException e) {
+			logger.error("Failed to load UserManagementFeatureImplementation:{}", userManagementFeature);
+		}
+		
 		//Here are all of the server configuration settings
-		String keystoreFilename = configurationProperties.getProperty("keystoreFilename");
-		if (keystoreFilename != null) {
-			keystoreFile = new File(keystoreFilename);
+		String sslKeystoreFilename = configurationProperties.getProperty("keystoreFilename");
+		if (sslKeystoreFilename != null) {
+			sslKeystoreFile = new File(sslKeystoreFilename);
+		}
+		String userKeystoreFilename = configurationProperties.getProperty("userKeystoreFilename");
+		if (userKeystoreFilename != null) {
+			userKeystoreFile = new File(userKeystoreFilename);
 		}
 		useSSL = new Boolean(configurationProperties.getProperty("useSSL", "false"));
 		printerHostPort = new Integer(configurationProperties.getProperty("printerHostPort", useSSL?"443":"9091"));
 		if (System.getProperty("overrideHostPort") != null) {
 			printerHostPort = Integer.parseInt(System.getProperty("overrideHostPort"));
 		}
+		useAuthentication = new Boolean(configurationProperties.getProperty("useAuthentication", "false"));
 		externallyAccessableName = configurationProperties.getProperty("externallyAccessableName");
-		keypairPassword = configurationProperties.getProperty("keypairPassword");
-		keystorePassword = configurationProperties.getProperty("keystorePassword");
+		sslKeypairPassword = configurationProperties.getProperty("keypairPassword");
+		sslKeystorePassword = configurationProperties.getProperty("keystorePassword");
+		userKeystorePassword = configurationProperties.getProperty("userKeystorePassword");
 		securityRealmName = configurationProperties.getProperty("securityRealmName", "SecurityRealm");
-		clientUsername = configurationProperties.getProperty(securityRealmName + ".clientUsername", "");
-		clientPassword = configurationProperties.getProperty(securityRealmName + ".clientPassword", "");
+		
 		forwardHeader = configurationProperties.getProperty("forwardHeader", null);
 		removeJobOnCompletion = new Boolean(configurationProperties.getProperty("removeJobOnCompletion", "true"));
 		forceCalibrationOnFirstUse = new Boolean(configurationProperties.getProperty("forceCalibrationOnFirstUse", "false"));
@@ -248,7 +303,7 @@ public class HostProperties {
 		}
 		
 		if (uploadDirString == null) {
-			uploadDir = new File(System.getProperty("java.io.tmpdir"), "uploaddir");
+			uploadDir = new File(System.getProperty("user.home"), "uploaddir");
 		} else {
 			uploadDir = new File(uploadDirString);
 		}
@@ -280,6 +335,8 @@ public class HostProperties {
 				throw new IllegalArgumentException("Couldn't create upload directory", e);
 			}
 		}
+		
+		this.sharedScriptEngine = this.buildScriptEngine();
 	}
 
 	private Properties getClasspathProperties() {
@@ -363,14 +420,6 @@ public class HostProperties {
 		return new ScriptEngineManager().getEngineByExtension(scriptEngineLanguage);
 	}
 	
-	public String getClientUsername() {
-		return clientUsername;
-	}
-
-	public String getClientPassword() {
-		return clientPassword;
-	}
-
 	public String getSecurityRealmName() {
 		return securityRealmName;
 	}
@@ -415,12 +464,24 @@ public class HostProperties {
 		return fakedisplay;
 	}
 	
-	public String getKeypairPassword() {
-		return keypairPassword;
+	public String getSSLKeypairPassword() {
+		return sslKeypairPassword;
 	}
 
-	public String getKeystorePassword() {
-		return keystorePassword;
+	public String getSSLKeystorePassword() {
+		return sslKeystorePassword;
+	}
+
+	public File getSSLKeystoreFile() {
+		return sslKeystoreFile;
+	}
+
+	public String getUserKeystorePassword() {
+		return userKeystorePassword;
+	}
+
+	public File getUserKeystoreFile() {
+		return userKeystoreFile;
 	}
 
 	public Class<SerialCommunicationsPort> getSerialCommunicationsClass() {
@@ -446,6 +507,10 @@ public class HostProperties {
 	public boolean isUseSSL() {
 		return useSSL;
 	}
+	
+	public boolean isUseAuthentication() {
+		return useAuthentication;
+	}
 
 	public String getForwardHeader() {
 		return forwardHeader;
@@ -453,10 +518,6 @@ public class HostProperties {
 
 	public String getExternallyAccessableName() {
 		return externallyAccessableName;
-	}
-
-	public File getKeystoreFile() {
-		return keystoreFile;
 	}
 
 	public String[] getDumpStackTraceCommand() {
@@ -507,10 +568,11 @@ public class HostProperties {
 	public HostInformation loadHostInformation() {
 		Properties configurationProperties = getMergedProperties();
 		HostInformation settings = new HostInformation(
-				configurationProperties.getProperty("deviceName", "3D Multiprint Host"),
-				configurationProperties.getProperty("manufacturer", "Wes & Sean"));
+				configurationProperties.getProperty("deviceName", "Photonic 3D Multiprint Host"),
+				configurationProperties.getProperty("manufacturer", "Wes Gilster"));
 		return settings;
 	}
+	
 	public void saveHostInformation(HostInformation device) {
 		Properties hostInfoformationProperties = new Properties();
 		hostInfoformationProperties.setProperty("deviceName", device.getDeviceName());
@@ -764,6 +826,20 @@ public class HostProperties {
 		}
 	}
 	
+	private void overwriteOverriddenConfigurationProperties(Properties overridenConfigurationProperties) {
+		File configPropertiesInPrintersDirectory = new File(printerDir, "config.properties");
+		printerDir.mkdirs();
+		FileOutputStream stream = null;
+		try {
+			stream = new FileOutputStream(configPropertiesInPrintersDirectory);
+			overridenConfigurationProperties.store(stream, "File created by CWH");
+		} catch (IOException e) {
+			logger.error("Problem saving configuration properties from:" + configPropertiesInPrintersDirectory, e);
+			throw new IllegalArgumentException("Couldn't create:" + configPropertiesInPrintersDirectory, e);
+		} finally {
+			IOUtils.closeQuietly(stream);
+		}
+	}
 	public void hostStartupComplete() {
 		Properties oneTimeInstall = new Properties();
 		oneTimeInstall.setProperty("performedOneTimeInstall", "true");
@@ -776,6 +852,33 @@ public class HostProperties {
 		NotificationManager.hostSettingsChanged();
 	}
 
+	public void saveProperty(String name, String value) {
+		Properties properties = loadOverriddenConfigurationProperties();
+		properties.setProperty(name, value);
+		
+		overwriteOverriddenConfigurationProperties(properties);
+		NotificationManager.hostSettingsChanged();
+	}
+	
+	public String loadProperty(String name) {
+		Properties properties = loadOverriddenConfigurationProperties();
+		String value = properties.getProperty(name);
+		
+		overwriteOverriddenConfigurationProperties(properties);
+		NotificationManager.hostSettingsChanged();
+		return value;
+	}
+	
+	public void removeProperties(String... propertiesToRemove) {
+		Properties properties = loadOverriddenConfigurationProperties();
+		for (String property : propertiesToRemove) {
+			properties.remove(property);
+		}
+		
+		overwriteOverriddenConfigurationProperties(properties);
+		NotificationManager.hostSettingsChanged();
+	}
+	
 	//TODO: Implement versioning so that we don't have any lost update issues.
 	public void addOrUpdatePrinterConfiguration(PrinterConfiguration configuration) throws AlreadyAssignedException {
 		getPrinterConfigurations();

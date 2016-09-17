@@ -252,7 +252,7 @@ public class ImageDetectionPanel extends JSplitPane {
 		doubleClickedLines.clear();
 		doubleClickedCircles.clear();
 		
-		shapesImage = new BufferedImage(edgesImage.getWidth(), edgesImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		shapesImage = new BufferedImage(edgesImage.getWidth(), edgesImage.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
 		GenericHoughDetection<Line> lineHoughDetection = printMaterialDetector.buildLineDetection(edgesImage.getWidth(), edgesImage.getHeight());
 		for (HoughReference reference : watchedLines) {
 			lineHoughDetection.addWatch(reference, Color.BLUE);

@@ -1,6 +1,5 @@
 package org.area515.resinprinter.job;
 
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,6 +26,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
@@ -64,9 +64,14 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	}
 	
 	@Override
+	public DataAid createDataAid(PrintJob printJob) throws JobManagerException {
+		return new DataAid(printJob);//TODO: This should use RenderingCache some day
+	}
+
+	@Override
 	public JobStatus processFile(final PrintJob printJob) throws Exception {
 		File gCodeFile = findGcodeFile(printJob.getJobFile());
-		DataAid aid = initializeDataAid(printJob);
+		DataAid aid = initializeJobCacheWithDataAid(printJob);
 		
 		Printer printer = printJob.getPrinter();
 		BufferedReader stream = null;
@@ -78,11 +83,9 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 			String currentLine;
 			Integer sliceCount = null;
 			Pattern slicePattern = Pattern.compile("\\s*;\\s*<\\s*Slice\\s*>\\s*(\\d+|blank)\\s*", Pattern.CASE_INSENSITIVE);
-			Pattern delayPattern = Pattern.compile("\\s*;\\s*<\\s*Delay\\s*>\\s*(\\d+)\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern liftSpeedPattern = Pattern.compile(   "\\s*;\\s*\\(?\\s*Z\\s*Lift\\s*Feed\\s*Rate\\s*=\\s*([\\d\\.]+)\\s*(?:[Mm]{2}?/[Ss])?\\s*\\)?\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern liftDistancePattern = Pattern.compile("\\s*;\\s*\\(?\\s*Lift\\s*Distance\\s*=\\s*([\\d\\.]+)\\s*(?:[Mm]{2})?\\s*\\)?\\s*", Pattern.CASE_INSENSITIVE);
 			Pattern sliceCountPattern = Pattern.compile("\\s*;\\s*Number\\s*of\\s*Slices\\s*=\\s*(\\d+)\\s*", Pattern.CASE_INSENSITIVE);
-			Pattern gCodePattern = Pattern.compile("\\s*([^;]+)\\s*;?.*", Pattern.CASE_INSENSITIVE);
 			
 			//We can't set these values, that means they aren't set to helpful values when this job starts
 			//data.printJob.setExposureTime(data.inkConfiguration.getExposureTime());
@@ -119,7 +122,8 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 							String imageFilename = FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png";
 							File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
 							BufferedImage newImage = ImageIO.read(imageFile);
-							applyBulbMask(aid, (Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
+							newImage = applyImageTransforms(aid, newImage);
+							// applyBulbMask(aid, (Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
 							currentlyDisplayedImage.put(printJob, newImage);
 							logger.info("Show picture: {}", imageFilename);
 							
@@ -135,7 +139,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 						continue;
 					}
 					
-					matcher = delayPattern.matcher(currentLine);
+					/*matcher = delayPattern.matcher(currentLine);
 					if (matcher.matches()) {
 						try {
 							int sleepTime = Integer.parseInt(matcher.group(1));
@@ -151,7 +155,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 							logger.error("Interrupted while waiting for exposure to complete.", e);
 						}
 						continue;
-					}
+					}*/
 					
 					matcher = sliceCountPattern.matcher(currentLine);
 					if (matcher.matches()) {
@@ -185,7 +189,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 						continue;
 					}
 					
-					matcher = gCodePattern.matcher(currentLine);
+					/*matcher = gCodePattern.matcher(currentLine);
 					if (matcher.matches()) {
 						String gCode = matcher.group(1).trim();
 						logger.info("Send GCode:{}", gCode);
@@ -199,10 +203,11 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 						}
 						logger.info("Printer Response:{}", gCode);
 						continue;
-					}
+					}*/
 					
 					// print out comments
-					logger.info("Ignored line:{}", currentLine);
+					//logger.info("Ignored line:{}", currentLine);
+					printer.getGCodeControl().executeGCodeWithTemplating(printJob, currentLine);
 			}
 			
 			return printer.isPrintActive()?JobStatus.Completed:printer.getStatus();
@@ -372,5 +377,10 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	@Override
 	public String getFriendlyName() {
 		return "Creation Workshop Scene";
+	}
+
+	@Override
+	public boolean isThreeDimensionalGeometryAvailable() {
+		return false;
 	}
 }

@@ -1,32 +1,18 @@
 package org.area515.resinprinter.printphoto;
 
-import java.awt.Graphics;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import org.area515.resinprinter.inkdetection.visual.CannyEdgeDetector8BitGray;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
-import org.area515.resinprinter.printer.SlicingProfile;
-import org.area515.resinprinter.server.Main;
+import org.area515.resinprinter.twodim.TwoDimensionalImageRenderer;
 import org.area515.resinprinter.twodim.TwoDimensionalPlatformPrintFileProcessor;
 
 public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProcessor<Object,Object> {
-	private class PrintImage extends TwoDimensionalPrintState {
-		Future<BufferedImage> futureImage;
-
-		@Override
-		public BufferedImage buildExtrusionImage(DataAid aid) throws ExecutionException, InterruptedException {
-			return futureImage.get();
-		}
-	}
-	
 	@Override
 	public String[] getFileExtensions() {
 		return new String[]{"gif", "jpg", "jpeg", "png"};
@@ -38,49 +24,7 @@ public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProc
 		String name = processingFile.getName().toLowerCase();
 		return name.endsWith("gif") || name.endsWith("jpg") || name.endsWith("jpeg") || name.endsWith("png");
 	}
-	
-	@Override
-	public void prepareEnvironment(final File processingFile, final PrintJob printJob) throws JobManagerException {
-		Future<BufferedImage> future = Main.GLOBAL_EXECUTOR.submit(new Callable<BufferedImage>() {
-			@Override
-			public BufferedImage call() throws Exception {
-				SlicingProfile profile = printJob.getPrinter().getConfiguration().getSlicingProfile();
-				BufferedImage image = ImageIO.read(processingFile);
-				int actualWidth = profile.getxResolution() - image.getWidth();
-				int actualHeight = profile.getyResolution() - image.getHeight();
-				
-				if (actualWidth < actualHeight && actualHeight < 0) {
-					actualWidth = profile.getxResolution();
-					actualHeight = -1;
-				} else if (actualWidth < actualHeight) {
-					actualWidth = image.getWidth();
-					actualHeight = -1;
-				} else if (actualHeight < actualWidth && actualWidth < 0) {
-					actualHeight = profile.getyResolution();
-					actualWidth = -1;
-				} else {
-					actualHeight = image.getHeight();
-					actualWidth = -1;
-				}
-				Image scaledImage = image.getScaledInstance(actualWidth, actualHeight, Image.SCALE_SMOOTH);
-				BufferedImage newImage = new BufferedImage(scaledImage.getWidth(null), scaledImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-				Graphics g = newImage.createGraphics();
-				g.drawImage(scaledImage, 0, 0, null);
-				g.dispose();
-				
-				CannyEdgeDetector8BitGray edgeDetector = new CannyEdgeDetector8BitGray();
-				edgeDetector.setLowThreshold(.01f);
-				edgeDetector.setHighThreshold(3f);
-				edgeDetector.setSourceImage(newImage);
-				edgeDetector.process();
-				return edgeDetector.getEdgesImage();
-			}
-		});
-		PrintImage printCube = new PrintImage();
-		printCube.futureImage = future;
-		createTwoDimensionalPrintState(printJob, printCube);
-	}
-
+		
 	@Override
 	public void cleanupEnvironment(File processingFile) throws JobManagerException {
 		//Nothing to cleanup everything is done in memory.
@@ -99,5 +43,24 @@ public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProc
 	@Override
 	public String getFriendlyName() {
 		return "Image";
+	}
+
+	@Override
+	public boolean isThreeDimensionalGeometryAvailable() {
+		return false;
+	}
+
+	@Override
+	public TwoDimensionalImageRenderer createRenderer(DataAid aid, AbstractPrintFileProcessor<?, ?> processor, Object imageIndexToBuild) {
+		return new TwoDimensionalImageRenderer(aid, processor, imageIndexToBuild) {
+			@Override
+			public BufferedImage loadImageFromFile(PrintJob job) throws JobManagerException {
+				try {
+					return ImageIO.read(job.getJobFile());
+				} catch (IOException e) {
+					throw new JobManagerException("Couldn't load image file:" + job.getJobFile(), e);
+				}
+			}
+		};
 	}
 }

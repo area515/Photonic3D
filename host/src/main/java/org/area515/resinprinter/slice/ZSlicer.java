@@ -49,6 +49,7 @@ public class ZSlicer {
 	 private double zOffset = .05;
 	 private StlFile<Triangle3d> stlFile;
 	 private boolean keepTrackOfErrors = false;
+	 private boolean rewriteNormalsWithRightHandRule = false;
 	 private PolygonMendingMechanism fixBrokenLoops;
 	 
 	 //These are the variables per z
@@ -65,7 +66,8 @@ public class ZSlicer {
 	 private int buildArea;
 	 
 	 //TODO: Need to add in super sampling
-	 public ZSlicer(double stlScale, double pixelsPerMMX, double pixelsPerMMY, double zSliceResolution, double zSliceOffset, boolean keepTrackOfErrors, PolygonMendingMechanism fixBrokenLoops) {
+	 public ZSlicer(double stlScale, double pixelsPerMMX, double pixelsPerMMY, double zSliceResolution, double zSliceOffset, boolean keepTrackOfErrors, boolean rewriteNormalsWithRightHandRule, PolygonMendingMechanism fixBrokenLoops) {
+		 this.rewriteNormalsWithRightHandRule = rewriteNormalsWithRightHandRule;
 		 this.stlScale = stlScale;
 		 this.pixelsPerMMX = pixelsPerMMX;
 		 this.pixelsPerMMY = pixelsPerMMY;
@@ -934,22 +936,24 @@ public class ZSlicer {
 	 
 	 public void loadFile(InputStream stream, Double buildPlatformXPixels, Double buildPlatformYPixels) throws IOException {
 		  logger.info("Load file start", ()->Log4jTimer.startTimer("fileLoadTime"));
-		  stlFile.load(stream);
+		  stlFile.load(stream, rewriteNormalsWithRightHandRule);
  
 		if (imageOffsetX == null) {
 			if (buildPlatformXPixels != null) {
-				imageOffsetX = (buildPlatformXPixels / 2) - (stlFile.getWidth() / precisionScaler * pixelsPerMMX / 2)
+				imageOffsetX = (buildPlatformXPixels / 2) 
+						- (stlFile.getWidth() / precisionScaler * pixelsPerMMX / 2)
 						- (stlFile.getXmin() / precisionScaler * pixelsPerMMX);
 			} else {
-				imageOffsetX = 0.0;
+				imageOffsetX = -stlFile.getXmin() / precisionScaler * pixelsPerMMX;
 			}
 		}
 		if (imageOffsetY == null) {
 			if (buildPlatformYPixels != null) {
-				imageOffsetY = (buildPlatformYPixels / 2) - (stlFile.getHeight() / precisionScaler * pixelsPerMMY / 2)
+				imageOffsetY = (buildPlatformYPixels / 2) 
+						- (stlFile.getHeight() / precisionScaler * pixelsPerMMY / 2)
 						- (stlFile.getYmin() / precisionScaler * pixelsPerMMY);
 			} else {
-				imageOffsetY = 0.0;
+				imageOffsetY = -stlFile.getYmin() / precisionScaler * pixelsPerMMY;
 			}
 		}
 		logger.info("Load file stop:{}", ()->Log4jTimer.completeTimer("fileLoadTime"));
@@ -981,7 +985,15 @@ public class ZSlicer {
 	public double getStlScale() {
 		return stlScale;
 	}
-
+	
+	public double getWidthPixels() {
+		return stlFile.getWidth() * pixelsPerMMX;
+	}
+	
+	public double getHeightPixels() {
+		return stlFile.getHeight() * pixelsPerMMX;
+	}
+	
 	public int getZMinIndex() {
 		return (int)Math.ceil(stlFile.getZmin() / precisionScaler / sliceResolution - zOffset);
 	}

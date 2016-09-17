@@ -56,6 +56,10 @@
 			$scope.$emit("HTTPError", {status:error.status, statusText:error.data});
 		};
 		
+		this.returnToPrinterList = function returnToPrinterList() {
+			$location.path('/printersPage').search({autodirect: 'disabled'});
+		}
+
         this.move = function move(dimension, step) {
 			$http.get("services/printers/move" + dimension + "/" + printerName + "/" + step).then(gCodeSuccess, errorFunction)
 		}

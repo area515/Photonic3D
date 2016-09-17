@@ -11,10 +11,12 @@ import org.area515.resinprinter.job.PrintJob;
 public class StubPrintFileProcessor<G,E> implements PrintFileProcessor<G,E> {
 	private String[] fileExtensions;
 	private String friendlyName;
-
+	private boolean threeDimensionalGeometryAvailable;
+	
 	public StubPrintFileProcessor(PrintFileProcessor<G,E> processor) {
 		this.fileExtensions = processor.getFileExtensions();
 		this.friendlyName = processor.getFriendlyName();
+		this.threeDimensionalGeometryAvailable = processor.isThreeDimensionalGeometryAvailable();
 	}
 	
 	public StubPrintFileProcessor() {
@@ -66,5 +68,10 @@ public class StubPrintFileProcessor<G,E> implements PrintFileProcessor<G,E> {
 	@Override
 	public E getErrors(PrintJob printJob) throws JobManagerException {
 		throw new JobManagerException("This job is no longer operational");
+	}
+
+	@Override
+	public boolean isThreeDimensionalGeometryAvailable() {
+		return threeDimensionalGeometryAvailable;
 	}
 }

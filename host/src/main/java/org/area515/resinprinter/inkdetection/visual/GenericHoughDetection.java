@@ -427,7 +427,7 @@ public class GenericHoughDetection<S> {
     }
     
     public BufferedImage generateWatchOverlayInImageSpace(int width, int height, Integer scaleIndex) {
-    	BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+    	BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
     	if (watchedReferences != null) {
 	    	WritableRaster d = image.getRaster();
 	    	for (Map.Entry<HoughReference, WatchShape> watch : watchedReferences.entrySet()) {
@@ -444,7 +444,7 @@ public class GenericHoughDetection<S> {
     }
     
     public BufferedImage generateWatchOverlayInHoughSpace(Integer scaleIndex) {
-    	BufferedImage image = new BufferedImage(houghSpaceSize[0], houghSpaceSize[1], BufferedImage.TYPE_INT_ARGB);
+    	BufferedImage image = new BufferedImage(houghSpaceSize[0], houghSpaceSize[1], BufferedImage.TYPE_4BYTE_ABGR);
     	if (watchedReferences != null) {
 	    	WritableRaster d = image.getRaster();
 	    	for (Map.Entry<HoughReference, WatchShape> watch : watchedReferences.entrySet()) {

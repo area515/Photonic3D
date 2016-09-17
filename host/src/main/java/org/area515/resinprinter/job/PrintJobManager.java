@@ -18,6 +18,8 @@ import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 
+import org.area515.resinprinter.services.CustomizerService;
+
 public class PrintJobManager {
 	private static final Logger logger = LogManager.getLogger();
 	private static PrintJobManager INSTANCE;
@@ -81,10 +83,10 @@ public class PrintJobManager {
 		return new ArrayList<PrintJob>(printJobsByJobId.values());
 	}
 	
-	public PrintJob createJob(File job, final Printer printer) throws JobManagerException, AlreadyAssignedException  {
+	public PrintJob createJob(File job, final Printer printer, Customizer customizer) throws JobManagerException, AlreadyAssignedException  {
 		final PrintJob newJob = new PrintJob(job);
 		PrintJob otherJob = printJobsByJobId.putIfAbsent(newJob.getId(), newJob);
-		
+
 		//This could never happen.
 		if (otherJob != null) {
 			throw new JobManagerException("The selected job is already running");
@@ -98,8 +100,13 @@ public class PrintJobManager {
 			printJobsByJobId.remove(newJob.getId());
 			throw new JobManagerException("The selected job is not a file");
 		}
+
+		if (customizer != null) {
+			newJob.setCustomizer(CustomizerService.INSTANCE.getCustomizer(job.getName(), customizer.getExternalImageAffectingState()));
+			logger.info(newJob.getCustomizer());
+		}
 		
-		//Why are these being set?
+		//TODO: These should be set by customizer
 		newJob.setCurrentSlice(0);
 		newJob.setTotalSlices(0);
 
@@ -117,7 +124,7 @@ public class PrintJobManager {
 			//Trigger all job completion tasks after job is complete
 			Main.GLOBAL_EXECUTOR.submit(new JobCloser(printer, futureJobStatus, newJob));
 		}
-		return newJob;
+		return newJob;		
 	}
 	
 	public PrintJob getJob(UUID jobId) {

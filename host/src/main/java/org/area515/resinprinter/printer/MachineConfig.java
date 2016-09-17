@@ -131,6 +131,8 @@ public class MachineConfig implements Named {
 	private MonitorDriverConfig monitorDriverConfig;
 	@XmlElement(name="PauseOnPrinterResponseRegEx")
 	private String pauseOnPrinterResponseRegEx;
+	@XmlElement(name="OverrideModelNormalsWithRightHandRule")
+	private Boolean overrideModelNormalsWithRightHandRule;
 	private String name;
 
 	@XmlTransient
@@ -149,7 +151,7 @@ public class MachineConfig implements Named {
 	public void setPauseOnPrinterResponseRegEx(String pauseOnPrinterResponseRegEx) {
 		this.pauseOnPrinterResponseRegEx = pauseOnPrinterResponseRegEx;
 	}
-	
+
 	@XmlTransient
 	public double getPlatformXSize() {
 		return platformXSize;
@@ -218,6 +220,14 @@ public class MachineConfig implements Named {
 		}
 		
 		return Integer.parseInt(matcher.group(1)) - 1;		
+	}
+	
+	@XmlTransient
+	public Boolean getOverrideModelNormalsWithRightHandRule() {
+		return overrideModelNormalsWithRightHandRule;
+	}
+	public void setOverrideModelNormalsWithRightHandRule(Boolean overrideModelNormalsWithRightHandRule) {
+		this.overrideModelNormalsWithRightHandRule = overrideModelNormalsWithRightHandRule;
 	}
 	
 	@XmlTransient

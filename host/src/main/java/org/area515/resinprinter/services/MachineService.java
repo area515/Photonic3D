@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.zip.ZipOutputStream;
 
+import javax.annotation.security.RolesAllowed;
 import javax.mail.AuthenticationFailedException;
 import javax.mail.MessagingException;
 import javax.mail.Transport;
@@ -70,6 +71,7 @@ import org.area515.resinprinter.server.CwhEmailSettings;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
+import org.area515.resinprinter.util.security.PhotonicUser;
 import org.area515.util.IOUtilities;
 import org.area515.util.MailUtilities;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -77,6 +79,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import com.sun.mail.smtp.SMTPSendFailedException;
 
 @Api(value="machine")
+@RolesAllowed(PhotonicUser.FULL_RIGHTS)
 @Path("machine")
 public class MachineService {
     private static final Logger logger = LogManager.getLogger();
