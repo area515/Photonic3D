@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.network.LinuxNetworkManager;
 import org.area515.resinprinter.network.LinuxNetworkManagerTest;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
@@ -131,7 +132,7 @@ public class IOUtilitiesTest {
 		actions.add(new ParseAction(new String[]{"scan\n"}, "[\\r\\s]*<\\d+>\\s*CTRL-EVENT-SCAN-RESULTS\\s*", SearchStyle.RepeatUntilMatch));
 		actions.add(new ParseAction(new String[]{""}, "\\s*>", SearchStyle.RepeatUntilMatch));
 		actions.add(new ParseAction(new String[]{"scan_results\n"}, "bssid.*", SearchStyle.RepeatUntilMatch));
-		actions.add(new ParseAction(new String[]{""}, "\\s*([A-Fa-f0-9:]+)\\s+(\\d+)\\s+(\\d+)\\s+([\\[\\]\\+\\-\\w]+)\\s+(\\w*)\\s*", SearchStyle.RepeatWhileMatching));
+		actions.add(new ParseAction(new String[]{""}, LinuxNetworkManager.WIFI_REGEX, SearchStyle.RepeatWhileMatching));
 
 		List<String[]> dataReturned = IOUtilities.communicateWithNativeCommand(actions, "^>|\n", true, null, "wlan0");
 		Assert.assertEquals("SomeNetwork", dataReturned.get(0)[4]);

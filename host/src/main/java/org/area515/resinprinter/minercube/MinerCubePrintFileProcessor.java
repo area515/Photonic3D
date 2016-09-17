@@ -56,11 +56,6 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 	}
 
 	@Override
-	public DataAid createDataAid(PrintJob printJob) throws JobManagerException {
-		return new DataAid(printJob);
-	}
-
-	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
 		try {
 			DataAid data = initializeJobCacheWithDataAid(printJob);

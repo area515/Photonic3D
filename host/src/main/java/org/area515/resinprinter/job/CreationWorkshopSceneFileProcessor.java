@@ -62,11 +62,6 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	public Double getBuildAreaMM(PrintJob processingFile) {
 		return null;
 	}
-	
-	@Override
-	public DataAid createDataAid(PrintJob printJob) throws JobManagerException {
-		return new DataAid(printJob);//TODO: This should use RenderingCache some day
-	}
 
 	@Override
 	public JobStatus processFile(final PrintJob printJob) throws Exception {

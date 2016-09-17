@@ -19,6 +19,7 @@ import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.MockSettings;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -29,6 +30,10 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 public class AbstractPrintFileProcessorTest {
 	private BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_4BYTE_ABGR);
+	
+	public static AbstractPrintFileProcessor createNewPrintFileProcessor() {
+		return Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
+	}
 	
 	public static PrintJob createTestPrintJob(PrintFileProcessor processor) throws InappropriateDeviceException, Exception {
 		PrintJob printJob = Mockito.mock(PrintJob.class);
@@ -99,7 +104,7 @@ public class AbstractPrintFileProcessorTest {
 
 	@Test
 	public void unsupportedBuildAreaDoesntBreakProjectorGradient() throws InappropriateDeviceException, ScriptException, Exception {
-		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
+		AbstractPrintFileProcessor processor = createNewPrintFileProcessor();
 		Graphics2D graphics = Mockito.mock(Graphics2D.class);
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getProjectorGradientCalculator()).thenReturn("var mm = $buildAreaMM * 2;java.awt.Color.ORANGE");
@@ -113,7 +118,7 @@ public class AbstractPrintFileProcessorTest {
 
 	@Test
 	public void unsupportedBuildAreaDoesntBreakLiftDistanceCalculator() throws Exception {
-		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
+		AbstractPrintFileProcessor processor = createNewPrintFileProcessor();
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn("var mm = $buildAreaMM * 2;mm");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
@@ -123,7 +128,7 @@ public class AbstractPrintFileProcessorTest {
 
 	@Test
 	public void getExceptionWhenWeReturnGarbageForLiftDistanceCalculator() throws Exception {
-		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
+		AbstractPrintFileProcessor processor = createNewPrintFileProcessor();
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn("var mm = $buildAreaMM * 2;java.awt.Color.ORANGE");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
@@ -137,7 +142,7 @@ public class AbstractPrintFileProcessorTest {
 
 	@Test
 	public void noNullPointerWhenWeReturnNull() throws Exception {
-		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
+		AbstractPrintFileProcessor processor = createNewPrintFileProcessor();
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn(";");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
@@ -151,7 +156,7 @@ public class AbstractPrintFileProcessorTest {
 
 	@Test
 	public void usingUnsupportedBuildAreaWithLiftDistance() throws Exception {
-		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
+		AbstractPrintFileProcessor processor = createNewPrintFileProcessor();
 		Graphics2D graphics = Mockito.mock(Graphics2D.class);
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getZLiftDistanceGCode()).thenReturn("G99 ${1 + UnknownVariable * 2} ;dependent on buildArea");
@@ -162,7 +167,7 @@ public class AbstractPrintFileProcessorTest {
 			processor.printImageAndPerformPostProcessing(aid, image);
 			Assert.fail("Must throw InappropriateDeviceException");
 		} catch (InappropriateDeviceException e) {
-			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(1)).getBuildAreaMM(Mockito.any(PrintJob.class));
+			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(2)).getBuildAreaMM(Mockito.any(PrintJob.class));
 		}
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getZLiftDistanceGCode()).thenReturn("G99 ${1 + buildAreaMM * 2} ;dependent on buildArea");
 		try {
@@ -175,7 +180,7 @@ public class AbstractPrintFileProcessorTest {
 
 	@Test
 	public void syntaxErrorInTemplate() throws Exception {
-		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
+		AbstractPrintFileProcessor processor = createNewPrintFileProcessor();
 		Graphics2D graphics = Mockito.mock(Graphics2D.class);
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getZLiftDistanceGCode()).thenReturn("G99 ${ ;dependent on buildArea");
@@ -191,7 +196,7 @@ public class AbstractPrintFileProcessorTest {
 
 	@Test
 	public void properGCodeCreated() throws Exception {
-		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
+		AbstractPrintFileProcessor processor = createNewPrintFileProcessor();
 		Graphics2D graphics = Mockito.mock(Graphics2D.class);
 		PrintJob printJob = createTestPrintJob(processor);
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getZLiftDistanceGCode()).thenReturn("${1 + buildAreaMM * 2}");

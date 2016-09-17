@@ -37,7 +37,7 @@ import org.area515.util.TemplateEngine;
 public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProcessor<G,E>{
 	private static final Logger logger = LogManager.getLogger();
 	public static final String EXPOSURE_TIMER = "exposureTime";
-	private Map<PrintJob, DataAid> renderingCacheByPrintJob = new HashMap<>();
+	private Map<PrintJob, DataAid> renderingCacheByPrintJob;
 	
 	public static class DataAid {
 		public ScriptEngine scriptEngine;
@@ -126,9 +126,17 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 	}
 	
+	private final Map<PrintJob, DataAid> getRenderingCacheByPrintJob() {
+		if (renderingCacheByPrintJob == null) {
+			renderingCacheByPrintJob = new HashMap<>();
+		}
+		
+		return renderingCacheByPrintJob;
+	}
+	
 	public final DataAid initializeJobCacheWithDataAid(PrintJob printJob) throws InappropriateDeviceException, JobManagerException {
 		DataAid aid = createDataAid(printJob);
-		renderingCacheByPrintJob.put(printJob, aid);
+		getRenderingCacheByPrintJob().put(printJob, aid);
 		return aid;
 	}
 	
@@ -260,13 +268,14 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		//Perform the lift gcode manipulation
 		aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeLift());
 		
+		Double buildArea = getBuildAreaMM(aid.printJob);
 		// Log slice settings (in JSON for extraction and processing)
 		logger.info("{ \"layer\": {}, \"exposureTime\": {}, \"liftDistance\": {}, \"liftSpeed\": {} , \"layerAreaMM2\": {} }",
 			aid.printJob.getCurrentSlice(), aid.printJob.getExposureTime(), aid.printJob.getZLiftDistance(),
-			aid.printJob.getZLiftSpeed(), getBuildAreaMM(aid.printJob));
+			aid.printJob.getZLiftSpeed(), buildArea);
 		
 		//Perform area and cost manipulations for current slice
-		aid.printJob.addNewSlice(System.currentTimeMillis() - aid.currentSliceTime, getBuildAreaMM(aid.printJob));
+		aid.printJob.addNewSlice(System.currentTimeMillis() - aid.currentSliceTime, buildArea);
 		
 		//Notify the client that the printJob has increased the currentSlice
 		NotificationManager.jobChanged(aid.printer, aid.printJob);
@@ -413,10 +422,10 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 	}
 
 	public DataAid getDataAid(PrintJob job) {
-		return renderingCacheByPrintJob.get(job);
+		return getRenderingCacheByPrintJob().get(job);
 	}
 	
 	public void clearDataAid(PrintJob job) {
-		renderingCacheByPrintJob.remove(job);
+		getRenderingCacheByPrintJob().remove(job);
 	}
 }
