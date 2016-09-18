@@ -34,7 +34,8 @@
 		};
 
 		this.changeCurrentPrintable = function changeCurrentPrintable(newPrintable) {
-			var newCustomizerName = newPrintable.name + "." + newPrintable.extension + "." + controller.currentPrinter.configuration.name;
+			var currentPrinterName = controller.currentPrinter != null?controller.currentPrinter.configuration.name:null;
+			var newCustomizerName = newPrintable.name + "." + newPrintable.extension + (currentPrinterName != null?"." + currentPrinterName: "");
 			if (controller.currentPrintable != null && newPrintable.name == controller.currentPrintable.name && newPrintable.extension == controller.currentPrintable.extension) {
 				return;
 			}
@@ -46,7 +47,7 @@
 						if (data == "") {
 							controller.currentCustomizer = {
 									name: newCustomizerName,
-									printerName: controller.currentPrinter.configuration.name,
+									printerName: currentPrinterName,
 									printableName: newPrintable.name,
 									printableExtension: newPrintable.extension,
 									supportsAffineTransformSettings: true,
