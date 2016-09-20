@@ -29,7 +29,11 @@ public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 		this.imageIndexToBuild = imageIndexToBuild;
 	}
 	
-	public BufferedImage buildLargestImageBetweenPrinterAndRenderedImage(int renderedWidth, int renderedHeight) {
+	public BufferedImage buildImage(int renderedWidth, int renderedHeight) {
+		return new BufferedImage(renderedWidth, renderedHeight, BufferedImage.TYPE_4BYTE_ABGR);
+	}
+	
+	/*public BufferedImage buildLargestImageBetweenPrinterAndRenderedImage(int renderedWidth, int renderedHeight) {
 		int actualWidth = renderedWidth > aid.xResolution?renderedWidth:aid.xResolution;
 		int actualHeight = renderedHeight > aid.yResolution?renderedHeight:aid.yResolution;
 		return new BufferedImage(actualWidth, actualHeight, BufferedImage.TYPE_4BYTE_ABGR);
@@ -50,7 +54,7 @@ public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 		}
 		
 		return renderedImage;
-	}
+	}*/
 	
 	public RenderedData call() throws JobManagerException {
 		long startTime = System.currentTimeMillis();
@@ -58,11 +62,11 @@ public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 		lock.lock();
 		try {
 			RenderedData imageData = aid.cache.get(imageIndexToBuild);
-			BufferedImage image = imageData.getImage();
-			image = renderImage(image);
-			imageData.setImage(image);
+			BufferedImage image = imageData.getPrintableImage();
+			image = renderImage(imageData.getPreTransformedImage());
+			imageData.setPreTransformedImage(image);
 			BufferedImage after = processor.applyImageTransforms(aid, image);
-			imageData.setImage(after);
+			imageData.setPrintableImage(after);
 			if (!aid.optimizeWithPreviewMode) {
 				long pixelArea = computePixelArea(image);
 				imageData.setArea((double)pixelArea);

@@ -28,7 +28,7 @@ public class PlatformImageRenderer extends CurrentImageRenderer {
 	@Override
 	public BufferedImage renderImage(BufferedImage imageToDisplay) throws JobManagerException {
 		if (imageToDisplay == null) {
-			imageToDisplay = extrusionImageRenderer.call().getImage();
+			imageToDisplay = extrusionImageRenderer.call().getPrintableImage();
 		}
 		
 		int centerX = aid.xResolution / 2;

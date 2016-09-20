@@ -102,7 +102,7 @@ public class PrintJobManager {
 		}
 
 		if (customizer != null) {
-			newJob.setCustomizer(CustomizerService.INSTANCE.getCustomizer(job.getName(), customizer.getExternalImageAffectingState()));
+			newJob.setCustomizer(customizer);
 			logger.info(newJob.getCustomizer());
 		}
 		

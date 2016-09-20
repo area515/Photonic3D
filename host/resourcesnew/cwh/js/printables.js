@@ -42,6 +42,12 @@
 			
 			controller.currentPrintable = newPrintable;
 			controller.errorMsg = null;
+			
+			if (currentPrinterName == null) {
+				controller.refreshCurrentPrinter();
+				return;
+			}
+			
 			$http.get("services/customizers/get/" + newCustomizerName + "?externalState=" + cacheControl.previewExternalStateId).success(
 					function (data) {
 						if (data == "") {
@@ -160,17 +166,27 @@
 		}
 		
 		this.setProjectImage = function setProjectImage(projectImage) {
-			controller.projectImage = projectImage;
+			var serviceCall = null;
 			if (projectImage) {
-				$http.get("services/customizers/projectCustomizerOnPrinter/" + encodeURIComponent(controller.currentCustomizer.name));
+				serviceCall = "services/customizers/projectCustomizerOnPrinter/" + encodeURIComponent(controller.currentCustomizer.name);
 			} else {
-				$http.get("services/printers/showBlankScreen/" + encodeURIComponent(controller.currentPrinter.configuration.name));
+				if (controller.currentPrinter == null) {
+					return;
+				}
+				
+				serviceCall = "services/printers/showBlankScreen/" + encodeURIComponent(controller.currentPrinter.configuration.name);
 			}
+			
+			$http.get(serviceCall).success(function (data) {
+	        	controller.projectImage = projectImage;
+	        });
 		}
 
 		this.resetTranslation = function resetTranslation() {
 			controller.currentCustomizer.zscale = 1.0;
-			
+			controller.currentCustomizer.nextSlice = 0;
+			controller.currentCustomizer.nextStep = "PerformHeader";
+
 			var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
 			affineTransformSettings.xtranslate = 0;
 			affineTransformSettings.ytranslate = 0;

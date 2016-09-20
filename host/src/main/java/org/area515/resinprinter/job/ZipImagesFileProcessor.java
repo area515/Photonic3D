@@ -76,7 +76,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 						slicePending = false;
 					}
 
-					status = printImageAndPerformPostProcessing(dataAid, imageData.getImage());
+					status = printImageAndPerformPostProcessing(dataAid, imageData.getPrintableImage());
 
 					if (status != null) {
 						return status;
@@ -111,7 +111,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 			
 			SimpleImageRenderer renderer = new SimpleImageRenderer(dataAid, this, imageFile);
 			RenderedData stdImage = renderer.call();
-			return stdImage.getImage();
+			return stdImage.getPrintableImage();
 		} catch (IOException | JobManagerException e) {
 			throw new SliceHandlingException(e);
 		}

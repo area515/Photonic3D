@@ -41,7 +41,7 @@ public class RenderingCache {
 	}
 	
 	public BufferedImage getCurrentImage() {
-		return get(currentImagePointer).getImage();
+		return get(currentImagePointer).getPrintableImage();
 	}
 	
 	public Double getCurrentArea() {

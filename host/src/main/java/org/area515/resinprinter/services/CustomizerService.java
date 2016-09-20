@@ -67,7 +67,7 @@ public class CustomizerService {
 	public Customizer getCustomizer(@PathParam("customizerName")String customizerName, @QueryParam("externalState") String externalState) {
 		Customizer customizer = customizersByName.getIfPresent(customizerName);
 		if (customizer != null) {
-			if (!customizer.getExternalImageAffectingState().equals(externalState)) {
+			if (customizer.getExternalImageAffectingState() == null || !customizer.getExternalImageAffectingState().equals(externalState)) {
 				customizer.setOrigSliceCache(null);
 				//TODO: start building image in a background task before the client asks for it!
 			}
@@ -85,7 +85,8 @@ public class CustomizerService {
 		Customizer oldCustomizer = customizersByName.getIfPresent(customizer.getName());
 		if (oldCustomizer != null) {
 			//If the image was affected by some external state other than the customizer(e.g. calibration), trash the cache.
-			if (customizer.getExternalImageAffectingState().equals(oldCustomizer.getExternalImageAffectingState())) {
+			if (customizer.getExternalImageAffectingState() != null && 
+				customizer.getExternalImageAffectingState().equals(oldCustomizer.getExternalImageAffectingState())) {
 				customizer.setOrigSliceCache(oldCustomizer.getOrigSliceCache());
 			}
 			//else TODO: start building image in a background task before the client asks for it!
@@ -114,7 +115,12 @@ public class CustomizerService {
 			throw new IllegalArgumentException("Customizer is missing");
 		}
 		
-		Printer printer = PrinterService.INSTANCE.getPrinter(customizer.getPrinterName());
+		String printerName = customizer.getPrinterName();
+		if (printerName == null) {
+			throw new IllegalArgumentException("No printer available.");
+		}
+		
+		Printer printer = PrinterService.INSTANCE.getPrinter(printerName);
 		if (!printer.isStarted()) {
 			throw new IllegalArgumentException("Printer must be started");
 		}
