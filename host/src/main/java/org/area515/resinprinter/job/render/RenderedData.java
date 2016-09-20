@@ -5,17 +5,25 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class RenderedData {
 	private BufferedImage image;
+	private BufferedImage preTransformedImage;
 	private Double area;
 	private ReentrantLock lock = new ReentrantLock();
 
 	public RenderedData() {
 	}
 	
-	public void setImage(BufferedImage image) {
+	public void setPrintableImage(BufferedImage image) {
 		this.image = image;
 	}
-	public BufferedImage getImage() {
+	public BufferedImage getPrintableImage() {
 		return this.image;
+	}
+
+	public BufferedImage getPreTransformedImage() {
+		return preTransformedImage;
+	}
+	public void setPreTransformedImage(BufferedImage preTransformedImage) {
+		this.preTransformedImage = preTransformedImage;
 	}
 
 	public void setArea(Double area) {

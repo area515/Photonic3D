@@ -74,7 +74,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			//Get the slicer queued up for the first image;
 			dataAid.slicer.setZIndex(slicer.getZMinIndex());
 			Object nextRenderingPointer = dataAid.cache.getCurrentRenderingPointer();
-			Future<RenderedData> currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, nextRenderingPointer));
+			Future<RenderedData> currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, nextRenderingPointer, false));
 			
 			//Everything needs to be setup in the dataByPrintJob before we start the header
 			performHeader(dataAid);
@@ -92,7 +92,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 				logger.info("SliceOverheadStart:{}", ()->Log4jTimer.startTimer(STL_OVERHEAD));
 				
 				//Wait until the image has been properly rendered. Most likely, it's already done though...
-				BufferedImage image = currentImage.get().getImage();
+				BufferedImage image = currentImage.get().getPrintableImage();
 				
 				logger.info("SliceOverhead:{}", ()->Log4jTimer.completeTimer(STL_OVERHEAD));
 				
@@ -111,7 +111,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 				//Render the next image while we are waiting for the current image to cure
 				if (z < slicer.getZMaxIndex() + 1) {
 					slicer.setZIndex(z);
-					currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, nextRenderingPointer));
+					currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, nextRenderingPointer, false));
 				}
 				
 				//Performs all of the duties that are common to most print files
@@ -139,8 +139,8 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			//Get the slicer queued up for the first image;
 			dataAid.slicer.setZIndex(dataAid.slicer.getZMinIndex());
 			Object nextRenderingPointer = dataAid.cache.getCurrentRenderingPointer();
-			STLImageRenderer renderer = new STLImageRenderer(dataAid, this, nextRenderingPointer);
-			return renderer.call().getImage();
+			STLImageRenderer renderer = new STLImageRenderer(dataAid, this, nextRenderingPointer, true);
+			return renderer.call().getPrintableImage();
 		} catch (IOException | JobManagerException e) {
 			throw new SliceHandlingException(e);
 		}

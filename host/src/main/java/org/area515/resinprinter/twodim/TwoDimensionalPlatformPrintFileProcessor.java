@@ -56,9 +56,9 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 			TwoDimensionalImageRenderer platformSizeInitializer = null;
 			if (platformSlices > 0) {
 				platformSizeInitializer = createRenderer(dataAid, this, nextRenderingPointer);
-				Main.GLOBAL_EXECUTOR.submit(new PlatformImageRenderer(dataAid, this, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer));
+				currentImage = Main.GLOBAL_EXECUTOR.submit(new PlatformImageRenderer(dataAid, this, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer));
 			} else {
-				Main.GLOBAL_EXECUTOR.submit(createRenderer(dataAid, this, nextRenderingPointer));
+				currentImage = Main.GLOBAL_EXECUTOR.submit(createRenderer(dataAid, this, nextRenderingPointer));
 			}
 			while (platformSlices > 0 || extrusionSlices > 0) {
 				
@@ -69,7 +69,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 				}
 				
 				//Wait until the image has been properly rendered. Most likely, it's already done though...
-				BufferedImage image = currentImage.get().getImage();
+				BufferedImage image = currentImage.get().getPrintableImage();
 				
 				//Now that the image has been rendered, we can make the switch to use the pointer that we were using while we were rendering
 				printState.setCurrentRenderingPointer(nextRenderingPointer);
@@ -138,7 +138,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 	public BufferedImage renderPreviewImage(final DataAid aid) throws SliceHandlingException {
 		try {
 			TwoDimensionalImageRenderer extrusion = createRenderer(aid, this, Boolean.TRUE);
-			return extrusion.call().getImage();
+			return extrusion.call().getPrintableImage();
 		} catch (JobManagerException e) {
 			throw new SliceHandlingException(e);
 		}

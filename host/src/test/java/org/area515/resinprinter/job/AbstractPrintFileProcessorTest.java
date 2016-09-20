@@ -2,12 +2,14 @@ package org.area515.resinprinter.job;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
 
 import javax.script.ScriptException;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.gcode.eGENERICGCodeControl;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
+import org.area515.resinprinter.job.Customizer.PrinterStep;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.MachineConfig.MonitorDriverConfig;
@@ -19,7 +21,6 @@ import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.MockSettings;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -46,6 +47,7 @@ public class AbstractPrintFileProcessorTest {
 		MonitorDriverConfig monitorConfig = Mockito.mock(MonitorDriverConfig.class);
 		MachineConfig machine = Mockito.mock(MachineConfig.class);
 		
+		Mockito.when(printJob.getJobFile()).thenReturn(new File("jobname.txt"));
 		Mockito.when(printJob.getPrinter()).thenReturn(printer);
 		Mockito.when(printer.getPrinterFirmwareSerialPort()).thenReturn(serialPort);
 		Mockito.when(printJob.getPrintFileProcessor()).thenReturn(processor);
@@ -123,7 +125,9 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getzLiftDistanceCalculator()).thenReturn("var mm = $buildAreaMM * 2;mm");
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
 		DataAid aid = processor.initializeJobCacheWithDataAid(printJob);
+		aid.customizer.setNextStep(PrinterStep.PerformExposure);
 		processor.printImageAndPerformPostProcessing(aid, image);
+		Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(1)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString());
 	}
 
 	@Test
@@ -134,7 +138,9 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
 		DataAid aid = processor.initializeJobCacheWithDataAid(printJob);
 		try {
+			aid.customizer.setNextStep(PrinterStep.PerformExposure);
 			processor.printImageAndPerformPostProcessing(aid, image);
+			Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(1)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString());
 		} catch (IllegalArgumentException e) {
 			Assert.assertEquals("The result of your lift distance script needs to evaluate to an instance of java.lang.Number", e.getMessage());
 		}
@@ -148,7 +154,9 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class))).thenReturn(null);
 		DataAid aid = processor.initializeJobCacheWithDataAid(printJob);
 		try {
+			aid.customizer.setNextStep(PrinterStep.PerformExposure);
 			processor.printImageAndPerformPostProcessing(aid, image);
+			Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(1)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString());
 		} catch (IllegalArgumentException e) {
 			Assert.assertEquals("The result of your lift distance script needs to evaluate to an instance of java.lang.Number", e.getMessage());
 		}
@@ -164,6 +172,7 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(whenBuilAreaMMCalled).thenReturn(null);
 		DataAid aid = processor.initializeJobCacheWithDataAid(printJob);
 		try {
+			aid.customizer.setNextStep(PrinterStep.PerformExposure);
 			processor.printImageAndPerformPostProcessing(aid, image);
 			Assert.fail("Must throw InappropriateDeviceException");
 		} catch (InappropriateDeviceException e) {
@@ -171,6 +180,7 @@ public class AbstractPrintFileProcessorTest {
 		}
 		Mockito.when(printJob.getPrinter().getConfiguration().getSlicingProfile().getZLiftDistanceGCode()).thenReturn("G99 ${1 + buildAreaMM * 2} ;dependent on buildArea");
 		try {
+			aid.customizer.setNextStep(PrinterStep.PerformExposure);
 			processor.printImageAndPerformPostProcessing(aid, image);
 			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(5)).getBuildAreaMM(Mockito.any(PrintJob.class));
 		} catch (InappropriateDeviceException e) {
@@ -187,6 +197,7 @@ public class AbstractPrintFileProcessorTest {
 		Double whenBuilAreaMMCalled = printJob.getPrintFileProcessor().getBuildAreaMM(Mockito.any(PrintJob.class));
 		DataAid aid = processor.initializeJobCacheWithDataAid(printJob);
 		try {
+			aid.customizer.setNextStep(PrinterStep.PerformExposure);
 			processor.printImageAndPerformPostProcessing(aid, image);
 			Assert.fail("Must throw InappropriateDeviceException");
 		} catch (InappropriateDeviceException e) {
@@ -220,6 +231,9 @@ public class AbstractPrintFileProcessorTest {
 				return (String)invocation.getArguments()[0];
 			}
 		});
+		aid.customizer.setNextStep(PrinterStep.PerformExposure);
 		processor.printImageAndPerformPostProcessing(aid, image);
+		//The two executes are for getZLiftDistanceGCode and the life gcode itself
+		Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(2)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString());
 	}
 }

@@ -24,6 +24,14 @@ public class Customizer {
 	private SoftReference<BufferedImage> origSliceCache = null;
 	private Double zScale = 1.0;
 	private String cacheId;
+	private int nextSlice = 0;
+	private PrinterStep nextStep = PrinterStep.PerformHeader;
+	
+	public static enum PrinterStep {
+		PerformHeader,
+		PerformPreSlice,
+		PerformExposure,
+	}
 	
 	public static class AffineTransformSettings {
 		private Double xTranslate = 0.0;//negative printerwidth for xflip
@@ -136,6 +144,20 @@ public class Customizer {
 			return affineTransform;
 		} 
 		
+	}
+
+	public int getNextSlice() {
+		return nextSlice;
+	}
+	public void setNextSlice(int nextSlice) {
+		this.nextSlice = nextSlice;
+	}
+
+	public PrinterStep getNextStep() {
+		return nextStep;
+	}
+	public void setNextStep(PrinterStep nextStep) {
+		this.nextStep = nextStep;
 	}
 
 	public AffineTransform createAffineTransform(double width, double height) {

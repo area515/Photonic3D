@@ -8,6 +8,7 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,11 +18,13 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.exception.SliceHandlingException;
+import org.area515.resinprinter.job.Customizer.PrinterStep;
 import org.area515.resinprinter.job.render.RenderingCache;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
@@ -29,6 +32,7 @@ import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.services.CustomizerService;
 import org.area515.resinprinter.services.PrinterService;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.Log4jTimer;
@@ -57,9 +61,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		public boolean optimizeWithPreviewMode;
 		public AffineTransform affineTransform = new AffineTransform();
 		public RenderingCache cache = new RenderingCache();
-
-		//should have affine transform matrix calculated here 
-		//store Affine Transform Object here
+		public Customizer customizer;
 
 		public DataAid(PrintJob printJob) throws JobManagerException {
 			this.printJob = printJob;
@@ -73,12 +75,23 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			yPixelsPerMM = slicingProfile.getDotsPermmY();
 			xResolution = slicingProfile.getxResolution();
 			yResolution = slicingProfile.getyResolution();
-			this.optimizeWithPreviewMode = false;
-			
-			// Set the affine transform given the customizer from the printJob
-			Customizer customizer = printJob.getCustomizer();
+			optimizeWithPreviewMode = false;
+			customizer = printJob.getCustomizer();
 			if (customizer != null) {
 				this.affineTransform = customizer.createAffineTransform(xResolution, yResolution);
+			} else {
+				customizer = new Customizer();
+				customizer.setNextStep(PrinterStep.PerformHeader);
+				customizer.setNextSlice(0);
+				customizer.setPrintableName(FilenameUtils.getBaseName(printJob.getJobFile().getName()));
+				customizer.setPrintableExtension(FilenameUtils.getExtension(printJob.getJobFile().getName()));
+				customizer.setPrinterName(printer.getName());
+				customizer.setName(printJob.getJobFile().getName() + "." + printer.getName());
+				Customizer otherCustomizer = CustomizerService.INSTANCE.getCustomizers().get(customizer.getName());
+				if (otherCustomizer != null) {
+					customizer.setName(customizer.getName() + "." + System.currentTimeMillis());
+				}
+				CustomizerService.INSTANCE.addOrUpdateCustomizer(customizer);
 			}
 			
 			//This file processor requires an ink configuration
@@ -140,6 +153,11 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		return aid;
 	}
 	
+	private void moveToNextPrinterStep(Customizer customizer, PrinterStep newState) {
+		customizer.setNextStep(newState);
+		CustomizerService.INSTANCE.addOrUpdateCustomizer(customizer);
+	}
+	
 	public void performHeader(DataAid aid) throws InappropriateDeviceException, IOException {
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
@@ -153,8 +171,11 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		aid.printJob.setExposureTime(aid.inkConfiguration.getExposureTime());
 		
 		//Perform the gcode associated with the printer start function
-		if (aid.slicingProfile.getgCodeHeader() != null && aid.slicingProfile.getgCodeHeader().trim().length() > 0) {
+		if (aid.slicingProfile.getgCodeHeader() != null && 
+			aid.slicingProfile.getgCodeHeader().trim().length() > 0 &&
+			aid.customizer.getNextStep() == PrinterStep.PerformHeader) {
 			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeHeader());
+			moveToNextPrinterStep(aid.customizer, PrinterStep.PerformPreSlice);
 		}
 		
 		if (aid.inkConfiguration != null) {
@@ -174,10 +195,11 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
+
 		aid.currentSliceTime = System.currentTimeMillis();
 
 		//Show the errors to our users if the stl file is broken, but we'll keep on processing like normal
-		if (errors != null && !errors.isEmpty()) {
+		if (errors != null && !errors.isEmpty() && aid.customizer.getNextStep() == PrinterStep.PerformPreSlice) {
 			NotificationManager.errorEncountered(aid.printJob, errors);
 		}
 		
@@ -189,10 +211,13 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 
 		//Execute preslice gcode
-		if (aid.slicingProfile.getgCodePreslice() != null && aid.slicingProfile.getgCodePreslice().trim().length() > 0) {
+		if (aid.slicingProfile.getgCodePreslice() != null && 
+			aid.slicingProfile.getgCodePreslice().trim().length() > 0 && 
+			aid.customizer.getNextStep() == PrinterStep.PerformPreSlice) {
 			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodePreslice());
 		}
 		
+		moveToNextPrinterStep(aid.customizer, PrinterStep.PerformExposure);
 		return null;
 	}
 	
@@ -203,6 +228,10 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 
 		if (sliceImage == null) {
 			throw new IllegalStateException("You must specify a sliceImage to display");
+		}
+		
+		if (aid.customizer.getNextStep() != PrinterStep.PerformExposure) {
+			return null;
 		}
 		
 		//Start but don't wait for a potentially heavy weight operation to determine if we are out of ink.
@@ -280,6 +309,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		//Notify the client that the printJob has increased the currentSlice
 		NotificationManager.jobChanged(aid.printer, aid.printJob);
 		
+		moveToNextPrinterStep(aid.customizer, PrinterStep.PerformPreSlice);
+		
 		return null;
 	}
 
@@ -352,10 +383,6 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 		
 		BufferedImage after = new BufferedImage(aid.xResolution, aid.yResolution, img.getType());
-			
-		((Graphics2D)img.getGraphics()).setBackground(Color.black);
-		((Graphics2D)after.getGraphics()).setBackground(Color.black);
-		
 		AffineTransformOp transOp = new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
 		after = transOp.filter(img, after);
 		
