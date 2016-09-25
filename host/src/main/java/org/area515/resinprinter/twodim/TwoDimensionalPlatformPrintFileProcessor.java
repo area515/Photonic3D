@@ -2,10 +2,8 @@ package org.area515.resinprinter.twodim;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.Future;
 
-import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +15,7 @@ import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.Previewable;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.job.render.CurrentImageRenderer;
 import org.area515.resinprinter.job.render.RenderedData;
 import org.area515.resinprinter.job.render.RenderingCache;
 import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
@@ -40,15 +39,27 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 		}
 	}
 	
+	private PlatformImageRenderer buildPlatformRenderer(DataAid dataAid, Object nextRenderingPointer, int totalPlatformSlices, TwoDimensionalImageRenderer platformSizeInitializer) {
+		return new PlatformImageRenderer(dataAid, this, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer);
+	}
+	
 	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
 		DataAid dataAid = getDataAid(printJob);
 		try {
 			performHeader(dataAid);
 			
+			int startingSlice = dataAid.customizer.getNextSlice();
 			int platformSlices = getSuggestedPlatformLayerCount(dataAid);
 			int totalPlatformSlices = platformSlices;
 			int extrusionSlices = getSuggested2DExtrusionLayerCount(dataAid);
+			
+			if (startingSlice >= platformSlices) {
+				platformSlices = 0;
+				startingSlice -= platformSlices;
+			}
+			extrusionSlices -= startingSlice;
+			
 			printJob.setTotalSlices(platformSlices + extrusionSlices);
 			RenderingCache printState = dataAid.cache;
 			Object nextRenderingPointer = printState.getCurrentRenderingPointer();
@@ -56,7 +67,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 			TwoDimensionalImageRenderer platformSizeInitializer = null;
 			if (platformSlices > 0) {
 				platformSizeInitializer = createRenderer(dataAid, this, nextRenderingPointer);
-				currentImage = Main.GLOBAL_EXECUTOR.submit(new PlatformImageRenderer(dataAid, this, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer));
+				currentImage = Main.GLOBAL_EXECUTOR.submit(buildPlatformRenderer(dataAid, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer));
 			} else {
 				currentImage = Main.GLOBAL_EXECUTOR.submit(createRenderer(dataAid, this, nextRenderingPointer));
 			}
@@ -79,7 +90,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 				
 				//Render the next image while we are waiting for the current image to cure
 				if (platformSlices > 0) {
-					currentImage = Main.GLOBAL_EXECUTOR.submit(new PlatformImageRenderer(dataAid, this, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer));
+					currentImage = Main.GLOBAL_EXECUTOR.submit(buildPlatformRenderer(dataAid, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer));
 				} else if (extrusionSlices > 1) {
 					currentImage = Main.GLOBAL_EXECUTOR.submit(createRenderer(dataAid, this, nextRenderingPointer));
 				}
@@ -137,8 +148,13 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 	@Override
 	public BufferedImage renderPreviewImage(final DataAid aid) throws SliceHandlingException {
 		try {
-			TwoDimensionalImageRenderer extrusion = createRenderer(aid, this, Boolean.TRUE);
-			return extrusion.call().getPrintableImage();
+			int platformSlices = getSuggestedPlatformLayerCount(aid);
+			TwoDimensionalImageRenderer extrusionRenderer = createRenderer(aid, this, Boolean.TRUE);
+			CurrentImageRenderer targetRenderer = aid.customizer.getNextSlice() < platformSlices?
+					buildPlatformRenderer(aid, Boolean.TRUE, platformSlices, extrusionRenderer):
+					extrusionRenderer;
+
+			return targetRenderer.call().getPrintableImage();
 		} catch (JobManagerException e) {
 			throw new SliceHandlingException(e);
 		}

@@ -207,7 +207,7 @@
 								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeTranslate(0, -1)"> 1</a>
 								<a class="btn btn-sm btn-success fa fa-angle-up" ng-click="printablesController.changeTranslate(0, -10)"> 10</a>
 								<a class="btn btn-sm btn-success fa fa-angle-double-up" ng-click="printablesController.changeTranslate(0, -100)"> 100</a>
-							</span>					
+							</span>
 							<h6>Translate image on X axis: {{printablesController.currentCustomizer.affineTransformSettings.xtranslate}}</h6>
 							<span class="btn-group" >
 								<b class="btn btn-sm btn-danger fa fa-angle-double-left" ng-click="printablesController.changeTranslate(-100, 0)"> 100</b> 
@@ -217,6 +217,21 @@
 								<a class="btn btn-sm btn-success fa fa-angle-right" ng-click="printablesController.changeTranslate(10, 0)"> 10</a>
 								<a class="btn btn-sm btn-success fa fa-angle-double-right" ng-click="printablesController.changeTranslate(100, 0)">100</a>
 							</span>
+						</div>
+						<div class="list-group-item">
+							<i class="fa fa-2x fa-list-ol pull-left"></i>
+							<h4>Starting slice #</h4>
+							<div class="input-group"
+								cwh-spinner
+								placeholder="Slice #"
+								min="0"
+								max="500000000000"
+								inc="1"
+								goClick="printablesController.clearExternalCacheAndSaveCustomizer()"
+								incClick="printablesController.clearExternalCacheAndSaveCustomizer()"
+								decClick="printablesController.clearExternalCacheAndSaveCustomizer()"
+								ng-model="printablesController.currentCustomizer.nextSlice">
+							</div>
 						</div>
 					</div>
 					<!-- End list group -->

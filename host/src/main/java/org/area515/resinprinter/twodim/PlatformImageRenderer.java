@@ -27,8 +27,9 @@ public class PlatformImageRenderer extends CurrentImageRenderer {
 	
 	@Override
 	public BufferedImage renderImage(BufferedImage imageToDisplay) throws JobManagerException {
+		BufferedImage extrudedImage = extrusionImageRenderer.call().getPreTransformedImage();
 		if (imageToDisplay == null) {
-			imageToDisplay = extrusionImageRenderer.call().getPrintableImage();
+			imageToDisplay = buildImage(aid.xResolution, aid.yResolution);
 		}
 		
 		int centerX = aid.xResolution / 2;
@@ -42,8 +43,8 @@ public class PlatformImageRenderer extends CurrentImageRenderer {
 		Map<String, Object> overrides = new HashMap<>();
 		overrides.put("platformGraphics", graphics);
 		overrides.put("platformRaster", imageToDisplay.getRaster());
-		overrides.put("extrusionX", imageToDisplay.getWidth());
-		overrides.put("extrusionY", imageToDisplay.getHeight());
+		overrides.put("extrusionX", extrudedImage.getWidth());
+		overrides.put("extrusionY", extrudedImage.getHeight());
 		overrides.put("resolutionX", aid.xResolution);
 		overrides.put("resolutionY", aid.yResolution);
 		overrides.put("centerX", centerX);

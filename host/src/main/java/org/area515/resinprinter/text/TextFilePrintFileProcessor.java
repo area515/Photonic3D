@@ -45,16 +45,6 @@ public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileP
 	}
 
 	@Override
-	public BufferedImage renderPreviewImage(final org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid dataAid) throws SliceHandlingException {
-		try {
-			TextImageRenderer extrusion = new TextImageRenderer(dataAid, this, Boolean.TRUE);
-			return extrusion.call().getPrintableImage();
-		} catch (JobManagerException e) {
-			throw new SliceHandlingException(e);
-		}
-	}
-
-	@Override
 	public boolean isThreeDimensionalGeometryAvailable() {
 		return false;
 	}

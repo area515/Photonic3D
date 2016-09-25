@@ -56,7 +56,12 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 	
 			// Preload first image then loop
 			if (imgIter.hasNext()) {
-				File imageFile = imgIter.next();
+				File imageFile = null;
+				int sliceIndex = dataAid.customizer.getNextSlice();
+				while (imgIter.hasNext() && sliceIndex > 0) {
+					sliceIndex--;
+					imgIter.next();
+				}
 				
 				Future<RenderedData> prepareImage = Main.GLOBAL_EXECUTOR.submit(new SimpleImageRenderer(dataAid, this, imageFile));
 				boolean slicePending = true;
@@ -98,14 +103,17 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 			SortedMap<String, File> imageFiles = findImages(dataAid.printJob.getJobFile());
 			
 			dataAid.printJob.setTotalSlices(imageFiles.size());
-	
-			// performHeader(dataAid);
-	
 			Iterator<File> imgIter = imageFiles.values().iterator();
 	
 			// Preload first image then loop
+			int sliceIndex = dataAid.customizer.getNextSlice();
+			while (imgIter.hasNext() && sliceIndex > 0) {
+				sliceIndex--;
+				imgIter.next();
+			}
+			
 			if (!imgIter.hasNext()) {
-				throw new IOException("No Image Found");
+				throw new IOException("No Image Found for index:" + dataAid.customizer.getNextSlice());
 			}
 			File imageFile = imgIter.next();
 			

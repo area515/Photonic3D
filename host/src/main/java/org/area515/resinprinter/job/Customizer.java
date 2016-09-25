@@ -45,16 +45,6 @@ public class Customizer {
 		private Boolean yFlip = false;
 		private String affineTransformScriptCalculator;//Ignore this for now
 		
-		@JsonIgnore
-		public boolean isIdentity() {
-			if (xTranslate == 0.0 && yTranslate == 0.0
-					&& xScale == 1.0 && yScale == 1.0) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-		
 		public Double getXTranslate() {
 			return xTranslate;
 		}
@@ -125,19 +115,21 @@ public class Customizer {
 			this.affineTransformScriptCalculator = affineTransformScriptCalculator;
 		}
 
-		public AffineTransform createAffineTransform(double width, double height) {
+		public AffineTransform createAffineTransform(double xResolution, double yResolution, double imageWidth, double imageHeight) {
 			AffineTransform firstTransform = null;
 			if (this.xFlip || this.yFlip) {
 				firstTransform = new AffineTransform();
-				firstTransform.translate(xFlip?width:0, yFlip?height:0);
+				firstTransform.translate((xFlip?imageWidth:0), (yFlip?imageHeight:0));
 				firstTransform.scale(xFlip?-1:1, yFlip?-1:1);
 			}
 			
 			AffineTransform affineTransform = new AffineTransform();
-			affineTransform.translate(this.xTranslate, this.yTranslate);
+			affineTransform.translate(xResolution/2, yResolution/2);
 			affineTransform.shear(this.xShear, this.yShear);
-			affineTransform.rotate(Math.toRadians(this.rotation), width/2, height/2);
+			affineTransform.rotate(Math.toRadians(this.rotation));
 			affineTransform.scale(this.xScale, this.yScale);
+			affineTransform.translate(-imageWidth/2 + this.xTranslate, -imageHeight/2 + this.yTranslate);
+
 			if (firstTransform != null) {
 				affineTransform.concatenate(firstTransform);
 			}
@@ -160,8 +152,8 @@ public class Customizer {
 		this.nextStep = nextStep;
 	}
 
-	public AffineTransform createAffineTransform(double width, double height) {
-		return this.affineTransformSettings.createAffineTransform(width, height);
+	public AffineTransform createAffineTransform(double width, double height, double imageWidth, double imageHeight) {
+		return this.affineTransformSettings.createAffineTransform(width, height, imageWidth, imageHeight);
 	} 
 
 	public String getPrintableExtension() {

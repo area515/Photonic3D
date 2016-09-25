@@ -62,8 +62,7 @@ public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 		lock.lock();
 		try {
 			RenderedData imageData = aid.cache.get(imageIndexToBuild);
-			BufferedImage image = imageData.getPrintableImage();
-			image = renderImage(imageData.getPreTransformedImage());
+			BufferedImage image = renderImage(imageData.getPreTransformedImage());
 			imageData.setPreTransformedImage(image);
 			BufferedImage after = processor.applyImageTransforms(aid, image);
 			imageData.setPrintableImage(after);

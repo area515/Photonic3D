@@ -4,20 +4,15 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-import javax.script.ScriptException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.job.render.RenderedData;
-import org.area515.resinprinter.job.render.RenderingCache;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.CloseOffMend;
@@ -72,15 +67,15 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			printJob.setTotalSlices(slicer.getZMaxIndex() - slicer.getZMinIndex());
 			
 			//Get the slicer queued up for the first image;
-			dataAid.slicer.setZIndex(slicer.getZMinIndex());
+			int startPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(slicer.getZMinIndex() + 1 + customizer.getNextSlice()): (slicer.getZMaxIndex() + 1);
+			int endPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(slicer.getZMaxIndex() + 1 - customizer.getNextSlice()): (slicer.getZMinIndex() + 1);
+			dataAid.slicer.setZIndex(startPoint);
 			Object nextRenderingPointer = dataAid.cache.getCurrentRenderingPointer();
 			Future<RenderedData> currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, nextRenderingPointer, false));
 			
 			//Everything needs to be setup in the dataByPrintJob before we start the header
 			performHeader(dataAid);
 			
-			int startPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(slicer.getZMinIndex() + 1): (slicer.getZMaxIndex() + 1);
-			int endPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(slicer.getZMaxIndex() + 1): (slicer.getZMinIndex() + 1);
 			for (int z = startPoint; z <= endPoint && dataAid.printer.isPrintActive(); z += dataAid.slicingProfile.getDirection().getVector()) {
 				
 				//Performs all of the duties that are common to most print files
@@ -137,7 +132,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			dataAid.printJob.setTotalSlices(dataAid.slicer.getZMaxIndex() - dataAid.slicer.getZMinIndex());
 	
 			//Get the slicer queued up for the first image;
-			dataAid.slicer.setZIndex(dataAid.slicer.getZMinIndex());
+			dataAid.slicer.setZIndex(dataAid.slicer.getZMinIndex() + dataAid.customizer.getNextSlice());
 			Object nextRenderingPointer = dataAid.cache.getCurrentRenderingPointer();
 			STLImageRenderer renderer = new STLImageRenderer(dataAid, this, nextRenderingPointer, true);
 			return renderer.call().getPrintableImage();
