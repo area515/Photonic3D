@@ -59,6 +59,8 @@
 									supportsAffineTransformSettings: true,
 									externalImageAffectingState:cacheControl.previewExternalStateId,
 									zscale: 1,
+									nextSlice: 0,
+									nextStep: "PerformHeader",
 									affineTransformSettings: {
 										yflip: false,
 										xflip: false,
@@ -92,6 +94,9 @@
 			$http.get("services/printers/getFirstAvailablePrinter").success(
 	  			function (data) {
 	  				controller.currentPrinter = data;
+	  			}).error(
+	  			function (data) {
+	  				controller.errorMsg = data;
 	  			});
 		};
 
@@ -117,26 +122,6 @@
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
 	        		})
 		}
-		
-		/*this.flipY = function flipY() {
-			var incrementor = controller.currentPrinter.configuration.machineConfig.MonitorDriverConfig.DLP_Y_Res;
-			if (controller.currentCustomizer.affineTransformSettings.yscale < 0) {
-				incrementor *= -1;
-			}
-			controller.currentCustomizer.affineTransformSettings.ytranslate += incrementor;			
-			controller.currentCustomizer.affineTransformSettings.yscale = -controller.currentCustomizer.affineTransformSettings.yscale;
-			this.saveCustomizer();
-		}
-		
-		this.flipX = function flipX() {
-			var incrementor = controller.currentPrinter.configuration.machineConfig.MonitorDriverConfig.DLP_X_Res;
-			if (controller.currentCustomizer.affineTransformSettings.xscale < 0) {
-				incrementor *= -1;
-			}
-			controller.currentCustomizer.affineTransformSettings.xtranslate += incrementor;			
-			controller.currentCustomizer.affineTransformSettings.xscale = -controller.currentCustomizer.affineTransformSettings.xscale;
-			this.saveCustomizer();
-		}*/
 		
 		this.changeScale = function changeScale(x, y, z) {	
 			controller.currentCustomizer.affineTransformSettings.xscale += x;
@@ -258,7 +243,12 @@
 			
 			fileChosenModal.result.then(function (uploadedPrintable) {this.refreshPrintables()});
 		};
-	  			
+	  	
+		this.clearExternalCacheAndSaveCustomizer = function clearExternalCacheAndSaveCustomizer() {
+			cacheControl.clearPreviewExternalState();
+			controller.saveCustomizer();
+		}
+		
 		this.getPrintableIconClass = function getPrintableIconClass(printable) {
 			if (printable.printFileProcessor.friendlyName === 'Image') {
 				return "fa-photo";

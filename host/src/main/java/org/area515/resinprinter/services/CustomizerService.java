@@ -147,7 +147,7 @@ public class CustomizerService {
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
 	@Path("renderPreviewImage/{customizerName}")
-	@Produces("image/jpeg")
+	@Produces("image/png")
 	public StreamingOutput renderFirstSliceImage(@PathParam("customizerName") String customizerName) throws NoPrinterFoundException, SliceHandlingException {
 		Customizer customizer = customizersByName.getIfPresent(customizerName);
 		if (customizer == null) {
@@ -170,7 +170,7 @@ public class CustomizerService {
 				@Override
 				public void write(OutputStream output) throws IOException, WebApplicationException {
 					try {
-						ImageIO.write(img, "JPG", output);
+						ImageIO.write(img, "png", output);
 
 						logger.debug("Writing the img");
 					} catch (IOException e) {

@@ -19,8 +19,14 @@ angular.module('cwh.spinner', []).directive('cwhSpinner', function() {
                 iElement.find('input')[0].value = ngModelController.$viewValue;
             };
             function incrementModel(inc) {
-                ngModelController.$setViewValue(ngModelController.$viewValue + inc);
-                ngModelController.$render();
+            	if (ngModelController.$viewValue + inc <= max &&
+            		ngModelController.$viewValue + inc >= min) {
+	                ngModelController.$setViewValue(ngModelController.$viewValue + inc);
+	                ngModelController.$render();
+	                return true;
+	            }
+            	
+            	return false;
             }
             scope.setModel = function() {
             	var input = parseFloat(iElement.find('input')[0].value);
@@ -35,10 +41,14 @@ angular.module('cwh.spinner', []).directive('cwhSpinner', function() {
             	ngModelController.$setViewValue(input);
             }
             scope.increment = function() {
-            	incrementModel(increment);
+            	if (incrementModel(increment) && iAttrs.incclick != null) {
+                	scope.$parent.$eval(iAttrs.incclick);
+            	}
             }
             scope.decrement = function() {
-            	incrementModel(-increment);
+            	if (incrementModel(-increment) && iAttrs.decclick != null) {
+                	scope.$parent.$eval(iAttrs.decclick);
+            	}
             }
             scope.goClick = function() {
             	scope.$parent.$eval(iAttrs.goclick);

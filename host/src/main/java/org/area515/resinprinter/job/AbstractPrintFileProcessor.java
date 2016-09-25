@@ -1,20 +1,22 @@
 package org.area515.resinprinter.job;
 
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.imageio.ImageIO;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
@@ -37,6 +39,7 @@ import org.area515.resinprinter.services.PrinterService;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.Log4jTimer;
 import org.area515.util.TemplateEngine;
+import org.fourthline.cling.support.avtransport.callback.GetTransportInfo;
 
 public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProcessor<G,E>{
 	private static final Logger logger = LogManager.getLogger();
@@ -59,7 +62,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		public long currentSliceTime;
 		public Paint maskPaint;
 		public boolean optimizeWithPreviewMode;
-		public AffineTransform affineTransform = new AffineTransform();
+		private AffineTransform affineTransform;
 		public RenderingCache cache = new RenderingCache();
 		public Customizer customizer;
 
@@ -77,9 +80,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			yResolution = slicingProfile.getyResolution();
 			optimizeWithPreviewMode = false;
 			customizer = printJob.getCustomizer();
-			if (customizer != null) {
-				this.affineTransform = customizer.createAffineTransform(xResolution, yResolution);
-			} else {
+			
+			if (customizer == null) {
 				customizer = new Customizer();
 				customizer.setNextStep(PrinterStep.PerformHeader);
 				customizer.setNextSlice(0);
@@ -101,6 +103,20 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			
 			//TODO: how do I integrate slicingProfile.getLiftDistance()
 			sliceHeight = inkConfiguration.getSliceHeight();
+		}
+		
+		public AffineTransform getAffineTransform(BufferedImage img) {			
+			if (this.affineTransform != null) {
+				return this.affineTransform;
+			}
+			
+			if (customizer != null) {
+				this.affineTransform = customizer.createAffineTransform(xResolution, yResolution, img.getWidth(), img.getHeight());
+			} else {
+				this.affineTransform = new AffineTransform();
+			}
+			
+			return this.affineTransform;
 		}
 	}
 	
@@ -382,17 +398,39 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			return img;
 		}
 		
-		BufferedImage after = new BufferedImage(aid.xResolution, aid.yResolution, img.getType());
-		AffineTransformOp transOp = new AffineTransformOp(aid.affineTransform, AffineTransformOp.TYPE_BILINEAR);
-		after = transOp.filter(img, after);
+		/*try {
+			ImageIO.write(img, "png",  new File("first.png"));
+		} catch (IOException e) {
+		}//*/
+
+		BufferedImage after = new BufferedImage(aid.xResolution, aid.yResolution, BufferedImage.TYPE_4BYTE_ABGR);
+		Graphics2D g = (Graphics2D)after.getGraphics();
+		g.setColor(Color.BLACK);
+		g.fillRect(0, 0, aid.xResolution, aid.yResolution);
 		
+		/*try {
+			ImageIO.write(after, "png",  new File("afterfill.png"));
+		} catch (IOException e) {
+		}//*/
+		
+		AffineTransform transform = aid.getAffineTransform(img);
+		g.drawImage(img, transform, null);
+		/*try {
+			ImageIO.write(after, "png",  new File("afterapplication.png"));
+		} catch (IOException e) {
+		}//*/
 		applyBulbMask(aid, (Graphics2D)after.getGraphics(), aid.xResolution, aid.yResolution);
+		/*try {
+			ImageIO.write(after, "png",  new File("afterbulb.png"));
+		} catch (IOException e) {
+		}//*/
+
 		return after;
 	}
 	
 	protected BufferedImage convertTo3BGR(BufferedImage input) {
 		BufferedImage output = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
-		output.getGraphics().drawImage(input, 0, 0, null);
+		output.getGraphics().drawImage(input, 0, 0, Color.BLACK, null);
 		return output;
 	}
 	
@@ -431,10 +469,10 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 				dataAid.optimizeWithPreviewMode = true;
 				image = previewable.renderPreviewImage(dataAid);
 				dataAid.optimizeWithPreviewMode = false;
-				if (customizer.getAffineTransformSettings().isIdentity()) {
+				/*if (customizer.getAffineTransformSettings().isIdentity()) {
 					image = convertTo3BGR(image);
 					customizer.setOrigSliceCache(image);
-				}
+				}*/
 			}
 			
 			image = applyImageTransforms(dataAid, image);
