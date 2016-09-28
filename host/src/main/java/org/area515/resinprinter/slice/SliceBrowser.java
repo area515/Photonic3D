@@ -307,7 +307,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 				}
 
 				if (useRender) {
-					slicer.paintSlice((Graphics2D) g);
+					slicer.paintSlice((Graphics2D) g, true);
 					try {
 						tools.getProjectorMaskCreator().applyProjectorMask((Graphics2D) g);
 					} catch (Exception e) {

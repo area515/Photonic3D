@@ -506,11 +506,12 @@ public class ZSlicer {
 		  }
 	 }
 	 
-	 public void paintSlice(Graphics2D g) {
-		g.setBackground(Color.black);
-		Rectangle r = g.getDeviceConfiguration().getBounds();
-		g.clearRect(0, 0, r.width, r.height);
-
+	 public void paintSlice(Graphics2D g, boolean fillBlackFirst) {
+		 if (fillBlackFirst) {
+			g.setBackground(Color.black);
+			Rectangle r = g.getDeviceConfiguration().getBounds();
+			g.clearRect(0, 0, r.width, r.height);
+		 }
 		/*g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 	    g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);*/

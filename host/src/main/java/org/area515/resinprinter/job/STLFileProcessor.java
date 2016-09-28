@@ -76,7 +76,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			//Everything needs to be setup in the dataByPrintJob before we start the header
 			performHeader(dataAid);
 			
-			for (int z = startPoint; z <= endPoint && dataAid.printer.isPrintActive(); z += dataAid.slicingProfile.getDirection().getVector()) {
+			for (int z = startPoint; dataAid.slicingProfile.getDirection().isSliceAvailable(z, endPoint) && dataAid.printer.isPrintActive(); z += dataAid.slicingProfile.getDirection().getVector()) {
 				
 				//Performs all of the duties that are common to most print files
 				JobStatus status = performPreSlice(dataAid, slicer.getStlErrors());
@@ -127,10 +127,17 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 		try {
 			STLDataAid dataAid = (STLDataAid)aid;
 			boolean overrideNormals = dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule() == null?false:dataAid.configuration.getMachineConfig().getOverrideModelNormalsWithRightHandRule();
-			dataAid.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, overrideNormals, new CloseOffMend());
+			//dataAid.slicer = new ZSlicer(1, dataAid.xPixelsPerMM, dataAid.yPixelsPerMM, dataAid.sliceHeight, dataAid.sliceHeight / 2, true, overrideNormals, new CloseOffMend());
+			dataAid.slicer = new ZSlicer(aid.customizer.getZScale(), 
+					dataAid.xPixelsPerMM / aid.customizer.getZScale(), 
+					dataAid.yPixelsPerMM / aid.customizer.getZScale(), 
+					dataAid.sliceHeight, 
+					dataAid.sliceHeight / 2, 
+					true, 
+					overrideNormals,
+					new CloseOffMend());//*/
 			dataAid.slicer.loadFile(new FileInputStream(dataAid.printJob.getJobFile()), null, null);
 			dataAid.printJob.setTotalSlices(dataAid.slicer.getZMaxIndex() - dataAid.slicer.getZMinIndex());
-	
 			//Get the slicer queued up for the first image;
 			dataAid.slicer.setZIndex(dataAid.slicer.getZMinIndex() + dataAid.customizer.getNextSlice());
 			Object nextRenderingPointer = dataAid.cache.getCurrentRenderingPointer();
