@@ -13,4 +13,12 @@ public enum BuildDirection {
 	public int getVector() {
 		return vector;
 	}
+	
+	public boolean isSliceAvailable(int currentSlice, int lastSlice) {
+		if (this == BuildDirection.Bottom_Up) {
+			return currentSlice <= lastSlice;
+		}
+		
+		return currentSlice >= lastSlice;
+	}
 }

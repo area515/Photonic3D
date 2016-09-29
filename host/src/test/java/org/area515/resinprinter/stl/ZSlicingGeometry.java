@@ -64,7 +64,7 @@ public class ZSlicingGeometry {
 					g.drawRect(0, 0, x, y);
 					slicer.setZIndex(point.getSliceNumber());
 					slicer.colorizePolygons(null, null);
-					slicer.paintSlice(g);
+					slicer.paintSlice(g, true);
 				}
 				
 				int[] data = image.getRaster().getPixel(point.getX(), point.getY(), (int[])null);
@@ -100,7 +100,7 @@ public class ZSlicingGeometry {
 		for (int z = slicer.getZMinIndex(); z <= slicer.getZMaxIndex(); z++) {
 			slicer.setZIndex(z);
 			slicer.colorizePolygons(null, null);
-			slicer.paintSlice(g);
+			slicer.paintSlice(g, true);
 			g.drawRect(0, 0, x, y);
 			
 			for (FillPoint point : allPoints) {
