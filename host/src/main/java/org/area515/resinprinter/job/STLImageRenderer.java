@@ -72,7 +72,7 @@ public class STLImageRenderer extends CurrentImageRenderer {
 			g2.drawRect(0, 0, (int)aid.slicer.getWidthPixels() - 1, (int)aid.slicer.getHeightPixels() - 1);
 		}
 
-		aid.slicer.paintSlice(g2, false);
+		aid.slicer.paintSlice(g2, !previewMode);
 		
 		//imageToDisplay.setArea((double)aid.slicer.getBuildArea());//TODO: This won't work if affine transforms are applied afterwards!
 		return imageToDisplay;
