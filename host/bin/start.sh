@@ -44,7 +44,7 @@ elif [ "${cpu}" = "i686" ]; then
 elif [ "${cpu}" = "x86_64" ]; then
 	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jdk-8u102-linux-x64.tar.gz"
 elif [ "${cpu}" = "aarch64" ]; then
-	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u101-b13/jdk-8u101-linux-arm64-vfp-hflt.tar.gz:"
+	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u101-b13/jdk-8u101-linux-arm64-vfp-hflt.tar.gz"
 fi
 
 if [ ! -f "/usr/lib/jni/librxtxSerial.so" ]; then
