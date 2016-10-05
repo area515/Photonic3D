@@ -38,11 +38,13 @@ fi;
 
 #Its pretty hard to keep these updated, let me know when they get too old
 if [ "${cpu}" = "armv6l" -o "${cpu}" = "armv7l" ]; then
-	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-arm32-vfp-hflt.tar.gz"
+	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u101-b13/jdk-8u101-linux-arm32-vfp-hflt.tar.gz"
 elif [ "${cpu}" = "i686" ]; then
-	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-i586.tar.gz"
+	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jdk-8u102-linux-i586.tar.gz"
 elif [ "${cpu}" = "x86_64" ]; then
-	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-x64.tar.gz"
+	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jdk-8u102-linux-x64.tar.gz"
+elif [ "${cpu}" = "aarch64" ]; then
+	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u101-b13/jdk-8u101-linux-arm64-vfp-hflt.tar.gz"
 fi
 
 if [ ! -f "/usr/lib/jni/librxtxSerial.so" ]; then
