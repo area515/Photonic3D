@@ -428,12 +428,6 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		return after;
 	}
 	
-	protected BufferedImage convertTo3BGR(BufferedImage input) {
-		BufferedImage output = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
-		output.getGraphics().drawImage(input, 0, 0, Color.BLACK, null);
-		return output;
-	}
-	
 	public BufferedImage buildPreviewSlice(Customizer customizer, File jobFile, Previewable previewable) throws NoPrinterFoundException, SliceHandlingException {
 		//find the first activePrinter
 		String printerName = customizer.getPrinterName();
@@ -469,10 +463,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 				dataAid.optimizeWithPreviewMode = true;
 				image = previewable.renderPreviewImage(dataAid);
 				dataAid.optimizeWithPreviewMode = false;
-				/*if (customizer.getAffineTransformSettings().isIdentity()) {
-					image = convertTo3BGR(image);
-					customizer.setOrigSliceCache(image);
-				}*/
+				customizer.setOrigSliceCache(image);
 			}
 			
 			image = applyImageTransforms(dataAid, image);
