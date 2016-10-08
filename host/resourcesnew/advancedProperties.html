@@ -23,21 +23,6 @@
 					<input class="form-control" type="checkbox" ng-model="printersController.currentPrinter.configuration.machineConfig.OverrideModelNormalsWithRightHandRule">
 				</div>
 			</div>
-			<div class="list-group">
-				<div class="list-group-item">
-					<i title="template variable = ${LayerThickness}" class="fa fa-2x fa-arrows-h pull-left"></i>
-					<h4 title="template variable = ${LayerThickness}">X Density (pixels/mm)</h4>
-					<input title="template variable = ${LayerThickness}" type="number" step="0.01" class="form-control" placeholder="pixels/mm" ng-model="printersController.currentPrinter.configuration.slicingProfile.DotsPermmX">
-				</div>
-			</div>
-			<div class="list-group">
-				<div class="list-group-item">
-					<i title="template variable = ${LayerThickness}" class="fa fa-2x fa-arrows-v pull-left"></i>
-					<h4 title="template variable = ${LayerThickness}">Y Density (pixels/mm)</h4>
-					<input title="template variable = ${LayerThickness}" type="number" step="0.01" class="form-control" placeholder="pixels/mm" ng-model="printersController.currentPrinter.configuration.slicingProfile.DotsPermmY">
-				</div>
-			</div>
-			
 			<div class="panel-footer">
 				<span ng-include="'cardFooter.html'"></span>
 			</div>

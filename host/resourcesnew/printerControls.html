@@ -200,6 +200,10 @@
 					<b class="cwh-text-indent">Y Density: {{printerControlsController.currentPrinter.configuration.slicingProfile.DotsPermmY|number:2}} (pixels/mm)</b>
 				</div>
 				<div class="list-group-item" ng-hide="printerControlsController.currentPrinter.printInProgress">
+					<b class="cwh-text-indent">X Width: {{printerControlsController.currentPrinter.configuration.slicingProfile.XResolution|number}} (pixels) {{printerControlsController.currentPrinter.configuration.slicingProfile.XResolution/printerControlsController.currentPrinter.configuration.slicingProfile.DotsPermmX|number:1}} (mm)</b><br>
+					<b class="cwh-text-indent">Y Width: {{printerControlsController.currentPrinter.configuration.slicingProfile.YResolution|number}} (pixels) {{printerControlsController.currentPrinter.configuration.slicingProfile.YResolution/printerControlsController.currentPrinter.configuration.slicingProfile.DotsPermmY|number:1}} (mm)</b>
+				</div>
+				<div class="list-group-item" ng-hide="printerControlsController.currentPrinter.printInProgress">
 					<a class="btn btn-primary btn-sm" ng-click="printerControlsController.showBlankScreen()">
 						<b class="fa fa-square-o"></b>
 						<b class="cwh-text-indent">Show Blank Screen</b>

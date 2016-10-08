@@ -6,7 +6,6 @@
 		var BRANCH = "master";
 		var REPO = $scope.repo;
 		
-		cacheControl.clearPreviewExternalState();
 		this.loadingFontsMessage = "--- Loading fonts from server ---"
 		this.loadingProfilesMessage = "--- Loading slicing profiles from server ---"
 		this.loadingMachineConfigMessage = "--- Loading machine configurations from server ---"
@@ -95,6 +94,7 @@
 			executeActionAndRefreshPrinters("Save Printer", "No printer selected to save.", '/services/printers/save', printer, true);
 	        controller.editPrinter = null;
 	        controller.openType = null;
+			cacheControl.clearPreviewExternalState();
 		}
 		
 		function openSavePrinterDialog(editTitle, isNewPrinter) {
