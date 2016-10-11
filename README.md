@@ -5,11 +5,11 @@ Photonic3D is a control server for DLP resin 3D printers with a web-based user i
 
 The server is capable of printing a variety of formats, including:
  - `.cws` files created by Creation Workshop
- - STL files, which Photonic3D will slice incrementally
+ - STL files, which Photonic3D will slice incrementally at times when the CPU would generally be inactive(exposure and gcode execution)
  - Zip of PNG images, which Photonic3D will scan recursively and print based on alphanumeric ordering (meaning both zero-padded and non-padded numbered PNG files will work correctly)
  - Single GIF, JPEG, or PNG image, which Photonic3D will extrude and optionally print a 3D relief
  - Block of text, which Photonic3D will extrude using a system or user uploaded font
- - STL file, which Photonic3D will extrude and optionally print a 3D relief
+ - SVG file, which Photonic3D will extrude and optionally print a 3D relief
 
 
 Raspberry Pi Usage
