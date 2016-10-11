@@ -173,6 +173,7 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 					knownUsers.put(user.getName(), users);
 				}
 				
+				loadRoles(user);
 				users.add(user);
 			}
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
@@ -196,6 +197,8 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 			PhotonicCrypto crypto = null;
 			if (user.getUserId() != null) {
 				crypto = KeystoreUtilities.getPhotonicCrypto(user, keyFile, user.isRemote()?null:user.getCredential(), keystorePassword, allowInsecureCommunications);
+			} else if (!users.isEmpty()){
+				throw new UserManagementException("Invalid username or password");
 			} else {
 				Date validTo = new Calendar.Builder()
 						.set(Calendar.YEAR, Calendar.getInstance().get(Calendar.YEAR) + 50)
@@ -210,9 +213,9 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 						keystorePassword,
 						allowInsecureCommunications);
 			}
-
 			user = new PhotonicUser(user.getName(), null, crypto.getLocalUserId(), user.getEmail(), user.getRoles(), user.isRemote());
 			saveRoles(user);
+			users.remove(user);
 			users.add(user);
 			DefaultUserIdentity identity = loggedInUsers.get(user);
 			if (identity != null) {
@@ -222,7 +225,7 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 		} catch (InvalidNameException e) {
 			throw new UserManagementException("Invalid username or password", e);
 		} catch (IOException | GeneralSecurityException e) {
-			throw new UserManagementException("Couldn't create user", e);
+			throw new UserManagementException("Couldn't add or update user", e);
 		}
 	}
 
@@ -238,10 +241,17 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 
 	@Override
 	public void remove(PhotonicUser user) throws UserManagementException {
+		if (user == null) {
+			throw new UserManagementException("No user specified");
+		}
+		
 		try {
+			Set<PhotonicUser> users = knownUsers.get(user.getName());
+			if (users == null) {
+				throw new UserManagementException("Couldn't remove user");
+			}
 			JettySecurityUtils.removeKeysForUser(user.getUserId(), keyFile, keystorePassword);
 			loggedInUsers.remove(user);
-			Set<PhotonicUser> users = knownUsers.get(user.getName());
 			for (PhotonicUser currentUser : users) {
 				if (currentUser.equals(user)) {
 					users.remove(currentUser);

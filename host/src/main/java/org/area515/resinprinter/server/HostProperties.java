@@ -863,9 +863,6 @@ public class HostProperties {
 	public String loadProperty(String name) {
 		Properties properties = loadOverriddenConfigurationProperties();
 		String value = properties.getProperty(name);
-		
-		overwriteOverriddenConfigurationProperties(properties);
-		NotificationManager.hostSettingsChanged();
 		return value;
 	}
 	

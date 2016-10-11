@@ -1,0 +1,59 @@
+	<div class="row">
+		<div class="row">
+			<div class="col-sm-5 bootcards-list">
+				<div class="panel panel-default">
+					<div class="panel-heading clearfix">
+						<i class="fa fa-2x fa-users pull-left"></i>
+						<h3 class="panel-title pull-left">All Users</h3>
+						<div class="row">
+							<div class="btn-group pull-right" >
+								<button class="btn btn-primary" ng-disabled="currentUser.started || currentUser == null" ng-click="editCurrentUser('Edit User')" >
+									<i class="fa fa-pencil"></i>
+									<span>Edit</span>
+								</button>
+								<button class="btn btn-danger" ng-disabled="currentUser == null" ng-click="deleteCurrentUser()">
+									<i class="fa fa-trash-o"></i> 
+									<span>Remove</span>
+								</button>
+								<button class="btn btn-success" ng-click="createNewUser('Create User')">
+									<i class="fa fa-plus"></i> 
+									<span>Create</span>
+								</button>
+						    </div>
+						</div>
+					</div>
+					<div class="list-group">
+							<a ng-class="{active:user.userId == currentUser.userId}" ng-repeat="user in users"
+								class="list-group-item"
+					 			ng-click="changeCurrentUser(user)">
+					 			<span class="pull-left fa-stack fa-lg">
+									<i class="fa fa-stack-1x fa-2x fa-user" ng-show="!user.remote"></i>
+			  						<i class="fa fa-stack-2x fa-2x fa-user-secret" ng-show="user.remote"></i>
+								</span>
+								<h4 class="list-group-item-heading">{{user.name}}</h4>
+								<p class="list-group-item-text">Permissions:{{user.roles}}</p>
+							</a>
+							<div class="list-group-item" ng-show="users.length == 0">
+								<i class="pull-left fa fa-2x fa-exclamation-triangle"></i>
+								<h3 class="list-group-item-heading" >No users have been setup</h3>
+							</div>
+					</div>
+					<div class="panel-footer">
+						<span ng-include="'cardFooter.html'"></span>
+					</div>			
+				</div>
+			</div>
+			<div class="col-sm-7 bootcards-cards">
+				<span ng-include="'user.html'"></span>
+			</div>
+		</div>	
+	</div>
+		
+	<div class="modal fade" id="graphScript" tabindex="-1" role="dialog" aria-labelledby="editModal" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<span ng-include="'graphScript.html'"></span>
+			</div>
+		</div>
+	</div>
+	
