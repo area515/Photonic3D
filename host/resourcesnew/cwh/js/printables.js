@@ -25,6 +25,7 @@
 
 		this.saveCustomizer = function saveCustomizer() {
 			if (controller.currentPrintable != null && controller.currentCustomizer != null) {
+				controller.currentCustomizer.externalImageAffectingState = cacheControl.previewExternalStateId;
 				$http.post("/services/customizers/upsert", controller.currentCustomizer).success(function (data) {
 						controller.currentPreviewImg = "/services/customizers/renderPreviewImage/" + controller.currentCustomizer.name + "?_=" + data.cacheId;
 					}).error(function (data, status, headers, config, statusText) {
