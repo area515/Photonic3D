@@ -26,6 +26,7 @@ public class Customizer {
 	private String cacheId;
 	private int nextSlice = 0;
 	private PrinterStep nextStep = PrinterStep.PerformHeader;
+	private String imageManipulationCalculator;
 	
 	public static enum PrinterStep {
 		PerformHeader,
@@ -211,6 +212,13 @@ public class Customizer {
 	}
 	public void setExternalImageAffectingState(String externalImageAffectingState) {
 		this.externalImageAffectingState = externalImageAffectingState;
+	}
+	
+	public String getImageManipulationCalculator() {
+		return imageManipulationCalculator;
+	}
+	public void setImageManipulationCalculator(String imageManipulationCalculator) {
+		this.imageManipulationCalculator = imageManipulationCalculator;
 	}
 	
 	public String getCacheId() {

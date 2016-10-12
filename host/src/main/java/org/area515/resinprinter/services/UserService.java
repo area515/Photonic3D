@@ -36,7 +36,7 @@ import org.area515.resinprinter.util.security.PhotonicUser;
 
 @Api(value="users")
 @RolesAllowed({PhotonicUser.FULL_RIGHTS, PhotonicUser.USER_ADMIN})
-@Path("user")
+@Path("")
 public class UserService {
     private static final Logger logger = LogManager.getLogger();
 
@@ -141,6 +141,15 @@ public class UserService {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public PhotonicUser createNewUser(PhotonicUser user) throws UserManagementException {
+    	if (user == null) {
+    		throw new UserManagementException("No user specified to save");
+    	}
+    	if (user.getName() == null) {
+    		throw new UserManagementException("No username specified.");
+    	}
+    	if (user.getCredential() == null) {
+    		throw new UserManagementException("No password specified.");
+    	}
 		return FeatureManager.getUserManagementFeature().update(user);
 	}
     
@@ -152,14 +161,9 @@ public class UserService {
 	@DELETE
 	@Path("users/{userId}")
 	@Produces(MediaType.APPLICATION_JSON)
-    public Response deleteUser(@PathParam("userId")String userId) {
-		try {
-			FeatureManager.getUserManagementFeature().remove(new PhotonicUser(null, null, UUID.fromString(userId), null, null, false));
-			return Response.status(Status.OK).build();
-		} catch (UserManagementException e) {
-			logger.error(e);
-			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-		}
+    public Response deleteUser(@PathParam("userId")String userId) throws UserManagementException {
+		FeatureManager.getUserManagementFeature().remove(FeatureManager.getUserManagementFeature().getUser(UUID.fromString(userId)));
+		return Response.status(Status.OK).build();
     }
     
     @ApiOperation(value = "Trusts a new remote Photonic 3d user as a new friend. "

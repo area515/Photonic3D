@@ -119,12 +119,12 @@ public class JettySecurityUtils {
 				continue;
 			}
 
-			alias = alias.substring(0, alias.length() - 1);
-			if (!userIdAndName[0].equals(alias)) {
-				logger.error("UID component:" + userIdAndName[0] + " can't be different than alias:" + alias);
+			String userId = alias.substring(0, alias.length() - 1);
+			if (!userIdAndName[0].equals(userId)) {
+				logger.error("UID component:" + userIdAndName[0] + " can't be different than alias:" + userId);
 				continue;
 			}
-			
+
 			users.add(new PhotonicUser(userIdAndName[1], null, UUID.fromString(userIdAndName[0]), null, null, !keyStore.isKeyEntry(alias)));
 		}
 

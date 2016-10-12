@@ -1,0 +1,48 @@
+<form class="form-horizontal" >
+	<div class="modal-header">
+			<div class="btn-group pull-left">
+				<button class="btn btn-danger" data-dismiss="modal" ng-click="cancel()">
+					Cancel
+				</button>
+			</div>
+			
+			<div class="btn-group pull-right">
+				<button class="btn btn-success" data-dismiss="modal" ng-click="save()">
+					Save
+				</button>
+			</div>
+			
+			<h4 class="modal-title">
+					{{title}}
+			</h4>
+	</div>
+	<div class="modal-body">
+		<div class="form-group">
+			<label class="col-xs-4 control-label">User</label>
+			<div class="col-xs-8">
+				<input type="text" class="form-control" placeholder="User" ng-model="editUser.name">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-xs-4 control-label">Password</label>
+			<div class="col-xs-8">
+				<input class="form-control" type="password" ng-model="editUser.credential">
+			</div>
+		</div>			
+		<div class="form-group">
+			<label class="col-xs-4 control-label">Permissions</label>
+			<div class="col-xs-8">
+				<select class="form-control"
+					ng-model="editUser.roles"
+					ng-options="item.name as item.name for item in allRoles"
+					multiple
+					required>
+				</select>
+			</div>		
+		</div>
+	</div>
+</form>
+
+<div class="modal-footer">
+	<span ng-include="'cardFooter.html'"></span>
+</div>	

@@ -37,11 +37,11 @@ import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
+import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.InkDetector;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
-import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.render.StubPrintFileProcessor;
 import org.area515.resinprinter.printer.BuildDirection;
 import org.area515.resinprinter.printer.ComPortSettings;
@@ -529,8 +529,17 @@ public class PrinterService {
 			
 			currentConfiguration.getSlicingProfile().setDotsPermmX(xPixelsPerMM);
 			currentConfiguration.getSlicingProfile().setDotsPermmY(yPixelsPerMM);
+			Printer printer = PrinterService.INSTANCE.getPrinter(printerName);
+			GraphicsDevice device = null;
+			if (printer.isStarted()) {
+				device = DisplayManager.Instance().getDisplayDevice(printer.getDisplayDeviceID());
+			} else {
+				device = DisplayManager.Instance().getDisplayDevice(currentConfiguration.getMachineConfig().getOSMonitorID());
+			}
+			currentConfiguration.getSlicingProfile().setxResolution(device.getDefaultConfiguration().getBounds().width);
+			currentConfiguration.getSlicingProfile().setyResolution(device.getDefaultConfiguration().getBounds().height);
 			currentConfiguration.setCalibrated(true);
-			logger.info("Showing calibration screen for xPixelsPerMM:{} yPixelsPerMM:{}", xPixelsPerMM, yPixelsPerMM);
+			logger.info("Calibrated printer to xPixelsPerMM:{} yPixelsPerMM:{}", xPixelsPerMM, yPixelsPerMM);
 			
 			HostProperties.Instance().addOrUpdatePrinterConfiguration(currentConfiguration);
 			return new MachineResponse("calibratePrinter", true, "Calibrated printer:" + printerName + "");

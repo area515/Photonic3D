@@ -40,9 +40,15 @@ public class PhotonicUser implements Principal {
 	public String getCredential() {
 		return credential;
 	}
+	public void setCredential(String credential) {
+		this.credential = credential;
+	}
 	
 	public UUID getUserId() {
 		return userId;
+	}
+	public void getUserId(UUID userId) {
+		this.userId = userId;
 	}
 	
 	public String getEmail() {
@@ -52,12 +58,18 @@ public class PhotonicUser implements Principal {
 	public Boolean isRemote() {
 		return remote;
 	}
+	public void setRemote(boolean remote) {
+		this.remote = remote;
+	}
 	
 	@Override
 	public String getName() {
 		return simpleUserName;
 	}
-
+	public void setName(String simpleUserName) {
+		this.simpleUserName = simpleUserName;
+	}
+	
 	public String toString() {
 		return simpleUserName + "(" + getUserId() + ")";
 	}

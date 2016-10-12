@@ -1,6 +1,6 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("PrinterControlsController", ['$scope', '$http', '$location', '$routeParams', 'cwhWebSocket', function ($scope, $http, $location, $routeParams, cwhWebSocket) {
+	cwhApp.controller("PrinterControlsController", ['$scope', '$http', '$location', '$routeParams', 'cwhWebSocket', 'cacheControl', function ($scope, $http, $location, $routeParams, cwhWebSocket, cacheControl) {
 		controller = this;
 		this.currentPrintJob = null;
 		this.gcodeProcessing = "";
@@ -19,7 +19,7 @@
 					yPixels:Math.round(controller.squarePixelSize * controller.currentPrinter.configuration.slicingProfile.DotsPermmY)};
 			} else {
 				controller.calibration.xPixels = Math.round(controller.calibration.xMM * controller.currentPrinter.configuration.slicingProfile.DotsPermmX); 
-				controller.calibration.xPixels = Math.round(controller.calibration.yMM * controller.currentPrinter.configuration.slicingProfile.DotsPermmY);
+				controller.calibration.yPixels = Math.round(controller.calibration.yMM * controller.currentPrinter.configuration.slicingProfile.DotsPermmY);
 			}
 		}
 		
@@ -34,14 +34,18 @@
 			}
 		}
 		
-		$http.get("/services/printers/get/" + printerName).success(
+		var loadPrinter = function loadPrinter() {
+			$http.get("/services/printers/get/" + printerName).success(
 	        		function (data) {
 	        			refreshPrinter(data);
 	        		})
-		$http.get("/services/printJobs/getByPrinterName/" + printerName).success(
+		}
+		var loadPrintJob = function loadPrintJob() {
+			$http.get("/services/printJobs/getByPrinterName/" + printerName).success(
         		function (data) {
         			controller.currentPrintJob = data;
         		})
+		}
         var gCodeSuccess = function (response) {
 			if (response.data.response) {
 				if (response.data.message.lastIndexOf("\n") != response.data.message.length-1) {
@@ -87,7 +91,12 @@
         this.calibrate = function calibrate() {
         	if (controller.calibration.startedCalibration) {
         		controller.calibration.startedCalibration = false;
-    			$http.get("services/printers/calibrate/" + printerName + "/" + (controller.calibration.xPixels/controller.calibration.xMM) + "/" + (controller.calibration.yPixels/controller.calibration.yMM)).then(gCodeSuccess, errorFunction);
+    			$http.get("services/printers/calibrate/" + printerName + "/" + (controller.calibration.xPixels/controller.calibration.xMM) + "/" + (controller.calibration.yPixels/controller.calibration.yMM)).
+    				then(function(data) {
+    					gCodeSuccess(data);
+    	    			cacheControl.clearPreviewExternalState();
+    	    			loadPrinter();
+    				}, errorFunction);
     			controller.showBlankScreen();
         	} else {
         		controller.calibration.startedCalibration = true;
@@ -110,6 +119,8 @@
 			$http.get("services/printers/" + shutterState + "shutter/" + printerName).then(gCodeSuccess, errorFunction)
 		}
 
+        loadPrinter();
+        loadPrintJob();
 		attachToPrinter(printerName);
 	}])
 

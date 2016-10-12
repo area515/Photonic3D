@@ -57,6 +57,11 @@
     	        controller: 'SettingsController',
     	        controllerAs: 'settingsController'
     	    })
+    	    $routeProvider.when('/usersPage', {
+    	        templateUrl: '/users.html',
+    	        controller: 'UsersController',
+    	        controllerAs: 'usersController'
+    	    })
     	    $routeProvider.otherwise({
     	    	redirectTo: '/dashboardPage'
     	    });
