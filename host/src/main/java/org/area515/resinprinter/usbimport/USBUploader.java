@@ -6,7 +6,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +26,24 @@ public class USBUploader implements Feature {
 	private HashMap<String, File> masterRoots;
 	private ScheduledFuture<?> future;
 	
+	private List<File> listRoots() {
+		String configRoots[] = {"/media", "/storage"};
+		List<File> allRoots = new ArrayList<>();
+		for (File currentFile : File.listRoots()) {
+			allRoots.add(currentFile);
+		}
+		for (String root : configRoots) {
+			File nextFile = new File(root);
+			if (nextFile.exists()) {
+				for (File currentFile : nextFile.listFiles()) {
+					allRoots.add(currentFile);
+				}
+			}
+		}
+		
+		return allRoots;
+	}
+	
 	private void uploadFromRoot(File root) {
 		for (File currentFile : root.listFiles(PrintFileFilter.INSTANCE)) {
 			try (InputStream stream = new BufferedInputStream(new FileInputStream(currentFile))) {
@@ -37,7 +57,7 @@ public class USBUploader implements Feature {
 	@Override
 	public void start(URI uri) {
 		masterRoots = new HashMap<>();
-		for (File root : File.listRoots()) {
+		for (File root : listRoots()) {
 			masterRoots.put(root.getAbsolutePath(), root);
 		}
 		
@@ -46,7 +66,7 @@ public class USBUploader implements Feature {
 			public void run() {
 				Map<String, File> negativeList = new HashMap<>();
 				negativeList.putAll(masterRoots);
-				for (File root : File.listRoots()) {
+				for (File root : listRoots()) {
 					File foundItem = negativeList.remove(root.getAbsolutePath());
 					if (foundItem == null) {
 						uploadFromRoot(root);
