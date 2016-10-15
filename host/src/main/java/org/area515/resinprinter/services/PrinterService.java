@@ -864,11 +864,14 @@ public class PrinterService {
 	
 	private Map<String, Object> buildPrintInProgressSimulation() {
 		BufferedImage image = new BufferedImage(200, 200, BufferedImage.TYPE_4BYTE_ABGR_PRE);
+		BufferedImage printImage = new BufferedImage(10, 10, BufferedImage.TYPE_4BYTE_ABGR_PRE);
 		Map<String, Object> overrides = new HashMap<>();
 		overrides.put("platformGraphics", image.getGraphics());
 		overrides.put("platformRaster", image.getRaster());
-		overrides.put("extrusionX", 200);
-		overrides.put("extrusionY", 200);
+		overrides.put("buildPlatformImage", image);
+		overrides.put("buildPlatformGraphics", image.getGraphics());
+		overrides.put("buildPlatformRaster", image.getRaster());
+		overrides.put("printImage", printImage);
 		overrides.put("centerX", 100);
 		overrides.put("centerY", 100);
 		return overrides;

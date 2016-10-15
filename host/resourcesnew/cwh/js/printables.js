@@ -279,6 +279,7 @@
 		this.refreshCurrentPrinter();
 	}]);
 
+	
 
 	cwhApp.directive('handleError', function() {
 			return {

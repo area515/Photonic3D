@@ -1,5 +1,8 @@
 package org.area515.util;
 
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -15,8 +18,11 @@ import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
+import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
 import org.area515.resinprinter.server.HostProperties;
 
 import freemarker.cache.StringTemplateLoader;
@@ -138,6 +144,33 @@ public class TemplateEngine {
         	
         	throw e;
         }
+	}
+	
+	public static BufferedImage runScriptInImagingContext(BufferedImage imageToDisplay, BufferedImage targetImage, DataAid aid, Map<String, Object> overrides, String calculatorScript) throws JobManagerException {
+		int centerX = aid.xResolution / 2;
+		int centerY = aid.yResolution / 2;
+
+		Graphics graphics = imageToDisplay.getGraphics();
+		graphics.setColor(Color.black);
+		graphics.fillRect(0, 0, imageToDisplay.getWidth(), imageToDisplay.getHeight());
+		graphics.setColor(Color.white);
+		
+		if (overrides == null) {
+			overrides = new HashMap<>();
+		}
+		overrides.put("buildPlatformImage", imageToDisplay);
+		overrides.put("buildPlatformGraphics", graphics);
+		overrides.put("buildPlatformRaster", imageToDisplay.getRaster());
+		overrides.put("printImage", targetImage);
+		overrides.put("centerX", centerX);
+		overrides.put("centerY", centerY);
+
+		try {
+			TemplateEngine.runScript(aid.printJob, aid.printer, aid.scriptEngine, calculatorScript, "2D Platform rendering script", overrides);
+		} catch (ScriptException e) {
+			throw new JobManagerException("Error while executing platform rendering script.", e);
+		}
+		return imageToDisplay;
 	}
 	
 	public static Object runScript(PrintJob job, Printer printer, ScriptEngine engine, String script, String scriptName, Map<String, Object> overrides) throws ScriptException {
