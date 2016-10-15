@@ -101,14 +101,18 @@ public class IncomingHttpTunnel {
     public void sendCertificateTrustExchange(PhotonicCrypto fromLocalCrypto, UUID toRemote) throws CertificateEncodingException, JsonProcessingException, IOException {
 		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
 		Message message = fromLocalCrypto.buildCertificateTrustMessage(toRemote);
-		session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(message)));
+		synchronized (session.getRemote()) {
+			session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(message)));
+		}
 		//TODO: Someday we should wait for an accept friend response from the remote.
     }
     
     public void sendKeyExchange(PhotonicCrypto crypto) throws CertificateExpiredException, CertificateNotYetValidException, InvalidKeyException, InvalidNameException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, JsonProcessingException, IOException {
 		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
     	Message message = crypto.buildKeyExchange();
-    	session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(message)));
+		synchronized (session.getRemote()) {
+			session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(message)));
+		}
 		//TODO: Someday we should wait for a key receipt message
     }
     
@@ -277,7 +281,9 @@ public class IncomingHttpTunnel {
 			buffer.put(responseString.getBytes());
 			buffer.put(response);
 			Message outMessage = connection.getCrypto().buildEncryptedMessage(buffer);
-			session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(outMessage)));
+			synchronized (session.getRemote()) {
+				session.getRemote().sendBytes(ByteBuffer.wrap(mapper.writeValueAsBytes(outMessage)));
+			}
 		} catch (IOException | InvalidNameException | InvalidAlgorithmParameterException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | NoSuchAlgorithmException e) {
 			logger.error(e);
 		}
