@@ -66,8 +66,6 @@
 									<b class="cwh-text-indent">Disable</b>
 								</a>
 							</span>
-					<!-- 		<h3 class="panel-title pull-right">Project Image On Printer </h3>	 -->						
-							
 							<div class="row">
 							</div>
 						</div>
@@ -232,6 +230,44 @@
 								decClick="printablesController.clearExternalCacheAndSaveCustomizer()"
 								ng-model="printablesController.currentCustomizer.nextSlice">
 							</div>
+						</div>
+					</div>
+					<!-- End list group -->
+					<div class="panel-footer">
+						<span ng-include="'cardFooter.html'"></span>
+					</div>
+				</div>
+			</div>
+			<!-- End Customizer -->
+			
+			<!-- Advanced Customizations -->
+			<div class="col-sm-7 bootcards-list pull-right" id="controls" ng-show="false && !printablesController.errorMsg && printablesController.currentPrintable">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<i class="fa fa-2x fa-graduation-cap pull-left"></i>
+						<h3 class="panel-title pull-left">Advanced Customizations</h3>
+						<div class="row"></div>
+					</div>
+					<div class="list-group">
+						<div class="list-group-item">
+							<i class="fa fa-2x fa-circle pull-left"></i>
+							<h4>Place drain hole</h4>
+						</div>
+						
+						<div class="list-group-item">
+				 			<i class="fa fa-2x fa-th-large pull-left"></i>						
+							<h4>Duplication grid</h4>
+
+						</div>
+						<div class="list-group-item">
+				 			<i class="fa fa-2x fa-th-large pull-left"></i>						
+							<h4>Image Manipulation Calculator</h4>
+
+						</div>
+						<div class="list-group-item">
+				 			<i class="fa fa-2x fa-th-large pull-left"></i>						
+							<h4>AffineTransform Calculator</h4>
+
 						</div>
 					</div>
 					<!-- End list group -->

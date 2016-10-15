@@ -117,6 +117,7 @@ public class Customizer {
 		}
 
 		public AffineTransform createAffineTransform(double xResolution, double yResolution, double imageWidth, double imageHeight) {
+			//TOOD: add data in here to create transform from calculator
 			AffineTransform firstTransform = null;
 			if (this.xFlip || this.yFlip) {
 				firstTransform = new AffineTransform();

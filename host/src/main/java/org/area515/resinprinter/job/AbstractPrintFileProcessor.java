@@ -110,7 +110,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 				return this.affineTransform;
 			}
 			
-			if (customizer != null) {
+			if (customizer != null && customizer.getAffineTransformSettings() != null) {
 				this.affineTransform = customizer.createAffineTransform(xResolution, yResolution, img.getWidth(), img.getHeight());
 			} else {
 				this.affineTransform = new AffineTransform();
@@ -386,7 +386,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 	}
 
-	public BufferedImage applyImageTransforms(DataAid aid, BufferedImage img) throws ScriptException {
+	public BufferedImage applyImageTransforms(DataAid aid, BufferedImage img) throws ScriptException, JobManagerException {
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
@@ -399,7 +399,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 		
 		/*try {
-			ImageIO.write(img, "png",  new File("first.png"));
+			ImageIO.write(img, "png",  new File("start.png"));
 		} catch (IOException e) {
 		}//*/
 
@@ -409,19 +409,29 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		g.fillRect(0, 0, aid.xResolution, aid.yResolution);
 		
 		/*try {
-			ImageIO.write(after, "png",  new File("afterfill.png"));
+			ImageIO.write(after, "png",  new File("afterFill.png"));
 		} catch (IOException e) {
 		}//*/
 		
 		AffineTransform transform = aid.getAffineTransform(img);
 		g.drawImage(img, transform, null);
+		
 		/*try {
-			ImageIO.write(after, "png",  new File("afterapplication.png"));
+			ImageIO.write(after, "png",  new File("afterDraw.png"));
+		} catch (IOException e) {
+		}//*/
+		if (aid.customizer.getImageManipulationCalculator() != null) {
+			Map<String, Object> overrides = new HashMap<>();
+			overrides.put("affineTransform", transform);
+			TemplateEngine.runScriptInImagingContext(after, img, aid, overrides, aid.customizer.getImageManipulationCalculator());
+		}
+		/*try {
+			ImageIO.write(after, "png",  new File("afterImageManipulation.png"));
 		} catch (IOException e) {
 		}//*/
 		applyBulbMask(aid, (Graphics2D)after.getGraphics(), aid.xResolution, aid.yResolution);
 		/*try {
-			ImageIO.write(after, "png",  new File("afterbulb.png"));
+			ImageIO.write(after, "png",  new File("afterBulbMask.png"));
 		} catch (IOException e) {
 		}//*/
 
@@ -454,6 +464,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			printJob.setPrinter(activePrinter);
 			printJob.setCustomizer(customizer);
 			printJob.setPrintFileProcessor(this);
+			printJob.setCurrentSlice(customizer.getNextSlice());
 			
 			//instantiate new dataaid
 			DataAid dataAid = createDataAid(printJob); //TODO: Eventually we should just use the internal cache inside the dataAid
