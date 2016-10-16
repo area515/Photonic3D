@@ -62,6 +62,7 @@
 									zscale: 1,
 									nextSlice: 0,
 									nextStep: "PerformHeader",
+									imageManipulationCalculator: null,
 									affineTransformSettings: {
 										yflip: false,
 										xflip: false,
@@ -71,7 +72,8 @@
 										xtranslate: 0,
 										ytranslate: 0,
 										xshear: 0,
-										yshear: 0
+										yshear: 0,
+										affineTransformScriptCalculator: null
 									}
 								};
 						} else {
@@ -172,7 +174,8 @@
 			controller.currentCustomizer.zscale = 1.0;
 			controller.currentCustomizer.nextSlice = 0;
 			controller.currentCustomizer.nextStep = "PerformHeader";
-
+			controller.currentCustomizer.imageManipulationCalculator = null;
+			
 			var affineTransformSettings = controller.currentCustomizer.affineTransformSettings;
 			affineTransformSettings.xtranslate = 0;
 			affineTransformSettings.ytranslate = 0;
@@ -183,6 +186,7 @@
 			affineTransformSettings.xflip = false;
 			affineTransformSettings.yflip = false;
 			affineTransformSettings.rotation = 0;
+			affineTransformSettings.affineTransformScriptCalculator = null;
 			this.saveCustomizer();
 		}
 

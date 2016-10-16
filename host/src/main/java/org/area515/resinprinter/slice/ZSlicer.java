@@ -992,7 +992,7 @@ public class ZSlicer {
 	}
 	
 	public double getHeightPixels() {
-		return stlFile.getHeight() * pixelsPerMMX;
+		return stlFile.getHeight() * pixelsPerMMY;
 	}
 	
 	public int getZMinIndex() {
