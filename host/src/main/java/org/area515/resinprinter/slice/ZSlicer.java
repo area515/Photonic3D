@@ -478,9 +478,9 @@ public class ZSlicer {
 					  g.setColor(Color.magenta);
 					  Point3d point = (Point3d)shape;
 					  g.drawLine((int)(point.x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
-							  (int)(point.y / (precisionScaler) * pixelsPerMMY + imageOffsetX), 
+							  (int)(point.y / (precisionScaler) * pixelsPerMMY + imageOffsetY), 
 							  (int)(point.x / (precisionScaler) * pixelsPerMMX + imageOffsetX), 
-							  (int)(point.y / (precisionScaler) * pixelsPerMMY + imageOffsetX));
+							  (int)(point.y / (precisionScaler) * pixelsPerMMY + imageOffsetY));
 				  } else {
 					  logger.debug("No intersection. WRONG!!!");
 				  }
@@ -992,7 +992,7 @@ public class ZSlicer {
 	}
 	
 	public double getHeightPixels() {
-		return stlFile.getHeight() * pixelsPerMMX;
+		return stlFile.getHeight() * pixelsPerMMY;
 	}
 	
 	public int getZMinIndex() {
