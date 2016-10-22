@@ -9,8 +9,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
 
-import javax.script.ScriptException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,34 +43,38 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 	public JobStatus processFile(PrintJob printJob) throws Exception {
 		try {
 			DataAid dataAid = initializeJobCacheWithDataAid(printJob);
-	
+
 			SortedMap<String, File> imageFiles = findImages(printJob.getJobFile());
-			
+
 			printJob.setTotalSlices(imageFiles.size());
-	
+
 			performHeader(dataAid);
-	
+
 			Iterator<File> imgIter = imageFiles.values().iterator();
-	
-			// Preload first image then loop
+			
+			// Iterate the image stack up to the slice index requested by the customizer
 			if (imgIter.hasNext()) {
-				File imageFile = null;
 				int sliceIndex = dataAid.customizer.getNextSlice();
 				while (imgIter.hasNext() && sliceIndex > 0) {
 					sliceIndex--;
 					imgIter.next();
 				}
-				
+			}
+
+			// Preload first image then loop
+			if (imgIter.hasNext()) {
+				File imageFile = imgIter.next();
+
 				Future<RenderedData> prepareImage = Main.GLOBAL_EXECUTOR.submit(new SimpleImageRenderer(dataAid, this, imageFile));
 				boolean slicePending = true;
-				
+
 				do {
-	
+
 					JobStatus status = performPreSlice(dataAid, null);
 					if (status != null) {
 						return status;
 					}
-					
+
 					RenderedData imageData = prepareImage.get();
 					if (imgIter.hasNext()) {
 						imageFile = imgIter.next();
@@ -88,7 +90,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 					}
 				} while (slicePending);
 			}
-			
+
 			return performFooter(dataAid);
 		} finally {
 			clearDataAid(printJob);
