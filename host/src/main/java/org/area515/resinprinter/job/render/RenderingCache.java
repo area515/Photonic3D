@@ -57,6 +57,6 @@ public class RenderingCache {
 	}
 	
 	public void setCurrentRenderingPointer(Object pointer) {
-		currentImagePointer = (Boolean)pointer;
+		currentImagePointer = pointer;
 	}
 }

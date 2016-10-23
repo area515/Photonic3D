@@ -18,8 +18,6 @@ import org.area515.resinprinter.printer.PrinterManager;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 
-import org.area515.resinprinter.services.CustomizerService;
-
 public class PrintJobManager {
 	private static final Logger logger = LogManager.getLogger();
 	private static PrintJobManager INSTANCE;
