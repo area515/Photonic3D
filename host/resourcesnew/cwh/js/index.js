@@ -6,14 +6,67 @@
 		        return new Date(1970, 0, 1).setMilliseconds(milliseconds);
 		    };
 		}]);
-		cwhApp.factory('cacheControl', function() {
+		
+		cwhApp.factory('photonicUtils', ['$http', '$rootScope', function($http, $rootScope) {
 	        return {
 	        	previewExternalStateId:firstCacheId,
+	        	
+	        	testScript: function(controller, scriptName, returnType, script, successFunction) {
+	    			var printerNameEn = encodeURIComponent(controller.currentPrinter.configuration.name);
+	    			var scriptNameEn = encodeURIComponent(scriptName);
+	    			var returnTypeEn = encodeURIComponent(returnType);
+	    			
+	    			$http.post('/services/printers/testScript/' + printerNameEn + "/" + scriptNameEn + "/" + returnTypeEn, script).success(function (data) {
+	    				controller.graph = data.result;
+	    				if (data.error) {
+	    					$rootScope.$emit("MachineResponse", {machineResponse: {command:scriptName, message:data.errorDescription}, successFunction:null, afterErrorFunction:null});
+	    	     			return;
+	    	     		} else if (returnType.indexOf("[") > -1){
+	    					$('#graphScript').modal();
+	    				} else {
+	    					$rootScope.$emit("MachineResponse", {machineResponse: {command:scriptName, message:"Successful execution. Script returned:" + JSON.stringify(data.result), response:true}, successFunction:null, afterErrorFunction:null});
+	    				}
+	    				if (successFunction != null) {
+	    					successFunction();
+	    				}
+	    			}).error(function (data, status, headers, config, statusText) {
+	    				$rootScope.$emit("HTTPError", {status:status, statusText:data});
+	        		})
+	    		},
+	    		
+	    		getPrintFileProcessorIconClass: function getPrintFileProcessorIconClass(processorContainer) {
+	    			if (processorContainer == null || processorContainer.printFileProcessor == null) {
+	    				return "Unknown";
+	    			}
+	    			if (processorContainer.printFileProcessor.friendlyName === 'Image') {
+	    				return "fa-photo";
+	    			}
+	    			if (processorContainer.printFileProcessor.friendlyName === 'Maze Cube') {
+	    				return "fa-cube";
+	    			}			
+	    			if (processorContainer.printFileProcessor.friendlyName === 'STL 3D Model') {
+	    				return "fa-object-ungroup";
+	    			}			
+	    			if (processorContainer.printFileProcessor.friendlyName === 'Creation Workshop Scene') {
+	    				return "fa-diamond";
+	    			}
+	    			if (processorContainer.printFileProcessor.friendlyName === 'Zip of Slice Images') {
+	    				return "fa-stack-overflow";
+	    			}
+	    			if (processorContainer.printFileProcessor.friendlyName === 'Simple Text') {
+	    				return "fa-bold";
+	    			}
+	    			if (processorContainer.printFileProcessor.friendlyName === 'Scalable Vector Graphics') {
+	    				return "fa-puzzle-piece";
+	    			}
+	    			return "fa-question-circle";
+	    		},
+
 	            clearPreviewExternalState: function() {
 	        		this.previewExternalStateId = Math.random();
 	            }
 	        };
-	    });
+	    }]);
 
 		cwhApp.config(['$routeProvider', '$locationProvider', '$httpProvider', function($routeProvider, $locationProvider, $httpProvider) {
 		    if (!$httpProvider.defaults.headers.get) {

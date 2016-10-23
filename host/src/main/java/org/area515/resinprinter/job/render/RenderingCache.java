@@ -48,10 +48,6 @@ public class RenderingCache {
 		return get(currentImagePointer).getArea();
 	}
 	
-	public Object getNextRenderingPointer() {
-		return !(Boolean)currentImagePointer;
-	}
-	
 	public Object getCurrentRenderingPointer() {
 		return currentImagePointer;
 	}

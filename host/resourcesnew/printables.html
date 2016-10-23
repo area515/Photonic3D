@@ -241,7 +241,7 @@
 			<!-- End Customizer -->
 			
 			<!-- Advanced Customizations -->
-			<div class="col-sm-7 bootcards-list pull-right" id="controls" ng-show="false && !printablesController.errorMsg && printablesController.currentPrintable">
+			<div class="col-sm-7 bootcards-list pull-right" id="controls" ng-show="!printablesController.errorMsg && printablesController.currentPrintable">
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<i class="fa fa-2x fa-graduation-cap pull-left"></i>
@@ -251,23 +251,52 @@
 					<div class="list-group">
 						<div class="list-group-item">
 							<i class="fa fa-2x fa-circle pull-left"></i>
-							<h4>Place drain hole</h4>
+							<h4>Drain hole</h4>
+							<button class="btn btn-primary btn-sm" ng-click="printablesController.writeDrainHoldCode()">
+								<b class="fa fa-thumbs-o-up"></b> 
+								<span>Create</span>
+							</button>
 						</div>
 						
 						<div class="list-group-item">
-				 			<i class="fa fa-2x fa-th-large pull-left"></i>						
+				 			<i class="fa fa-2x fa-th-large pull-left"></i>
 							<h4>Duplication grid</h4>
-
+							<button class="btn btn-primary btn-sm" ng-click="printablesController.writeDuplicationGridCode()">
+								<b class="fa fa-thumbs-o-up"></b>
+								<span>Create</span>
+							</button>
 						</div>
+						
+						<div class="list-group-item">
+				 			<i class="fa fa-2x fa-retweet pull-left"></i>
+							<h4>3D spiral</h4>
+							<button class="btn btn-primary btn-sm" ng-click="printablesController.write3dTwistCode()">
+								<b class="fa fa-thumbs-o-up"></b> 
+								<span>Create</span>
+							</button> 
+						</div>
+						
 						<div class="list-group-item">
 				 			<i class="fa fa-2x fa-paint-brush pull-left"></i>						
 							<h4>Image Manipulation Calculator</h4>
-
+							<div class="input-group"
+								cwh-testscript
+								placeholder="(no return value required yet)"
+								helpURL="https://docs.oracle.com/javase/8/docs/api/java/awt/Graphics.html"
+								testClick="printablesController.testScript('Image manipulation script', 'java.lang.Void', printablesController.currentCustomizer.imageManipulationCalculator)"
+								ng-model="printablesController.currentCustomizer.imageManipulationCalculator">
+							</div>
 						</div>
 						<div class="list-group-item">
 				 			<i class="fa fa-2x fa-map-o pull-left"></i>						
 							<h4>AffineTransform Calculator</h4>
-
+							<div class="input-group"
+								cwh-testscript
+								placeholder="java.awt.geom.AffineTransform"
+								helpURL="https://docs.oracle.com/javase/8/docs/api/java/awt/geom/AffineTransform.html"
+								testClick="printablesController.testScript('2D AffineTransform creation script', 'java.awt.geom.AffineTransform', printablesController.currentCustomizer.affineTransformSettings.affineTransformScriptCalculator)"
+								ng-model="printablesController.currentCustomizer.affineTransformSettings.affineTransformScriptCalculator">
+							</div>
 						</div>
 					</div>
 					<!-- End list group -->

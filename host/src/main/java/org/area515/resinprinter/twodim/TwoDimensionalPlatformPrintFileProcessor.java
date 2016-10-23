@@ -62,7 +62,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 			
 			printJob.setTotalSlices(platformSlices + extrusionSlices);
 			RenderingCache printState = dataAid.cache;
-			Object nextRenderingPointer = printState.getCurrentRenderingPointer();
+			Boolean nextRenderingPointer = (Boolean)printState.getCurrentRenderingPointer();
 			Future<RenderedData> currentImage = null;
 			TwoDimensionalImageRenderer platformSizeInitializer = null;
 			if (platformSlices > 0) {
@@ -86,7 +86,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 				printState.setCurrentRenderingPointer(nextRenderingPointer);
 				
 				//Get the next pointer in line to start rendering the image into
-				nextRenderingPointer = printState.getNextRenderingPointer();
+				nextRenderingPointer = !nextRenderingPointer;
 				
 				//Render the next image while we are waiting for the current image to cure
 				if (platformSlices > 0) {

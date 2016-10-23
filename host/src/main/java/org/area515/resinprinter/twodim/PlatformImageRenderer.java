@@ -4,6 +4,8 @@ import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.script.ScriptException;
+
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
@@ -40,7 +42,11 @@ public class PlatformImageRenderer extends CurrentImageRenderer {
 		BufferedImage extrudedImage = extrusionImageRenderer.call().getPreTransformedImage();
 		Map<String, Object> overrides = new HashMap<>();
 		overrides.put("totalPlatformSlices", totalPlatformSlices);
-		imageToDisplay = TemplateEngine.runScriptInImagingContext(imageToDisplay, extrudedImage, aid, overrides, platformScript);
+		try {
+			TemplateEngine.runScriptInImagingContext(imageToDisplay, extrudedImage, aid.printJob, aid.printer, aid.scriptEngine, overrides, platformScript, "2D Platform rendering script", true);
+		} catch (ScriptException e) {
+			throw new JobManagerException("Failed to execute script", e);
+		}
 		return imageToDisplay;
 	}
 }

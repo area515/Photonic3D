@@ -70,7 +70,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			int startPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(slicer.getZMinIndex() + 1 + customizer.getNextSlice()): (slicer.getZMaxIndex() + 1);
 			int endPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(slicer.getZMaxIndex() + 1 - customizer.getNextSlice()): (slicer.getZMinIndex() + 1);
 			dataAid.slicer.setZIndex(startPoint);
-			Object nextRenderingPointer = dataAid.cache.getCurrentRenderingPointer();
+			Boolean nextRenderingPointer = (Boolean)dataAid.cache.getCurrentRenderingPointer();
 			Future<RenderedData> currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, nextRenderingPointer, false));
 			
 			//Everything needs to be setup in the dataByPrintJob before we start the header
@@ -101,7 +101,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 				//dataAid.printer.showImage(image);
 				
 				//Get the next pointer in line to start rendering the image into
-				nextRenderingPointer = dataAid.cache.getNextRenderingPointer();
+				nextRenderingPointer = !nextRenderingPointer;
 				
 				//Render the next image while we are waiting for the current image to cure
 				if (z < slicer.getZMaxIndex() + 1) {
