@@ -1,12 +1,9 @@
 package org.area515.resinprinter.job;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
-import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +13,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.imageio.ImageIO;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
@@ -39,7 +35,6 @@ import org.area515.resinprinter.services.PrinterService;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.Log4jTimer;
 import org.area515.util.TemplateEngine;
-import org.fourthline.cling.support.avtransport.callback.GetTransportInfo;
 
 public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProcessor<G,E>{
 	private static final Logger logger = LogManager.getLogger();
