@@ -76,6 +76,8 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 					}
 
 					RenderedData imageData = prepareImage.get();
+					dataAid.cache.setCurrentRenderingPointer(imageFile);
+					
 					if (imgIter.hasNext()) {
 						imageFile = imgIter.next();
 						prepareImage = Main.GLOBAL_EXECUTOR.submit(new SimpleImageRenderer(dataAid, this, imageFile));
@@ -95,6 +97,17 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 		} finally {
 			clearDataAid(printJob);
 		}
+	}
+	
+	@Override
+	public Double getBuildAreaMM(PrintJob processingFile) {
+		DataAid aid = super.getDataAid(processingFile);
+		
+		if (aid.cache.getCurrentArea() == null) {
+			return null;
+		}
+		
+		return aid.cache.getCurrentArea() / (aid.xPixelsPerMM * aid.yPixelsPerMM);
 	}
 
 	@Override
