@@ -10,6 +10,7 @@ import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.render.CurrentImageRenderer;
+import org.area515.resinprinter.job.render.RenderedData;
 import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
 import org.area515.util.TemplateEngine;
 
@@ -39,11 +40,15 @@ public class PlatformImageRenderer extends CurrentImageRenderer {
 			throw new JobManagerException("This printer doesn't have 2D platform rendering calculator setup");
 		}
 		
-		BufferedImage extrudedImage = extrusionImageRenderer.call().getPreTransformedImage();
+		RenderedData data = aid.cache.getOrCreateIfMissing("lastExtrusionImage");
+		if (data.getPreTransformedImage() == null) {
+			data.setPreTransformedImage(extrusionImageRenderer.renderImage(null));
+		}
+		
 		Map<String, Object> overrides = new HashMap<>();
 		overrides.put("totalPlatformSlices", totalPlatformSlices);
 		try {
-			TemplateEngine.runScriptInImagingContext(imageToDisplay, extrudedImage, aid.printJob, aid.printer, aid.scriptEngine, overrides, platformScript, "2D Platform rendering script", true);
+			TemplateEngine.runScriptInImagingContext(imageToDisplay, data.getPreTransformedImage(), aid.printJob, aid.printer, aid.scriptEngine, overrides, platformScript, "2D Platform rendering script", true);
 		} catch (ScriptException e) {
 			throw new JobManagerException("Failed to execute script", e);
 		}

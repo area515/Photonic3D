@@ -51,6 +51,6 @@ public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileP
 
 	@Override
 	public TwoDimensionalImageRenderer createRenderer(DataAid aid, AbstractPrintFileProcessor<?, ?> processor, Object imageIndexToBuild) {
-		return new TextImageRenderer(aid, this, Boolean.TRUE);
+		return new TextImageRenderer(aid, this, imageIndexToBuild);
 	}
 }
