@@ -8,6 +8,13 @@ import java.lang.ref.SoftReference;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.script.ScriptException;
+
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
+import org.area515.util.TemplateEngine;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -116,8 +123,16 @@ public class Customizer {
 			this.affineTransformScriptCalculator = affineTransformScriptCalculator;
 		}
 
-		public AffineTransform createAffineTransform(double xResolution, double yResolution, double imageWidth, double imageHeight) {
-			//TOOD: add data in here to create transform from calculator
+		public AffineTransform createAffineTransform(DataAid aid, BufferedImage buildPlatformImage, BufferedImage printImage) throws ScriptException {
+			if (affineTransformScriptCalculator != null && affineTransformScriptCalculator.trim().length() > 0) {
+				return (AffineTransform)TemplateEngine.runScriptInImagingContext(buildPlatformImage, printImage, aid.printJob, aid.printer, aid.scriptEngine, null, affineTransformScriptCalculator, "Affine transform rendering script", false);
+				//AffineTransform affineTransform = (AffineTransform)TemplateEngine.runScript(aid.printJob, aid.printer, aid.scriptEngine, affineTransformScriptCalculator, "Affine transform rendering script", overrides);
+			}
+			
+			double xResolution = buildPlatformImage.getWidth();
+			double yResolution = buildPlatformImage.getHeight();
+			double imageWidth = printImage.getWidth();
+			double imageHeight = printImage.getHeight();
 			AffineTransform firstTransform = null;
 			if (this.xFlip || this.yFlip) {
 				firstTransform = new AffineTransform();
@@ -154,8 +169,8 @@ public class Customizer {
 		this.nextStep = nextStep;
 	}
 
-	public AffineTransform createAffineTransform(double width, double height, double imageWidth, double imageHeight) {
-		return this.affineTransformSettings.createAffineTransform(width, height, imageWidth, imageHeight);
+	public AffineTransform createAffineTransform(DataAid aid, BufferedImage buildPlatformImage, BufferedImage printImage) throws ScriptException {
+		return this.affineTransformSettings.createAffineTransform(aid, buildPlatformImage, printImage);
 	} 
 
 	public String getPrintableExtension() {

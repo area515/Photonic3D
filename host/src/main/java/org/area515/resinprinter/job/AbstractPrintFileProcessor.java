@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.imageio.ImageIO;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
@@ -90,6 +91,10 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 				}
 				CustomizerService.INSTANCE.addOrUpdateCustomizer(customizer);
 			}
+			if (customizer.getZScale() == null) {
+				customizer.setZScale(1.0);
+			}
+			//We must make sure our customizer is perfectly setup at this point, everyone should be able to depend on our customizer after this setup process
 			
 			//This file processor requires an ink configuration
 			if (inkConfiguration == null) {
@@ -100,15 +105,15 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			sliceHeight = inkConfiguration.getSliceHeight();
 		}
 		
-		public AffineTransform getAffineTransform(BufferedImage img) {			
-			if (this.affineTransform != null) {
-				return this.affineTransform;
-			}
-			
+		public AffineTransform getAffineTransform(BufferedImage buildPlatformImage, BufferedImage printImage) throws ScriptException {			
 			if (customizer != null && customizer.getAffineTransformSettings() != null) {
-				this.affineTransform = customizer.createAffineTransform(xResolution, yResolution, img.getWidth(), img.getHeight());
+				if (this.affineTransform == null || customizer.getAffineTransformSettings().getAffineTransformScriptCalculator() != null) {
+					this.affineTransform = customizer.createAffineTransform(this, buildPlatformImage, printImage);
+				}
 			} else {
 				this.affineTransform = new AffineTransform();
+				affineTransform.translate(xResolution/2, yResolution/2);
+				affineTransform.translate(-printImage.getWidth()/2 , -printImage.getHeight()/2);
 			}
 			
 			return this.affineTransform;
@@ -408,17 +413,17 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		} catch (IOException e) {
 		}//*/
 		
-		AffineTransform transform = aid.getAffineTransform(img);
+		AffineTransform transform = aid.getAffineTransform(after, img);
 		g.drawImage(img, transform, null);
 		
 		/*try {
 			ImageIO.write(after, "png",  new File("afterDraw.png"));
 		} catch (IOException e) {
 		}//*/
-		if (aid.customizer.getImageManipulationCalculator() != null) {
+		if (aid.customizer.getImageManipulationCalculator() != null && aid.customizer.getImageManipulationCalculator().trim().length() > 0) {
 			Map<String, Object> overrides = new HashMap<>();
 			overrides.put("affineTransform", transform);
-			TemplateEngine.runScriptInImagingContext(after, img, aid, overrides, aid.customizer.getImageManipulationCalculator());
+			TemplateEngine.runScriptInImagingContext(after, img, aid.printJob, aid.printer, aid.scriptEngine, overrides, aid.customizer.getImageManipulationCalculator(), "Image manipulation script", false);
 		}
 		/*try {
 			ImageIO.write(after, "png",  new File("afterImageManipulation.png"));

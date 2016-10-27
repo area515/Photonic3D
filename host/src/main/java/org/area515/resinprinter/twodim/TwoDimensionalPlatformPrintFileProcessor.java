@@ -62,7 +62,7 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 			
 			printJob.setTotalSlices(platformSlices + extrusionSlices);
 			RenderingCache printState = dataAid.cache;
-			Object nextRenderingPointer = printState.getCurrentRenderingPointer();
+			Boolean nextRenderingPointer = (Boolean)printState.getCurrentRenderingPointer();
 			Future<RenderedData> currentImage = null;
 			TwoDimensionalImageRenderer platformSizeInitializer = null;
 			if (platformSlices > 0) {
@@ -86,25 +86,30 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 				printState.setCurrentRenderingPointer(nextRenderingPointer);
 				
 				//Get the next pointer in line to start rendering the image into
-				nextRenderingPointer = printState.getNextRenderingPointer();
+				nextRenderingPointer = !nextRenderingPointer;
 				
 				//Render the next image while we are waiting for the current image to cure
-				if (platformSlices > 0) {
+				if (platformSlices > 1) {
 					currentImage = Main.GLOBAL_EXECUTOR.submit(buildPlatformRenderer(dataAid, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer));
+					platformSlices--;
 				} else if (extrusionSlices > 1) {
+					//Clear cache so that the text will render for the first time and not use the build platform cache
+					if (platformSlices == 1) {
+						platformSlices--;
+						dataAid.cache.clearCache(Boolean.TRUE);
+						dataAid.cache.clearCache(Boolean.FALSE);
+					} else {
+						extrusionSlices--;
+					}
 					currentImage = Main.GLOBAL_EXECUTOR.submit(createRenderer(dataAid, this, nextRenderingPointer));
+				} else {
+					extrusionSlices--;
 				}
 
 				//Performs all of the duties that are common to most print files
 				status = printImageAndPerformPostProcessing(dataAid, image);
 				if (status != null) {
 					return status;
-				}
-	
-				if (platformSlices > 0) {
-					platformSlices--;
-				} else {
-					extrusionSlices--;
 				}
 			}
 			

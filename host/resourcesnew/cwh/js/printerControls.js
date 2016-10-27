@@ -1,6 +1,6 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("PrinterControlsController", ['$scope', '$http', '$location', '$routeParams', 'cwhWebSocket', 'cacheControl', function ($scope, $http, $location, $routeParams, cwhWebSocket, cacheControl) {
+	cwhApp.controller("PrinterControlsController", ['$scope', '$http', '$location', '$routeParams', 'cwhWebSocket', 'photonicUtils', function ($scope, $http, $location, $routeParams, cwhWebSocket, photonicUtils) {
 		controller = this;
 		this.currentPrintJob = null;
 		this.gcodeProcessing = "";
@@ -94,7 +94,7 @@
     			$http.get("services/printers/calibrate/" + printerName + "/" + (controller.calibration.xPixels/controller.calibration.xMM) + "/" + (controller.calibration.yPixels/controller.calibration.yMM)).
     				then(function(data) {
     					gCodeSuccess(data);
-    	    			cacheControl.clearPreviewExternalState();
+    					photonicUtils.clearPreviewExternalState();
     	    			loadPrinter();
     				}, errorFunction);
     			controller.showBlankScreen();

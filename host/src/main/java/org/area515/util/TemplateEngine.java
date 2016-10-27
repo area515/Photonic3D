@@ -110,6 +110,8 @@ public class TemplateEngine {
 		root.put("SlideTiltVal", printer.getConfiguration().getSlicingProfile().getSlideTiltValue());
 		root.put("buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
 		root.put("buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
+		root.put("pixelsPerMMX", printer.getConfiguration().getSlicingProfile().getDotsPermmX());
+		root.put("pixelsPerMMY", printer.getConfiguration().getSlicingProfile().getDotsPermmY());
 		root.put("hostProperties", HostProperties.Instance());
 		root.put("job", job);
 		root.put("printer", printer);
@@ -145,14 +147,23 @@ public class TemplateEngine {
         	throw e;
         }
 	}
-	
-	public static BufferedImage runScriptInImagingContext(BufferedImage imageToDisplay, BufferedImage targetImage, DataAid aid, Map<String, Object> overrides, String calculatorScript) throws JobManagerException {
-		int centerX = aid.xResolution / 2;
-		int centerY = aid.yResolution / 2;
 
+	public static Object runScriptInImagingContext(
+			BufferedImage imageToDisplay, 
+			BufferedImage targetImage, 
+			PrintJob printJob, 
+			Printer printer, 
+			ScriptEngine scriptEngine, 
+			Map<String, Object> overrides, 
+			String calculatorScript, 
+			String scriptName, 
+			boolean clearMasterImage) throws ScriptException {
+		
 		Graphics graphics = imageToDisplay.getGraphics();
-		graphics.setColor(Color.black);
-		graphics.fillRect(0, 0, imageToDisplay.getWidth(), imageToDisplay.getHeight());
+		if (clearMasterImage) {
+			graphics.setColor(Color.black);
+			graphics.fillRect(0, 0, imageToDisplay.getWidth(), imageToDisplay.getHeight());
+		}
 		graphics.setColor(Color.white);
 		
 		if (overrides == null) {
@@ -162,17 +173,14 @@ public class TemplateEngine {
 		overrides.put("buildPlatformGraphics", graphics);
 		overrides.put("buildPlatformRaster", imageToDisplay.getRaster());
 		overrides.put("printImage", targetImage);
-		overrides.put("centerX", centerX);
-		overrides.put("centerY", centerY);
+		overrides.put("printGraphics", targetImage.getGraphics());
+		overrides.put("printRaster", targetImage.getRaster());
+		overrides.put("centerX", imageToDisplay.getWidth() / 2);//int centerX = aid.xResolution / 2;
+		overrides.put("centerY", imageToDisplay.getHeight() / 2);//int centerY = aid.yResolution / 2;
 
-		try {
-			TemplateEngine.runScript(aid.printJob, aid.printer, aid.scriptEngine, calculatorScript, "2D Platform rendering script", overrides);
-		} catch (ScriptException e) {
-			throw new JobManagerException("Error while executing platform rendering script.", e);
-		}
-		return imageToDisplay;
+		return TemplateEngine.runScript(printJob, printer, scriptEngine, calculatorScript, scriptName, overrides);
 	}
-	
+
 	public static Object runScript(PrintJob job, Printer printer, ScriptEngine engine, String script, String scriptName, Map<String, Object> overrides) throws ScriptException {
 		Bindings bindings = engine.createBindings();
 		bindings.put("now", new Date());
@@ -192,6 +200,8 @@ public class TemplateEngine {
 		bindings.put("$SlideTiltVal", printer.getConfiguration().getSlicingProfile().getSlideTiltValue());
 		bindings.put("$buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
 		bindings.put("$buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
+		bindings.put("pixelsPerMMX", printer.getConfiguration().getSlicingProfile().getDotsPermmX());
+		bindings.put("pixelsPerMMY", printer.getConfiguration().getSlicingProfile().getDotsPermmY());
 		bindings.put("hostProperties", HostProperties.Instance());
 		bindings.put("job", job);
 		bindings.put("printer", printer);

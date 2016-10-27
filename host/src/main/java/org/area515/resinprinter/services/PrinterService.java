@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import java.awt.GraphicsDevice;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -861,8 +862,9 @@ public class PrinterService {
 		job.setPrinter(printer);
 		return job;
 	}
-	
-	private Map<String, Object> buildPrintInProgressSimulation() {
+	/*Fix the two places where we assign icons to all of the image types in javascript
+	Fix all of the test buttons in photonic javascript
+	/*private Map<String, Object> buildPrintInProgressSimulation() {properly embed this...
 		BufferedImage image = new BufferedImage(200, 200, BufferedImage.TYPE_4BYTE_ABGR_PRE);
 		BufferedImage printImage = new BufferedImage(10, 10, BufferedImage.TYPE_4BYTE_ABGR_PRE);
 		Map<String, Object> overrides = new HashMap<>();
@@ -872,10 +874,12 @@ public class PrinterService {
 		overrides.put("buildPlatformGraphics", image.getGraphics());
 		overrides.put("buildPlatformRaster", image.getRaster());
 		overrides.put("printImage", printImage);
+		overrides.put("printGraphics", printImage.getGraphics());
+		overrides.put("printRaster", printImage.getRaster());
 		overrides.put("centerX", 100);
 		overrides.put("centerY", 100);
 		return overrides;
-	}
+	}*/
 	
     @ApiOperation(value="Tests out a script using the scripting language(likely javascript) specified in the config.properties via scriptEngineLanguage=[script language]"
     		+ "The returnType parameter passed to this method must match a known Java type or the following format: "
@@ -910,7 +914,13 @@ public class PrinterService {
 			ScriptEngine engine = HostProperties.Instance().buildScriptEngine();
 			
 			if (chartData == null) {
-				Object returnObject = TemplateEngine.runScript(job, printer, engine, javascript, scriptName, buildPrintInProgressSimulation());
+				BufferedImage imageToDisplay = new BufferedImage(200, 200, BufferedImage.TYPE_4BYTE_ABGR_PRE);
+				BufferedImage targetImage = new BufferedImage(10, 10, BufferedImage.TYPE_4BYTE_ABGR_PRE);
+
+				Map<String, Object> overrides = new HashMap<>();
+				overrides.put("affineTransform", new AffineTransform());
+				Object returnObject = TemplateEngine.runScriptInImagingContext(imageToDisplay, targetImage, job, printer, engine, overrides, javascript, scriptName, false);
+				//Object returnObject = TemplateEngine.runScript(job, printer, engine, javascript, scriptName, buildPrintInProgressSimulation());
 				
 				if (expectedReturnType.equals(Void.class)) {
 					TestingResult result = new TestingResult(null);

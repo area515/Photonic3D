@@ -23,7 +23,7 @@ public class RenderingCache {
 	
 	private Object currentImagePointer = Boolean.TRUE;
 
-	public RenderedData get(Object imageToBuild) {
+	public RenderedData getOrCreateIfMissing(Object imageToBuild) {
 		try {
 			return imageSync.get(imageToBuild);
 		} catch (ExecutionException e) {
@@ -32,24 +32,24 @@ public class RenderingCache {
 		}
 	}
 	
+	public void clearCache(Object imageToBuild) {
+		imageSync.invalidate(imageToBuild);
+	}
+	
 	public ReentrantLock getSpecificLock(Object imageToBuild) {
-		return get(imageToBuild).getLock();
+		return getOrCreateIfMissing(imageToBuild).getLock();
 	}
 	
 	public ReentrantLock getCurrentLock() {
-		return get(currentImagePointer).getLock();
+		return getOrCreateIfMissing(currentImagePointer).getLock();
 	}
 	
 	public BufferedImage getCurrentImage() {
-		return get(currentImagePointer).getPrintableImage();
+		return getOrCreateIfMissing(currentImagePointer).getPrintableImage();
 	}
 	
 	public Double getCurrentArea() {
-		return get(currentImagePointer).getArea();
-	}
-	
-	public Object getNextRenderingPointer() {
-		return !(Boolean)currentImagePointer;
+		return getOrCreateIfMissing(currentImagePointer).getArea();
 	}
 	
 	public Object getCurrentRenderingPointer() {

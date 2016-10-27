@@ -1,6 +1,6 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', 'cacheControl', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket, cacheControl) {
+	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', 'photonicUtils', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket, photonicUtils) {
 		controller = this;
 		
 		this.currentPrintable = null;
@@ -25,7 +25,7 @@
 
 		this.saveCustomizer = function saveCustomizer() {
 			if (controller.currentPrintable != null && controller.currentCustomizer != null) {
-				controller.currentCustomizer.externalImageAffectingState = cacheControl.previewExternalStateId;
+				controller.currentCustomizer.externalImageAffectingState = photonicUtils.previewExternalStateId;
 				$http.post("/services/customizers/upsert", controller.currentCustomizer).success(function (data) {
 						controller.currentPreviewImg = "/services/customizers/renderPreviewImage/" + controller.currentCustomizer.name + "?_=" + data.cacheId;
 					}).error(function (data, status, headers, config, statusText) {
@@ -49,7 +49,7 @@
 				return;
 			}
 			
-			$http.get("services/customizers/get/" + newCustomizerName + "?externalState=" + cacheControl.previewExternalStateId).success(
+			$http.get("services/customizers/get/" + newCustomizerName + "?externalState=" + photonicUtils.previewExternalStateId).success(
 					function (data) {
 						if (data == "") {
 							controller.currentCustomizer = {
@@ -58,7 +58,7 @@
 									printableName: newPrintable.name,
 									printableExtension: newPrintable.extension,
 									supportsAffineTransformSettings: true,
-									externalImageAffectingState:cacheControl.previewExternalStateId,
+									externalImageAffectingState:photonicUtils.previewExternalStateId,
 									zscale: 1,
 									nextSlice: 0,
 									nextStep: "PerformHeader",
@@ -78,7 +78,7 @@
 								};
 						} else {
 							controller.currentCustomizer = data;
-							controller.currentCustomizer.externalImageAffectingState = cacheControl.previewExternalStateId;
+							controller.currentCustomizer.externalImageAffectingState = photonicUtils.previewExternalStateId;
 						}
 						
 						//We probably don't need to save the customizer here but we do it in case the externalState changed
@@ -250,34 +250,60 @@
 		};
 	  	
 		this.clearExternalCacheAndSaveCustomizer = function clearExternalCacheAndSaveCustomizer() {
-			cacheControl.clearPreviewExternalState();
+			photonicUtils.clearPreviewExternalState();
 			controller.saveCustomizer();
 		}
 		
+		this.testScript = function testScript(scriptName, returnType, script) {
+			photonicUtils.testScript(controller, scriptName, returnType, script, controller.clearExternalCacheAndSaveCustomizer);
+		};
+		
+		this.writeDrainHoldCode = function writeDrainHoldCode() {
+			controller.currentCustomizer.imageManipulationCalculator = 
+			"var drainHoleInMM = { centerX:centerX, centerY:centerY, widthX:5, widthY:5, depth:5};\n\n" +
+			"if (($CURSLICE * $LayerThickness) <= drainHoleInMM.depth) {\n" +
+			"   buildPlatformGraphics.setColor(java.awt.Color.BLACK);\n" + 
+			"   buildPlatformGraphics.fillOval(\n" +
+			"      (drainHoleInMM.centerX - (drainHoleInMM.widthX/2 * pixelsPerMMX)),\n" +
+			"      (drainHoleInMM.centerY - (drainHoleInMM.widthY/2 * pixelsPerMMY)),\n" +
+			"      drainHoleInMM.widthX * pixelsPerMMX,\n" +
+			"      drainHoleInMM.widthY * pixelsPerMMY);\n" +
+			"}\n";
+			
+			controller.clearExternalCacheAndSaveCustomizer();
+		};
+		
+		this.writeDuplicationGridCode = function writeDuplicationGridCode() {
+			controller.currentCustomizer.imageManipulationCalculator = 
+				"var gridDataInMM = {distanceBetweenImagesX: 1, distanceBetweenImagesY: 1, numberOfRows:3, numberOfColumns:3 };\n\n" +
+				"for (var x = 0; x < gridDataInMM.numberOfColumns; x++) {\n" +
+				"   for (var y = 0; y < gridDataInMM.numberOfRows; y++) {\n" +
+				"      if (x > 0 || y > 0) {\n" +
+				"         var currentTransform = new java.awt.geom.AffineTransform(affineTransform);\n" +
+				"         currentTransform.translate(\n" +
+				"            (x * gridDataInMM.distanceBetweenImagesX * pixelsPerMMX) + (x * printImage.getWidth()),\n" +
+				"            (y * gridDataInMM.distanceBetweenImagesY * pixelsPerMMY) + (y * printImage.getHeight()));\n" +
+				"         buildPlatformGraphics.drawImage(printImage, currentTransform, null);\n" +
+				"      }\n" +
+				"   }\n" +
+				"}\n";
+				
+				controller.clearExternalCacheAndSaveCustomizer();
+		};
+		
+		this.write3dTwistCode = function write3dTwistCode() {
+			controller.currentCustomizer.affineTransformSettings.affineTransformScriptCalculator = 
+				"var currentTransform = new java.awt.geom.AffineTransform();\n" +
+				"currentTransform.rotate(java.lang.Math.toRadians($CURSLICE));\n" +
+				"currentTransform.translate(\n" +
+				"   centerX-printImage.getWidth()/2,\n" +
+				"   centerY-printImage.getHeight()/2);\n" +
+				"currentTransform";
+		}
+		
 		this.getPrintableIconClass = function getPrintableIconClass(printable) {
-			if (printable.printFileProcessor.friendlyName === 'Image') {
-				return "fa-photo";
-			}
-			if (printable.printFileProcessor.friendlyName === 'Maze Cube') {
-				return "fa-cube";
-			}			
-			if (printable.printFileProcessor.friendlyName === 'STL 3D Model') {
-				return "fa-object-ungroup";
-			}			
-			if (printable.printFileProcessor.friendlyName === 'Creation Workshop Scene') {
-				return "fa-diamond";
-			}
-			if (printable.printFileProcessor.friendlyName === 'Zip of Slice Images') {
-				return "fa-stack-overflow";
-			}
-			if (printable.printFileProcessor.friendlyName === 'Simple Text') {
-				return "fa-bold";
-			}
-			if (printable.printFileProcessor.friendlyName === 'Scalable Vector Graphics') {
-				return "fa-puzzle-piece";
-			}
-			return "fa-question-circle";
-		};//*/
+			return photonicUtils.getPrintFileProcessorIconClass(printable);
+		};
 
 		this.refreshPrintables();
 		this.refreshCurrentPrinter();

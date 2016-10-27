@@ -1,6 +1,6 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("PrintJobsController", ['$scope', '$http', '$location', '$anchorScroll', 'Upload', 'cwhWebSocket', function ($scope, $http, $location, $anchorScroll, Upload, cwhWebSocket) {
+	cwhApp.controller("PrintJobsController", ['$scope', '$http', '$location', '$anchorScroll', 'Upload', 'cwhWebSocket', 'photonicUtils', function ($scope, $http, $location, $anchorScroll, Upload, cwhWebSocket, photonicUtils) {
 		controller = this;
 		
 		this.urlToUpload = null;
@@ -151,31 +151,7 @@
 		}
 		
 		this.getPrintJobIconClass = function getPrintJobIconClass(printable) {
-			if (printable == null || printable.printFileProcessor == null) {
-				return "Unknown";
-			}
-			if (printable.printFileProcessor.friendlyName === 'Image') {
-				return "fa-photo";
-			}
-			if (printable.printFileProcessor.friendlyName === 'Maze Cube') {
-				return "fa-cube";
-			}			
-			if (printable.printFileProcessor.friendlyName === 'STL 3D Model') {
-				return "fa-object-ungroup";
-			}			
-			if (printable.printFileProcessor.friendlyName === 'Creation Workshop Scene') {
-				return "fa-diamond";
-			}
-			if (printable.printFileProcessor.friendlyName === 'Zip of Slice Images') {
-				return "fa-stack-overflow";
-			}
-			if (printable.printFileProcessor.friendlyName === 'Simple Text') {
-				return "fa-bold";
-			}
-			if (printable.printFileProcessor.friendlyName === 'Scalable Vector Graphics') {
-				return "fa-puzzle-piece";
-			}
-			return "fa-question-circle";
+			return photonicUtils.getPrintFileProcessorIconClass(printable);
 		}
 		
 		this.refreshPrintJobs();

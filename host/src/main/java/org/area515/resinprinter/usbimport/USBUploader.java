@@ -30,22 +30,28 @@ public class USBUploader implements Feature {
 		String configRoots[] = {"/media", "/storage"};
 		List<File> allRoots = new ArrayList<>();
 		for (File currentFile : File.listRoots()) {
+			logger.debug("listroot:" + currentFile);
 			allRoots.add(currentFile);
 		}
 		for (String root : configRoots) {
 			File nextFile = new File(root);
+			logger.debug("Config root:" + nextFile);
 			if (nextFile.exists()) {
+				logger.debug("Existing Child under config root:" + nextFile);
 				for (File currentFile : nextFile.listFiles()) {
+					logger.debug("Added root:" + currentFile);
 					allRoots.add(currentFile);
 				}
 			}
 		}
 		
+		logger.debug("allRoots:" + allRoots);
 		return allRoots;
 	}
 	
 	private void uploadFromRoot(File root) {
 		for (File currentFile : root.listFiles(PrintFileFilter.INSTANCE)) {
+			logger.debug("Found potential printable:" + currentFile);
 			try (InputStream stream = new BufferedInputStream(new FileInputStream(currentFile))) {
 				PrintableService.uploadFile(currentFile.getName(), stream, HostProperties.Instance().getUploadDir());
 			} catch (IOException e) {
@@ -66,17 +72,20 @@ public class USBUploader implements Feature {
 			public void run() {
 				Map<String, File> negativeList = new HashMap<>();
 				negativeList.putAll(masterRoots);
+				logger.debug("MasterRoots:" + masterRoots);
 				for (File root : listRoots()) {
 					File foundItem = negativeList.remove(root.getAbsolutePath());
 					if (foundItem == null) {
 						uploadFromRoot(root);
 						
 						//Since we've uploaded all of the files from this root, we don't want to do it again.
+						logger.debug("NewRoot:" + foundItem);
 						masterRoots.put(root.getAbsolutePath(), root);
 					}
 				}
 				
 				//These are the USB drives that were unplugged
+				logger.debug("Unplugged drives:" + negativeList);
 				for (String name : negativeList.keySet()) {
 					masterRoots.remove(name);
 				}

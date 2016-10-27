@@ -1,6 +1,6 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("UsersController", ['$scope', '$http', '$location', '$anchorScroll', '$uibModal', 'cacheControl', function ($scope, $http, $location, $anchorScroll, $uibModal, cacheControl) {
+	cwhApp.controller("UsersController", ['$scope', '$http', '$location', '$anchorScroll', '$uibModal', 'photonicUtils', function ($scope, $http, $location, $anchorScroll, $uibModal, photonicUtils) {
 		$scope.refreshUsers = function refreshUsers() {
 	        $http.get('/services/users/list').success(function(data) {
 	        	$scope.users = data;
