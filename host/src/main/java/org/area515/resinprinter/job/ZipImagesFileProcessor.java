@@ -103,7 +103,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 	public Double getBuildAreaMM(PrintJob processingFile) {
 		DataAid aid = super.getDataAid(processingFile);
 		
-		if (aid.cache.getCurrentArea() == null) {
+		if (aid == null || aid.cache.getCurrentArea() == null) {
 			return null;
 		}
 		
