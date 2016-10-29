@@ -26,7 +26,12 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 	public String[] getFileExtensions() {
 		return new String[]{"imgzip"};
 	}
-
+	
+	@Override
+	public BufferedImage getCurrentImage(PrintJob printJob) {
+		return getCurrentImageFromCache(printJob);
+	}
+	
 	@Override
 	public boolean acceptsFile(File processingFile) {
 		if (processingFile.getName().toLowerCase().endsWith(".imgzip") || processingFile.getName().toLowerCase().endsWith(".zip")) {

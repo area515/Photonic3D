@@ -137,6 +137,10 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 	
 	@Override
 	public BufferedImage getCurrentImage(PrintJob printJob) {
+		return getCurrentImageFromCache(printJob);
+	}
+	
+	protected BufferedImage getCurrentImageFromCache(PrintJob printJob) {
 		DataAid data = getDataAid(printJob);
 		if (data == null) {
 			return null;
