@@ -26,7 +26,12 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 	public String[] getFileExtensions() {
 		return new String[]{"imgzip"};
 	}
-
+	
+	@Override
+	public BufferedImage getCurrentImage(PrintJob printJob) {
+		return getCurrentImageFromCache(printJob);
+	}
+	
 	@Override
 	public boolean acceptsFile(File processingFile) {
 		if (processingFile.getName().toLowerCase().endsWith(".imgzip") || processingFile.getName().toLowerCase().endsWith(".zip")) {
@@ -103,7 +108,7 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor i
 	public Double getBuildAreaMM(PrintJob processingFile) {
 		DataAid aid = super.getDataAid(processingFile);
 		
-		if (aid.cache.getCurrentArea() == null) {
+		if (aid == null || aid.cache.getCurrentArea() == null) {
 			return null;
 		}
 		
