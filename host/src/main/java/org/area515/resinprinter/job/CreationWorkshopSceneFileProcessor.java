@@ -10,10 +10,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -26,10 +28,10 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.util.IOUtilities;
 
 public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcessor<Object,Object> {
 	private static final Logger logger = LogManager.getLogger();
@@ -227,10 +229,55 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		}
 	}
 	
+	public static File buildExtractionDirectoryForJob(String archive, UUID jobId) {
+		return Paths.get(HostProperties.Instance().getWorkingDir().toString(), archive, jobId.toString()).toFile();
+	}
+	
 	public static File buildExtractionDirectory(String archive) {
-		return new File(HostProperties.Instance().getWorkingDir(), archive + "extract");
+		return Paths.get(HostProperties.Instance().getWorkingDir().toString(), archive).toFile();
 	}
 
+	private void deleteDirectory(File extractDirectory) throws JobManagerException {
+		String unable = "Unable to delete directory (.*)[.]";
+		boolean deletePerformed = false;
+		int attemptsToDelete = 0;
+		List<IOException> cantDelete = new ArrayList<>();
+		do {
+			try {
+				attemptsToDelete++;
+				FileUtils.deleteDirectory(extractDirectory);
+				deletePerformed = true;
+			} catch (IOException e) {
+				if (e.getMessage() != null) {
+					Pattern pattern = Pattern.compile(unable);
+					Matcher matcher = pattern.matcher(e.getMessage());
+					if (matcher.matches()) {
+						logger.debug(() -> {
+								String[] output = IOUtilities.executeNativeCommand(new String[]{"ls", "-al", matcher.group(1)}, null);
+								StringBuilder builder = new StringBuilder();
+								for (String outLine :output) {
+									builder.append(outLine + "\n");
+								}
+								return builder.toString();
+							}
+						);
+					}
+				}
+				cantDelete.add(e);
+				deletePerformed = false;
+			}
+		} while (!deletePerformed && attemptsToDelete < 3);
+		
+		if (!deletePerformed) {
+			if (cantDelete.size() > 1) {
+				for (IOException e : cantDelete) {
+					logger.error("Error List", e);
+				}
+			}
+			throw new JobManagerException("Couldn't clean directory for new job:" + extractDirectory, cantDelete.get(0));
+		}
+	}
+	
 	@Override
 	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException {
 		List<PrintJob> printJobs = PrintJobManager.Instance().getJobsByFilename(processingFile.getName());
@@ -239,14 +286,10 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 				throw new JobManagerException("It currently isn't possible to print more than 1 " + getFriendlyName() + " file at once.");
 			}
 		}
-		File extractDirectory = buildExtractionDirectory(processingFile.getName());
 		
+		File extractDirectory = buildExtractionDirectory(processingFile.getName());
 		if (extractDirectory.exists()) {
-			try {
-				FileUtils.deleteDirectory(extractDirectory);
-			} catch (IOException e) {
-				throw new JobManagerException("Couldn't clean directory for new job:" + extractDirectory, e);
-			}
+			deleteDirectory(extractDirectory);
 		}
 
 		try {
@@ -260,12 +303,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	public void cleanupEnvironment(File processingFile) throws JobManagerException {
 		File extractDirectory = buildExtractionDirectory(processingFile.getName());
 		if (extractDirectory.exists()) {
-			try {
-				FileUtils.deleteDirectory(extractDirectory);
-			} catch (IOException e) {
-				logger.error("Error while cleaning up environment", e);
-				throw new JobManagerException("Couldn't clean up extract directory");
-			}
+			deleteDirectory(extractDirectory);
 		}
 	}
 	

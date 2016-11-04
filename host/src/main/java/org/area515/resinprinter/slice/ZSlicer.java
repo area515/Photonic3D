@@ -8,10 +8,10 @@ import java.awt.RenderingHints;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +47,7 @@ public class ZSlicer {
 	 private Double imageOffsetY = null;
 	 private double sliceResolution = 0.1;
 	 private double zOffset = .05;
-	 private StlFile<Triangle3d> stlFile;
+	 private StlFile<Triangle3d, Point3d> stlFile;
 	 private boolean keepTrackOfErrors = false;
 	 private boolean rewriteNormalsWithRightHandRule = false;
 	 private PolygonMendingMechanism fixBrokenLoops;
@@ -76,7 +76,7 @@ public class ZSlicer {
 		 this.keepTrackOfErrors = keepTrackOfErrors;
 		 this.fixBrokenLoops = fixBrokenLoops;
 		 
-		 stlFile = new StlFile<Triangle3d>() {
+		 stlFile = new StlFile<Triangle3d, Point3d>() {
 			private Triangle3d lastTriangle;
 			private Triangle3d firstTriangle;
 			
@@ -94,19 +94,19 @@ public class ZSlicer {
 			}
 			
 			@Override
-			protected void buildTriangle(Point3d[] triangle, Point3d normal) {
-				Triangle3d newTriangle = new Triangle3d(triangle, normal, null, null, triangles.size());
+			protected void buildTriangle(Point3d point1, Point3d point2, Point3d point3, double[] normal) {
+				Triangle3d newTriangle = new Triangle3d(new Point3d[]{point1, point2, point3}, new Point3d(normal[0], normal[1], normal[2]), null, null, triangles.size());
 				if (lastTriangle != null) {
 					lastTriangle.setNextTriangle(newTriangle);
 				}
 			    triangles.add(newTriangle);
 			    
-			    zmin = Math.min(triangle[0].z, Math.min(triangle[1].z, Math.min(triangle[2].z, zmin)));
-			    zmax = Math.max(triangle[0].z, Math.max(triangle[1].z, Math.max(triangle[2].z, zmax)));
-			    xmin = Math.min(triangle[0].x, Math.min(triangle[1].x, Math.min(triangle[2].x, xmin)));
-			    xmax = Math.max(triangle[0].x, Math.max(triangle[1].x, Math.max(triangle[2].x, xmax)));
-			    ymin = Math.min(triangle[0].y, Math.min(triangle[1].y, Math.min(triangle[2].y, ymin)));
-			    ymax = Math.max(triangle[0].y, Math.max(triangle[1].y, Math.max(triangle[2].y, ymax)));
+			    zmin = Math.min(point1.z, Math.min(point2.z, Math.min(point3.z, zmin)));
+			    zmax = Math.max(point1.z, Math.max(point2.z, Math.max(point3.z, zmax)));
+			    xmin = Math.min(point1.x, Math.min(point2.x, Math.min(point3.x, xmin)));
+			    xmax = Math.max(point1.x, Math.max(point2.x, Math.max(point3.x, xmax)));
+			    ymin = Math.min(point1.y, Math.min(point2.y, Math.min(point3.y, ymin)));
+			    ymax = Math.max(point1.y, Math.max(point2.y, Math.max(point3.y, ymax)));
 			    lastTriangle = newTriangle;
 			    if (firstTriangle == null) {
 			    	firstTriangle = newTriangle;
@@ -342,7 +342,7 @@ public class ZSlicer {
 		 return stlFile.getFirstTriangle();
 	 }
 	 
-	 public Set<Triangle3d> getAllTriangles() {
+	 public Collection<Triangle3d> getAllTriangles() {
 		 return stlFile.getTriangles();
 	 }
 	 
