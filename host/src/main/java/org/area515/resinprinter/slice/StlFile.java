@@ -25,7 +25,6 @@ import java.util.Collection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-
 /**
  * Title:         STL Loader
  * Description:   STL files loader (Supports ASCII and binary files) for Java3D
@@ -39,19 +38,8 @@ import org.apache.logging.log4j.Logger;
  * 
  * @version:      1.0
  *
- * Contact : xenicp@yahoo.es
- *
- 
- * 
+ * Contact: xenicp@yahoo.es
  * Contact:	avinash.s.devalla@gmail.com
- *
- *
- * Things TO-DO:
- *    1.-We can't read binary files over the net.
- *    2.-For binary files if size is lower than expected (calculated with the number of faces)
- *    the program will block.
- *    3.-Improve the way for detecting the kind of stl file?
- *    Can give us problems if the comment of the binary file begins by "solid"
  */
 
 public abstract class StlFile<T,P> {
