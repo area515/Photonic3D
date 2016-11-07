@@ -84,7 +84,11 @@ public class JMEStruts {
 		PolyFile figure = new PolyFile();
 		long load = System.currentTimeMillis();
 		//figure.load(StlFile.class.getResourceAsStream("lenscap-36mm.stl"), true);
-		figure.load(new FileInputStream("C:\\Users\\wgilster\\uploaddir\\Fat_Guy_Statue.stl"), true);
+		if (args[0] != null) {
+			figure.load(new FileInputStream(args[0]), true);
+		} else {
+			figure.load(new FileInputStream("C:\\Users\\wgilster\\uploaddir\\Fat_Guy_Statue.stl"), true);
+		}
 		//figure.load(StlFile.class.getResourceAsStream("Homebrew_Finds_Magnet_Mounting_Thingy.stl"), true);
 		long buildMesh = System.currentTimeMillis();
 		System.out.println("loading:" + (buildMesh - load));
