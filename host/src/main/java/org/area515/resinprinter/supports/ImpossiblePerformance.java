@@ -28,6 +28,7 @@ public class ImpossiblePerformance {
 
 		@Override
 		protected Vector3D buildPoint(double x, double y, double z) {
+			
 			Vector3D newPoint = new Vector3D(x, y, z);
 			Integer index = vertexLookup.get(newPoint);
 			if (index != null) {
@@ -54,9 +55,14 @@ public class ImpossiblePerformance {
 	
 	public static void main(String[] args) throws Exception {
 		PolyFile figure = new PolyFile();
-		figure.load(StlFile.class.getResourceAsStream("lenscap-36mm.stl"), true);
+		//figure.load(StlFile.class.getResourceAsStream("lenscap-36mm.stl"), true);
+		figure.load(new FileInputStream("C:\\Users\\wgilster\\uploaddir\\Fat_Guy_Statue.stl"), true);
 		//figure.load(StlFile.class.getResourceAsStream("Homebrew_Finds_Magnet_Mounting_Thingy.stl"), true);
+		long start = System.currentTimeMillis();
 		PolyhedronsSet polys = figure.getFirstTriangle();
+		long second = System.currentTimeMillis();
+		System.out.println(second - start);
 		System.out.println(polys.getBarycenter());
+		System.out.println(System.currentTimeMillis() - second);
 	}
 }
