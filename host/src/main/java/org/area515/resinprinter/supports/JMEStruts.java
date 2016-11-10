@@ -84,7 +84,7 @@ public class JMEStruts {
 		PolyFile figure = new PolyFile();
 		long load = System.currentTimeMillis();
 		//figure.load(StlFile.class.getResourceAsStream("lenscap-36mm.stl"), true);
-		if (args[0] != null) {
+		if (args.length == 1) {
 			figure.load(new FileInputStream(args[0]), true);
 		} else {
 			figure.load(new FileInputStream("C:\\Users\\wgilster\\uploaddir\\Fat_Guy_Statue.stl"), true);

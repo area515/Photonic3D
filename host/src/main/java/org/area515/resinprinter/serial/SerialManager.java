@@ -290,11 +290,9 @@ public class SerialManager {
 	}
 	
 	public SerialCommunicationsPort getSerialDevice(String comport) throws InappropriateDeviceException {
-		// if the rxtx has problems, it will fail in getSerial
-		// problem found in win 7 rxtx no class def found: io.gnu.rxtx... something like that in getSerialDevices - CommPortIdentifier.getPortIdentifiers()
-		// this will start
-		
-		// this line shortcuts the problem for my testing.
+		if (comport == null) {
+			throw new InappropriateDeviceException("No communications port was specified");
+		}
 		if(ConsoleCommPort.GCODE_RESPONSE_SIMULATION.equalsIgnoreCase(comport)){
 			return new ConsoleCommPort();
 		}
