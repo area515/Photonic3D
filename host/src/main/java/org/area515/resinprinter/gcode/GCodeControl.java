@@ -209,7 +209,7 @@ public abstract class GCodeControl {
 		Pattern gCodePattern = Pattern.compile("\\s*([^;]*)\\s*(;.*)?", Pattern.CASE_INSENSITIVE);
 		try {
 			if (gcodes == null || gcodes.trim().isEmpty()) {
-				throw new InappropriateDeviceException(MachineConfig.NOT_CAPABLE);
+				return null;
 			}
 			
 			StringBuilder buffer = new StringBuilder();

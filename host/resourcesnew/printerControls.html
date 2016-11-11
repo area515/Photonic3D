@@ -101,12 +101,12 @@
 					<i class="fa fa-stack-2x fa-2x fa-play text-danger cwh-text-opacity_50" ng-show="printerControlsController.currentPrinter.printInProgress"></i>
 					<i class="fa fa-stack-3x fa-2x fa-ban text-danger cwh-text-opacity_50" ng-hide="printerControlsController.currentPrinter.started"></i>
 				</span>
-				<h4 class="pull-left">DLP Controls: {{printerControlsController.currentPrinter.configuration.name}} </h4>
+				<h4 class="pull-left">Light Source Control: {{printerControlsController.currentPrinter.configuration.name}} </h4>
 			</div>
 			<div class="list-group">
 				<div class="list-group-item">
 					<i class="fa fa-2x fa-tv pull-left"></i>
-					<h4>Projector</h4>
+					<h4>Projector Power</h4>
 					<span class="btn-group" >
 						<a class="btn btn-danger btn-sm" ng-click="printerControlsController.projector('stop')">
 							<b class="fa fa-toggle-off"></b> 

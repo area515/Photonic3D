@@ -14,10 +14,18 @@ import org.mockito.stubbing.Answer;
 
 public class TestGCodeTemplating {
 	@Test
-	public void testBlockOfGCode() throws InappropriateDeviceException, ScriptException, Exception {
+	public void testEmptyGCode() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		PrintJob printJob = AbstractPrintFileProcessorTest.createTestPrintJob(processor);
-		String gcodes = "G1 Z${ZLiftDist} F${ZLiftRate}\nG1 Z-${(ZLiftDist - LayerThickness)} F180;\nM18\n; <    dElAy >   ${ZLiftDist * ZLiftRate};\n;";
+		Assert.assertNull(printJob.getPrinter().getGCodeControl().executeGCodeWithTemplating(printJob, null));
+		Assert.assertNull(printJob.getPrinter().getGCodeControl().executeGCodeWithTemplating(printJob, " "));
+	}
+	
+	@Test
+	public void testBlockOfGCode() throws Exception {
+		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
+		PrintJob printJob = AbstractPrintFileProcessorTest.createTestPrintJob(processor);
+		String gcodes = "G1 Z${ZLiftDist} F${ZLiftRate}\nG1 Z-${(ZLiftDist - LayerThickness)} F180;\n\nM18\n; <    dElAy >   ${ZLiftDist * ZLiftRate};\n;";
 		Mockito.when(printJob.getPrinter().getGCodeControl().sendGcodeAndRespectPrinter(Mockito.any(PrintJob.class), Mockito.any(String.class)))
 			.then(new Answer<String>() {
 				private int count = 0;

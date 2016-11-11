@@ -20,12 +20,10 @@ import java.io.Reader;
 import java.nio.ByteBuffer;
 // New from JDK 1.4 for endian related problems
 import java.nio.ByteOrder;
-import java.util.Set;
+import java.util.Collection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.stl.Point3d;
-
 
 /**
  * Title:         STL Loader
@@ -40,29 +38,18 @@ import org.area515.resinprinter.stl.Point3d;
  * 
  * @version:      1.0
  *
- * Contact : xenicp@yahoo.es
- *
- 
- * 
+ * Contact: xenicp@yahoo.es
  * Contact:	avinash.s.devalla@gmail.com
- *
- *
- * Things TO-DO:
- *    1.-We can't read binary files over the net.
- *    2.-For binary files if size is lower than expected (calculated with the number of faces)
- *    the program will block.
- *    3.-Improve the way for detecting the kind of stl file?
- *    Can give us problems if the comment of the binary file begins by "solid"
  */
 
-public abstract class StlFile<T> {
+public abstract class StlFile<T,P> {
   private static final Logger logger = LogManager.getLogger();
 
   //private int flag;                         // Needed cause implements Loader
   private boolean Ascii = true;             // File type Ascii -> true o binary -> false
   private boolean rewriteNormalsWithRightHandRule = false;
   
-  protected Set<T> triangles;
+  protected Collection<T> triangles;
   protected double zmin = Double.MAX_VALUE;
   protected double zmax = -Double.MAX_VALUE;
   protected double xmin = Double.MAX_VALUE;
@@ -202,7 +189,6 @@ public abstract class StlFile<T> {
 		
 		parser.nextToken();
 		double[] normal = read3d(parser, "normal", true);
-		Point3d normalPoint = new Point3d(normal[0], normal[1], normal[2]);
 		parser.nextToken();
 		readToken(parser, "outer");
 		
@@ -218,26 +204,26 @@ public abstract class StlFile<T> {
 		parser.nextToken();
 		readToken(parser, "endfacet");
 		
-		fixNormalIfBadSTLFile(normalPoint, triangle[0], triangle[1], triangle[2]);
-		buildTriangle(new Point3d[]{
+		fixNormalIfBadSTLFile(normal, triangle[0], triangle[1], triangle[2]);
+		buildTriangle(
 				buildPoint(triangle[0][0], triangle[0][1], triangle[0][2]), 
 				buildPoint(triangle[1][0], triangle[1][1], triangle[1][2]), 
-				buildPoint(triangle[2][0], triangle[2][1], triangle[2][2])}, normalPoint);
+				buildPoint(triangle[2][0], triangle[2][1], triangle[2][2]), normal);
   }// End of readFacet
 
-  protected abstract void buildTriangle(Point3d[] points, Point3d normal);
-  protected abstract Point3d buildPoint(double x, double y, double z);
-  protected abstract Set<T> createSet();
+  protected abstract void buildTriangle(P point1, P point2, P point3, double[] normal);
+  protected abstract P buildPoint(double x, double y, double z);
+  protected abstract Collection<T> createSet();
   protected abstract T getFirstTriangle();
 
-  private void fixNormalIfBadSTLFile(Point3d normal, double[] p1, double[] p2, double[] p3) {
-		if ((normal.x == 0 && normal.y == 0 && normal.z == 0) || rewriteNormalsWithRightHandRule) {
-			/*normal.x = (p3[1] - p2[1]) * (p2[2] - p1[2]) - (p3[2] - p2[2]) * (p2[1] - p1[1]);
-			normal.y = (p3[2] - p2[2]) * (p2[0] - p1[0]) - (p3[0] - p2[0]) * (p2[2] - p1[2]);
-			normal.z = (p3[0] - p2[0]) * (p2[1] - p1[1]) - (p3[1] - p2[1]) * (p2[0] - p1[0]);*/
-			normal.x = (p3[2] - p2[2]) * (p2[1] - p1[1]) - (p3[1] - p2[1]) * (p2[2] - p1[2]);
-			normal.y = (p3[0] - p2[0]) * (p2[2] - p1[2]) - (p3[2] - p2[2]) * (p2[0] - p1[0]);
-			normal.z = (p3[1] - p2[1]) * (p2[0] - p1[0]) - (p3[0] - p2[0]) * (p2[1] - p1[1]);
+  private void fixNormalIfBadSTLFile(double[] normal, double[] p1, double[] p2, double[] p3) {
+		if ((normal[0] == 0 && normal[1] == 0 && normal[2] == 0) || rewriteNormalsWithRightHandRule) {
+			/*normal[0] = (p3[1] - p2[1]) * (p2[2] - p1[2]) - (p3[2] - p2[2]) * (p2[1] - p1[1]);
+			normal[1] = (p3[2] - p2[2]) * (p2[0] - p1[0]) - (p3[0] - p2[0]) * (p2[2] - p1[2]);
+			normal[2] = (p3[0] - p2[0]) * (p2[1] - p1[1]) - (p3[1] - p2[1]) * (p2[0] - p1[0]);*/
+			normal[0] = (p3[2] - p2[2]) * (p2[1] - p1[1]) - (p3[1] - p2[1]) * (p2[2] - p1[2]);
+			normal[1] = (p3[0] - p2[0]) * (p2[2] - p1[2]) - (p3[2] - p2[2]) * (p2[0] - p1[0]);
+			normal[2] = (p3[1] - p2[1]) * (p2[0] - p1[0]) - (p3[0] - p2[0]) * (p2[1] - p1[1]);
 		}
   }
   
@@ -254,24 +240,23 @@ public abstract class StlFile<T> {
    */
   public void readFacetB(ByteBuffer dataBuffer, int index) throws IOException {
 	    // Read the Normal
-		Point3d normal = new Point3d(
+		double normal[] = {
 			dataBuffer.getFloat(), 
 			dataBuffer.getFloat(), 
-			dataBuffer.getFloat());
+			dataBuffer.getFloat()};
 
 	    // Read vertex1
 		double p1[] = new double[]{dataBuffer.getFloat(), dataBuffer.getFloat(), dataBuffer.getFloat()};
 		double p2[] = new double[]{dataBuffer.getFloat(), dataBuffer.getFloat(), dataBuffer.getFloat()};
 		double p3[] = new double[]{dataBuffer.getFloat(), dataBuffer.getFloat(), dataBuffer.getFloat()};
 		
-		Point3d[] triangle = new Point3d[3];
-		triangle[0] = buildPoint(p1[0], p1[1], p1[2]);
-		triangle[1] = buildPoint(p2[0], p2[1], p2[2]);
-		triangle[2] = buildPoint(p3[0], p3[1], p3[2]);
+		P point1 = buildPoint(p1[0], p1[1], p1[2]);
+		P point2 = buildPoint(p2[0], p2[1], p2[2]);
+		P point3 = buildPoint(p3[0], p3[1], p3[2]);
 		
 		fixNormalIfBadSTLFile(normal, p1, p2, p3);
 		
-		buildTriangle(triangle, normal);
+		buildTriangle(point1, point2, point3, normal);
 		
 		//TODO: After each facet there are 2 bytes that can be used for color information, we should add those two bytes to the triangle.
         dataBuffer.get();
@@ -454,7 +439,7 @@ public abstract class StlFile<T> {
     this.objectName = name;
   }
 	
-	public Set<T> getTriangles() {
+	public Collection<T> getTriangles() {
 		return triangles;
 	}
 	
