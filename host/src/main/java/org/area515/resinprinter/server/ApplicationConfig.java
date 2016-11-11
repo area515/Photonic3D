@@ -31,7 +31,7 @@ public class ApplicationConfig extends Application{
     public ApplicationConfig() {
     	BeanConfig beanConfig = new BeanConfig();
     	beanConfig.setTitle("Photonic3D REST API");
-        beanConfig.setVersion("0.0." + HostProperties.Instance().getVersionNumber());
+        beanConfig.setVersion(HostProperties.Instance().getReleaseTagName());
         beanConfig.setSchemes(new String[]{"http"});
         //beanConfig.setHost("localhost:9091");
         beanConfig.setBasePath("/services");

@@ -43,6 +43,7 @@ public class SettingsService {
 		return HostProperties.Instance().getVisibleCards();
 	}
 	
+    @Deprecated
     @ApiOperation(value="Returns the integer based version number of Photonic3D found in the build.number file.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),

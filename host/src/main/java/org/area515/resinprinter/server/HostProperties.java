@@ -425,7 +425,16 @@ public class HostProperties {
 	}
 
 	public int getVersionNumber() {
-		return versionNumber;
+		if (releaseTagName == null) {
+			return 0;
+		}
+		
+		String release = releaseTagName.replaceAll("[^\\d]", "");
+		if (release.length() == 0) {
+			return 0;
+		}
+		
+		return Integer.valueOf(release);
 	}
 
 	public String getReleaseTagName() {

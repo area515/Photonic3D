@@ -36,6 +36,7 @@ public class UPNPAdvertiser implements Feature {
 	public static class UPNPSetup {
 		private String deviceName = null;
 		private String manufacturer = null;
+		private String deviceReleaseString = HostProperties.Instance().getReleaseTagName();
 		private int deviceVersion = HostProperties.Instance().getVersionNumber();
 		private String deviceType = Main.PRINTER_TYPE;
 		private int upnpStreamPort = 5001;
@@ -64,7 +65,7 @@ public class UPNPAdvertiser implements Feature {
 	@Override
 	public void start(URI webPresentationURI) {
 		try {
-			UDN udn = UDN.uniqueSystemIdentifier(getSetup().deviceName + getSetup().deviceVersion + getSetup().manufacturer);
+			UDN udn = UDN.uniqueSystemIdentifier(getSetup().deviceName + getSetup().deviceReleaseString + getSetup().manufacturer);
 			DeviceType type = new UDADeviceType(getSetup().deviceType, getSetup().deviceVersion);
 	
 			DeviceDetails details = new DeviceDetails(getSetup().deviceName,
@@ -72,7 +73,7 @@ public class UPNPAdvertiser implements Feature {
 						new ModelDetails(
 								getSetup().deviceName, 
 								getSetup().deviceName, 
-								"v" + getSetup().deviceVersion), 
+								"v" + getSetup().deviceReleaseString), 
 							webPresentationURI, 
 					new DLNADoc[] {
 							new DLNADoc("DMS", DLNADoc.Version.V1_5),
@@ -115,7 +116,7 @@ public class UPNPAdvertiser implements Feature {
 				}
 			}
 		} catch (Exception e) {
-			logger.error("Couldn't advertise URI:", webPresentationURI);
+			logger.error("Couldn't advertise URI:" + webPresentationURI, e);
 			throw new RuntimeException("Couldn't advertise URI:" + webPresentationURI);
 		}
 	}
