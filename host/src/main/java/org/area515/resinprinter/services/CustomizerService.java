@@ -151,12 +151,16 @@ public class CustomizerService {
 	public StreamingOutput renderFirstSliceImage(@PathParam("customizerName") String customizerName) throws NoPrinterFoundException, SliceHandlingException {
 		Customizer customizer = customizersByName.getIfPresent(customizerName);
 		if (customizer == null) {
-			throw new IllegalArgumentException("Customizer is missing");
+			throw new IllegalArgumentException("Customizer is missing for:" + customizerName);
 		}
 		
 		File file = new File(HostProperties.Instance().getUploadDir(), customizer.getPrintableName() + "." + customizer.getPrintableExtension());
 		PrintFileProcessor<?,?> processor = PrintFileFilter.INSTANCE.findAssociatedPrintProcessor(file);
 		if (!(processor instanceof Previewable)) {
+			if (processor == null) {
+				throw new IllegalArgumentException("Couldn't find file processor for file:" + file);
+			}
+			
 			throw new IllegalArgumentException(processor.getFriendlyName() + " files don't support image preview.");
 		}
 		

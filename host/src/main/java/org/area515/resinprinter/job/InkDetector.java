@@ -12,6 +12,7 @@ import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.Main;
 
 public class InkDetector {
+	public static final String VISUAL_ERROR = "Error occurred while performing visual detection";
     private static final Logger logger = LogManager.getLogger();
 	private Printer printer;
 	private PrintJob printJob;
@@ -38,6 +39,7 @@ public class InkDetector {
 				}
 				
 				hasAlreadyPausedWithError = true;
+				printJob.setErrorDescription(VISUAL_ERROR);
 				printer.setStatus(JobStatus.PausedWithWarning);
 				NotificationManager.jobChanged(printer, printJob);
 				throw e;

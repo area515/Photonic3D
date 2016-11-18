@@ -92,6 +92,7 @@ public abstract class GCodeControl {
 	        	if (isPausableError(response.getLastLineMatcher(), printJob)) {
 	        		attempt++;
 	        		printJob.setErrorDescription(response.getLastLineMatcher().group(2));
+	        		logger.info("Received error from printer:" + response.getLastLineMatcher().group(2));
 	        		printer.setStatus(JobStatus.PausedWithWarning);
 	        		NotificationManager.jobChanged(printer, printJob);
 	        		

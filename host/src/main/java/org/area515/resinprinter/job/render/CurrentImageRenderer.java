@@ -29,29 +29,6 @@ public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 		return new BufferedImage(renderedWidth, renderedHeight, BufferedImage.TYPE_4BYTE_ABGR);
 	}
 	
-	/*public BufferedImage buildLargestImageBetweenPrinterAndRenderedImage(int renderedWidth, int renderedHeight) {
-		int actualWidth = renderedWidth > aid.xResolution?renderedWidth:aid.xResolution;
-		int actualHeight = renderedHeight > aid.yResolution?renderedHeight:aid.yResolution;
-		return new BufferedImage(actualWidth, actualHeight, BufferedImage.TYPE_4BYTE_ABGR);
-	}
-	
-	public BufferedImage buildLargestImageBetweenPrinterAndRenderedImage(BufferedImage renderedImage) {
-		if (renderedImage.getWidth() < aid.xResolution ||
-			renderedImage.getHeight() < aid.yResolution) {
-				BufferedImage newSize = buildLargestImageBetweenPrinterAndRenderedImage(renderedImage.getWidth(), renderedImage.getHeight());
-				Graphics graphics = newSize.getGraphics();
-				graphics.setColor(Color.black);
-				graphics.fillRect(0, 0, newSize.getWidth(), newSize.getHeight());
-				graphics.setColor(Color.white);
-				int centerX = aid.xResolution / 2;
-				int centerY = aid.yResolution / 2;
-				graphics.drawImage(renderedImage, centerX - (newSize.getWidth() / 2), centerY - (newSize.getHeight() / 2), null);
-				return newSize;
-		}
-		
-		return renderedImage;
-	}*/
-	
 	public RenderedData call() throws JobManagerException {
 		long startTime = System.currentTimeMillis();
 		Lock lock = aid.cache.getSpecificLock(imageIndexToBuild);
@@ -65,7 +42,7 @@ public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 			if (!aid.optimizeWithPreviewMode) {
 				long pixelArea = computePixelArea(image);
 				imageData.setArea((double)pixelArea);
-				logger.info("Loaded {}  with {} non-black pixels in {}ms", imageIndexToBuild, pixelArea, System.currentTimeMillis()-startTime);
+				logger.info("Loaded {} with {} non-black pixels in {}ms", imageIndexToBuild, pixelArea, System.currentTimeMillis()-startTime);
 			}
 			return imageData;
 		} catch (ScriptException e) {

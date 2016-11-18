@@ -123,7 +123,7 @@ public class Main {
 			if (graphics != null) {
 				graphics.setBackground(new Color(0, true));
 				graphics.clearRect(0, 0, outerBounds.width, outerBounds.height);
-
+				
 				updateGraphics(graphics);
 			}
 			updateScreen();
@@ -582,7 +582,7 @@ public class Main {
 									foundDevices.add(new PrintableDevice(currentDevice));
 									System.out.println("Found printer URL here:" + currentDevice.getDetails().getPresentationURI());
 									if (finalUpdater != null) {
-										finalUpdater.showProgress("Found printer:" + currentDevice.getDisplayString());
+										finalUpdater.showProgress("Found printer: " + currentDevice.getDisplayString());
 									}
 								}
 							}

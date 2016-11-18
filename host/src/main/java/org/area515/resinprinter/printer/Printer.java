@@ -145,7 +145,7 @@ public class Printer {
 			if (this.status != null && this.status.isPaused()) {
 				jobContinued.signalAll();
 			}
-			
+			logger.info("Moving from status:" + this.status + " to status:" + status);
 			this.status = status;
 			if (!status.isPrintInProgress()) {
 				sliceNumber = 0;

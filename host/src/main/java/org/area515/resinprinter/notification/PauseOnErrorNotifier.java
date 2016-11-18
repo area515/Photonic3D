@@ -35,6 +35,7 @@ public class PauseOnErrorNotifier implements Notifier {
 
 	@Override
 	public void geometryError(PrintJob job, List<StlError> error) {
+		job.setErrorDescription("Your 3D file has improper geometry.");
 		job.getPrinter().setStatus(JobStatus.PausedWithWarning);
 	}
 

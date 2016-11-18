@@ -18,11 +18,8 @@ import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
-import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.printer.Printer;
-import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
 import org.area515.resinprinter.server.HostProperties;
 
 import freemarker.cache.StringTemplateLoader;
