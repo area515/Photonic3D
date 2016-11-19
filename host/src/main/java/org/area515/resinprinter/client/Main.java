@@ -612,7 +612,9 @@ public class Main {
 				userHasbeenAskedToInstall = true;
 				try {
 					List<Box> boxes = scanner.waitForDevicesWithPossibleRemoteInstallCapability();
-					finalUpdater.close();
+					if (finalUpdater != null) {
+						finalUpdater.close();
+					}
 					if (boxes.size() > 0) {
 						Box box = (Box)JOptionPane.showInputDialog(null, 
 						        "I couldn't find Photonic3D installed on your network.\n"
@@ -646,7 +648,9 @@ public class Main {
 				}
 				
 				if (!installCompletedOnThisLoopIteration) {
-					finalUpdater.close();
+					if (finalUpdater != null) {
+						finalUpdater.close();
+					}
 					System.out.println("3d printer not found after waiting:" + maxLengthToWaitForAll);
 					JOptionPane optionPane = new JOptionPane();
 					optionPane.setMessage("Couldn't find your printer on this network.\n"
@@ -682,7 +686,9 @@ public class Main {
 				searchPane.pack();
 				searchPane.setLocationRelativeTo(null);
 				searchPane.setVisible(true);
-				finalUpdater.close();
+				if (finalUpdater != null) {
+					finalUpdater.close();
+				}
 			}
 		} while (foundDevices.size() == 0);
 		
@@ -696,7 +702,9 @@ public class Main {
 		if (foundDevices.size() == 1) {
 			chosenPrinter = foundDevices.iterator().next();
 		} else {
-			finalUpdater.close();
+			if (finalUpdater != null) {
+				finalUpdater.close();
+			}
 			chosenPrinter = (PrintableDevice)JOptionPane.showInputDialog(null, 
 		        "There were multiple 3d printers found on this network.\nWhich printer would you like to view?", 
 		        "Choose a Printer",
