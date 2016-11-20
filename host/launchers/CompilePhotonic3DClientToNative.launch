@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.ui.externaltools.ProgramLaunchConfigurationType">
+<stringAttribute key="org.eclipse.ui.externaltools.ATTR_LOCATION" value="${ee_home:JavaSE-1.8}/bin/java.exe"/>
+<stringAttribute key="org.eclipse.ui.externaltools.ATTR_TOOL_ARGUMENTS" value="-Xmx1024m -jar C:\Users\wgilster\Desktop\compiles\JWrapper\jwrapper-00044250826.jar ${project_loc:/photonic3d/jwrapper/Photonic3dClient.xml}/jwrapper/Photonic3dClient.xml"/>
+<stringAttribute key="org.eclipse.ui.externaltools.ATTR_WORKING_DIRECTORY" value="C:\Users\wgilster\Desktop\compiles\JWrapper"/>
+</launchConfiguration>
