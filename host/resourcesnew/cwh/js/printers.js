@@ -13,7 +13,7 @@
 		function refreshSelectedPrinter(printerList) {
         	var foundPrinter = false;
         	if (printerList.length == 1 && printerList[0].started && controller.autodirect != 'disabled') {
-        		controller.currentPrinter = printer;
+        		controller.currentPrinter = printerList[0];
         		controller.gotoPrinterControls();
         		foundPrinter = true;
         	} else {
