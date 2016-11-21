@@ -56,6 +56,10 @@ public class ConsoleCommPort implements SerialCommunicationsPort {
 		return "ok\n".getBytes();
 	}
 
+	@Override
+	public void restartCommunications() {
+	}
+
 	public String toString() {
 		return name;
 	}

@@ -37,6 +37,7 @@ public class IOUtilities {
 	public static class ParseState {
 		public int parseLocation;
 		public String currentLine;
+		public boolean timeout;
 	}
 	
 	public static class ParseAction {
@@ -247,6 +248,7 @@ public class IOUtilities {
 				ParseState state = new ParseState();
 				state.currentLine = null;
 				state.parseLocation = parseLocation;
+				state.timeout = true;
 				return state;
 			}
 			
