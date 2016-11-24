@@ -15,6 +15,7 @@ import org.area515.resinprinter.projector.HexCodeBasedProjectorTesting;
 import org.area515.resinprinter.security.KeystoreSecurityTest;
 import org.area515.resinprinter.security.SerializeMessageAsJson;
 import org.area515.resinprinter.security.keystore.RendezvousExchange;
+import org.area515.resinprinter.services.MachineServiceTest;
 import org.area515.resinprinter.services.TestScriptAndTemplating;
 import org.area515.resinprinter.slice.CheckSlicePoints;
 import org.area515.resinprinter.stl.ZSlicingGeometry;
@@ -43,6 +44,7 @@ import org.junit.runners.Suite;
 	TestGCodeTemplating.class,
 	TestByteSession.class,
 	TestCustomizer.class,
+	MachineServiceTest.class,
 })
 
 public class FullTestSuite {
