@@ -64,7 +64,7 @@
 	       			function(response) {
 	       				if (shouldRefreshPrinterList) {
 	       					refreshPrinters();
-	       					need code to refresh machine profiles, ink profiles and slicing profile if it's a new printer
+	       					//TODO: need code to refresh machine profiles, ink profiles and slicing profile if it's a new printer
 	       				}
 	       			}, 
 	       			function(response) {
