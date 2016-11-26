@@ -52,7 +52,7 @@ public class ApplicationConfig extends Application{
     	singletons.add(RemoteService.INSTANCE);
     }
 
-    public JacksonJaxbJsonProvider buildJacksonJaxbJsonProvider() {
+    public static JacksonJaxbJsonProvider buildJacksonJaxbJsonProvider() {
         ObjectMapper mapper = new ObjectMapper();
         //mapper.enable(SerializationFeature.INDENT_OUTPUT);
         AnnotationIntrospector pair = AnnotationIntrospector.pair(
