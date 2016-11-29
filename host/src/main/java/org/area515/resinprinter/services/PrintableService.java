@@ -68,6 +68,7 @@ public class PrintableService {
     public static PrintableService INSTANCE = new PrintableService();
 	public static final String UNKNOWN_FILE = "I don't know how do deal with a file of this type:";
 	public static final String NO_FILE = "You didn't attempt to upload a file, or the filename was Blank.";
+	public static final String NO_FILE_MIME = "No file specified in multipart mime!";
 	
 	private PrintableService() {
 	}
@@ -76,16 +77,16 @@ public class PrintableService {
 		File newUploadFile = new File(parentDirectory, fileName);
 		try {
 			if (!saveFile(istream, newUploadFile.getAbsoluteFile())) {
-				return Response.status(Status.BAD_REQUEST).entity(UNKNOWN_FILE + fileName).build();
+				return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN_TYPE).entity(UNKNOWN_FILE + fileName).build();
 			}
 		} catch (IOException e) {
 			String output = "Error while uploading file: " + newUploadFile;
 			logger.error(output, e);
-			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(output).build();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).type(MediaType.TEXT_PLAIN_TYPE).entity(output).build();
 		}
 
 	    String output = "File saved to location: " + newUploadFile;
-		return Response.status(Status.OK).entity(output).build();
+		return Response.status(Status.OK).type(MediaType.TEXT_PLAIN_TYPE).entity(output).build();
 	}
 	
 	public static Response uploadFile(MultipartFormDataInput input, File parentDirectory) {
@@ -94,8 +95,8 @@ public class PrintableService {
 	
 		List<InputPart> inPart = formParts.get("file");
 		if (inPart == null) {
-			logger.info("No file specified in multipart mime!");
-			return Response.status(500).build();
+			logger.info(NO_FILE_MIME);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).type(MediaType.TEXT_PLAIN_TYPE).entity(NO_FILE_MIME).build();
 		}
 		
 		File newUploadFile = null;
@@ -108,7 +109,7 @@ public class PrintableService {
 
 				// If the filename was blank we aren't interested in the file.
 				if (fileName == null || fileName.isEmpty()) {
-					return Response.status(Status.BAD_REQUEST).entity(NO_FILE).build();
+					return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN_TYPE).entity(NO_FILE).build();
 				}
 
 				// Handle the body of that part with an InputStream
@@ -118,18 +119,18 @@ public class PrintableService {
 				newUploadFile = new File(parentDirectory, fileName);
 
 				if (!saveFile(istream, newUploadFile.getAbsoluteFile())) {
-					return Response.status(Status.BAD_REQUEST).entity(UNKNOWN_FILE + fileName).build();
+					return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN_TYPE).entity(UNKNOWN_FILE + fileName).build();
 				}
 
 			} catch (IOException e) {
 				String output = "Error while uploading file: " + newUploadFile;
 				logger.error(output, e);
-				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(output).build();
+				return Response.status(Status.INTERNAL_SERVER_ERROR).type(MediaType.TEXT_PLAIN_TYPE).entity(output).build();
 			}
 		}
 
 	    String output = "File saved to location: " + newUploadFile;
-		return Response.status(Status.OK).entity(output).build();
+		return Response.status(Status.OK).type(MediaType.TEXT_PLAIN_TYPE).entity(output).build();
 	}
 
     @ApiOperation(value="Upload a printable file using multipart/form-data. "

@@ -52,16 +52,17 @@
 		    });
 	
 		    $scope.fileToUpload.upload.then(function (response) {
-		    		//TODO: Upload complete should reload file list
-		    		if (!response.data.response) {
-						$rootScope.$emit("MachineResponse", {machineResponse: response.data, successFunction:null, afterErrorFunction:null});
+		    		/*if (!response.data.response) {
+						$rootScope.$emit("MachineResponse", {machineResponse: {"command":"File Upload", "message":response.data}, successFunction:null, afterErrorFunction:null});
 		    		} else {
 			    		$scope.fileToUpload.result = response.data;
-		    		}
+		    		}*/
 		    	}, function (response) {
 			    	//TODO: Upload complete should reload file list
-		    		if (response.status > 0)
-		    			$scope.errorMsg = response.status + ': ' + response.data;
+		    		if (response.status != 200) {
+						$rootScope.$emit("MachineResponse", {machineResponse: {"command":"File Upload", "message":response.data}, successFunction:null, afterErrorFunction:null});
+		    			//$scope.errorMsg = response.status + ': ' + response.data;
+		    		}
 		    	}
 		    );
 		    $scope.fileToUpload.upload.progress(function (evt) {
