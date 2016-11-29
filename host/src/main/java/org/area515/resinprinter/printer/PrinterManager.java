@@ -164,7 +164,7 @@ public class PrinterManager {
 				printer.close();
 			}
 			throw e;
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			logger.error("Error starting printer:" + currentConfiguration, e);
 			DisplayManager.Instance().removeAssignment(printer);
 			SerialManager.Instance().removeAssignments(printer);
