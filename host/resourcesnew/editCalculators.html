@@ -16,7 +16,9 @@
 					<div title="template variable = ${ZLiftDist}" class="input-group"
 						cwh-testscript
 						placeholder="please return a double value from this script"
-						helpURL="http://www.w3schools.com/js/"
+						helpURL="<a href='https://wiki.photonic3d.com/doku.php?id=calculators'>Javascript Variables</a><br>
+								<a href='http://www.w3schools.com/js/'>Javascript help</a><br>
+								<a href='https://wiki.photonic3d.com/doku.php?id=calculator_examples'>A Few Examples</a>"
 						testClick="printersController.testScript('Z Lift Distance Calculator' , 'java.lang.Double[$CURSLICE({{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers}},{{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers+2}},1)$buildAreaMM(0.0,2000.0,75)]', printersController.currentPrinter.configuration.slicingProfile.ZLiftDistanceCalculator)"
 						ng-model="printersController.currentPrinter.configuration.slicingProfile.ZLiftDistanceCalculator">
 					</div>
@@ -27,7 +29,9 @@
 					<div title="template variable = ${ZLiftRate}" class="input-group"
 						cwh-testscript
 						placeholder="please return a double value from this script"
-						helpURL="http://www.w3schools.com/js/"
+						helpURL="<a href='https://wiki.photonic3d.com/doku.php?id=calculators'>Javascript Variables</a><br>
+								<a href='http://www.w3schools.com/js/'>Javascript help</a><br>
+								<a href='https://wiki.photonic3d.com/doku.php?id=calculator_examples'>A Few Examples</a>"
 						testClick="printersController.testScript('Z Lift Speed Calculator' , 'java.lang.Double[$CURSLICE({{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers}},{{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers+2}},1)$buildAreaMM(0.0,2000.0,75)]', printersController.currentPrinter.configuration.slicingProfile.ZLiftSpeedCalculator)"
 						ng-model="printersController.currentPrinter.configuration.slicingProfile.ZLiftSpeedCalculator">
 					</div>
@@ -38,7 +42,9 @@
 					<div class="input-group"
 						cwh-testscript
 						placeholder="please return an integer value from this script"
-						helpURL="http://www.w3schools.com/js/"
+						helpURL="<a href='https://wiki.photonic3d.com/doku.php?id=calculators'>Javascript Variables</a><br>
+								<a href='http://www.w3schools.com/js/'>Javascript help</a><br>
+								<a href='https://wiki.photonic3d.com/doku.php?id=calculator_examples'>A Few Examples</a>"
 						testClick="printersController.testScript('Exposure Time Calculator' , 'java.lang.Integer[$CURSLICE({{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers}},{{printersController.currentPrinter.configuration.slicingProfile.InkConfig[printersController.currentPrinter.configuration.slicingProfile.selectedInkConfigIndex].NumberofBottomLayers+2}},1)$buildAreaMM(0.0,2000.0,75)]', printersController.currentPrinter.configuration.slicingProfile.ExposureTimeCalculator)"
 						ng-model="printersController.currentPrinter.configuration.slicingProfile.ExposureTimeCalculator">
 					</div>
@@ -50,7 +56,12 @@
 					<div class="input-group"
 						cwh-testscript
 						placeholder="please return an instance of java.awt.Paint from this script"
-						helpURL="http://www.w3schools.com/js/"
+						helpURL="<a href='https://docs.oracle.com/javase/8/docs/api/java/awt/Paint.html'>Paint object</a><br>
+								<a href='https://docs.oracle.com/javase/8/docs/api/java/awt/RadialGradientPaint.html'>Building radial gradients</a><br>
+								<a href='https://docs.oracle.com/javase/8/docs/api/java/awt/TexturePaint.html'>Image based paint</a><br>
+								<a href='https://wiki.photonic3d.com/doku.php?id=calculators'>Javascript Variables</a><br>
+								<a href='http://www.w3schools.com/js/'>Javascript help</a><br>
+								<a href='https://wiki.photonic3d.com/doku.php?id=calculator_examples'>A Few Examples</a>"
 						testClick="printersController.testScript('Projector Gradient Calculator' , 'java.awt.Paint', printersController.currentPrinter.configuration.slicingProfile.ProjectorGradientCalculator)"
 						ng-model="printersController.currentPrinter.configuration.slicingProfile.ProjectorGradientCalculator">
 					</div>
