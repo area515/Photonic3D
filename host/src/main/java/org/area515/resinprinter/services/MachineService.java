@@ -260,7 +260,7 @@ public class MachineService {
 		}
 	}
 	
-    @ApiOperation(value="Upload TrueType fonts to be used with 2D file processing.")
+    @ApiOperation(value="Enumerates the list of available fonts to be used with 2D file printing.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})

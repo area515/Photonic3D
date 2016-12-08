@@ -17,8 +17,8 @@ public class TestGCodeTemplating {
 	public void testEmptyGCode() throws Exception {
 		AbstractPrintFileProcessor processor = Mockito.mock(AbstractPrintFileProcessor.class, Mockito.CALLS_REAL_METHODS);
 		PrintJob printJob = AbstractPrintFileProcessorTest.createTestPrintJob(processor);
-		Assert.assertNull(printJob.getPrinter().getGCodeControl().executeGCodeWithTemplating(printJob, null));
-		Assert.assertNull(printJob.getPrinter().getGCodeControl().executeGCodeWithTemplating(printJob, " "));
+		Assert.assertNull(printJob.getPrinter().getGCodeControl().executeGCodeWithTemplating(printJob, null, true));
+		Assert.assertNull(printJob.getPrinter().getGCodeControl().executeGCodeWithTemplating(printJob, " ", true));
 	}
 	
 	@Test
@@ -51,7 +51,7 @@ public class TestGCodeTemplating {
 					return (String)"ok";
 				}
 			});
-		printJob.getPrinter().getGCodeControl().executeGCodeWithTemplating(printJob, gcodes);
+		printJob.getPrinter().getGCodeControl().executeGCodeWithTemplating(printJob, gcodes, true);
 	}
 }
 

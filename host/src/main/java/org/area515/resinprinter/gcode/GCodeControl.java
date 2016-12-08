@@ -216,7 +216,7 @@ public abstract class GCodeControl {
 		}
     }
     
-    public String executeGCodeWithTemplating(PrintJob printJob, String gcodes) throws InappropriateDeviceException {
+    public String executeGCodeWithTemplating(PrintJob printJob, String gcodes, boolean stopSendingGCodeWhenPrintInactive) throws InappropriateDeviceException {
 		Pattern gCodePattern = Pattern.compile("\\s*([^;]*)\\s*(;.*)?", Pattern.CASE_INSENSITIVE);
 		try {
 			if (gcodes == null || gcodes.trim().isEmpty()) {
@@ -230,7 +230,7 @@ public abstract class GCodeControl {
 			}
 			
 			for (String gcode : gcodes.split("[\r]?\n")) {
-				if (!printJob.getPrinter().isPrintActive()) {
+				if (stopSendingGCodeWhenPrintInactive && !printJob.getPrinter().isPrintActive()) {
 					break;
 				}
 				

@@ -203,7 +203,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 					
 					// print out comments
 					//logger.info("Ignored line:{}", currentLine);
-					printer.getGCodeControl().executeGCodeWithTemplating(printJob, currentLine);
+					printer.getGCodeControl().executeGCodeWithTemplating(printJob, currentLine, true);
 			}
 			
 			return printer.isPrintActive()?JobStatus.Completed:printer.getStatus();

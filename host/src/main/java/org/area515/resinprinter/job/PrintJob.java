@@ -208,7 +208,7 @@ public class PrintJob {
 		try {
 			overrideZLiftDistance = true;
 			this.zLiftDistance = zLiftDistance;
-			printer.getGCodeControl().executeGCodeWithTemplating(this, printer.getConfiguration().getSlicingProfile().getZLiftDistanceGCode());
+			printer.getGCodeControl().executeGCodeWithTemplating(this, printer.getConfiguration().getSlicingProfile().getZLiftDistanceGCode(), true);
 		} catch (InappropriateDeviceException e) {
 			throw e;
 		}
@@ -244,7 +244,7 @@ public class PrintJob {
 		try {
 			this.overrideZLiftSpeed = true;
 			this.zLiftSpeed = zLiftSpeed;
-			printer.getGCodeControl().executeGCodeWithTemplating(this, printer.getConfiguration().getSlicingProfile().getZLiftSpeedGCode());
+			printer.getGCodeControl().executeGCodeWithTemplating(this, printer.getConfiguration().getSlicingProfile().getZLiftSpeedGCode(), true);
 		} catch (InappropriateDeviceException e) {
 			throw e;
 		}

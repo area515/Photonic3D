@@ -194,7 +194,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		if (aid.slicingProfile.getgCodeHeader() != null && 
 			aid.slicingProfile.getgCodeHeader().trim().length() > 0 &&
 			aid.customizer.getNextStep() == PrinterStep.PerformHeader) {
-			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeHeader());
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeHeader(), true);
 			moveToNextPrinterStep(aid.customizer, PrinterStep.PerformPreSlice);
 		}
 		
@@ -234,7 +234,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		if (aid.slicingProfile.getgCodePreslice() != null && 
 			aid.slicingProfile.getgCodePreslice().trim().length() > 0 && 
 			aid.customizer.getNextStep() == PrinterStep.PerformPreSlice) {
-			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodePreslice());
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodePreslice(), true);
 		}
 		
 		moveToNextPrinterStep(aid.customizer, PrinterStep.PerformExposure);
@@ -272,7 +272,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		 	
 		if (aid.slicingProfile.getgCodeShutter() != null && aid.slicingProfile.getgCodeShutter().trim().length() > 0) {
 			aid.printer.setShutterOpen(true);
-			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeShutter());
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeShutter(), true);
 		}
 		
 		//Sleep for the amount of time that we are exposing the resin.
@@ -280,7 +280,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		
 		if (aid.slicingProfile.getgCodeShutter() != null && aid.slicingProfile.getgCodeShutter().trim().length() > 0) {
 			aid.printer.setShutterOpen(false);
-			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeShutter());
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeShutter(), true);
 		}
 
 		//Blank the screen
@@ -308,14 +308,14 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			}
 		}
 		if (aid.slicingProfile.getZLiftDistanceGCode() != null && aid.slicingProfile.getZLiftDistanceGCode().trim().length() > 0) {
-			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getZLiftDistanceGCode());
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getZLiftDistanceGCode(), true);
 		}
 		if (aid.slicingProfile.getZLiftSpeedGCode() != null && aid.slicingProfile.getZLiftSpeedGCode().trim().length() > 0) {
-			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getZLiftSpeedGCode());
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getZLiftSpeedGCode(), true);
 		}
 		
 		//Perform the lift gcode manipulation
-		aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeLift());
+		aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeLift(), true);
 		
 		Double buildArea = getBuildAreaMM(aid.printJob);
 		// Log slice settings (in JSON for extraction and processing)
@@ -344,7 +344,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 		
 		if (aid.slicingProfile.getgCodeFooter() != null && aid.slicingProfile.getgCodeFooter().trim().length() > 0) {
-			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeFooter());
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeFooter(), true);
 		}
 		
 		if (aid.printer.isProjectorPowerControlSupported()) {
