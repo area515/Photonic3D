@@ -449,7 +449,7 @@ public class HostProperties {
 		return printerHostPort;
 	}
 
-	public String hostGUI() {
+	public String getHostGUIDir() {
 		return hostGUI;
 	}
 	

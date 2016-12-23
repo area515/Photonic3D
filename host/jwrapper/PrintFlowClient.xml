@@ -1,15 +1,15 @@
 <jwrapper>
-<BuildOutputFolder>C:\Users\wgilster\Desktop\compiles\JWrapper\PhotonicJWrapperBuild</BuildOutputFolder>
+<BuildOutputFolder>C:\Users\wgilster\Desktop\compiles\JWrapper\PrintFlowJWrapperBuild</BuildOutputFolder>
 <BundleName>Photonic3D</BundleName>
-<SplashPNG>C:\Users\wgilster\git\Creation-Workshop-Host\host\src\main\resources\PhotonicSplash.png</SplashPNG>
-<BundleLogoPNG>C:\Users\wgilster\git\Creation-Workshop-Host\host\resourcesnew\favicon\android-icon-48x48.png</BundleLogoPNG>
+<SplashPNG>C:\Users\wgilster\Desktop\compiles\SplashScreen1920x1080HighRes.jpg</SplashPNG>
+<BundleLogoPNG>C:\Users\wgilster\Desktop\compiles\IconPrintFlow48x48.png</BundleLogoPNG>
 <InstallType>NoInstall</InstallType>
 <App>
   <Name>Photonic3D</Name>
-  <LogoPNG>C:\Users\wgilster\git\Creation-Workshop-Host\host\resourcesnew\favicon\android-icon-48x48.png</LogoPNG>
+  <LogoPNG>C:\Users\wgilster\Desktop\compiles\IconPrintFlow48x48.png</LogoPNG>
   <MainClass>org.area515.resinprinter.client.Main</MainClass>
   <Param>-w</Param>
-  <Param>PhotonicSplash.png</Param>
+  <Param>SplashScreen1920x1080HighRes.jpg</Param>
 </App>
 <SupportedLanguages>en</SupportedLanguages>
 <Windows32JRE>C:\Users\wgilster\Desktop\compiles\JWrapper\jwrapperJREs\win32\jre1.8.0_111</Windows32JRE>
@@ -31,9 +31,9 @@
 <File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.seamless/seamless-util/1.1.0/ef025cdbb79c4a031148b20a6d59db89c72ea0a3/seamless-util-1.1.0.jar</File>
 <File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.seamless/seamless-xml/1.1.0/497f05ee745c564e0ab5c26e66e60d4f7502fba3/seamless-xml-1.1.0.jar</File>
 <File classpath='yes'>C:\Users\wgilster\.gradle\caches\modules-2\files-2.1\commons-cli\commons-cli\1.2\2bf96b7aa8b611c177d329452af1dc933e14501c\commons-cli-1.2.jar</File>
-<File classpath='yes'>C:\Users\wgilster\Desktop\compiles\photonic3d.jar</File>
+<File classpath='yes'>C:\Users\wgilster\Desktop\compiles\PrintFlowphotonic3d.jar</File>
 <JvmOptions>
-<JvmOption>-splash:PhotonicSplash.png</JvmOption>
+<JvmOption>-splash:SplashScreen1920x1080HighRes.jpg</JvmOption>
 </JvmOptions>
 <!-- IMPORTANT place custom content BELOW this comment for compatibility with JW App -->
 
