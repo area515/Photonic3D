@@ -21,7 +21,7 @@ install:
   - cd host
   - ./gradlew assemble
 script:
-  - ./gradlew --stacktrace -debug check
+  - ./gradlew --stacktrace --debug check
 before_deploy:
   - ./gradlew dist
   - export RELEASE_PKG_FILE=$(ls *.zip | grep -v 298 | head -1)
