@@ -19,9 +19,9 @@ install:
   - mkdir -p ~/.gradle/
 #  - echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
   - cd host
-  - ./gradlew assemble
+  - ./gradlew assemble --debug
 script:
-  - ./gradlew --stacktrace --debug check
+  - ./gradlew --stacktrace check
 before_deploy:
   - ./gradlew dist
   - export RELEASE_PKG_FILE=$(ls *.zip | grep -v 298 | head -1)
