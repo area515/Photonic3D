@@ -48,6 +48,7 @@ dependencies {
   compile 'org.eclipse.jetty:jetty-server:9.3.7.v20160115'
   compile 'org.eclipse.jetty:jetty-servlet:9.3.7.v20160115'
   compile 'org.eclipse.jetty:jetty-rewrite:9.3.7.v20160115'
+  compile 'org.jboss.weld.servlet:weld-servlet-core:2.4.1.Final'
   compile 'org.eclipse.jetty.websocket:javax-websocket-server-impl:9.3.7.v20160115'
 
   compile 'com.jcraft:jsch:0.1.53'
@@ -73,9 +74,7 @@ dependencies {
   compile 'org.powermock:powermock-module-junit4:1.6.4'
   compile 'org.powermock:powermock-api-mockito:1.6.4'
 
-  compile 'junit:junit:4.12'
-  
-  compile 'javax:javaee-api:6.0'
+  compile 'junit:junit:4.12'   
 
   compile fileTree(dir: 'libs', include: '**/*.jar')
   compile files('conf')
