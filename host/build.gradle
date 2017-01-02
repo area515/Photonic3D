@@ -74,6 +74,8 @@ dependencies {
   compile 'org.powermock:powermock-api-mockito:1.6.4'
 
   compile 'junit:junit:4.12'
+  
+  compile 'javax:javaee-api:6.0'
 
   compile fileTree(dir: 'libs', include: '**/*.jar')
   compile files('conf')
