@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -232,9 +233,9 @@ public class Main {
 		return null;
 	}
 	
-	private static boolean findSuccessLine(String[] lines, String containsLine) {
+	private static boolean findSuccessLine(String[] lines, String matchesLine) {
 		for (String line : lines) {
-			if (line.contains(containsLine)) {
+			if (line.matches(matchesLine)) {
 				return true;
 			}
 		}
@@ -438,7 +439,7 @@ public class Main {
 			
 			installOptionPane.setMessage("Downloading installation scripts...");
 			String[] output = client.send("wget https://github.com/" + REPO + "/raw/master/host/bin/start.sh");
-			if (!findSuccessLine(output, "start.sh' saved")) {
+			if (!findSuccessLine(output, "(?s:.*start.sh.*saved.*)")) {
 				writeOutput(output);
 				throw new IOException("This device can't seem to reach the internet.");
 			}
@@ -446,7 +447,7 @@ public class Main {
 			
 			installOptionPane.setMessage("Performing installation...");
 			output = client.send("./start.sh");
-			if (!findSuccessLine(output, "Starting printer host server")) {
+			if (!findSuccessLine(output, "(?s:.*Starting printer host server.*)")) {
 				writeOutput(output);
 				throw new IOException("There was a problem installing Photonic3D. Please refer to logs.");
 			}
@@ -638,7 +639,7 @@ public class Main {
 								}
 							} catch (JSchException | IOException e) {
 								e.printStackTrace();
-								JOptionPane.showConfirmDialog(null, "Unable To Install Photonic3D", e.getMessage(), JOptionPane.ERROR);
+								JOptionPane.showConfirmDialog(null, e.getMessage(), "Unable To Install Photonic3D", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
 								System.exit(-2);
 							}
 						}
