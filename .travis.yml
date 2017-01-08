@@ -19,7 +19,7 @@ install:
   - mkdir -p ~/.gradle/
 #  - echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
   - cd host
-  - ./gradlew assemble --stacktrace --debug
+  - ./gradlew assemble
 script:
   - ./gradlew --stacktrace check
 before_deploy:
