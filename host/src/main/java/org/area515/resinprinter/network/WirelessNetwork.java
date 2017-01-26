@@ -5,6 +5,7 @@ import java.util.List;
 
 public class WirelessNetwork {
 	private String ssid;
+	private boolean hidden;
 	private List<WirelessEncryption> supportedWirelessEncryption = new ArrayList<WirelessEncryption>();
 	private String parentInterfaceName;
 	private String password;
@@ -18,6 +19,13 @@ public class WirelessNetwork {
 		this.ssid = ssid;
 	}
 	
+	public boolean isHidden() {
+		return hidden;
+	}
+	public void setHidden(boolean hidden) {
+		this.hidden = hidden;
+	}
+
 	public List<WirelessEncryption> getSupportedWirelessEncryption() {
 		return supportedWirelessEncryption;
 	}

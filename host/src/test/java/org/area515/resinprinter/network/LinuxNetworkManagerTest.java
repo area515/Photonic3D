@@ -13,15 +13,16 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"javax.management.*"})
 public class LinuxNetworkManagerTest {
-	public static String SCAN_WIFI_DATA = "wpa_cli v1.0\nCopyright (c) 2004-2012, Jouni Malinen <j@w1.fi> and contributors\n\nThis program is free software. You can distribute it and/or modify it\nunder the terms of the GNU General Public License version 2.\n\nAlternatively, this software may be distributed under the terms of the\nBSD license. See README and COPYING for more details.\n\n\n\n\nInteractive mode\n\n>OK\n>\r<3>CTRL-EVENT-SCAN-RESULTS \n>bssid / frequency / signal level / flags / ssid\n03:15:2a:0c:93:15       2437    -69      [WEP][ESS]\tSomeNetwork\n11:51:a6:71:51:55       2412    92      [WPA-PSK-TKIP+CCMP][WPA2-PSK-TKIP+CCMP][WPS][ESS]\tCenturyLink9999\nac:95:17:92:60:20       2437    26      [WPA2-PSK-CCMP][WPS][ESS]\tSomeHouse\n>";
+	public static String SCAN_WIFI_DATA = "wpa_cli v1.0\nCopyright (c) 2004-2012, Jouni Malinen <j@w1.fi> and contributors\n\nThis program is free software. You can distribute it and/or modify it\nunder the terms of the GNU General Public License version 2.\n\nAlternatively, this software may be distributed under the terms of the\nBSD license. See README and COPYING for more details.\n\n\n\n\nInteractive mode\n\n>OK\n>\r<3>CTRL-EVENT-SCAN-RESULTS \n>bssid / frequency / signal level / flags / ssid\n03:15:2a:0c:93:15       2437    -69      [WEP][ESS]\tSomeNetwork\n11:51:a6:71:51:55       2412    92      [WPA-PSK-TKIP+CCMP][WPA2-PSK-TKIP+CCMP][WPS][ESS]\t\\x00\nac:95:17:92:60:20       2437    26      [WPA2-PSK-CCMP][WPS][ESS]\t&#9786;\\u0044\\\\\\x45\\\\u0044Test\n>";
 
+	
 	@Test
 	@PrepareForTest(IOUtilities.class)
 	public void getNetworks() throws IOException {
@@ -70,7 +71,8 @@ public class LinuxNetworkManagerTest {
 		Assert.assertEquals(lanName, interfaces.get(0).getName());
 		Assert.assertEquals(3, interfaces.get(0).getWirelessNetworks().size());
 		Assert.assertEquals("SomeNetwork", interfaces.get(0).getWirelessNetworks().get(0).getSsid());
-		Assert.assertEquals("CenturyLink9999", interfaces.get(0).getWirelessNetworks().get(1).getSsid());
-		Assert.assertEquals("SomeHouse", interfaces.get(0).getWirelessNetworks().get(2).getSsid());
+		Assert.assertEquals("\u0000", interfaces.get(0).getWirelessNetworks().get(1).getSsid());
+		Assert.assertEquals(true, interfaces.get(0).getWirelessNetworks().get(1).isHidden());
+		Assert.assertEquals("\u263AD\\E\\u0044Test", interfaces.get(0).getWirelessNetworks().get(2).getSsid());
 	}
 }
