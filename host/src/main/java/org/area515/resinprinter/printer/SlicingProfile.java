@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
+import org.area515.resinprinter.inkdetection.PrintMaterialDetectorSettings;
 import org.area515.resinprinter.job.InkDetector;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.util.TemplateEngine;
@@ -131,6 +132,16 @@ public class SlicingProfile implements Named {
 	    @XmlElement(name="ResinPriceL")
 	    private double resinPriceL;
 		private InkDetector detector;
+		@XmlElement(name="PrintMaterialDetectorSettings")
+		private PrintMaterialDetectorSettings printMaterialDetectorSettings;
+		
+		@XmlTransient
+		public PrintMaterialDetectorSettings getPrintMaterialDetectorSettings() {
+			return printMaterialDetectorSettings;
+		}
+		public void setPrintMaterialDetectorSettings(PrintMaterialDetectorSettings printMaterialDetectorSettings) {
+			this.printMaterialDetectorSettings = printMaterialDetectorSettings;
+		}
 		
 		@XmlTransient
 		public String getName() {
@@ -207,7 +218,7 @@ public class SlicingProfile implements Named {
 			}
 			
 			try {
-				this.detector = new InkDetector(printJob.getPrinter(), printJob, ((Class<PrintMaterialDetector>)Class.forName(detectorClass)).newInstance(), percentageConsideredEmpty);
+				this.detector = new InkDetector(printJob.getPrinter(), printJob, ((Class<PrintMaterialDetector>)Class.forName(detectorClass)).newInstance(), getPrintMaterialDetectorSettings(), percentageConsideredEmpty);
 				return this.detector;
 			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 				logger.info("Failed to load PrintMaterialDetector:{}", detector);

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
@@ -19,18 +20,15 @@ import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 import org.area515.resinprinter.server.ApplicationConfig;
-import org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 public class MachineServiceTest {
-	public boolean isFound(List<? extends Named> named, String name) {
+	public static boolean isFound(List<? extends Named> named, String name) {
     	boolean fileFound = false;
     	for (Named currentConfig : named) {
     		if (currentConfig.getName().equals(name)) {
@@ -51,7 +49,12 @@ public class MachineServiceTest {
     private void assertPrinterProperties(PrinterConfiguration config) {
     	SlicingProfile slicingProfile = config.getSlicingProfile();
     	InkConfig inkConfig = slicingProfile.getSelectedInkConfig();
+    	Map<?,?> settings = slicingProfile.getInkConfigs().iterator().next().getPrintMaterialDetectorSettings().getSettings();
+    	
     	Assert.assertEquals("Firm Amber 50 Microns", inkConfig.getName());
+    	Assert.assertEquals(2, settings.size());
+    	Assert.assertEquals("AnotherValue", settings.get("AnotherSetting"));
+    	Assert.assertEquals("GoodValue", settings.get("GoodSetting"));
     	Assert.assertEquals(10L, slicingProfile.getInkConfigs().size());
     	Assert.assertEquals(2L, (long)slicingProfile.getSelectedInkConfigIndex());
     }

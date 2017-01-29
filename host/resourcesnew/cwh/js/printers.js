@@ -249,7 +249,10 @@
 			photonicUtils.testScript(controller, scriptName, returnType, script);
 		};
 		
-		controller.inkDetectors = [{name:"Visual Ink Detector", className:"org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector"}];
+		controller.inkDetectors = [
+		                           {name:"Visual Ink Detector", className:"org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector"},
+		                           {name:"Digital GPIO Ink Detector", className:"org.area515.resinprinter.inkdetection.gpio.GpioDigitalPinInkDetector"}
+		                          ];
 		refreshPrinters();
 	}])
 

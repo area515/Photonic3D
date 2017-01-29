@@ -78,6 +78,11 @@
         "InkConfig": [
           {
             "PercentageOfPrintMaterialConsideredEmpty": 10,
+            "PrintMaterialDetector": "org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector",
+            "PrintMaterialDetectorSettings": {
+        		"GoodSetting": "GoodValue",
+        		"AnotherSetting": "AnotherValue"
+            	},
             "Name": "Castable 50 Microns",
             "SliceHeight": 0.05,
             "LayerTime": 20000,

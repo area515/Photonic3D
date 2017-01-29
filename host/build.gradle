@@ -28,6 +28,7 @@ dependencies {
 
   //compile 'org.slf4j:log4j-over-slf4j:1.7.22'
   //compile 'org.slf4j:jul-to-slf4j:1.7.22'
+  compile 'com.pi4j:pi4j-core:1.1'
   compile 'net.java.dev.jna:jna:4.2.2'
   compile 'org.apache.xmlgraphics:xmlgraphics-commons:1.5'
   compile 'org.apache.xmlgraphics:batik-transcoder:1.8'
