@@ -91,6 +91,9 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 				}
 				CustomizerService.INSTANCE.addOrUpdateCustomizer(customizer);
 			}
+			if (customizer.getNextStep() == null) {
+				customizer.setNextStep(PrinterStep.PerformHeader);
+			}
 			if (customizer.getZScale() == null) {
 				customizer.setZScale(1.0);
 			}
