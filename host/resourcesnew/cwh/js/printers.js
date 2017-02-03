@@ -64,7 +64,8 @@
 	       			function(response) {
 	       				if (shouldRefreshPrinterList) {
 	       					refreshPrinters();
-	       					//TODO: need code to refresh machine profiles, ink profiles and slicing profile if it's a new printer
+	       					refreshSlicingProfiles();
+	       					refreshMachineConfigurations();
 	       				}
 	       			}, 
 	       			function(response) {
@@ -227,17 +228,21 @@
 					controller.loadingFontsMessage = "Select a font...";
 				});
 		
-		$http.get('/services/machine/slicingProfiles/list').success(
-				function (data) {
-					controller.slicingProfiles = data;
-					controller.loadingProfilesMessage = "Select a slicing profile...";
-				});
+		function refreshSlicingProfiles() {
+			$http.get('/services/machine/slicingProfiles/list').success(
+					function (data) {
+						controller.slicingProfiles = data;
+						controller.loadingProfilesMessage = "Select a slicing profile...";
+					});
+		}
 		
-		$http.get('/services/machine/machineConfigurations/list').success(
-				function (data) {
-					controller.machineConfigurations = data;
-					controller.loadingMachineConfigMessage = "Select a machine configuration...";
-				});
+		function refreshMachineConfigurations() {
+			$http.get('/services/machine/machineConfigurations/list').success(
+					function (data) {
+						controller.machineConfigurations = data;
+						controller.loadingMachineConfigMessage = "Select a machine configuration...";
+					});
+		}
 		
 		$http.get("https://api.github.com/repos/" + $scope.repo + "/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(
 			function (data) {
@@ -253,6 +258,8 @@
 		                           {name:"Visual Ink Detector", className:"org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector"},
 		                           {name:"Digital GPIO Ink Detector", className:"org.area515.resinprinter.inkdetection.gpio.GpioDigitalPinInkDetector"}
 		                          ];
+		refreshSlicingProfiles();
+		refreshMachineConfigurations();
 		refreshPrinters();
 	}])
 

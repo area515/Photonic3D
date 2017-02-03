@@ -55,6 +55,7 @@ public class GpioDigitalPinInkDetector implements PrintMaterialDetector, GpioPin
 		
 		gpio = GpioFactory.getInstance();
 		inputPin = gpio.provisionDigitalInputPin(rPin, "PrintMaterialDetector");
+		gpio.setShutdownOptions(true, PinState.LOW, inputPin);
 		inputPin.addListener(this);
 	}
 }

@@ -119,7 +119,6 @@ public class DisplayManager {
 			return;
 		
 		graphicsDevicesByPrinter.remove(printer);
-		
 		String deviceId = printer.getDisplayDeviceID();
 		if (deviceId == null)
 			return;
