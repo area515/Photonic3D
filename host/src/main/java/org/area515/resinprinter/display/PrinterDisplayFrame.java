@@ -61,7 +61,8 @@ public class PrinterDisplayFrame extends JFrame {
 		case Blank :
 			g2.setBackground(Color.black);
 			g2.clearRect(0, 0, screenSize.width, screenSize.height);
-			break;
+			logger.debug("Blank realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
+			return;
 		case Grid :
 			g2.setBackground(Color.black);
 			g2.clearRect(0, 0, screenSize.width, screenSize.height);
@@ -73,8 +74,8 @@ public class PrinterDisplayFrame extends JFrame {
 			for (int y = 0; y < screenSize.height; y += gridSquareSize) {
 				g2.drawLine(0, y, screenSize.width, y);
 			}
-			logger.debug("Image realized:{}", () -> Log4jTimer.completeTimer("Image Realize"));
-			break;
+			logger.debug("Grid realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
+			return;
 		case Calibration :
 			g2.setBackground(Color.black);
 			g2.clearRect(0, 0, screenSize.width, screenSize.height);
@@ -97,7 +98,8 @@ public class PrinterDisplayFrame extends JFrame {
 			//Horizontal line of cross
 			g2.setStroke(new BasicStroke(5, 0, 0, 1.0f, new float[]{10, 10}, 2.0f));
 			g2.drawLine(startingX, screenSize.height / 2, startingX + calibrationXY.x, screenSize.height / 2);
-			break;
+			logger.debug("Calibration realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
+			return;
 		case CurrentSlice :
 			g2.drawImage(displayImage, null, screenSize.width / 2 - displayImage.getWidth() / 2, screenSize.height / 2 - displayImage.getHeight() / 2);
 			if (isSimulatedDisplay) {
@@ -105,10 +107,10 @@ public class PrinterDisplayFrame extends JFrame {
 				g2.setFont(getFont());
 				g2.drawString("Slice:" + sliceNumber, getInsets().left, getInsets().top + g2.getFontMetrics().getHeight());
 			}
-			break;
+			logger.debug("Image realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
+			return;
 		}
 		
-		logger.debug("Screen realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
 	}
 	
 	public void resetSliceCount() {
