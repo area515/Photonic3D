@@ -108,7 +108,7 @@ public class PrinterDisplayFrame extends JFrame {
 			break;
 		}
 		
-		logger.debug("Image realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
+		logger.debug("Screen realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
 	}
 	
 	public void resetSliceCount() {
