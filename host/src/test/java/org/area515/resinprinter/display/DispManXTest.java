@@ -320,9 +320,6 @@ public class DispManXTest {
         Memory bitmap = loadBitmapARGB8888( args[2], width, height, pitch );
         System.out.printf( "bitmap: %d x %d pitch->%d\n", width.getValue(), height.getValue(), pitch.getValue());
 
-        IntByReference ref = new IntByReference();
-        int resourceHandle = dispMan.vc_dispmanx_resource_create( VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), width.getValue(), height.getValue(), ref );
-        
         VC_RECT_T.ByReference copyRect = new VC_RECT_T.ByReference();
         VC_RECT_T.ByReference sourceRect = new VC_RECT_T.ByReference();
         VC_RECT_T.ByReference destinationRect = new VC_RECT_T.ByReference();
@@ -332,6 +329,20 @@ public class DispManXTest {
         res( "rect set", dispMan.vc_dispmanx_rect_set( sourceRect, 0, 0, width.getValue()<<16, height.getValue()<<16 ) );
         res( "rect set", dispMan.vc_dispmanx_rect_set( destinationRect, 0, 0, width.getValue(), height.getValue() ) );
 
+        IntByReference ref = new IntByReference();
+        int resourceHandle = dispMan.vc_dispmanx_resource_create( 
+        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), 
+        		width.getValue(), 
+        		height.getValue(), 
+        		ref );
+        res( "resource write data", dispMan.vc_dispmanx_resource_write_data( 
+        		resourceHandle, 
+        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), 
+        		pitch.getValue() , 
+        		bitmap, 
+        		destinationRect )
+        	);
+
         System.out.println("copyRect:" + copyRect.width + ", " + copyRect.height);
         System.out.println("sourceRect:" + sourceRect.width + ", " + sourceRect.height);
         System.out.println("destinationRect:" + destinationRect.width + ", " + destinationRect.height);
@@ -340,6 +351,8 @@ public class DispManXTest {
         VC_DISPMANX_ALPHA_T.ByReference alpha = new VC_DISPMANX_ALPHA_T.ByReference();
         alpha.flags = ALPHA.DISPMANX_FLAGS_ALPHA_FROM_SOURCE.getFlag() | ALPHA.DISPMANX_FLAGS_ALPHA_FIXED_ALL_PIXELS.getFlag();
         alpha.opacity = 255;
+        
+
         int element = dispMan.vc_dispmanx_element_add( 
         		update, 
         		display, 
@@ -351,15 +364,8 @@ public class DispManXTest {
         		alpha, 
         		0, 
         		VC_IMAGE_TRANSFORM_T.VC_IMAGE_ROT0.getcConst() );
-        res( "submit", dispMan.vc_dispmanx_update_submit_sync( update ) );
         
-        res( "resource write data", dispMan.vc_dispmanx_resource_write_data( 
-        		resourceHandle, 
-        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), 
-        		pitch.getValue() , 
-        		bitmap, 
-        		destinationRect )
-        	);
+        res( "submit", dispMan.vc_dispmanx_update_submit_sync( update ) );
 
         Thread.sleep( time * 1000 );
         update = dispMan.vc_dispmanx_update_start( 0 );

@@ -69,6 +69,7 @@ public class DisplayManager {
 		logger.info("Display:{} assigned to Printer:{}", device, newPrinter);
 	}
 	
+	//TODO: org.area515.resinprinter.display.GraphicsOutputInterface needs to be the interface we use that is returned from here instead of java.awt.GraphicsDevice
 	public List<GraphicsDevice> getDisplayDevices() {
 		List<GraphicsDevice> devices = new ArrayList<GraphicsDevice>();
 		try {
@@ -81,6 +82,8 @@ public class DisplayManager {
 		if (HostProperties.Instance().getFakeDisplay()) {
 			devices.add(new CustomNamedDisplayDevice(SIMULATED_DISPLAY));
 		}
+		
+		devices.addAll(HostProperties.Instance().getDisplayDevices());
 		
 		return devices;
 	}

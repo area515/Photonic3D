@@ -1,5 +1,6 @@
 package org.area515.resinprinter.server;
 
+import java.awt.GraphicsDevice;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -82,6 +83,7 @@ public class HostProperties {
 	private List<Class<Feature>> featureClasses = new ArrayList<Class<Feature>>();
 	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
 	private List<PrintFileProcessor> printFileProcessors = new ArrayList<PrintFileProcessor>();
+	private List<GraphicsDevice> displayDevices = new ArrayList<GraphicsDevice>();
 	private Class<SerialCommunicationsPort> serialPortClass;
 	private Class<NetworkManager> networkManagerClass;
 	
@@ -190,7 +192,7 @@ public class HostProperties {
 		fakedisplay = new Boolean(configurationProperties.getProperty("fakedisplay", "false"));
 		hostGUI = configurationProperties.getProperty("hostGUI", "resources");
 		visibleCards = Arrays.asList(configurationProperties.getProperty("visibleCards", "printers,printJobs,printables,users,settings").split(","));
-				
+		
 		//This loads features
 		for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
 			String currentPropertyString = currentProperty.getKey() + "";
@@ -199,8 +201,8 @@ public class HostProperties {
 				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
 					try {
 						featureClasses.add((Class<Feature>)Class.forName(currentPropertyString));
-					} catch (ClassNotFoundException e) {
-						logger.error("Failed to load feature:{}", currentPropertyString);
+					} catch (UnsatisfiedLinkError | ClassNotFoundException e) {
+						logger.error("Failed to load Feature:" + currentPropertyString, e);
 					}
 				}
 			}
@@ -214,8 +216,8 @@ public class HostProperties {
 				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
 					try {
 						notificationClasses.add((Class<Notifier>)Class.forName(currentPropertyString));
-					} catch (ClassNotFoundException e) {
-						logger.error("Failed to load notifier:{}", currentPropertyString);
+					} catch (UnsatisfiedLinkError | ClassNotFoundException e) {
+						logger.error("Failed to load Notifier:" + currentPropertyString, e);
 					}
 				}
 			}
@@ -230,8 +232,24 @@ public class HostProperties {
 					try {
 						PrintFileProcessor processor = ((Class<PrintFileProcessor>)Class.forName(currentPropertyString)).newInstance();
 						printFileProcessors.add(processor);
-					} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-						logger.error("Failed to load PrintFileProcessor:{}", currentPropertyString);
+					} catch (UnsatisfiedLinkError | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+						logger.error("Failed to load PrintFileProcessor:" + currentPropertyString, e);
+					}
+				}
+			}
+		}
+		
+		//This loads displayDevices
+		for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
+			String currentPropertyString = currentProperty.getKey() + "";
+			if (currentPropertyString.startsWith("displayDevice.")) {
+				currentPropertyString = currentPropertyString.replace("displayDevice.", "");
+				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
+					try {
+						GraphicsDevice device = ((Class<GraphicsDevice>)Class.forName(currentPropertyString)).newInstance();
+						displayDevices.add(device);
+					} catch (UnsatisfiedLinkError | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+						logger.error("Failed to load DisplayDevice:" + currentPropertyString, e);
 					}
 				}
 			}
@@ -513,6 +531,10 @@ public class HostProperties {
 		return printFileProcessors;
 	}
 	
+	public List<GraphicsDevice> getDisplayDevices() {
+		return displayDevices;
+	}
+	
 	public boolean isUseSSL() {
 		return useSSL;
 	}
@@ -604,6 +626,7 @@ public class HostProperties {
 										Boolean.valueOf(properties.getProperty("mail.smtp.starttls.enable")));
 		return settings;
 	}
+	
 	public void saveEmailSettings(CwhEmailSettings settings) {
 		Properties emailProperties = new Properties();
 		StringBuilder toEmails = new StringBuilder();

@@ -17,7 +17,7 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.printer.Printer.DisplayState;
 import org.area515.util.Log4jTimer;
 
-public class PrinterDisplayFrame extends JFrame {
+public class PrinterDisplayFrame extends JFrame implements GraphicsOutputInterface {
 	private static final long serialVersionUID = 5024551291098098753L;
 	private static final String IMAGE_REALIZE_TIMER = "Image Realize";
 	private static final Logger logger = LogManager.getLogger();
@@ -143,5 +143,10 @@ public class PrinterDisplayFrame extends JFrame {
 		setDisplayState(DisplayState.CurrentSlice);	
 		displayImage = image;
 		repaint();
+	}
+
+	@Override
+	public Rectangle getBoundry() {
+		return getGraphicsConfiguration().getBounds();
 	}
 }

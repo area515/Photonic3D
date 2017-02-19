@@ -2,9 +2,7 @@ package org.area515.resinprinter.printer;
 
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GraphicsDevice;
-import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -19,8 +17,10 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.DisplayManager;
+import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.display.PrinterDisplayFrame;
+import org.area515.resinprinter.display.dispmanx.RaspberryPiMainLCDScreen;
 import org.area515.resinprinter.gcode.GCodeControl;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.projector.ProjectorModel;
@@ -34,7 +34,7 @@ public class Printer {
 	private PrinterConfiguration configuration;
 	
 	//For Display
-	private PrinterDisplayFrame refreshFrame;
+	private GraphicsOutputInterface refreshFrame;
 	private boolean started;
 	private boolean shutterOpen;
 	private Integer bulbHours;
@@ -185,14 +185,18 @@ public class Printer {
 	
 	public void setGraphicsData(final GraphicsDevice device) {
 		this.displayDeviceID = device.getIDstring();
-		if (device.getIDstring().equalsIgnoreCase(DisplayManager.SIMULATED_DISPLAY)) {
-			refreshFrame = new PrinterDisplayFrame();
+		
+		if (device instanceof GraphicsOutputInterface) {
+			this.refreshFrame = (GraphicsOutputInterface)device;
+		} else if (device.getIDstring().equalsIgnoreCase(DisplayManager.SIMULATED_DISPLAY)) {
+			PrinterDisplayFrame refreshFrame = new PrinterDisplayFrame();
 			refreshFrame.setTitle("Printer Simulation");
 			refreshFrame.setVisible(true);
 			refreshFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 			refreshFrame.setMinimumSize(new Dimension(500, 500));
-		} else {
-			refreshFrame = new PrinterDisplayFrame(device.getDefaultConfiguration());
+			this.refreshFrame = refreshFrame;
+		} else  {
+			PrinterDisplayFrame refreshFrame = new PrinterDisplayFrame(device.getDefaultConfiguration());
 			refreshFrame.setAlwaysOnTop(true);
 			refreshFrame.setUndecorated(true);
 			refreshFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -213,9 +217,10 @@ public class Printer {
 		    BufferedImage cursorImage = new BufferedImage(1, 1, BufferedImage.TRANSLUCENT); 
 		    Cursor invisibleCursor = toolkit.createCustomCursor(cursorImage, hotSpot, "InvisibleCursor");        
 		    refreshFrame.setCursor(invisibleCursor);
+		    this.refreshFrame = refreshFrame;
 		}
 
-		Rectangle screenSize = refreshFrame.getGraphicsConfiguration().getBounds();
+		Rectangle screenSize = refreshFrame.getBoundry();
 		getConfiguration().getMachineConfig().getMonitorDriverConfig().setDLP_X_Res(screenSize.width);
 		getConfiguration().getMachineConfig().getMonitorDriverConfig().setDLP_Y_Res(screenSize.height);
 	}

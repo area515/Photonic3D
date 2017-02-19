@@ -20,7 +20,7 @@ public class MachineConfig implements Named {
 	
 	public static class CorrectionMask {
 	}
-
+	
 	public static class MotorsDriverConfig {
 		@XmlElement(name="DriverType")
 		private String driverType = "eGENERIC";
