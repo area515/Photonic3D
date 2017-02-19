@@ -44,7 +44,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
     	}
     	
     	displayHandle = DispManX.INSTANCE.graphics_get_display_size( screen.getId(), width, height );
-    	if (displayHandle != 0) {
+    	if (displayHandle == 0) {
     		disposeScreen();
     		throw new InappropriateDeviceException("graphics_get_display_size failed with:" + returnCode);
     	}
@@ -97,7 +97,6 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 		int bytesPerPixel = 4;
 		int pitch = getPitch( bytesPerPixel * image.getWidth(), 32 );
 		pitchByRef.setValue(pitch);
-		long start = System.currentTimeMillis();
 		if (destPixels == null) {
 			destPixels = new Memory(pitch * image.getHeight());
 		}
@@ -107,7 +106,6 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
         		destPixels.setInt((y*(pitch / bytesPerPixel) + x) * bytesPerPixel, image.getRGB(x, y));
             }
         }
-        System.out.println(System.currentTimeMillis() - start);
         width.setValue(image.getWidth());
         height.setValue(image.getHeight());
         return destPixels;
