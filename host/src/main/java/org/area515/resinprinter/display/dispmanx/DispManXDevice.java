@@ -31,22 +31,30 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
     private int updateHandle;
     private int elementHandle;
     private Memory destPixels;
+    private boolean screenInitialized = false;
     
     public DispManXDevice(String displayName, SCREEN screen) throws InappropriateDeviceException {
 		super(displayName);
 		this.screen = screen;
+	}
+    
+    private void initializeScreen() {
+    	if (screenInitialized) {
+    		return;
+    	}
+    	
         IntByReference width = new IntByReference();
         IntByReference height = new IntByReference();
     	int returnCode = DispManX.INSTANCE.bcm_host_init();
     	if (returnCode != 0) {
     		disposeScreen();
-    		throw new InappropriateDeviceException("bcm_host_init failed with:" + returnCode);
+    		throw new IllegalArgumentException("bcm_host_init failed with:" + returnCode);
     	}
     	
     	displayHandle = DispManX.INSTANCE.graphics_get_display_size( screen.getId(), width, height );
-    	if (displayHandle == 0) {
+    	if (displayHandle != 0) {
     		disposeScreen();
-    		throw new InappropriateDeviceException("graphics_get_display_size failed with:" + returnCode);
+    		throw new IllegalArgumentException("graphics_get_display_size failed with:" + returnCode);
     	}
     	
     	bounds.setBounds(0, 0, width.getValue(), height.getValue());
@@ -54,10 +62,12 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
         VC_DISPMANX_ALPHA_T.ByReference alpha = new VC_DISPMANX_ALPHA_T.ByReference();
         alpha.flags = ALPHA.DISPMANX_FLAGS_ALPHA_FROM_SOURCE.getFlag() | ALPHA.DISPMANX_FLAGS_ALPHA_FIXED_ALL_PIXELS.getFlag();
         alpha.opacity = 255;
-	}
-
+        screenInitialized = true;
+    }
+    
     private  void disposeScreen() {
     	logger.info("vc_dispmanx_display_close result:" + DispManX.INSTANCE.vc_dispmanx_display_close( screen.getId() ));
+    	screenInitialized = false;
 	}
     
 	@Override
@@ -113,6 +123,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 	
 	@Override
 	public void showBlankImage() {
+		initializeScreen();
 		dispose();
 	}
 
@@ -130,6 +141,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 	
 	@Override
 	public void showImage(BufferedImage image) {
+		initializeScreen();
         IntByReference width = new IntByReference();
         IntByReference height = new IntByReference();
         IntByReference pitch = new IntByReference();
@@ -217,6 +229,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 			
 			@Override
 			public Rectangle getBounds() {
+				initializeScreen();
 				return bounds;
 			}
 		};
@@ -229,6 +242,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 
 	@Override
 	public Rectangle getBoundry() {
+		initializeScreen();
 		return bounds;
 	}
 }
