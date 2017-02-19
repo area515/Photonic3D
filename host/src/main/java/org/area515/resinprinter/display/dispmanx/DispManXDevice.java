@@ -44,7 +44,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
     	}
     	
     	displayHandle = DispManX.INSTANCE.graphics_get_display_size( screen.getId(), width, height );
-    	if (displayHandle == 0) {
+    	if (displayHandle != 0) {
     		disposeScreen();
     		throw new InappropriateDeviceException("graphics_get_display_size failed with:" + returnCode);
     	}
@@ -139,7 +139,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
         destPixels = loadBitmapARGB8888(image, destPixels, width, height, pitch);
         VC_RECT_T.ByReference sourceRect = new VC_RECT_T.ByReference();
         VC_RECT_T.ByReference destinationRect = new VC_RECT_T.ByReference();
-        DispManX.INSTANCE.vc_dispmanx_rect_set( sourceRect, 0, 0, width.getValue()<<16, height.getValue()<<16 );//Shifting by 16 is a zoom factory of zero
+        DispManX.INSTANCE.vc_dispmanx_rect_set( sourceRect, 0, 0, width.getValue()<<16, height.getValue()<<16 );//Shifting by 16 is a zoom factor of zero
         DispManX.INSTANCE.vc_dispmanx_rect_set( destinationRect, 0, 0, width.getValue(), height.getValue() );
         
         IntByReference nativeImageReference = new IntByReference();
