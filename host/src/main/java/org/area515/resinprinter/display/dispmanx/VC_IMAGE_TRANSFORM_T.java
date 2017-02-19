@@ -1,7 +1,5 @@
 package org.area515.resinprinter.display.dispmanx;
 
-import org.area515.resinprinter.display.DispManXTest.TRANSFORM;
-
 public enum VC_IMAGE_TRANSFORM_T {
 	VC_IMAGE_ROT0(0),
 	VC_IMAGE_MIRROR_ROT0(TRANSFORM.TRANSFORM_HFLIP.getcConst()),
