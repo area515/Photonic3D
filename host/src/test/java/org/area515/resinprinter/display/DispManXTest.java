@@ -19,7 +19,6 @@ import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
 
 public class DispManXTest {
-
 	public static void displayInfo( int id, String name ) {
         IntByReference width = new IntByReference();
         IntByReference height = new IntByReference();
@@ -107,13 +106,24 @@ public class DispManXTest {
 	//sudo java -cp lib/*:. DispManXTest 2 10 resourcesnew/favicon/apple-icon-144x144.png
 	public static void main(String[] args) throws IOException, InterruptedException {
 		DispManX dispMan = DispManX.INSTANCE;
-		System.out.println("Initialized:" + dispMan.bcm_host_init());
+		System.out.println("BCM Initialized:" + dispMan.bcm_host_init());
         if ( args.length < 3 ) {
         	usage();
         	return;
         }
         
         int screen = Integer.parseInt( args[0] );
+        /*if (screen == 2 || screen == 3 || screen == 5) {
+        	IntByReference vchiHandle = new IntByReference();
+        	PointerByReference connections = new PointerByReference();
+
+        	dispMan.vcos_init();
+        	res("vchi_initialise", dispMan.vchi_initialise(vchiHandle));
+        	res("vchi_connect", dispMan.vchi_connect(null, 0, vchiHandle.getValue()));
+        	res("vc_vchi_tv_init", dispMan.vc_vchi_tv_init(vchiHandle, connections.getPointer(), 1));
+        	res("vc_tv_hdmi_power_on_preferred", dispMan.vc_tv_hdmi_power_on_preferred());
+        }*/
+        
         int time = Integer.parseInt( args[1] );
         IntByReference pitch = new IntByReference();
         IntByReference width = new IntByReference();
@@ -121,7 +131,7 @@ public class DispManXTest {
         res( "get display size", dispMan.graphics_get_display_size( screen, width, height ) );
         System.out.printf( "display %d: %d x %d\n", screen, width.getValue(), height.getValue() );
         int display = dispMan.vc_dispmanx_display_open( screen );
-        Memory bitmap = loadBitmapARGB8888( args[2], width, height, pitch );
+        Memory bitmap = loadBitmapRGB565( args[2], width, height, pitch );
         System.out.printf( "bitmap: %d x %d pitch->%d\n", width.getValue(), height.getValue(), pitch.getValue());
 
         VC_RECT_T.ByReference copyRect = new VC_RECT_T.ByReference();
@@ -135,13 +145,13 @@ public class DispManXTest {
 
         IntByReference ref = new IntByReference();
         int resourceHandle = dispMan.vc_dispmanx_resource_create( 
-        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), 
+        		VC_IMAGE_TYPE_T.VC_IMAGE_RGB565.getcIndex(), 
         		width.getValue(), 
         		height.getValue(), 
         		ref );
         res( "resource write data", dispMan.vc_dispmanx_resource_write_data( 
         		resourceHandle, 
-        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), 
+        		VC_IMAGE_TYPE_T.VC_IMAGE_RGB565.getcIndex(), 
         		pitch.getValue() , 
         		bitmap, 
         		destinationRect )
@@ -157,10 +167,10 @@ public class DispManXTest {
         alpha.opacity = 255;
         
 
-        int element = dispMan.vc_dispmanx_element_add( 
+        int element = dispMan.vc_dispmanx_element_add(
         		update, 
         		display, 
-        		1, 
+        		2010, 
         		destinationRect, 
         		resourceHandle, 
         		sourceRect, 
