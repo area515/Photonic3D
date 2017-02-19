@@ -1,8 +1,5 @@
 package org.area515.resinprinter.display.dispmanx;
 
-import org.area515.resinprinter.display.DispManXTest.VC_DISPMANX_ALPHA_T;
-import org.area515.resinprinter.display.DispManXTest.VC_RECT_T;
-
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;

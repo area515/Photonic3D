@@ -10,11 +10,11 @@ import java.awt.image.ColorModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.CustomNamedDisplayDevice;
-import org.area515.resinprinter.display.DispManXTest.ALPHA;
-import org.area515.resinprinter.display.DispManXTest.VC_DISPMANX_ALPHA_T;
-import org.area515.resinprinter.display.DispManXTest.VC_IMAGE_TRANSFORM_T;
-import org.area515.resinprinter.display.DispManXTest.VC_IMAGE_TYPE_T;
-import org.area515.resinprinter.display.DispManXTest.VC_RECT_T;
+import org.area515.resinprinter.display.dispmanx.ALPHA;
+import org.area515.resinprinter.display.dispmanx.VC_DISPMANX_ALPHA_T;
+import org.area515.resinprinter.display.dispmanx.VC_IMAGE_TRANSFORM_T;
+import org.area515.resinprinter.display.dispmanx.VC_IMAGE_TYPE_T;
+import org.area515.resinprinter.display.dispmanx.VC_RECT_T;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 
