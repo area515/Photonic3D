@@ -38,7 +38,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 		this.screen = screen;
 	}
     
-    private void initializeScreen() {
+    private synchronized void initializeScreen() {
     	if (screenInitialized) {
     		return;
     	}
@@ -47,17 +47,19 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
         IntByReference height = new IntByReference();
     	int returnCode = DispManX.INSTANCE.bcm_host_init();
     	if (returnCode != 0) {
-    		disposeScreen();
     		throw new IllegalArgumentException("bcm_host_init failed with:" + returnCode);
     	}
     	
-    	displayHandle = DispManX.INSTANCE.graphics_get_display_size( screen.getId(), width, height );
-    	if (displayHandle != 0) {
-    		disposeScreen();
+    	returnCode = DispManX.INSTANCE.graphics_get_display_size(screen.getId(), width, height);
+    	if (returnCode != 0) {
     		throw new IllegalArgumentException("graphics_get_display_size failed with:" + returnCode);
     	}
-    	
     	bounds.setBounds(0, 0, width.getValue(), height.getValue());
+    	
+    	displayHandle = DispManX.INSTANCE.vc_dispmanx_display_open(screen.getId());
+    	if (displayHandle == 0) {
+    		throw new IllegalArgumentException("vc_dispmanx_display_open failed with:" + returnCode);
+    	}
     	
         VC_DISPMANX_ALPHA_T.ByReference alpha = new VC_DISPMANX_ALPHA_T.ByReference();
         alpha.flags = ALPHA.DISPMANX_FLAGS_ALPHA_FROM_SOURCE.getFlag() | ALPHA.DISPMANX_FLAGS_ALPHA_FIXED_ALL_PIXELS.getFlag();
@@ -65,17 +67,12 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
         screenInitialized = true;
     }
     
-    private  void disposeScreen() {
-    	logger.info("vc_dispmanx_display_close result:" + DispManX.INSTANCE.vc_dispmanx_display_close( screen.getId() ));
-    	screenInitialized = false;
-	}
-    
 	@Override
-	public void dispose() {
-        updateHandle = DispManX.INSTANCE.vc_dispmanx_update_start( 0 );
-		logger.info("vc_dispmanx_element_remove result:" + DispManX.INSTANCE.vc_dispmanx_element_remove(updateHandle, elementHandle));
-		logger.info("vc_dispmanx_update_submit_sync result:" + DispManX.INSTANCE.vc_dispmanx_update_submit_sync(updateHandle));
-		logger.info("vc_dispmanx_resource_delete result:" + DispManX.INSTANCE.vc_dispmanx_resource_delete(resourceHandle));
+	public synchronized void dispose() {
+		logger.info("dispose screen");
+		removeAllElementsFromScreen();
+    	logger.info("vc_dispmanx_display_close result:" + DispManX.INSTANCE.vc_dispmanx_display_close(displayHandle));
+    	screenInitialized = false;
 	}
 	
 	
@@ -124,9 +121,20 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 	@Override
 	public void showBlankImage() {
 		initializeScreen();
-		dispose();
+		removeAllElementsFromScreen();
 	}
 
+	private void removeAllElementsFromScreen() {
+        updateHandle = DispManX.INSTANCE.vc_dispmanx_update_start( 0 );
+        if (updateHandle == 0) {
+        	logger.info("vc_dispmanx_update_start failed");
+        } else {
+        	logger.info("vc_dispmanx_element_remove result:" + DispManX.INSTANCE.vc_dispmanx_element_remove(updateHandle, elementHandle));
+        	logger.info("vc_dispmanx_update_submit_sync result:" + DispManX.INSTANCE.vc_dispmanx_update_submit_sync(updateHandle));
+        	logger.info("vc_dispmanx_resource_delete result:" + DispManX.INSTANCE.vc_dispmanx_resource_delete(resourceHandle));
+        }
+	}
+	
 	@Override
 	public void showCalibrationImage(int xPixels, int yPixels) {
 		// TODO Auto-generated method stub
