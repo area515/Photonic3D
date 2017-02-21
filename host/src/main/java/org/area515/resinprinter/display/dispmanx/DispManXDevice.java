@@ -71,7 +71,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 	public synchronized void dispose() {
 		logger.info("dispose screen");
 		removeAllElementsFromScreen();
-    	logger.info("vc_dispmanx_display_close result:" + DispManX.INSTANCE.vc_dispmanx_display_close(displayHandle));
+    	//logger.info("vc_dispmanx_display_close result:" + DispManX.INSTANCE.vc_dispmanx_display_close(displayHandle));
     	screenInitialized = false;
 	}
 	
