@@ -213,7 +213,8 @@ public class MachineService {
 			return false;
 		}
 	}
-	
+    
+	//TODO: getWirelessStrength
     @ApiOperation(value="Retrieves all of the supported file types that are returned from the each of the org.area515.resinprinter.job.PrintFileProcessor.getFileExtensions()."
     		+ SwaggerMetadata.PRINT_FILE_PROCESSOR)
     @ApiResponses(value = {

@@ -23,6 +23,8 @@ import com.sun.jna.ptr.IntByReference;
 
 public class DispManXDevice extends CustomNamedDisplayDevice implements GraphicsOutputInterface {
     private static final Logger logger = LogManager.getLogger();
+    private static boolean BCM_INIT = true;
+    
     private Rectangle bounds = new Rectangle();
     private SCREEN screen;
     private VC_DISPMANX_ALPHA_T.ByReference alpha;
@@ -38,19 +40,27 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 		this.screen = screen;
 	}
     
-    private synchronized void initializeScreen() {
-    	if (screenInitialized) {
+    private synchronized static void bcmHostInit() {
+    	if (BCM_INIT) {
     		return;
     	}
     	
-        IntByReference width = new IntByReference();
-        IntByReference height = new IntByReference();
     	int returnCode = DispManX.INSTANCE.bcm_host_init();
     	if (returnCode != 0) {
     		throw new IllegalArgumentException("bcm_host_init failed with:" + returnCode);
     	}
+    	BCM_INIT = true;
+    }
+    
+    private synchronized void initializeScreen() {
+    	if (screenInitialized) {
+    		return;
+    	}
+    	bcmHostInit();
     	
-    	returnCode = DispManX.INSTANCE.graphics_get_display_size(screen.getId(), width, height);
+        IntByReference width = new IntByReference();
+        IntByReference height = new IntByReference();
+    	int returnCode = DispManX.INSTANCE.graphics_get_display_size(screen.getId(), width, height);
     	if (returnCode != 0) {
     		throw new IllegalArgumentException("graphics_get_display_size failed with:" + returnCode);
     	}
@@ -71,7 +81,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 	public synchronized void dispose() {
 		logger.info("dispose screen");
 		removeAllElementsFromScreen();
-    	//logger.info("vc_dispmanx_display_close result:" + DispManX.INSTANCE.vc_dispmanx_display_close(displayHandle));
+    	logger.info("vc_dispmanx_display_close result:" + DispManX.INSTANCE.vc_dispmanx_display_close(displayHandle));
     	screenInitialized = false;
 	}
 	
