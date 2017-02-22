@@ -23,7 +23,7 @@ import com.sun.jna.ptr.IntByReference;
 
 public class DispManXDevice extends CustomNamedDisplayDevice implements GraphicsOutputInterface {
     private static final Logger logger = LogManager.getLogger();
-    private static boolean BCM_INIT = true;
+    private static boolean BCM_INIT = false;
     
     private Rectangle bounds = new Rectangle();
     private SCREEN screen;
@@ -45,6 +45,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
     		return;
     	}
     	
+    	logger.info("initialize bcm host");
     	int returnCode = DispManX.INSTANCE.bcm_host_init();
     	if (returnCode != 0) {
     		throw new IllegalArgumentException("bcm_host_init failed with:" + returnCode);
@@ -56,6 +57,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
     	if (screenInitialized) {
     		return;
     	}
+    	logger.info("initialize screen");
     	bcmHostInit();
     	
         IntByReference width = new IntByReference();
