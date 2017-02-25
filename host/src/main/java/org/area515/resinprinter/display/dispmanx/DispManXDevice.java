@@ -1,27 +1,32 @@
 package org.area515.resinprinter.display.dispmanx;
 
+import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DirectColorModel;
+import java.awt.image.SampleModel;
+import java.awt.image.SinglePixelPackedSampleModel;
+import java.awt.image.WritableRaster;
+import java.nio.ByteBuffer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.CustomNamedDisplayDevice;
-import org.area515.resinprinter.display.dispmanx.ALPHA;
-import org.area515.resinprinter.display.dispmanx.VC_DISPMANX_ALPHA_T;
-import org.area515.resinprinter.display.dispmanx.VC_IMAGE_TRANSFORM_T;
-import org.area515.resinprinter.display.dispmanx.VC_IMAGE_TYPE_T;
-import org.area515.resinprinter.display.dispmanx.VC_RECT_T;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.util.Log4jTimer;
 
 import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
 
 public class DispManXDevice extends CustomNamedDisplayDevice implements GraphicsOutputInterface {
+	private static final String IMAGE_REALIZE_TIMER = "Image Realize";
     private static final Logger logger = LogManager.getLogger();
     private static boolean BCM_INIT = false;
     
@@ -29,11 +34,18 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
     private SCREEN screen;
     private VC_DISPMANX_ALPHA_T.ByReference alpha;
     private int displayHandle;
-    private int resourceHandle;
-    private int updateHandle;
-    private int elementHandle;
-    private Memory destPixels;
     private boolean screenInitialized = false;
+    
+    //For dispmanx
+    private int imageResourceHandle;
+    private int imageElementHandle;
+    //For Image
+    private Memory imagePixels;
+    private int imageWidth;
+    private int imageHeight;
+    //For Calibration and Grid
+    private Memory calibrationAndGridPixels;
+    private BufferedImage calibrationAndGridImage;
     
     public DispManXDevice(String displayName, SCREEN screen) throws InappropriateDeviceException {
 		super(displayName);
@@ -84,9 +96,13 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 		logger.info("dispose screen");
 		removeAllElementsFromScreen();
     	logger.info("vc_dispmanx_display_close result:" + DispManX.INSTANCE.vc_dispmanx_display_close(displayHandle));
+    	calibrationAndGridPixels = null;
+    	imagePixels = null;
+    	calibrationAndGridImage = null;
+    	imageWidth = 0;
+    	imageHeight = 0;
     	screenInitialized = false;
 	}
-	
 	
     public static int getPitch( int x, int y ) {
         return ((x + (y)-1) & ~((y)-1));
@@ -94,7 +110,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
     
 	private Memory loadBitmapRGB565(BufferedImage image, Memory destPixels, IntByReference width, IntByReference height, IntByReference pitchByRef) {
 		int bytesPerPixel = 2;
-		int pitch = getPitch( bytesPerPixel * image.getWidth(), 32 );
+		int pitch = getPitch(bytesPerPixel * image.getWidth(), 32);
 		pitchByRef.setValue(pitch);
 		if (destPixels == null) {
 			destPixels = new Memory(pitch * image.getHeight());
@@ -110,11 +126,10 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
         height.setValue(image.getHeight());
         return destPixels;
 	}
-	
-	//TODO: Why am I doing this? can't I do this with NIO buffers and no conversion at all?
+
 	private Memory loadBitmapARGB8888(BufferedImage image, Memory destPixels, IntByReference width, IntByReference height, IntByReference pitchByRef) {
 		int bytesPerPixel = 4;
-		int pitch = getPitch( bytesPerPixel * image.getWidth(), 32 );
+		int pitch = getPitch(bytesPerPixel * image.getWidth(), 32);
 		pitchByRef.setValue(pitch);
 		if (destPixels == null) {
 			destPixels = new Memory(pitch * image.getHeight());
@@ -130,6 +145,39 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
         return destPixels;
 	}
 	
+	//TODO: this is totally untested but wouldn't it be cool if we could write straight to the native screen buffer from a BufferedImage without the need to use loadBitmapARGB8888 and loadBitmapRGB565!
+	private BufferedImage createBufferedImage(Memory pixelMemory, int xPixels, int yPixels) {
+		final ByteBuffer buffer = pixelMemory.getByteBuffer(0, pixelMemory.size());
+		DataBuffer nativeScreenBuffer = new DataBuffer(DataBuffer.TYPE_INT, buffer.limit()) {
+			@Override
+			public int getElem(int bank, int i) {
+				return (buffer.get(i * 4) << 24) | (buffer.get(i * 4 + 1) << 16) | (buffer.get(i * 4 + 2) << 8) | (buffer.get(i * 4 + 3));
+			}
+		  
+			@Override
+			public void setElem(int bank, int i, int val) {
+				buffer.put(i * 4 + 0, (byte)((val | 0xFF000000) >> 24));
+				buffer.put(i * 4 + 1, (byte)((val | 0xFF0000) >> 16));
+				buffer.put(i * 4 + 2, (byte)((val | 0xFF00) >> 8));
+				buffer.put(i * 4 + 3, (byte)(val | 0xFF));
+			}
+		};
+	
+		SampleModel argb = new SinglePixelPackedSampleModel(
+		    DataBuffer.TYPE_INT, 
+		    xPixels, 
+		    yPixels,
+		    new int[] { 0xFF0000, 0xFF00, 0xFF, 0xFF000000 });
+		
+		WritableRaster raster = new WritableRaster(argb, nativeScreenBuffer, new Point()){};
+		
+		return new BufferedImage(
+		    new DirectColorModel(32, 0xFF0000, 0xFF00, 0xFF0, 0xFF000000),
+		    raster, 
+		    false, 
+		    null);
+	}
+
 	@Override
 	public void showBlankImage() {
 		initializeScreen();
@@ -137,72 +185,101 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 	}
 
 	private void removeAllElementsFromScreen() {
-        updateHandle = DispManX.INSTANCE.vc_dispmanx_update_start( 0 );
+		logger.info("screen cleanup started");
+        int updateHandle = DispManX.INSTANCE.vc_dispmanx_update_start( 0 );
         if (updateHandle == 0) {
         	logger.info("vc_dispmanx_update_start failed");
         } else {
-        	logger.info("vc_dispmanx_element_remove result:" + DispManX.INSTANCE.vc_dispmanx_element_remove(updateHandle, elementHandle));
-        	logger.info("vc_dispmanx_update_submit_sync result:" + DispManX.INSTANCE.vc_dispmanx_update_submit_sync(updateHandle));
-        	logger.info("vc_dispmanx_resource_delete result:" + DispManX.INSTANCE.vc_dispmanx_resource_delete(resourceHandle));
+        	logger.debug("image vc_dispmanx_element_remove result:" + DispManX.INSTANCE.vc_dispmanx_element_remove(updateHandle, imageElementHandle));
+        	logger.debug("vc_dispmanx_update_submit_sync result:" + DispManX.INSTANCE.vc_dispmanx_update_submit_sync(updateHandle));
+        	logger.debug("image vc_dispmanx_resource_delete result:" + DispManX.INSTANCE.vc_dispmanx_resource_delete(imageResourceHandle));
         }
+	}
+	
+	private void initializeCalibrationAndGridImage() {
+		if (calibrationAndGridImage != null) {
+			return;
+		}
+		
+		calibrationAndGridImage = new BufferedImage(bounds.width, bounds.height, BufferedImage.TYPE_INT_ARGB);
 	}
 	
 	@Override
 	public void showCalibrationImage(int xPixels, int yPixels) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void showGridImage(int pixels) {
-		// TODO Auto-generated method stub
-		
+		logger.debug("Calibration assigned:{}", () -> Log4jTimer.startTimer(IMAGE_REALIZE_TIMER));
+		showBlankImage();
+		initializeCalibrationAndGridImage();
+		Graphics2D graphics = (Graphics2D)calibrationAndGridImage.createGraphics();
+		GraphicsOutputInterface.showCalibration(graphics, bounds, xPixels, yPixels);
+		graphics.dispose();
+		calibrationAndGridPixels = showImage(calibrationAndGridPixels, calibrationAndGridImage);
+		logger.debug("Calibration realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
 	}
 	
 	@Override
-	public void showImage(BufferedImage image) {
-		initializeScreen();
-        IntByReference width = new IntByReference();
-        IntByReference height = new IntByReference();
-        IntByReference pitch = new IntByReference();
+	public void showGridImage(int pixels) {
+		logger.debug("Grid assigned:{}", () -> Log4jTimer.startTimer(IMAGE_REALIZE_TIMER));
+		showBlankImage();
+		initializeCalibrationAndGridImage();
+		Graphics2D graphics = (Graphics2D)calibrationAndGridImage.createGraphics();
+		GraphicsOutputInterface.showGrid(graphics, bounds, pixels);
+		graphics.dispose();
+		
+		calibrationAndGridPixels = showImage(calibrationAndGridPixels, calibrationAndGridImage);		
+		logger.debug("Grid realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
+	}
+	
+	private Memory showImage(Memory memory, BufferedImage image) {
+		showBlankImage();//delete the old resources because we are creating new ones...
+		
+        IntByReference imageWidth = new IntByReference();
+        IntByReference imageHeight = new IntByReference();
+        IntByReference imagePitch = new IntByReference();
         
-        destPixels = loadBitmapARGB8888(image, destPixels, width, height, pitch);
+        memory = loadBitmapARGB8888(image, memory, imageWidth, imageHeight, imagePitch);
         VC_RECT_T.ByReference sourceRect = new VC_RECT_T.ByReference();
-        VC_RECT_T.ByReference destinationRect = new VC_RECT_T.ByReference();
-        DispManX.INSTANCE.vc_dispmanx_rect_set( sourceRect, 0, 0, width.getValue()<<16, height.getValue()<<16 );//Shifting by 16 is a zoom factor of zero
-        DispManX.INSTANCE.vc_dispmanx_rect_set( destinationRect, 0, 0, width.getValue(), height.getValue() );
+        DispManX.INSTANCE.vc_dispmanx_rect_set(sourceRect, 0, 0, imageWidth.getValue()<<16, imageHeight.getValue()<<16);//Shifting by 16 is a zoom factor of zero
         
         IntByReference nativeImageReference = new IntByReference();
-        resourceHandle = DispManX.INSTANCE.vc_dispmanx_resource_create(
+        imageResourceHandle = DispManX.INSTANCE.vc_dispmanx_resource_create(
         		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), 
-        		width.getValue(), 
-        		height.getValue(), 
+        		imageWidth.getValue(), 
+        		imageHeight.getValue(), 
         		nativeImageReference);
-        if (resourceHandle == 0) {
+        if (imageResourceHandle == 0) {
         	throw new IllegalArgumentException("Couldn't create resourceHandle for dispmanx");
         }
         
+        VC_RECT_T.ByReference sizeRect = new VC_RECT_T.ByReference();
+        DispManX.INSTANCE.vc_dispmanx_rect_set(sizeRect, 0, 0, imageWidth.getValue(), imageHeight.getValue());
         int returnCode = DispManX.INSTANCE.vc_dispmanx_resource_write_data( 
-        		resourceHandle, 
+        		imageResourceHandle, 
         		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), 
-        		pitch.getValue() , 
-        		destPixels, 
-        		destinationRect);
+        		imagePitch.getValue() , 
+        		memory, 
+        		sizeRect);
         if (returnCode != 0) {
         	throw new IllegalArgumentException("Couldn't vc_dispmanx_resource_write_data for dispmanx:" + returnCode);
         }
         
-        updateHandle = DispManX.INSTANCE.vc_dispmanx_update_start(0);  //This method should be called create update
+        int updateHandle = DispManX.INSTANCE.vc_dispmanx_update_start(0);  //This method should be called create update
         if (updateHandle == 0) {
         	throw new IllegalArgumentException("Couldn't vc_dispmanx_update_start for dispmanx");
         }
 
-        elementHandle = DispManX.INSTANCE.vc_dispmanx_element_add(     //Creates and adds the element to the current screen update
+        VC_RECT_T.ByReference destinationRect = new VC_RECT_T.ByReference();
+        DispManX.INSTANCE.vc_dispmanx_rect_set(
+        		destinationRect, 
+        		(bounds.width - imageWidth.getValue()) / 2, 
+        		(bounds.height - imageHeight.getValue()) / 2, 
+        		imageWidth.getValue(), 
+        		imageHeight.getValue());
+        imageElementHandle = DispManX.INSTANCE.vc_dispmanx_element_add(     //Creates and adds the element to the current screen update
         		updateHandle, 
         		displayHandle, 
         		1, 
         		destinationRect, 
-        		resourceHandle, 
+        		imageResourceHandle, 
         		sourceRect, 
         		PROTECTION.DISPMANX_PROTECTION_NONE.getcConst(), 
         		alpha, 
@@ -216,6 +293,21 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
         if (returnCode != 0) {
         	throw new IllegalArgumentException("Couldn't vc_dispmanx_update_submit_sync for dispmanx:" + returnCode);
         }
+        
+        return memory;
+	}
+	
+	@Override
+	public void showImage(BufferedImage image) {
+		logger.debug("Image assigned:{}", () -> Log4jTimer.startTimer(IMAGE_REALIZE_TIMER));
+		if (image.getWidth() == imageWidth && image.getHeight() == imageHeight) {
+			imagePixels = showImage(imagePixels, image);
+		} else {
+			imagePixels = showImage(null, image);
+		}
+		imageWidth = image.getWidth();
+		imageHeight = image.getHeight();
+		logger.debug("Image realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
 	}
 	
 	@Override

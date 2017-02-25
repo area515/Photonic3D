@@ -1,12 +1,10 @@
 package org.area515.resinprinter.display;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.HeadlessException;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
@@ -24,7 +22,8 @@ public class PrinterDisplayFrame extends JFrame implements GraphicsOutputInterfa
 	
 	private DisplayState displayState;
 	private int gridSquareSize;
-	private Point calibrationXY;
+	private int calibrationX;
+	private int calibrationY;
 	private BufferedImage displayImage;
 	private int sliceNumber;
 	private boolean isSimulatedDisplay;
@@ -64,40 +63,11 @@ public class PrinterDisplayFrame extends JFrame implements GraphicsOutputInterfa
 			logger.debug("Blank realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
 			return;
 		case Grid :
-			g2.setBackground(Color.black);
-			g2.clearRect(0, 0, screenSize.width, screenSize.height);
-			g2.setColor(Color.RED);
-			for (int x = 0; x < screenSize.width; x += gridSquareSize) {
-				g2.drawLine(x, 0, x, screenSize.height);
-			}
-			
-			for (int y = 0; y < screenSize.height; y += gridSquareSize) {
-				g2.drawLine(0, y, screenSize.width, y);
-			}
+			GraphicsOutputInterface.showGrid(g2, screenSize, gridSquareSize);
 			logger.debug("Grid realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
 			return;
 		case Calibration :
-			g2.setBackground(Color.black);
-			g2.clearRect(0, 0, screenSize.width, screenSize.height);
-			g2.setColor(Color.RED);
-			int startingX = screenSize.width / 2 - calibrationXY.x / 2;
-			int startingY = screenSize.height / 2 - calibrationXY.y / 2;
-			int halfLengthOfDimLines = 50;
-			
-			//X Dimension lines
-			g2.drawLine(startingX                  , screenSize.height / 2 - halfLengthOfDimLines, startingX                  , screenSize.height / 2 + halfLengthOfDimLines);
-			g2.drawLine(startingX + calibrationXY.x, screenSize.height / 2 - halfLengthOfDimLines, startingX + calibrationXY.x, screenSize.height / 2 + halfLengthOfDimLines);
-			
-			//Y Dimension lines
-			g2.drawLine(screenSize.width / 2 - halfLengthOfDimLines, startingY                  , screenSize.width / 2 + halfLengthOfDimLines, startingY);
-			g2.drawLine(screenSize.width / 2 - halfLengthOfDimLines, startingY + calibrationXY.y, screenSize.width / 2 + halfLengthOfDimLines, startingY + calibrationXY.y);
-								
-			//Vertical line of cross
-			g2.drawLine(screenSize.width / 2, startingY, screenSize.width / 2, startingY + calibrationXY.y);
-
-			//Horizontal line of cross
-			g2.setStroke(new BasicStroke(5, 0, 0, 1.0f, new float[]{10, 10}, 2.0f));
-			g2.drawLine(startingX, screenSize.height / 2, startingX + calibrationXY.x, screenSize.height / 2);
+			GraphicsOutputInterface.showCalibration(g2, screenSize, calibrationX, calibrationY);
 			logger.debug("Calibration realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
 			return;
 		case CurrentSlice :
@@ -126,7 +96,8 @@ public class PrinterDisplayFrame extends JFrame implements GraphicsOutputInterfa
 	public void showCalibrationImage(int xPixels, int yPixels) {
 		logger.debug("Calibration assigned:{}", () -> Log4jTimer.startTimer(IMAGE_REALIZE_TIMER));
 		setDisplayState(DisplayState.Calibration);
-		calibrationXY = new Point(xPixels, yPixels);
+		calibrationX = xPixels;
+		calibrationY = yPixels;
 		repaint();
 	}
 	

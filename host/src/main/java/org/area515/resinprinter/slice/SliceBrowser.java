@@ -60,7 +60,8 @@ public class SliceBrowser extends JSplitPane {
 	//781;//"C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl"; good
 	//"C:\\Users\\wgilster\\git\\Creation-Workshop-Host\\host\\src\\test\\resources\\org\\area515\\resinprinter\\slice\\CornerBracket_2.stl"
 	
-	private String firstFile = "C:\\Users\\wgilster\\Documents\\fdhgg.stl";//1,200,670
+	//private String firstFile = "C:\\Users\\wgilster\\Documents\\fdhgg.stl";//1,200,670
+	private String firstFile = "C:\\Users\\wgilster\\uploaddir\\johnny-test pieces 1.stl";
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\NonManifoldBox.stl";//-19
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl";
 //	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";//95
@@ -484,6 +485,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		});*/
 		
 		final JButton findNextTriangle = new JButton("FTONS");//Find triangles on next slice
+		findNextTriangle.setToolTipText("Find watched triangles on next slice");
 		findNextTriangle.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -494,11 +496,29 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		});
 		
 		final JButton findPreviousTriangle = new JButton("FTOPS");//Find triangles on previous slice
+		findPreviousTriangle.setToolTipText("Find watched triangles on previous slice");
 		findPreviousTriangle.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int z = slicer.getZIndex() - 1;
 				runWatch(z, mouseLabel);
+			}
+		});
+		
+		final JButton testTriangleEqualButton = new JButton("Test Equal");
+		testTriangleEqualButton.setToolTipText("Find watched triangles on previous slice");
+		testTriangleEqualButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				List<Triangle3d> triangles = sliceBrowserListener.getSelectedTriangles();
+				for (int t = 0; t < triangles.size() - 1; t++) {
+					System.out.print("Triangle:" + t + " = " + (t+1));
+					if (triangles.get(t).equals(triangles.get(t+1))) {
+						System.out.println(" equals");
+					} else {
+						System.out.println(" not equal");
+					}
+				}
 			}
 		});
 		
@@ -511,6 +531,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		});
 
 		final JButton runWatches = new JButton("Run watch");//Find triangles on previous slice
+		runWatches.setToolTipText("Find watched triangles on this slice");
 		runWatches.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -553,6 +574,10 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		bottomPanel.add(clearYWatches, cons);
 		cons = new GridBagConstraints();
 		cons.gridx = 4;
+		cons.gridy = 1;		
+		bottomPanel.add(testTriangleEqualButton, cons);
+		cons = new GridBagConstraints();
+		cons.gridx = 5;
 		cons.gridy = 1;		
 		bottomPanel.add(runWatches, cons);
 		window.add(zSliceBar, BorderLayout.EAST);
