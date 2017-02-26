@@ -38,6 +38,12 @@
 			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.AutoStart}}</h4>
 		</div>
 		<div class="list-group-item">
+			<!--<div class="btn-group pull-right">
+				<button class="btn btn-primary" ng-click="printersController.gotoPrinterControls()" >
+					<b class="fa fa-wrench"></b> 
+					<span>Manage</span>
+				</button>
+			</div>-->
 			<label>Machine Configuration</label>
 			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.MachineConfigurationName}}</h4>
 			<select name="type" class="form-control"
@@ -46,7 +52,7 @@
 				ng-change="printersController.currentPrinter.configuration.MachineConfigurationName=printersController.currentPrinter.configuration.machineConfig.name"
 				required>
 			  <option value="">{{printersController.loadingMachineConfigMessage}}</option>
-			</select>		
+			</select>
 		</div>
 		<div class="list-group-item">
 			<label>Slicing Profile</label>
