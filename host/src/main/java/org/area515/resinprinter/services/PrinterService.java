@@ -480,6 +480,10 @@ public class PrinterService {
 				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
 			}
 			
+			if (currentPrinter.isDisplayBusy()) {
+				throw new InappropriateDeviceException("Printer:" + printerName + " display is busy, try again later.");
+			}
+			
 			currentPrinter.showGridImage(pixels);
 			return new MachineResponse("gridscreenshown", true, "Showed calibration screen on:" + printerName);
 		} catch (InappropriateDeviceException e) {
@@ -501,6 +505,10 @@ public class PrinterService {
 			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
 			if (currentPrinter == null) {
 				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
+			}
+			
+			if (currentPrinter.isDisplayBusy()) {
+				throw new InappropriateDeviceException("Printer:" + printerName + " display is busy, try again later.");
 			}
 			
 			logger.info("Showing calibration screen for xPixels:{} yPixels:{}", xPixels, yPixels);
@@ -565,6 +573,10 @@ public class PrinterService {
 			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
 			if (currentPrinter == null) {
 				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
+			}
+			
+			if (currentPrinter.isDisplayBusy()) {
+				throw new InappropriateDeviceException("Printer:" + printerName + " display is busy, try again later.");
 			}
 			
 			currentPrinter.showBlankImage();

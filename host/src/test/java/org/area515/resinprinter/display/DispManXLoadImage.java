@@ -18,7 +18,7 @@ import org.area515.resinprinter.display.dispmanx.VC_RECT_T;
 import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
 
-public class DispManXTest {
+public class DispManXLoadImage {
 	public static void displayInfo( int id, String name ) {
         IntByReference width = new IntByReference();
         IntByReference height = new IntByReference();
@@ -101,9 +101,9 @@ public class DispManXTest {
         return destPixels;
 	}
 	
-	//sudo vi DispManXTest.java
-	//sudo javac -cp lib/*:. DispManXTest.java
-	//sudo java -cp lib/*:. DispManXTest 2 10 resourcesnew/favicon/apple-icon-144x144.png
+	//sudo vi DispManXLoadImage.java
+	//sudo javac -cp lib/*:. DispManXLoadImage.java
+	//sudo java -cp lib/*:. DispManXLoadImage 2 10 resourcesnew/favicon/apple-icon-144x144.png
 	public static void main(String[] args) throws IOException, InterruptedException {
 		DispManX dispMan = DispManX.INSTANCE;
 		System.out.println("BCM Initialized:" + dispMan.bcm_host_init());

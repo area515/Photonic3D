@@ -245,6 +245,10 @@ public class Printer {
 		refreshFrame.showImage(image);
 	}
 	
+	public boolean isDisplayBusy() {
+		return refreshFrame.isDisplayBusy();
+	}
+
 	@JsonIgnore
 	@XmlTransient
 	public boolean isProjectorPowerControlSupported() {

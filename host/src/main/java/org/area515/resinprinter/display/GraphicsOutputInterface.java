@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 
 //TODO: This needs to be the interface we use that is returned from the DisplayManager instead of java.awt.GraphicsDevice
 public interface GraphicsOutputInterface {
+	public boolean isDisplayBusy();	//It's not necessary, but it's helpful to let the user know that the display might be busy in a gui...
 	public void resetSliceCount();
 	public void dispose();
 	public void showBlankImage();
