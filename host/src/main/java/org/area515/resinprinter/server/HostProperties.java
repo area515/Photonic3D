@@ -199,7 +199,7 @@ public class HostProperties {
 				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
 					try {
 						featureClasses.add((Class<Feature>)Class.forName(currentPropertyString));
-					} catch (UnsatisfiedLinkError | ClassNotFoundException e) {
+					} catch (NoClassDefFoundError | UnsatisfiedLinkError | ClassNotFoundException e) {
 						logger.error("Failed to load Feature:" + currentPropertyString, e);
 					}
 				}
@@ -214,7 +214,7 @@ public class HostProperties {
 				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
 					try {
 						notificationClasses.add((Class<Notifier>)Class.forName(currentPropertyString));
-					} catch (UnsatisfiedLinkError | ClassNotFoundException e) {
+					} catch (NoClassDefFoundError | UnsatisfiedLinkError | ClassNotFoundException e) {
 						logger.error("Failed to load Notifier:" + currentPropertyString, e);
 					}
 				}
@@ -230,7 +230,7 @@ public class HostProperties {
 					try {
 						PrintFileProcessor processor = ((Class<PrintFileProcessor>)Class.forName(currentPropertyString)).newInstance();
 						printFileProcessors.add(processor);
-					} catch (UnsatisfiedLinkError | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+					} catch (NoClassDefFoundError | UnsatisfiedLinkError | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 						logger.error("Failed to load PrintFileProcessor:" + currentPropertyString, e);
 					}
 				}
@@ -246,7 +246,7 @@ public class HostProperties {
 					try {
 						GraphicsOutputInterface device = ((Class<GraphicsOutputInterface>)Class.forName(currentPropertyString)).newInstance();
 						displayDevices.add(device);
-					} catch (UnsatisfiedLinkError | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+					} catch (NoClassDefFoundError | UnsatisfiedLinkError | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 						logger.error("Failed to load DisplayDevice:" + currentPropertyString, e);
 					}
 				}

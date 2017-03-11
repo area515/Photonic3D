@@ -49,6 +49,10 @@ public class DispManXDevice implements GraphicsOutputInterface {
     public DispManXDevice(String displayName, SCREEN screen) throws InappropriateDeviceException {
 		this.displayName = displayName;
 		this.screen = screen;
+		
+		//Call a harmless method to ensure that Dispmanx lib is initialized
+        VC_RECT_T.ByReference sourceRect = new VC_RECT_T.ByReference();
+        DispManX.INSTANCE.vc_dispmanx_rect_set(sourceRect, 0, 0, 0, 0);
 	}
     
     private static void bcmHostInit() {
