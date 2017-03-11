@@ -25,13 +25,13 @@ public class SimulatedDisplay extends GraphicsDeviceOutputInterface {
 
 	@Override
 	public String buildIDString() {
-		return NAME + ":" + displayIndex;
+		return NAME + ":" + displayIndex++;
 	}
 
 	@Override
 	public GraphicsOutputInterface initializeDisplay(String displayId) {
 		PrinterDisplayFrame refreshFrame = new PrinterDisplayFrame(displayId);
-		refreshFrame.setTitle("Printer Simulation");
+		refreshFrame.setTitle(displayId);
 		refreshFrame.setVisible(true);
 		refreshFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		refreshFrame.setMinimumSize(new Dimension(500, 500));

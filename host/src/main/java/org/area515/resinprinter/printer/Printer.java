@@ -203,6 +203,8 @@ public class Printer {
 		refreshFrame.showImage(image);
 	}
 	
+	@JsonIgnore
+	@XmlTransient
 	public boolean isDisplayBusy() {
 		if (refreshFrame == null) {
 			return false;

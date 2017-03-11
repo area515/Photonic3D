@@ -50,7 +50,7 @@ public class DisplayManager {
 			throw new AlreadyAssignedException("Printer already assigned to:" + otherDevice, otherDevice);
 		}
 		
-		Printer otherJob = printersByDisplayIDString.putIfAbsent(device.getIDstring(), newPrinter);
+		Printer otherJob = printersByDisplayIDString.putIfAbsent(nextIdString, newPrinter);
 		if (otherJob != null) {
 			displayIdsByPrinter.remove(newPrinter);
 			throw new AlreadyAssignedException("Display already assigned to:" + otherJob, otherJob);
@@ -109,7 +109,7 @@ public class DisplayManager {
 			return;
 		
 		String otherId = displayIdsByPrinter.remove(printer);
-		if (!otherId.equals(printer.getDisplayDeviceID())) {
+		if (otherId != printer.getDisplayDeviceID() && !otherId.equals(printer.getDisplayDeviceID())) {
 			logger.error("otherId:" + otherId + " different than printerDisplayId:" + printer.getDisplayDeviceID());
 		}
 		
