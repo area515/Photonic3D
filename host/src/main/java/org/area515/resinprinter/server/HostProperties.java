@@ -1,6 +1,5 @@
 package org.area515.resinprinter.server;
 
-import java.awt.GraphicsDevice;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -35,6 +34,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
+import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.network.LinuxNetworkManager;
@@ -75,7 +75,6 @@ public class HostProperties {
 	private File printDir;
 	private String hostGUI;
 	private boolean fakeSerial = false;
-	private boolean fakedisplay = false;
 	private boolean removeJobOnCompletion = true;
 	private boolean forceCalibrationOnFirstUse = false;
 	private boolean limitLiveStreamToOneCPU = false;
@@ -83,7 +82,7 @@ public class HostProperties {
 	private List<Class<Feature>> featureClasses = new ArrayList<Class<Feature>>();
 	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
 	private List<PrintFileProcessor> printFileProcessors = new ArrayList<PrintFileProcessor>();
-	private List<GraphicsDevice> displayDevices = new ArrayList<GraphicsDevice>();
+	private List<GraphicsOutputInterface> displayDevices = new ArrayList<GraphicsOutputInterface>();
 	private Class<SerialCommunicationsPort> serialPortClass;
 	private Class<NetworkManager> networkManagerClass;
 	
@@ -189,7 +188,6 @@ public class HostProperties {
 		uploadDirString = configurationProperties.getProperty("uploaddir");
 		
 		fakeSerial = new Boolean(configurationProperties.getProperty("fakeserial", "false"));
-		fakedisplay = new Boolean(configurationProperties.getProperty("fakedisplay", "false"));
 		hostGUI = configurationProperties.getProperty("hostGUI", "resources");
 		visibleCards = Arrays.asList(configurationProperties.getProperty("visibleCards", "printers,printJobs,printables,users,settings").split(","));
 		
@@ -246,7 +244,7 @@ public class HostProperties {
 				currentPropertyString = currentPropertyString.replace("displayDevice.", "");
 				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
 					try {
-						GraphicsDevice device = ((Class<GraphicsDevice>)Class.forName(currentPropertyString)).newInstance();
+						GraphicsOutputInterface device = ((Class<GraphicsOutputInterface>)Class.forName(currentPropertyString)).newInstance();
 						displayDevices.add(device);
 					} catch (UnsatisfiedLinkError | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 						logger.error("Failed to load DisplayDevice:" + currentPropertyString, e);
@@ -487,10 +485,6 @@ public class HostProperties {
 		return fakeSerial;
 	}
 	
-	public boolean getFakeDisplay(){
-		return fakedisplay;
-	}
-	
 	public String getSSLKeypairPassword() {
 		return sslKeypairPassword;
 	}
@@ -531,7 +525,7 @@ public class HostProperties {
 		return printFileProcessors;
 	}
 	
-	public List<GraphicsDevice> getDisplayDevices() {
+	public List<GraphicsOutputInterface> getDisplayDevices() {
 		return displayDevices;
 	}
 	

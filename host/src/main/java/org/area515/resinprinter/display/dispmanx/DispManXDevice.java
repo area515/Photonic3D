@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.display.CustomNamedDisplayDevice;
+import org.area515.resinprinter.display.GraphicsDeviceOutputInterface;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.util.Log4jTimer;
@@ -20,7 +20,7 @@ import org.area515.util.Log4jTimer;
 import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
 
-public class DispManXDevice extends CustomNamedDisplayDevice implements GraphicsOutputInterface {
+public class DispManXDevice implements GraphicsOutputInterface {
 	private static final String IMAGE_REALIZE_TIMER = "Image Realize";
     private static final Logger logger = LogManager.getLogger();
     private static boolean BCM_INIT = false;
@@ -33,6 +33,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
     private VC_DISPMANX_ALPHA_T.ByReference alpha;
     private int displayHandle;
     private boolean screenInitialized = false;
+    private String displayName;
     
     //For dispmanx
     private int imageResourceHandle;
@@ -46,7 +47,7 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
     private BufferedImage calibrationAndGridImage;
     
     public DispManXDevice(String displayName, SCREEN screen) throws InappropriateDeviceException {
-		super(displayName);
+		this.displayName = displayName;
 		this.screen = screen;
 	}
     
@@ -308,49 +309,12 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 	}
 	
 	@Override
-	public GraphicsConfiguration getDefaultConfiguration() {
-		//TODO: this is horrible! we return this fake graphics configuration just so that we can give people our bounds!
-		return new GraphicsConfiguration() {
-			@Override
-			public AffineTransform getNormalizingTransform() {
-				return null;
-			}
-			
-			@Override
-			public GraphicsDevice getDevice() {
-				return null;
-			}
-			
-			@Override
-			public AffineTransform getDefaultTransform() {
-				return null;
-			}
-			
-			@Override
-			public ColorModel getColorModel(int transparency) {
-				return null;
-			}
-			
-			@Override
-			public ColorModel getColorModel() {
-				return null;
-			}
-			
-			@Override
-			public Rectangle getBounds() {
-				initializeScreen();
-				return bounds;
-			}
-		};
-	}
-
-	@Override
 	public void resetSliceCount() {
 		//Since this isn't used for debugging we don't do anything
 	}
 
 	@Override
-	public Rectangle getBoundry() {
+	public Rectangle getBoundary() {
 		initializeScreen();
 		return bounds;
 	}
@@ -358,5 +322,20 @@ public class DispManXDevice extends CustomNamedDisplayDevice implements Graphics
 	@Override
 	public boolean isDisplayBusy() {
 		return activityLock.isLocked();
+	}
+
+	@Override
+	public String getIDstring() {
+		return displayName;
+	}
+
+	@Override
+	public String buildIDString() {
+		return displayName;
+	}
+
+	@Override
+	public GraphicsOutputInterface initializeDisplay(String displayId) {
+		return this;
 	}
 }

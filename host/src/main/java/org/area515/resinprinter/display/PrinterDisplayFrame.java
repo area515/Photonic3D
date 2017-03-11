@@ -20,16 +20,18 @@ public class PrinterDisplayFrame extends JFrame implements GraphicsOutputInterfa
 	private static final Logger logger = LogManager.getLogger();
 	
 	private String IMAGE_REALIZE_TIMER = "Image Realize:";
-	private DisplayState displayState;
+	private DisplayState displayState = DisplayState.Blank;
 	private int gridSquareSize;
 	private int calibrationX;
 	private int calibrationY;
 	private BufferedImage displayImage;
 	private int sliceNumber;
 	private boolean isSimulatedDisplay;
+	private String displayId;
 	
-	public PrinterDisplayFrame() throws HeadlessException {
+	public PrinterDisplayFrame(String displayId) throws HeadlessException {
 		super();
+		this.displayId = displayId;
 		this.isSimulatedDisplay = true;
 		getRootPane().setBackground(Color.black);
 		getContentPane().setBackground(Color.black);
@@ -119,12 +121,27 @@ public class PrinterDisplayFrame extends JFrame implements GraphicsOutputInterfa
 	}
 
 	@Override
-	public Rectangle getBoundry() {
+	public Rectangle getBoundary() {
 		return getGraphicsConfiguration().getBounds();
 	}
 
 	@Override
 	public boolean isDisplayBusy() {
 		return false;
+	}
+
+	@Override
+	public String getIDstring() {
+		return displayId;
+	}
+
+	@Override
+	public String buildIDString() {
+		throw new IllegalStateException("You should never call buildIDString from this class");
+	}
+
+	@Override
+	public GraphicsOutputInterface initializeDisplay(String displayId) {
+		throw new IllegalStateException("You should never call initializeDisplay from this class");
 	}
 }

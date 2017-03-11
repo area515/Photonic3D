@@ -1,26 +1,17 @@
 package org.area515.resinprinter.printer;
 
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.GraphicsDevice;
-import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.swing.JFrame;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.display.PrinterDisplayFrame;
-import org.area515.resinprinter.display.dispmanx.RaspberryPiMainLCDScreen;
 import org.area515.resinprinter.gcode.GCodeControl;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.projector.ProjectorModel;
@@ -38,8 +29,8 @@ public class Printer {
 	private boolean started;
 	private boolean shutterOpen;
 	private Integer bulbHours;
-	private String displayDeviceID;
 	private long currentSlicePauseTime;
+	private String displayDeviceID;
 	
 	//For Serial Ports
 	private SerialCommunicationsPort printerFirmwareSerialPort;
@@ -183,44 +174,11 @@ public class Printer {
 		}
 	}
 	
-	public void setGraphicsData(final GraphicsDevice device) {
-		this.displayDeviceID = device.getIDstring();
+	public void initializeAndAssignGraphicsOutputInterface(final GraphicsOutputInterface device, final String displayDeviceID) {
+		this.displayDeviceID = displayDeviceID;
+		this.refreshFrame = device.initializeDisplay(displayDeviceID);
 		
-		if (device instanceof GraphicsOutputInterface) {
-			this.refreshFrame = (GraphicsOutputInterface)device;
-		} else if (device.getIDstring().equalsIgnoreCase(DisplayManager.SIMULATED_DISPLAY)) {
-			PrinterDisplayFrame refreshFrame = new PrinterDisplayFrame();
-			refreshFrame.setTitle("Printer Simulation");
-			refreshFrame.setVisible(true);
-			refreshFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-			refreshFrame.setMinimumSize(new Dimension(500, 500));
-			this.refreshFrame = refreshFrame;
-		} else  {
-			PrinterDisplayFrame refreshFrame = new PrinterDisplayFrame(device.getDefaultConfiguration());
-			refreshFrame.setAlwaysOnTop(true);
-			refreshFrame.setUndecorated(true);
-			refreshFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-			Dimension dim = device.getDefaultConfiguration().getBounds().getSize();
-			refreshFrame.setMinimumSize(dim);
-			refreshFrame.setSize(dim);
-			refreshFrame.setVisible(true);
-			if (device.isFullScreenSupported()) {
-				device.setFullScreenWindow(refreshFrame);//TODO: Does projector not support full screen
-			}
-			//This can only be done with a real graphics device since it would reassign the printer Simulation
-			//OLD getConfiguration().getMachineConfig().setOSMonitorID(device.getDefaultConfiguration().getDevice().getIDstring());
-			getConfiguration().getMachineConfig().setOSMonitorID(device.getIDstring());
-			
-			// hide mouse in full screen
-			Toolkit toolkit = Toolkit.getDefaultToolkit();
-		    Point hotSpot = new Point(0,0);
-		    BufferedImage cursorImage = new BufferedImage(1, 1, BufferedImage.TRANSLUCENT); 
-		    Cursor invisibleCursor = toolkit.createCustomCursor(cursorImage, hotSpot, "InvisibleCursor");        
-		    refreshFrame.setCursor(invisibleCursor);
-		    this.refreshFrame = refreshFrame;
-		}
-
-		Rectangle screenSize = refreshFrame.getBoundry();
+		Rectangle screenSize = refreshFrame.getBoundary();
 		getConfiguration().getMachineConfig().getMonitorDriverConfig().setDLP_X_Res(screenSize.width);
 		getConfiguration().getMachineConfig().getMonitorDriverConfig().setDLP_Y_Res(screenSize.height);
 	}
@@ -228,7 +186,7 @@ public class Printer {
 	public String getDisplayDeviceID() {
 		return displayDeviceID;
 	}
-
+	
 	public void showBlankImage() {	
 		refreshFrame.showBlankImage();
 	}
@@ -246,6 +204,10 @@ public class Printer {
 	}
 	
 	public boolean isDisplayBusy() {
+		if (refreshFrame == null) {
+			return false;
+		}
+		
 		return refreshFrame.isDisplayBusy();
 	}
 
@@ -367,6 +329,8 @@ public class Printer {
 		}
 		bulbHours = null;
 		started = false;
+		this.displayDeviceID = null;
+		this.refreshFrame = null;
 	}
 
 	@Override

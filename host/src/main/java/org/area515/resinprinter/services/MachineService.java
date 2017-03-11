@@ -62,6 +62,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.DisplayManager;
+import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.network.NetInterface;
 import org.area515.resinprinter.network.NetworkManager;
@@ -455,9 +456,9 @@ public class MachineService {
     @Path("graphicsDisplays/list")
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getDisplays() {
-		 List<GraphicsDevice> devices = DisplayManager.Instance().getDisplayDevices();
+		 List<GraphicsOutputInterface> devices = DisplayManager.Instance().getDisplayDevices();
 		 List<String> deviceStrings = new ArrayList<String>();
-		 for (GraphicsDevice current : devices) {
+		 for (GraphicsOutputInterface current : devices) {
 			 deviceStrings.add(current.getIDstring());
 		 }
 		 

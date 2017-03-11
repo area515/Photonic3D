@@ -1,7 +1,6 @@
 package org.area515.resinprinter.printer;
 
 
-import java.awt.GraphicsDevice;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
+import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
@@ -117,7 +117,7 @@ public class PrinterManager {
 		try {
 			printer = new Printer(currentConfiguration);
 			String monitorId = currentConfiguration.getMachineConfig().getOSMonitorID();
-			GraphicsDevice graphicsDevice = null;
+			GraphicsOutputInterface graphicsDevice = null;
 			if (monitorId != null) {
 				graphicsDevice = DisplayManager.Instance().getDisplayDevice(currentConfiguration.getMachineConfig().getOSMonitorID());
 			} else {

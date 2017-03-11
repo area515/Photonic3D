@@ -270,8 +270,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			}
 		}
 
-		logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
 		aid.printer.showImage(sliceImage);
+		logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
 		 	
 		if (aid.slicingProfile.getgCodeShutter() != null && aid.slicingProfile.getgCodeShutter().trim().length() > 0) {
 			aid.printer.setShutterOpen(true);
