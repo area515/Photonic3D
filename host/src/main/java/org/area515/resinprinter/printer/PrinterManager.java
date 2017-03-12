@@ -157,24 +157,26 @@ public class PrinterManager {
 			logger.info("Printer started:{}", printer);
 			return printer;
 		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
-			logger.error("Error starting printer:" + currentConfiguration, e);
-			DisplayManager.Instance().removeAssignment(printer);
-			SerialManager.Instance().removeAssignments(printer);
-			if (printer != null) {
-				printer.close();
-			}
+			handleError(printer, currentConfiguration, e);
 			throw e;
 		} catch (Throwable e) {
-			logger.error("Error starting printer:" + currentConfiguration, e);
-			DisplayManager.Instance().removeAssignment(printer);
-			SerialManager.Instance().removeAssignments(printer);
-			if (printer != null) {
-				printer.close();
-			}
-			throw new InappropriateDeviceException("Internal error on server");
+			handleError(printer, currentConfiguration, e);
+			throw new InappropriateDeviceException("Internal error on server", e);
 		} finally {
 			printerLock.unlock();
 		}
+	}
+	
+	private void handleError(Printer printer, PrinterConfiguration currentConfiguration, Throwable e) {
+		logger.error("Error starting printer:" + currentConfiguration, e);
+		try {
+			if (printer != null) {
+				printer.close();
+			}
+		} finally {
+			DisplayManager.Instance().removeAssignment(printer);
+			SerialManager.Instance().removeAssignments(printer);
+		}		
 	}
 	
 	public void assignPrinter(PrintJob newJob, Printer printer) throws AlreadyAssignedException {
