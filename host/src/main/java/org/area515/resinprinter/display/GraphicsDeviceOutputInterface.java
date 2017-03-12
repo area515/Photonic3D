@@ -85,7 +85,7 @@ public class GraphicsDeviceOutputInterface implements GraphicsOutputInterface {
 		} catch (InappropriateDeviceException e) {
 			throw new IllegalArgumentException("Couldn't find displayId:" + displayId, e);
 		}
-		PrinterDisplayFrame refreshFrame = new PrinterDisplayFrame(device.getDefaultConfiguration());
+		PrinterDisplayFrame refreshFrame = new PrinterDisplayFrame(device);
 		refreshFrame.setAlwaysOnTop(true);
 		refreshFrame.setUndecorated(true);
 		refreshFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);

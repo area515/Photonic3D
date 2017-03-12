@@ -329,12 +329,15 @@ public class Printer {
 		if (refreshFrame != null) {
 			refreshFrame.dispose();
 		}
-		bulbHours = null;
 		started = false;
-		this.displayDeviceID = null;
-		this.refreshFrame = null;
 	}
 
+	public void disassociateDisplay() {
+		this.bulbHours = null;
+		this.refreshFrame = null;
+		this.displayDeviceID = null;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

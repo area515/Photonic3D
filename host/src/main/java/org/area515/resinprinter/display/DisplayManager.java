@@ -111,13 +111,16 @@ public class DisplayManager {
 		if (printer == null)
 			return;
 		
+		String removalId = printer.getDisplayDeviceID();
+		printer.disassociateDisplay();
+		
 		String otherId = displayIdsByPrinter.remove(printer);
-		if (otherId != printer.getDisplayDeviceID() && !otherId.equals(printer.getDisplayDeviceID())) {
-			logger.error("otherId:" + otherId + " different than printerDisplayId:" + printer.getDisplayDeviceID());
+		if (otherId != removalId && !otherId.equals(removalId)) {
+			logger.error("otherId:" + otherId + " different than printerDisplayId:" + removalId);
 		}
 		
-		if (printer.getDisplayDeviceID() != null) {
-			Printer otherPrinter = printersByDisplayIDString.remove(printer.getDisplayDeviceID());
+		if (removalId != null) {
+			Printer otherPrinter = printersByDisplayIDString.remove(removalId);
 			if (!printer.equals(otherPrinter)) {
 				logger.error("otherPrinter:" + otherPrinter + " different than printer:" + printer);
 			}

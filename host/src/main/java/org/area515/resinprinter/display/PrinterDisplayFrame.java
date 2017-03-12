@@ -3,7 +3,7 @@ package org.area515.resinprinter.display;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
 import java.awt.HeadlessException;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
@@ -28,6 +28,7 @@ public class PrinterDisplayFrame extends JFrame implements GraphicsOutputInterfa
 	private int sliceNumber;
 	private boolean isSimulatedDisplay;
 	private String displayId;
+	private GraphicsDevice device;
 	
 	public PrinterDisplayFrame(String displayId) throws HeadlessException {
 		super();
@@ -38,8 +39,9 @@ public class PrinterDisplayFrame extends JFrame implements GraphicsOutputInterfa
 		IMAGE_REALIZE_TIMER += hashCode();
 	}
 
-	public PrinterDisplayFrame(GraphicsConfiguration gc) {
-		super(gc);
+	public PrinterDisplayFrame(GraphicsDevice device) {
+		super(device.getDefaultConfiguration());
+		this.device = device;
 		this.isSimulatedDisplay = false;
 		getRootPane().setBackground(Color.black);
 		getContentPane().setBackground(Color.black);
