@@ -37,7 +37,7 @@ public class DisplayManager {
 	public boolean isGraphicsDeviceDisplayAvailable(String displayId) {
 		try {
 			GraphicsOutputInterface display = getDisplayDevice(displayId);
-			return printersByDisplayIDString.contains(display.getIDstring());
+			return !printersByDisplayIDString.containsKey(display.getIDstring());
 		} catch (InappropriateDeviceException e) {
 			throw new IllegalArgumentException("Couldn't getDisplayDevice for:" + displayId, e);
 		}
@@ -45,6 +45,9 @@ public class DisplayManager {
 	
 	public void assignDisplay(Printer newPrinter, GraphicsOutputInterface device) throws AlreadyAssignedException, InappropriateDeviceException {
 		String nextIdString = device.buildIDString();//Note: Do NOT call getIDstring() since it's not appropriate
+		if (nextIdString == null) {
+			throw new InappropriateDeviceException(device + " didn't return an available display");
+		}
 		String otherDevice = displayIdsByPrinter.putIfAbsent(newPrinter, nextIdString);
 		if (otherDevice != null) {
 			throw new AlreadyAssignedException("Printer already assigned to:" + otherDevice, otherDevice);

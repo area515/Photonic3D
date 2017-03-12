@@ -32,6 +32,10 @@ public class LastAvailableDisplay extends GraphicsDeviceOutputInterface {
 	
 	@Override
 	public String buildIDString() {
-		return getGraphicsDevice().getIDstring();
+		GraphicsDevice lastDevice = getGraphicsDevice();
+		if (lastDevice == null) {
+			return null;
+		}
+		return lastDevice.getIDstring();
 	}
 }

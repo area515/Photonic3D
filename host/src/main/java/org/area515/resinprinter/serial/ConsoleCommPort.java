@@ -7,10 +7,15 @@ import org.area515.resinprinter.printer.ComPortSettings;
 public class ConsoleCommPort implements SerialCommunicationsPort {
     private static final Logger logger = LogManager.getLogger();
 	public static final String GCODE_RESPONSE_SIMULATION = "GCode response simulation";
+	private static int consoleNumber = 0;
 	
 	private String name = GCODE_RESPONSE_SIMULATION;
 	private int readCount;
 	private int timeout;
+	
+	public ConsoleCommPort() {
+		this.name = this.name + ":" + consoleNumber++;
+	}
 	
 	@Override
 	public void open(String printerName, int timeout, ComPortSettings settings) {

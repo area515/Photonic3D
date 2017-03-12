@@ -174,6 +174,10 @@ public class SerialManager {
 			identifier = null;
 			String[] identifiers = SerialManager.Instance().getPortNames();
 			for (String currentIdentifier : identifiers) {
+				if (currentIdentifier.equals(ConsoleCommPort.GCODE_RESPONSE_SIMULATION)) {
+					continue;
+				}
+
 				logger.debug("Autodetection trying against serial device:{}", currentIdentifier);
 				
 				//Auto detection will continue to override settings that haven't been set on the command line
