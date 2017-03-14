@@ -11,7 +11,7 @@
 						<h4>Access Point</h4>
 						<select name="type" id="AccessPoint" class="form-control"
 							ng-model="settingsController.selectedNetworkInterface" 
-							ng-options="item.ssid group by item.parentInterfaceName for item in settingsController.networkInterfaces"
+							ng-options="item.ssid group by item.parentInterfaceName for item in settingsController.networkInterfaces|{hidden: 'false'}"
 							required>
 						  <option value="">{{settingsController.loadingNetworksMessage}}</option>
 						</select>
