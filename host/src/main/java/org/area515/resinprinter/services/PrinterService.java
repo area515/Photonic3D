@@ -7,7 +7,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-import java.awt.GraphicsDevice;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -36,7 +35,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
+import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.display.LastAvailableDisplay;
+import org.area515.resinprinter.display.SimulatedDisplay;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.InkDetector;
@@ -83,7 +85,7 @@ public class PrinterService {
 		String shutterGCode = printer.getConfiguration().getSlicingProfile().getgCodeShutter();
 		if (shutterGCode != null && shutterGCode.trim().length() > 0) {
 			printer.setShutterOpen(shutter);
-			return new MachineResponse(name, true, printer.getGCodeControl().executeGCodeWithTemplating(job, printer.getConfiguration().getSlicingProfile().getgCodeShutter()));
+			return new MachineResponse(name, true, printer.getGCodeControl().executeGCodeWithTemplating(job, printer.getConfiguration().getSlicingProfile().getgCodeShutter(), false));
 		}
 		
 		return new MachineResponse(name, false, "This printer doesn't support a shutter.");
@@ -307,7 +309,7 @@ public class PrinterService {
 		//TODO: Return a nice unused name for this printer instead of the hardcoded value below
 		PrinterConfiguration configuration = createTemplatePrinter(
 			 "CWH Template Printer", //"mUVe 1 DLP (Testing)", 
-			 DisplayManager.SIMULATED_DISPLAY, 
+			 SimulatedDisplay.NAME, 
 			 ConsoleCommPort.GCODE_RESPONSE_SIMULATION, 
 			 134, 75, 185);
 		configuration.getSlicingProfile().getSelectedInkConfig().setNumberOfFirstLayers(10);
@@ -415,13 +417,13 @@ public class PrinterService {
 		slicingProfile.setLiftFeedRate(50);
 		slicingProfile.setDirection(BuildDirection.Bottom_Up);
 		try {
-			if (DisplayManager.SIMULATED_DISPLAY.equals(displayId)) {
+			if (SimulatedDisplay.NAME.equals(displayId)) {
 				monitor.setDLP_X_Res(1920);
 				monitor.setDLP_Y_Res(1080);
 			} else {
-				GraphicsDevice device = DisplayManager.Instance().getDisplayDevice(DisplayManager.LAST_AVAILABLE_DISPLAY);
-				monitor.setDLP_X_Res(device.getDefaultConfiguration().getBounds().getWidth());
-				monitor.setDLP_Y_Res(device.getDefaultConfiguration().getBounds().getHeight());
+				GraphicsOutputInterface device = DisplayManager.Instance().getDisplayDevice(LastAvailableDisplay.NAME);
+				monitor.setDLP_X_Res(device.getBoundary().getWidth());
+				monitor.setDLP_Y_Res(device.getBoundary().getHeight());
 			}
 			machineConfig.setxRenderSize((int)monitor.getDLP_X_Res());
 			machineConfig.setyRenderSize((int)monitor.getDLP_Y_Res());
@@ -480,6 +482,10 @@ public class PrinterService {
 				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
 			}
 			
+			if (currentPrinter.isDisplayBusy()) {
+				throw new InappropriateDeviceException("Printer:" + printerName + " display is busy, try again later.");
+			}
+			
 			currentPrinter.showGridImage(pixels);
 			return new MachineResponse("gridscreenshown", true, "Showed calibration screen on:" + printerName);
 		} catch (InappropriateDeviceException e) {
@@ -501,6 +507,10 @@ public class PrinterService {
 			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
 			if (currentPrinter == null) {
 				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
+			}
+			
+			if (currentPrinter.isDisplayBusy()) {
+				throw new InappropriateDeviceException("Printer:" + printerName + " display is busy, try again later.");
 			}
 			
 			logger.info("Showing calibration screen for xPixels:{} yPixels:{}", xPixels, yPixels);
@@ -531,14 +541,14 @@ public class PrinterService {
 			currentConfiguration.getSlicingProfile().setDotsPermmX(xPixelsPerMM);
 			currentConfiguration.getSlicingProfile().setDotsPermmY(yPixelsPerMM);
 			Printer printer = PrinterService.INSTANCE.getPrinter(printerName);
-			GraphicsDevice device = null;
+			GraphicsOutputInterface device = null;
 			if (printer.isStarted()) {
 				device = DisplayManager.Instance().getDisplayDevice(printer.getDisplayDeviceID());
 			} else {
 				device = DisplayManager.Instance().getDisplayDevice(currentConfiguration.getMachineConfig().getOSMonitorID());
 			}
-			currentConfiguration.getSlicingProfile().setxResolution(device.getDefaultConfiguration().getBounds().width);
-			currentConfiguration.getSlicingProfile().setyResolution(device.getDefaultConfiguration().getBounds().height);
+			currentConfiguration.getSlicingProfile().setxResolution(device.getBoundary().width);
+			currentConfiguration.getSlicingProfile().setyResolution(device.getBoundary().height);
 			currentConfiguration.setCalibrated(true);
 			logger.info("Calibrated printer to xPixelsPerMM:{} yPixelsPerMM:{}", xPixelsPerMM, yPixelsPerMM);
 			
@@ -565,6 +575,10 @@ public class PrinterService {
 			Printer currentPrinter = PrinterManager.Instance().getPrinter(printerName);
 			if (currentPrinter == null) {
 				throw new InappropriateDeviceException("Printer:" + printerName + " not started");
+			}
+			
+			if (currentPrinter.isDisplayBusy()) {
+				throw new InappropriateDeviceException("Printer:" + printerName + " display is busy, try again later.");
 			}
 			
 			currentPrinter.showBlankImage();
@@ -802,6 +816,9 @@ public class PrinterService {
     @Produces(MediaType.APPLICATION_JSON)
 	public MachineResponse printWithCustomizer(@PathParam("customizerName") String customizerName) {
     	Customizer customizer = CustomizerService.INSTANCE.getCustomizer(customizerName, null);
+    	if (customizer == null) {
+    		return new MachineResponse("startJob", false, "Customizer:" + customizerName + " not found");
+    	}
     	return startPrintJob(customizer.getPrinterName(), customizer.getPrintableName() + "." + customizer.getPrintableExtension(), customizer);
 	}
 

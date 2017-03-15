@@ -1,0 +1,142 @@
+<jwrapper>
+<BuildOutputFolder>C:\Users\wgilster\Desktop\compiles\JWrapper\JWrapperBuild</BuildOutputFolder>
+<BundleName>Photonic3D</BundleName>
+<SplashPNG>C:\Users\wgilster\git\Creation-Workshop-Host\host\images\photonic64.png</SplashPNG>
+<BundleLogoPNG>C:\Users\wgilster\git\Creation-Workshop-Host\host\images\photonic64.png</BundleLogoPNG>
+<InstallType>NoInstall</InstallType>
+<App>
+  <Name>Photonic3D</Name>
+  <LogoPNG>C:\Users\wgilster\git\Creation-Workshop-Host\host\images\photonic64.png</LogoPNG>
+  <MainClass>org.area515.resinprinter.client.Main</MainClass>
+</App>
+<SupportedLanguages>en</SupportedLanguages>
+<Windows32JRE>C:\Users\wgilster\git\Creation-Workshop-Host\host\jwrapper\jwrapperJREs\win32\jre1.8.0_111</Windows32JRE>
+<Windows64JRE>C:\Users\wgilster\git\Creation-Workshop-Host\host\jwrapper\jwrapperJREs\win64\jre1.8.0_111</Windows64JRE>
+<Linux32JRE>C:\Users\wgilster\git\Creation-Workshop-Host\host\jwrapper\jwrapperJREs\linux\jre1.8.0_111</Linux32JRE>
+<Linux64JRE>C:\Users\wgilster\git\Creation-Workshop-Host\host\jwrapper\jwrapperJREs\linuxx64\jre1.8.0_111</Linux64JRE>
+<Mac64JRE>C:\Users\wgilster\git\Creation-Workshop-Host\host\jwrapper\jwrapperJREs\macos64\jre1.8.0_111.jre</Mac64JRE>
+<NoStripJREs>true</NoStripJREs>
+<WindowsElevation>None</WindowsElevation>
+<WindowsElevationUiAccess>true</WindowsElevationUiAccess>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.4.5/b400d47efaf8ab612c03b904ae5bf26c6706ade6/jackson-annotations-2.4.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.4.5/6fb96728ee26edb19fe329d94f3bd4df1a97652a/jackson-core-2.4.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.4.5/c69c0cb613128c69d84a6a0304ddb9fce82e8242/jackson-databind-2.4.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.dataformat/jackson-dataformat-xml/2.4.5/535f27c7e322abc54c9758b50df1594f31ee6524/jackson-dataformat-xml-2.4.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/2.4.5/918e84a84ee0b202bb74bab590119b01bbea9830/jackson-dataformat-yaml-2.4.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-joda/2.4.5/830f7e1a9d69674900d1fa066d6ba27112ec6ca9/jackson-datatype-joda-2.4.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/2.4.5/b5a04c9664913552b75820834e945424e32b244f/jackson-jaxrs-base-2.4.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/2.4.5/aefd5dd637402fd697c1e2b083535d153ffd66c0/jackson-jaxrs-json-provider-2.4.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/2.4.5/af5432247be7a0248a03b900687bb9a74a68ccfa/jackson-module-jaxb-annotations-2.4.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/annotations/2.0.1/9ef6656259841cebfb9fb0697bb122ada4485498/annotations-2.0.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/19.0/6ce200f6b23222af3d8abb6b6459e6c44f4bb0e9/guava-19.0.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.jcraft/jsch/0.1.53/658b682d5c817b27ae795637dfec047c63d29935/jsch-0.1.53.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.sun.istack/istack-commons-runtime/2.16/927eb6fbb003f40d536efd96e7cbcb7ea4c1c2d0/istack-commons-runtime-2.16.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.sun.mail/javax.mail/1.5.5/ffcd34b5de820f35bcc9303649cf6ab2c65ad44e/javax.mail-1.5.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.sun.xml.bind/jaxb-core/2.2.7/f327817188a7dce503ae3c667c5931077630b0a1/jaxb-core-2.2.7.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.sun.xml.bind/jaxb-impl/2.2.7/a29e53347934e694c9551981cecd242fad05022b/jaxb-impl-2.2.7.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/com.sun.xml.fastinfoset/FastInfoset/1.2.12/e8c1c096162a146c2d84135c5036edf54c1b1d38/FastInfoset-1.2.12.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/commons-cli/commons-cli/1.2/2bf96b7aa8b611c177d329452af1dc933e14501c/commons-cli-1.2.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.6/b7f0fc8f61ecadeb3695f0b9464755eee44374d4/commons-codec-1.6.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.4/b1b6ea3b7e4aa4f492509a4952029cd8e48019ad/commons-io-2.4.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.2/4bfc12adfe4842bf07b657f0369c4cb522955686/commons-logging-1.2.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/io.swagger/swagger-annotations/1.5.8/48d3002e43bde443f19750ec5670d345e9cd8d62/swagger-annotations-1.5.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/io.swagger/swagger-core/1.5.8/545fe5b92dc4f7fc360fbda972fcc75ba8532044/swagger-core-1.5.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/io.swagger/swagger-jaxrs/1.5.8/15fdd3c3c08254c845ff1f2f5a345e10a51e1dad/swagger-jaxrs-1.5.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/io.swagger/swagger-models/1.5.8/36a5fbf513a2793a665660bfc579b054b67d349e/swagger-models-1.5.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/javax.activation/activation/1.1/e6cb541461c2834bdea3eb920f1884d1eb508b50/activation-1.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/javax.annotation/javax.annotation-api/1.2/479c1e06db31c432330183f5cae684163f186146/javax.annotation-api-1.2.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/javax.servlet/javax.servlet-api/3.1.0/3cd63d075497751784b2fa84be59432f4905bf7c/javax.servlet-api-3.1.0.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/javax.validation/validation-api/1.1.0.Final/8613ae82954779d518631e05daa73a6a954817d5/validation-api-1.1.0.Final.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/javax.websocket/javax.websocket-api/1.0/fc843b649d4a1dcb0497669d262befa3918c7ba8/javax.websocket-api-1.0.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/javax.xml.bind/jaxb-api/2.2.7/2f51c4bb4724ea408096ee9100ff2827e07e5b7c/jaxb-api-2.2.7.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/javax.xml.bind/jsr173_api/1.0/c79b8431c3104315c0aeaed7bf23d0ab0edbaa09/jsr173_api-1.0.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/joda-time/joda-time/2.2/a5f29a7acaddea3f4af307e8cf2d0cc82645fd7d/joda-time-2.2.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/net.jcip/jcip-annotations/1.0/afba4942caaeaf46aab0b976afd57cc7c181467e/jcip-annotations-1.0.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.2.1/66f13681add50ca9e4546ffabafaaac7645db3cf/commons-lang3-3.2.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-math3/3.6.1/e4ba98f1d4b3c80ec46392f25e094a6a2e58fcbf/commons-math3-3.6.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.3.3/18f4247ff4572a074444572cee34647c43e7c9c7/httpclient-4.3.3.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.3.2/31fbbff1ddbf98f3aa7377c94d33b0447c646b6e/httpcore-4.3.2.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.james/apache-mime4j/0.6.1/e70f12e1ea268c09373a5d02290aad4f557addd6/apache-mime4j-0.6.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.5/e7fd981408caba8a0c0fb276413562468d260160/log4j-api-2.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.5/7ed845de1dfe070d43511fab321784e6c4118398/log4j-core-2.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-anim/1.8/68197dfa3643a906ba250025a03dc42e6efe2dec/batik-anim-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-awt-util/1.8/5cd7f97060cdfab0139e70504962d48ceee71ef2/batik-awt-util-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-bridge/1.8/4ab4110b0ed4650ef50d4a344f0ca5c027f3283a/batik-bridge-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-css/1.8/2b3f22cc65702a0821b7f0178d055282a1cdde59/batik-css-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-dom/1.8/4e696cf01cee52e8c4f86c842b5d8314e689209c/batik-dom-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-ext/1.8/8713f3238cfac337624a90c3ad7d45d7bc6fb1b5/batik-ext-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-gvt/1.8/fbde4cd3c43001c162446cf43093d09fda346e11/batik-gvt-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-parser/1.8/7e4e69a4aa5317861864db93da5f246214750484/batik-parser-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-script/1.8/5bda6a9d45065b184c83c46b64d8002b4e0ab7c7/batik-script-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-svg-dom/1.8/97c9d00d08c849066d2359b0f1124f0e82b952c2/batik-svg-dom-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-svggen/1.8/c4684e18303e931845df704f9b9f6995fd770789/batik-svggen-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-transcoder/1.8/f330b3e9946ff21ddf3ea6d4f58ae44145cfd362/batik-transcoder-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-util/1.8/35dcd204f397d6976290ca48ffa0011ba9b7ef43/batik-util-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/batik-xml/1.8/9bf0ee759fed1e3a2e4ad41819eac69ff4873732/batik-xml-1.8.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.apache.xmlgraphics/xmlgraphics-commons/1.5/7fb5c2b2c18f0e87fbe9bded16429a5d7cc2dc2b/xmlgraphics-commons-1.5.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.codehaus.woodstox/stax2-api/3.1.4/ac19014b1e6a7c08aad07fe114af792676b685b7/stax2-api-3.1.4.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty.websocket/javax-websocket-client-impl/9.3.7.v20160115/6064e1a1624f5ae77207178f9e3eb2d79c64ec08/javax-websocket-client-impl-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty.websocket/javax-websocket-server-impl/9.3.7.v20160115/35174ae3b835c7c54fcaa50966e10da3c45500a7/javax-websocket-server-impl-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty.websocket/websocket-api/9.3.7.v20160115/d9bd9f922c03490674c5d3b2fed3a01e28148818/websocket-api-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty.websocket/websocket-client/9.3.7.v20160115/ead61f9a9ab66369292be4d91fb7480728cf4923/websocket-client-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty.websocket/websocket-common/9.3.7.v20160115/1d491b04bd46cec33488f2b830136019300694f1/websocket-common-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty.websocket/websocket-server/9.3.7.v20160115/813526a845502e070d96dbbe99d94680eddb91e9/websocket-server-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty.websocket/websocket-servlet/9.3.7.v20160115/daa68ddaf4c887ca9bd398166752d576954f1e20/websocket-servlet-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-annotations/9.3.7.v20160115/be95b93f571db1b5b255b20a087b5c12ea87b0cc/jetty-annotations-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-client/9.3.7.v20160115/c144f460967c41b16bd17eafd7707c054342c8e/jetty-client-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-http/9.3.7.v20160115/1ae96c106af283080f4eb468597788650fdc0597/jetty-http-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-io/9.3.7.v20160115/a37a88dda790f595f002102d746b5371a1c80150/jetty-io-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-jndi/9.3.7.v20160115/9492c89906ffadcb66b07c290e95eff35ebe9bac/jetty-jndi-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-plus/9.3.7.v20160115/be6f661fdd9469ee90e80a30c8cefad98db7cc8d/jetty-plus-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-rewrite/9.3.7.v20160115/95de020baae052fbe459de255055e8ccc1d5563a/jetty-rewrite-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-security/9.3.7.v20160115/2ab9d3ecf02ba8ca918a047e090a0cad351588a6/jetty-security-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-server/9.3.7.v20160115/59cf44c6d05c0179ccbb9ec06a46083bfb96bbf6/jetty-server-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-servlet/9.3.7.v20160115/6213334a9b8b533f6af047bcd5b9fa2a7150720d/jetty-servlet-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-util/9.3.7.v20160115/d97b3d3676d69df5e635c5576dc3c46e17294898/jetty-util-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-webapp/9.3.7.v20160115/8cc2923b3129992d6009b3a9c8bbe5f0b81e10c2/jetty-webapp-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-xml/9.3.7.v20160115/1a329f5304c019bb85c129b0df73a341f53e8899/jetty-xml-9.3.7.v20160115.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.fourthline.cling/cling-core/2.0.1/c588b1493c6f92f3e63755c9b763c740546f805a/cling-core-2.0.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.fourthline.cling/cling-support/2.0.1/3be864b366ec15b075a936ecaeec731d8c62eba3/cling-support-2.0.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.freemarker/freemarker/2.3.23/cd143cd8c02a9f838e3cb75a6dfe133750437f6d/freemarker-2.3.23.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.javassist/javassist/3.20.0-GA/a9cbcdfb7e9f86fbc74d3afae65f2248bfbf82a0/javassist-3.20.0-GA.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.jboss.resteasy/jaxrs-api/3.0.9.Final/a723b3e3a0fded98577023caaeb0284728d13da/jaxrs-api-3.0.9.Final.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.jboss.resteasy/resteasy-client/3.0.9.Final/8e395dbc2a6d3e7aa875419d393bcdb279aeefa1/resteasy-client-3.0.9.Final.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.jboss.resteasy/resteasy-jackson2-provider/3.0.9.Final/25fc4302f8bb3fdfe1bb720ac3e41a5395048335/resteasy-jackson2-provider-3.0.9.Final.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.jboss.resteasy/resteasy-jaxb-provider/3.0.9.Final/2a578057808f9192653f07027c11f6dbf10a428c/resteasy-jaxb-provider-3.0.9.Final.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.jboss.resteasy/resteasy-jaxrs/3.0.9.Final/34ace9253b98b9aefef6d3423aed2d240aed1edc/resteasy-jaxrs-3.0.9.Final.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.jboss.resteasy/resteasy-multipart-provider/3.0.9.Final/62e958b723c83b753a688aa29f8563b92fbacda1/resteasy-multipart-provider-3.0.9.Final.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.jboss.spec.javax.annotation/jboss-annotations-api_1.1_spec/1.0.1.Final/8f9335f966885529d1254793182ff3df1c515eb8/jboss-annotations-api_1.1_spec-1.0.1.Final.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.mockito/mockito-core/1.10.19/e8546f5bef4e061d8dd73895b4e8f40e3fe6effe/mockito-core-1.10.19.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.objenesis/objenesis/2.1/87c0ea803b69252868d09308b4618f766f135a96/objenesis-2.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-commons/5.0.1/7b7147a390a93a14d2edfdcf3f7b0e87a0939c3e/asm-commons-5.0.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-tree/5.0.1/1b1e6e9d869acd704056d0a4223071a511c619e6/asm-tree-5.0.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm/5.0.1/2fd56467a018aafe6ec6a73ccba520be4a7e1565/asm-5.0.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-api-mockito/1.6.4/fe12509b7e9e49d25131f4155145748a31e42e40/powermock-api-mockito-1.6.4.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-api-support/1.6.4/314daafb761541293595630e10a3699ebc07881d/powermock-api-support-1.6.4.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-core/1.6.4/85fb32e9ccba748d569fc36aef92e0b9e7f40b87/powermock-core-1.6.4.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-module-junit4-common/1.6.4/b0b578da443794ceb8224bd5f5f852aaf40f1b81/powermock-module-junit4-common-1.6.4.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-module-junit4/1.6.4/8692eb1d9bb8eb1310ffe8a20c2da7ee6d1b5994/powermock-module-junit4-1.6.4.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.powermock/powermock-reflect/1.6.4/5532f4e7c42db4bca4778bc9f1afcd4b0ee0b893/powermock-reflect-1.6.4.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.reflections/reflections/0.9.10/c7f4ea230aedc757ca1499ebcfb2953c81cf8b67/reflections-0.9.10.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.rxtx/rxtx/2.1.7/e96c946be1e6537378fd532d2742b523df2725a4/rxtx-2.1.7.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.scream3r/jssc/2.8.0/7e8d93052a8743a7937a6d46854057ac1ce876c1/jssc-2.8.0.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.seamless/seamless-http/1.1.0/463012d16bcb06a623d3b931a6cfe19e4beace63/seamless-http-1.1.0.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.seamless/seamless-swing/1.1.0/9ceae59cb0b977a4103d9a52b5e777d2e259678b/seamless-swing-1.1.0.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.seamless/seamless-util/1.1.0/ef025cdbb79c4a031148b20a6d59db89c72ea0a3/seamless-util-1.1.0.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.seamless/seamless-xml/1.1.0/497f05ee745c564e0ab5c26e66e60d4f7502fba3/seamless-xml-1.1.0.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.6.3/365f7c674cb7a4b38531353392128d9fb1e37c0e/slf4j-api-1.6.3.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/org.yaml/snakeyaml/1.12/ebe66a6b88caab31d7a19571ad23656377523545/snakeyaml-1.12.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/se.sawano.java/alphanumeric-comparator/1.4.1/24e5642e40c00db96a0c0c077f774cc1f10f7546/alphanumeric-comparator-1.4.1.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/xalan/xalan/2.7.0/a33c0097f1c70b20fa7ded220ea317eb3500515e/xalan-2.7.0.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/xml-apis/xml-apis-ext/1.3.04/41a8b86b358e87f3f13cf46069721719105aff66/xml-apis-ext-1.3.04.jar</File>
+<File classpath='yes'>C:/Users/wgilster/.gradle/caches/modules-2/files-2.1/xml-apis/xml-apis/2.0.2/3136ca936f64c9d68529f048c2618bd356bf85c9/xml-apis-2.0.2.jar</File>
+<File classpath='yes'>C:/Users/wgilster/git/Creation-Workshop-Host/host/libs/mp4parser/mp4parser.jar</File>
+<File classpath='yes'>C:\Users\wgilster\Desktop\compiles\photonic3d.jar</File>
+<JvmOptions>
+</JvmOptions>
+<!-- IMPORTANT place custom content BELOW this comment for compatibility with JW App -->
+
+
+</jwrapper>

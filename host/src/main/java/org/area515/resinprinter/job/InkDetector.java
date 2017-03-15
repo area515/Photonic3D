@@ -7,11 +7,13 @@ import java.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
+import org.area515.resinprinter.inkdetection.PrintMaterialDetectorSettings;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.Main;
 
 public class InkDetector {
+	public static final String DETECTION_ERROR = "Error occurred while performing ink detection";
     private static final Logger logger = LogManager.getLogger();
 	private Printer printer;
 	private PrintJob printJob;
@@ -32,12 +34,13 @@ public class InkDetector {
 				
 				return false;
 			} catch (IOException e) {
-				logger.error("Error occurred while performing visual detection", e);
+				logger.error(DETECTION_ERROR, e);
 				if (hasAlreadyPausedWithError) {
 					return false;
 				}
 				
 				hasAlreadyPausedWithError = true;
+				printJob.setErrorDescription(DETECTION_ERROR);
 				printer.setStatus(JobStatus.PausedWithWarning);
 				NotificationManager.jobChanged(printer, printJob);
 				throw e;
@@ -45,10 +48,11 @@ public class InkDetector {
 		}
 	}
 	
-	public InkDetector(Printer printer, PrintJob job, PrintMaterialDetector detector, float percentageConsideredEmpty) {
+	public InkDetector(Printer printer, PrintJob job, PrintMaterialDetector detector, PrintMaterialDetectorSettings settings, float percentageConsideredEmpty) {
 		this.printer = printer;
 		this.detector = detector;
 		this.printMaterialRemainingForEmpty = percentageConsideredEmpty;
+		detector.initializeDetector(settings);
 	}
 	
 	public float performMeasurement() throws IOException {

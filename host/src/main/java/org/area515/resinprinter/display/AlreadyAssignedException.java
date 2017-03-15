@@ -10,7 +10,7 @@ public class AlreadyAssignedException extends Exception {
 	private static final long serialVersionUID = 5346661559747947463L;
 
 	private Printer printer;
-	private GraphicsDevice graphicsDevice;
+	private String graphicsDevice;
 	private SerialCommunicationsPort comPort;
 	private PrintJob printJob;
 	
@@ -29,7 +29,7 @@ public class AlreadyAssignedException extends Exception {
 		this.comPort = comPort;
 	}
 	
-	public AlreadyAssignedException(String message, GraphicsDevice graphicsDevice) {
+	public AlreadyAssignedException(String message, String graphicsDevice) {
 		super(message);
 		this.graphicsDevice = graphicsDevice;
 	}
@@ -42,7 +42,7 @@ public class AlreadyAssignedException extends Exception {
 		return printer;
 	}
 	
-	public GraphicsDevice getGraphicsDevice() {
+	public String getGraphicsDeviceId() {
 		return graphicsDevice;
 	}
 

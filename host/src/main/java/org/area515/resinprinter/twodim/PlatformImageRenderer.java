@@ -48,7 +48,7 @@ public class PlatformImageRenderer extends CurrentImageRenderer {
 		Map<String, Object> overrides = new HashMap<>();
 		overrides.put("totalPlatformSlices", totalPlatformSlices);
 		try {
-			TemplateEngine.runScriptInImagingContext(imageToDisplay, data.getPreTransformedImage(), aid.printJob, aid.printer, aid.scriptEngine, overrides, platformScript, "2D Platform rendering script", true);
+			TemplateEngine.runScriptInImagingContext(imageToDisplay, data.getPreTransformedImage(), aid.printJob, aid.printer, aid.scriptEngine, overrides, platformScript, "2D Platform rendering script", false);
 		} catch (ScriptException e) {
 			throw new JobManagerException("Failed to execute script", e);
 		}

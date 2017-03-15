@@ -136,8 +136,8 @@ public class IOUtilitiesTest {
 
 		List<String[]> dataReturned = IOUtilities.communicateWithNativeCommand(actions, "^>|\n", true, null, "wlan0");
 		Assert.assertEquals("SomeNetwork", dataReturned.get(0)[4]);
-		Assert.assertEquals("CenturyLink9999", dataReturned.get(1)[4]);
-		Assert.assertEquals("SomeHouse", dataReturned.get(2)[4]);
+		Assert.assertEquals("\\x00", dataReturned.get(1)[4]);
+		Assert.assertEquals("&#9786;\\u0044\\\\\\x45\\\\u0044Test", dataReturned.get(2)[4]);
 	}
 	@Test
 	public void inputStreamReadLineTest() throws IOException {

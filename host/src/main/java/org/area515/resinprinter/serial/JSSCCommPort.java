@@ -15,7 +15,9 @@ import org.area515.resinprinter.printer.Printer;
 public class JSSCCommPort implements SerialCommunicationsPort {
     private static final Logger logger = LogManager.getLogger();
 	private SerialPort port;
-	private String cwhName;
+	private String name;
+	private ComPortSettings settings;
+	private int timeout;
 	
 	@Override
 	public void open(String controllingDevice, int timeout,
@@ -40,7 +42,9 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 			throw new InappropriateDeviceException("Speed hasn't been configured for this device(" + settings.getPortName() + ").");
 		}
 		
-		port = new SerialPort(settings.getPortName());
+		this.timeout = timeout;
+		this.settings = new ComPortSettings(settings);
+		this.port = new SerialPort(settings.getPortName());
 		int parity = 0;
 		if (settings.getParity().equalsIgnoreCase("EVEN")) {
 			parity = SerialPort.PARITY_EVEN;
@@ -98,12 +102,12 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 
 	@Override
 	public void setName(String name) {
-		cwhName = name;
+		this.name = name;
 	}
 
 	@Override
 	public String getName() {
-		return cwhName;
+		return name;
 	}
 
 	@Override
@@ -111,7 +115,7 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 		try {
 			port.writeBytes(gcode);
 		} catch (SerialPortException e) {
-			throw new IOException("Couldn't write gcode to " + cwhName, e);
+			throw new IOException("Couldn't write gcode to " + name, e);
 		}
 	}
 
@@ -128,15 +132,37 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 		}
 	}
 	
+	private void printDiagnostic() {
+		try {
+			logger.info("Printing diagnostic for:" + this.settings);
+			logger.info("open:" + port.isOpened());
+			logger.info("CTS:" + port.isCTS());
+			logger.info("DSR:" + port.isDSR());
+			logger.info("RING:" + port.isRING());
+			logger.info("RLSD:" + port.isRLSD());
+			logger.info("flow:" + port.getFlowControlMode());
+		} catch (SerialPortException e) {
+			logger.error("Couldn't print diagnostic", e);
+		}
+	}
+	
+	@Override
+	public void restartCommunications() throws AlreadyAssignedException, InappropriateDeviceException {
+		printDiagnostic();
+		close();
+		open(name, timeout, settings);
+		printDiagnostic();
+	}
+
 	public String toString() {
-		return cwhName;
+		return name;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((cwhName == null) ? 0 : cwhName.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		return result;
 	}
 
@@ -149,10 +175,10 @@ public class JSSCCommPort implements SerialCommunicationsPort {
 		if (getClass() != obj.getClass())
 			return false;
 		JSSCCommPort other = (JSSCCommPort) obj;
-		if (cwhName == null) {
-			if (other.cwhName != null)
+		if (name == null) {
+			if (other.name != null)
 				return false;
-		} else if (!cwhName.equals(other.cwhName))
+		} else if (!name.equals(other.name))
 			return false;
 		return true;
 	}

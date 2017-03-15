@@ -3,8 +3,6 @@ package org.area515.resinprinter.serial;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -176,6 +174,10 @@ public class SerialManager {
 			identifier = null;
 			String[] identifiers = SerialManager.Instance().getPortNames();
 			for (String currentIdentifier : identifiers) {
+				if (currentIdentifier.equals(ConsoleCommPort.GCODE_RESPONSE_SIMULATION)) {
+					continue;
+				}
+
 				logger.debug("Autodetection trying against serial device:{}", currentIdentifier);
 				
 				//Auto detection will continue to override settings that haven't been set on the command line
@@ -343,7 +345,7 @@ public class SerialManager {
 		
 		return idents;
 	}
-	
+    
 	/**
 	 * This should be called when you stop using the port.
 	 * This will prevent port locking on platforms like Linux.

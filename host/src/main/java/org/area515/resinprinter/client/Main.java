@@ -1,27 +1,47 @@
 package org.area515.resinprinter.client;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Desktop;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.SplashScreen;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JWindow;
+import javax.swing.SwingConstants;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -49,11 +69,95 @@ public class Main {
 	public static final String PRINTER_TYPE = "3DPrinterHost";
 	public static final String PRINTERS_DIRECTORY = "printers";
 	public static final String BRANCH = "master";
-	public static String REPO = "area515";
+	public static String REPO = "area515/Photonic3D";
 	
 	private static Set<PrintableDevice> foundDevices = new HashSet<PrintableDevice>();
 	private static long maxLengthToWait = 5000;
 	private static long maxLengthToWaitForAll = 7000;
+	
+	public static class StatusPanel extends JLabel {
+		private static final long serialVersionUID = 6639519775722442260L;
+		
+		private ScreenUpdater updater;
+		
+		public StatusPanel(String text, Icon icon, int horizontalAlignment) {
+			super(text, icon, horizontalAlignment);
+		}
+
+		public void setScreenUpdater(ScreenUpdater updater) {
+			this.updater = updater;
+		}
+		
+		@Override
+		public void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			if (updater != null) {
+				updater.updateGraphics((Graphics2D)g);
+			}
+		}
+	}
+	
+	public static class ScreenUpdater {
+		private Graphics2D graphics;
+		private SplashScreen screen;
+		private Rectangle outerBounds;
+		private String showText;
+		private StatusPanel statusPanel;
+		private Color textColor;
+		
+		private ScreenUpdater(SplashScreen splashScreen, Color textColor) {
+			this.graphics = splashScreen.createGraphics();
+			this.screen = splashScreen;
+			this.outerBounds = graphics.getDeviceConfiguration().getBounds();
+			this.textColor = textColor;
+		}
+		
+		private ScreenUpdater(StatusPanel statusPanel, Color textColor) {
+			this.outerBounds = statusPanel.getBounds();
+			this.statusPanel = statusPanel;
+			this.statusPanel.setScreenUpdater(this);
+			this.textColor = textColor;
+		}
+		
+		public void showProgress(String showText) {
+			this.showText = showText;
+			if (graphics != null) {
+				graphics.setBackground(new Color(0, true));
+				graphics.clearRect(0, 0, outerBounds.width, outerBounds.height);
+				
+				updateGraphics(graphics);
+			}
+			updateScreen();
+		}
+		
+		public void updateGraphics(Graphics2D graphics) {
+			if (showText == null) {
+				return;
+			}
+			
+			graphics.setColor(textColor);
+			Rectangle2D bounds = graphics.getFontMetrics().getStringBounds(showText, graphics);
+			graphics.drawString(showText, (int)(outerBounds.width / 2 - bounds.getWidth() / 2), (int)bounds.getHeight());
+		}
+		
+		public void close() {
+			if (statusPanel != null) {
+				javax.swing.SwingUtilities.getWindowAncestor(statusPanel).dispose();
+			}
+			if (screen != null && screen.isVisible()) {
+				screen.close();
+			}
+		}
+		
+		public void updateScreen() {
+			if (screen != null) {
+				screen.update();
+			}
+			if (statusPanel != null) {
+				statusPanel.updateUI();
+			}
+		}
+	}
 	
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class PrinterEntry {
@@ -129,9 +233,9 @@ public class Main {
 		return null;
 	}
 	
-	private static boolean findSuccessLine(String[] lines, String containsLine) {
+	private static boolean findSuccessLine(String[] lines, String matchesLine) {
 		for (String line : lines) {
-			if (line.contains(containsLine)) {
+			if (line.matches(matchesLine)) {
 				return true;
 			}
 		}
@@ -241,7 +345,7 @@ public class Main {
 	    // specify the host, protocol, and port
 		HttpHost restTarget = new HttpHost("api.github.com", 443, "https");
 		HttpHost cwhTarget = new HttpHost(installToBox.getName(), 9091, "http");
-		HttpGet getRequest = new HttpGet("/repos/" + REPO + "/Creation-Workshop-Host/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH);
+		HttpGet getRequest = new HttpGet("/repos/" + REPO + "/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH);
 		
 		PrinterEntry[] printers = null;
 		try {
@@ -304,10 +408,10 @@ public class Main {
 	public static boolean performInstall(Box box, String username, String oldPassword) throws IOException, JSchException  {
 		System.out.println("User chose install on:" + box);
 		
-		final JOptionPane installOptionPane = new JOptionPane("Installing CWH...", JOptionPane.INFORMATION_MESSAGE, JOptionPane.CANCEL_OPTION, null, new String[]{"Cancel"}, "Cancel");
+		final JOptionPane installOptionPane = new JOptionPane("Installing Photonic3D...", JOptionPane.INFORMATION_MESSAGE, JOptionPane.CANCEL_OPTION, null, new String[]{"Cancel"}, "Cancel");
 		JDialog installPane = null;
 		installPane = new JDialog();
-		installPane.setTitle("Installing CWH");
+		installPane.setTitle("Installing Photonic3D");
 		installPane.setResizable(false);
 		installPane.setAlwaysOnTop(true);
 		installPane.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -334,8 +438,8 @@ public class Main {
 			}
 			
 			installOptionPane.setMessage("Downloading installation scripts...");
-			String[] output = client.send("wget https://github.com/" + REPO + "/Creation-Workshop-Host/raw/master/host/bin/start.sh");
-			if (!findSuccessLine(output, "start.sh' saved")) {
+			String[] output = client.send("wget https://github.com/" + REPO + "/raw/master/host/bin/start.sh");
+			if (!findSuccessLine(output, "(?s:.*start.sh.*saved.*)")) {
 				writeOutput(output);
 				throw new IOException("This device can't seem to reach the internet.");
 			}
@@ -343,9 +447,9 @@ public class Main {
 			
 			installOptionPane.setMessage("Performing installation...");
 			output = client.send("./start.sh");
-			if (!findSuccessLine(output, "Starting printer host server")) {
+			if (!findSuccessLine(output, "(?s:.*Starting printer host server.*)")) {
 				writeOutput(output);
-				throw new IOException("There was a problem installing CWH. Please refer to logs.");
+				throw new IOException("There was a problem installing Photonic3D. Please refer to logs.");
 			}
 			
 			if (box.isRaspberryPi()) {
@@ -371,6 +475,21 @@ public class Main {
 		}
 	}
 	
+	private static StatusPanel showSplashscreenIfJWrapperDoesntSupportIt(String splash) throws MalformedURLException {
+		StatusPanel panel = new StatusPanel("", new ImageIcon(Main.class.getClassLoader().getResource(splash)), SwingConstants.CENTER);
+		JFrame window = new JFrame();
+		window.setUndecorated(true);
+		window.setResizable(false);
+		window.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		window.setFocusable(false);
+		window.getContentPane().add(panel);
+		window.pack();
+		window.setVisible(true);
+		window.toFront();
+		window.setLocationRelativeTo(null);
+		return panel;
+	}
+	
 	/**
 	 * return 0 for printer found
 	 * returns -1 for user cancelled operation
@@ -378,10 +497,54 @@ public class Main {
 	 * 
 	 * @param args
 	 */
-	public static void main(String[] args) {
-		if (args.length > 0) {
-			REPO = args[0];
+	public static void main(String[] args) throws MalformedURLException {
+		PosixParser parser = new PosixParser();
+		Options options = new Options();
+		options.addOption("h", "help", false, "Shows this help screen.");
+		options.addOption("r", "repo", true, "If the user chooses to install Photonic3d on a remote device, then Photonic3d will be installed from the following github repo");
+		options.addOption("w", "jwrappersplash", true, "JWrapper doesn't support the Java splash screen so this client will build it's own and use the parameter sent to this method");
+		options.addOption("t", "progresstextcolor", true, "Color [Red(0-255),Green(0-255),Blue(0-255),Alpha(0-255)] of text on splash screen to show printers as they are found on the network");
+		CommandLine commands;
+		try {
+			commands = parser.parse(options, args);
+		} catch (ParseException e2) {
+			e2.printStackTrace();
+			throw new IllegalArgumentException("Couldn't understand arguments sent in command line");
 		}
+		
+		if (commands.hasOption("h")) {
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp("java org.area515.resinprinter.client.Main [options]", options);
+			return;
+		}
+		
+		if (commands.hasOption("r")) {
+			REPO = commands.getOptionValue("r");
+		}
+		
+		Color textColor = null;
+		if (commands.hasOption("t")) {
+			String colors[] = commands.getOptionValue("t").split(",");
+			if (colors.length != 4) {
+				System.out.println("TextColor must be in format r,g,b,a (0-255,0-255,0-255,0-255)");
+				System.exit(-2);
+			}
+			textColor = new Color(Integer.valueOf(colors[0]),Integer.valueOf(colors[1]),Integer.valueOf(colors[2]),Integer.valueOf(colors[3]));
+		} else {
+			textColor = Color.WHITE;
+		}
+		
+		ScreenUpdater updater = null;
+		if (commands.hasOption("w")) {
+			StatusPanel manualSplash = showSplashscreenIfJWrapperDoesntSupportIt(commands.getOptionValue("w"));
+			updater = new ScreenUpdater(manualSplash, textColor);
+		} else {
+			SplashScreen splashScreen = SplashScreen.getSplashScreen();
+			if (splashScreen != null) {
+				updater = new ScreenUpdater(splashScreen, textColor);
+			}
+		}
+		final ScreenUpdater finalUpdater = updater;
 		
 		boolean installCompletedOnThisLoopIteration = false;
 		boolean userHasbeenAskedToInstall = false;
@@ -419,10 +582,13 @@ public class Main {
 								if (currentDevice.getType().getType().equals(PRINTER_TYPE)) {
 									foundDevices.add(new PrintableDevice(currentDevice));
 									System.out.println("Found printer URL here:" + currentDevice.getDetails().getPresentationURI());
+									if (finalUpdater != null) {
+										finalUpdater.showProgress("Found printer: " + currentDevice.getDisplayString());
+									}
 								}
 							}
 							
-							Thread.currentThread().sleep(300);
+							Thread.currentThread().sleep(200);
 						}
 	
 						waitForURLFound.countDown();
@@ -447,13 +613,16 @@ public class Main {
 				userHasbeenAskedToInstall = true;
 				try {
 					List<Box> boxes = scanner.waitForDevicesWithPossibleRemoteInstallCapability();
+					if (finalUpdater != null) {
+						finalUpdater.close();
+					}
 					if (boxes.size() > 0) {
 						Box box = (Box)JOptionPane.showInputDialog(null, 
-						        "I couldn't find CWH installed on your network.\n"
+						        "I couldn't find Photonic3D installed on your network.\n"
 						        + "I did find place(s) where I might be able to install it.\n"
-						        + "Choose any of the following locations to install CWH.\n"
-						        + "Click 'Cancel' if you've already installed CWH.", 
-						        "Install CWH?",
+						        + "Choose any of the following locations to install Photonic3D.\n"
+						        + "Click 'Cancel' if you've already installed Photonic3D.", 
+						        "Install Photonic3D?",
 						        JOptionPane.QUESTION_MESSAGE,
 						        null,
 						        boxes.toArray(),
@@ -470,7 +639,7 @@ public class Main {
 								}
 							} catch (JSchException | IOException e) {
 								e.printStackTrace();
-								JOptionPane.showConfirmDialog(null, "Unable To Install CWH", e.getMessage(), JOptionPane.ERROR);
+								JOptionPane.showConfirmDialog(null, e.getMessage(), "Unable To Install Photonic3D", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
 								System.exit(-2);
 							}
 						}
@@ -480,6 +649,9 @@ public class Main {
 				}
 				
 				if (!installCompletedOnThisLoopIteration) {
+					if (finalUpdater != null) {
+						finalUpdater.close();
+					}
 					System.out.println("3d printer not found after waiting:" + maxLengthToWaitForAll);
 					JOptionPane optionPane = new JOptionPane();
 					optionPane.setMessage("Couldn't find your printer on this network.\n"
@@ -515,6 +687,9 @@ public class Main {
 				searchPane.pack();
 				searchPane.setLocationRelativeTo(null);
 				searchPane.setVisible(true);
+				if (finalUpdater != null) {
+					finalUpdater.close();
+				}
 			}
 		} while (foundDevices.size() == 0);
 		
@@ -528,6 +703,9 @@ public class Main {
 		if (foundDevices.size() == 1) {
 			chosenPrinter = foundDevices.iterator().next();
 		} else {
+			if (finalUpdater != null) {
+				finalUpdater.close();
+			}
 			chosenPrinter = (PrintableDevice)JOptionPane.showInputDialog(null, 
 		        "There were multiple 3d printers found on this network.\nWhich printer would you like to view?", 
 		        "Choose a Printer",

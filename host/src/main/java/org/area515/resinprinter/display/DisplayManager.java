@@ -19,11 +19,9 @@ public class DisplayManager {
     private static final Logger logger = LogManager.getLogger();
 
     private static DisplayManager INSTANCE = null;
-	public static final String LAST_AVAILABLE_DISPLAY = "Last available display";
-	public static final String SIMULATED_DISPLAY = "Simulated display";
 	
 	private GraphicsEnvironment ge = null;
-	private ConcurrentHashMap<Printer, GraphicsDevice> graphicsDevicesByPrinter = new ConcurrentHashMap<Printer, GraphicsDevice>();
+	private ConcurrentHashMap<Printer, String> displayIdsByPrinter = new ConcurrentHashMap<Printer, String>();
 	private ConcurrentHashMap<String, Printer> printersByDisplayIDString = new ConcurrentHashMap<String, Printer>();
 
 	public static DisplayManager Instance() {
@@ -36,58 +34,53 @@ public class DisplayManager {
 	private DisplayManager(){
 	}
 
-	public void assignDisplay(Printer newPrinter, GraphicsDevice device) throws AlreadyAssignedException, InappropriateDeviceException {
-		if (device.getIDstring().equals(LAST_AVAILABLE_DISPLAY)) {
-			ArrayList<GraphicsDevice> devices = new ArrayList<GraphicsDevice>();
-			devices.addAll(Arrays.asList(getGraphicsEnvironment().getScreenDevices()));
-			Collections.reverse(devices);
-			for (GraphicsDevice currentDevice : devices) {
-				if (!printersByDisplayIDString.containsKey(currentDevice.getIDstring())) {
-					device = currentDevice;
-					break;
-				}
-			}
-			
-			if (device.getIDstring().equals(LAST_AVAILABLE_DISPLAY)) {
-				throw new InappropriateDeviceException("No displays left to assign");
-			}
+	public boolean isGraphicsDeviceDisplayAvailable(String displayId) {
+		try {
+			GraphicsOutputInterface display = getDisplayDevice(displayId);
+			return !printersByDisplayIDString.containsKey(display.getIDstring());
+		} catch (InappropriateDeviceException e) {
+			throw new IllegalArgumentException("Couldn't getDisplayDevice for:" + displayId, e);
 		}
-		
-		GraphicsDevice otherDevice = graphicsDevicesByPrinter.putIfAbsent(newPrinter, device);
+	}
+	
+	public void assignDisplay(Printer newPrinter, GraphicsOutputInterface device) throws AlreadyAssignedException, InappropriateDeviceException {
+		String nextIdString = device.buildIDString();//Note: Do NOT call getIDstring() since it's not appropriate
+		if (nextIdString == null) {
+			throw new InappropriateDeviceException(device + " didn't return an available display");
+		}
+		String otherDevice = displayIdsByPrinter.putIfAbsent(newPrinter, nextIdString);
 		if (otherDevice != null) {
-			throw new AlreadyAssignedException("Printer already assigned to:" + otherDevice.getIDstring(), otherDevice);
+			throw new AlreadyAssignedException("Printer already assigned to:" + otherDevice, otherDevice);
 		}
 		
-		Printer otherJob = printersByDisplayIDString.putIfAbsent(device.getIDstring(), newPrinter);
+		Printer otherJob = printersByDisplayIDString.putIfAbsent(nextIdString, newPrinter);
 		if (otherJob != null) {
-			graphicsDevicesByPrinter.remove(newPrinter);
+			displayIdsByPrinter.remove(newPrinter);
 			throw new AlreadyAssignedException("Display already assigned to:" + otherJob, otherJob);
 		}
 
-		newPrinter.setGraphicsData(device);
+		newPrinter.initializeAndAssignGraphicsOutputInterface(device, nextIdString);
 		newPrinter.showBlankImage();
 		logger.info("Display:{} assigned to Printer:{}", device, newPrinter);
 	}
 	
-	public List<GraphicsDevice> getDisplayDevices() {
-		List<GraphicsDevice> devices = new ArrayList<GraphicsDevice>();
+	public List<GraphicsOutputInterface> getDisplayDevices() {
+		List<GraphicsOutputInterface> devices = new ArrayList<GraphicsOutputInterface>();
 		try {
-			devices.addAll(Arrays.asList(getGraphicsEnvironment().getScreenDevices()));
+			for (GraphicsDevice device : getGraphicsEnvironment().getScreenDevices()) {
+				devices.add(new GraphicsDeviceOutputInterface(device.getIDstring(), device));
+			}
 		} catch (InappropriateDeviceException e) {
 			logger.error("Continuing after error...", e);
 		}
 		
-		devices.add(new CustomNamedDisplayDevice(LAST_AVAILABLE_DISPLAY));
-		if (HostProperties.Instance().getFakeDisplay()) {
-			devices.add(new CustomNamedDisplayDevice(SIMULATED_DISPLAY));
-		}
-		
+		devices.addAll(HostProperties.Instance().getDisplayDevices());
 		return devices;
 	}
 
-	public GraphicsDevice getDisplayDevice(String deviceId) throws InappropriateDeviceException {
-		GraphicsDevice newDevice = null;
-		for (GraphicsDevice currentDevice : getDisplayDevices()) {
+	public GraphicsOutputInterface getDisplayDevice(String deviceId) throws InappropriateDeviceException {
+		GraphicsOutputInterface newDevice = null;
+		for (GraphicsOutputInterface currentDevice : getDisplayDevices()) {
 			if (currentDevice.getIDstring().equals(deviceId)) {
 				newDevice = currentDevice;
 			}
@@ -96,8 +89,8 @@ public class DisplayManager {
 		return newDevice;
 	}	
 	
-	public GraphicsDevice getDisplayDevice(int index) throws InappropriateDeviceException {
-		return getGraphicsEnvironment().getScreenDevices()[index];
+	public GraphicsOutputInterface getDisplayDevice(int index) throws InappropriateDeviceException {
+		return getDisplayDevice(getGraphicsEnvironment().getScreenDevices()[index].getIDstring());
 	}
 	
 	GraphicsEnvironment getGraphicsEnvironment() throws InappropriateDeviceException {
@@ -118,12 +111,19 @@ public class DisplayManager {
 		if (printer == null)
 			return;
 		
-		graphicsDevicesByPrinter.remove(printer);
+		String removalId = printer.getDisplayDeviceID();
+		printer.disassociateDisplay();
 		
-		String deviceId = printer.getDisplayDeviceID();
-		if (deviceId == null)
-			return;
+		String otherId = displayIdsByPrinter.remove(printer);
+		if (otherId != removalId && !otherId.equals(removalId)) {
+			logger.error("otherId:" + otherId + " different than printerDisplayId:" + removalId);
+		}
 		
-		printersByDisplayIDString.remove(deviceId);
+		if (removalId != null) {
+			Printer otherPrinter = printersByDisplayIDString.remove(removalId);
+			if (!printer.equals(otherPrinter)) {
+				logger.error("otherPrinter:" + otherPrinter + " different than printer:" + printer);
+			}
+		}
 	}
 }

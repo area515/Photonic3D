@@ -145,6 +145,10 @@ public class RendezvousExchange {
 		Assert.assertEquals(testMessage, new String(dataFrom2));
 		
 		//===================
+		//TODO: This local execution of the concurrency test failed on: 12/8/2016
+		//The I believe this occurred because there was a timeout waiting for a response from method of: org.area515.resinprinter.security.keystore.RendezvousExchange.HttpRequestRunnable
+		//Why did we timeout?
+		
 		runOneWayConcurrencyTest(server1, user1.getUserId(), user2.getUserId());
 		//===================
 		

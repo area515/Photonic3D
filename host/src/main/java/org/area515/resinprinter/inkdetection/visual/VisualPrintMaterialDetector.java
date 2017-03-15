@@ -18,6 +18,7 @@ import javax.ws.rs.core.StreamingOutput;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
+import org.area515.resinprinter.inkdetection.PrintMaterialDetectorSettings;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.services.MediaService;
@@ -172,5 +173,10 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 		
 		BufferedImage edgesImage = detector.getEdgesImage();
 		return getPrintMaterialRemainingFromEdgeImage(edgesImage, houghCircleDetection, houghLineDetection);
+	}
+
+	@Override
+	public void initializeDetector(PrintMaterialDetectorSettings settings) {
+		//No custom settings right now.
 	}
 }

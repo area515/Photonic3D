@@ -1,0 +1,189 @@
+{
+    "configuration": {
+    "name": "LC HR",
+      "machineConfig": {
+      "name": "LC HR",
+        "FileVersion": 0,
+      "PlatformXSize": 160,
+      "PlatformYSize": 120,
+        "PlatformZSize": 200,
+        "MaxXFeedRate": 0,
+        "MaxYFeedRate": 0,
+        "MaxZFeedRate": 0,
+      "XRenderSize": 2048,
+      "YRenderSize": 1536,
+        "MotorsDriverConfig": {
+          "DriverType": "Photocentric",
+          "ComPortSettings": {
+            "PortName": "Autodetect 3d printer firmware",
+            "Speed": 115200,
+            "Databits": 8,
+            "Parity": "None",
+            "Stopbits": "One",
+            "Handshake": "None"
+          }
+        },
+        "MonitorDriverConfig": {
+          "DLP_X_Res": 2048,
+          "DLP_Y_Res": 1536,
+          "MonitorID": "DISPLAY1",
+          "OSMonitorID": "Photocentric Custom Display",
+          "DisplayCommEnabled": false,
+          "ComPortSettings": {
+            "Handshake": "None"
+          },
+          "MonitorTop": 12,
+          "MonitorLeft": 11,
+          "MonitorRight": 11,
+          "MonitorBottom": 12,
+          "UseMask": false
+        },
+        "PauseOnPrinterResponseRegEx": ".*door.*open.*"
+      },
+      "slicingProfile": {
+        "gCodeHeader": "G91;\nM17;\nG1 Z10 F50;\nG1 Z-10 F50;",
+        "gCodeFooter": "M18",
+        "gCodePreslice": null,
+        "gCodeLift": "G1 Z${ZLiftDist} F${ZLiftRate};\nG1 Z-${(ZLiftDist - LayerThickness)} F180;\nM17;\n;<delay> 1500;",
+        "gCodeShutter": null,
+        "name": "Daylight Resin Hard - Red 25 micron",
+        "zliftDistanceGCode": null,
+        "zliftSpeedGCode": null,
+        "selectedInkConfigIndex": 0,
+        "DotsPermmX": 10.3937007874,
+        "DotsPermmY": 10.3937007874,
+        "XResolution": 2048,
+        "YResolution": 1536,
+        "BlankTime": 0,
+        "PlatformTemp": 0,
+        "ExportSVG": 0,
+        "Export": false,
+        "ExportPNG": false,
+        "Direction": "Bottom_Up",
+        "LiftDistance": 5,
+        "SlideTiltValue": 0,
+        "AntiAliasing": true,
+        "UseMainLiftGCode": false,
+        "AntiAliasingValue": 10,
+        "LiftFeedRate": 50,
+        "LiftRetractRate": 0,
+        "FlipX": false,
+        "FlipY": true,
+        "ZLiftDistanceCalculator": "var minLift = 4.5;\nvar value = 8.0;\nif ($CURSLICE > $NumFirstLayers) {\nvalue = minLift  +  0.0015*Math.pow($buildAreaMM,1);\n}\nvalue",
+        "ZLiftSpeedCalculator": "var value = 50.0;\nif ($CURSLICE > $NumFirstLayers) {\nvalue = 100.0 - 0.02 * Math.pow($buildAreaMM,1);\n}\nvalue",
+        "ExposureTimeCalculator": "var value = $FirstLayerTime;\nif ($CURSLICE > $NumFirstLayers) {\n\tvalue = $LayerTime\n}\nvalue",
+        "SelectedInk": "Firm Amber 50 Microns",
+        "MinTestExposure": 0,
+        "TestExposureStep": 0,
+        "InkConfig": [
+          {
+            "PercentageOfPrintMaterialConsideredEmpty": 10,
+            "PrintMaterialDetector": "org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector",
+            "PrintMaterialDetectorSettings": {
+        		"GoodSetting": "GoodValue",
+        		"AnotherSetting": "AnotherValue"
+            	},
+            "Name": "Castable 50 Microns",
+            "SliceHeight": 0.05,
+            "LayerTime": 20000,
+            "FirstLayerTime": 150000,
+            "NumberofBottomLayers": 4,
+            "ResinPriceL": 45
+          },
+		  {
+            "PercentageOfPrintMaterialConsideredEmpty": 10,
+            "Name": "Castable 100 Microns",
+            "SliceHeight": 0.1,
+            "LayerTime": 25000,
+            "FirstLayerTime": 200000,
+            "NumberofBottomLayers": 4,
+            "ResinPriceL": 45
+          },
+		  {
+            "PercentageOfPrintMaterialConsideredEmpty": 10,
+            "Name": "Firm Amber 50 Microns",
+            "SliceHeight": 0.05,
+            "LayerTime": 16000,
+            "FirstLayerTime": 200000,
+            "NumberofBottomLayers": 4,
+            "ResinPriceL": 45
+          },
+		  {
+            "PercentageOfPrintMaterialConsideredEmpty": 10,
+            "Name": "Firm Amber 100 Microns",
+            "SliceHeight": 0.1,
+            "LayerTime": 20000,
+            "FirstLayerTime": 200000,
+            "NumberofBottomLayers": 4,
+            "ResinPriceL": 45
+          },
+		  {
+            "PercentageOfPrintMaterialConsideredEmpty": 10,
+            "Name": "Firm Color 50 Microns",
+            "SliceHeight": 0.05,
+            "LayerTime": 20000,
+            "FirstLayerTime": 200000,
+            "NumberofBottomLayers": 4,
+            "ResinPriceL": 45
+          },
+		  {
+            "PercentageOfPrintMaterialConsideredEmpty": 10,
+            "Name": "Firm Color 100 Microns",
+            "SliceHeight": 0.1,
+            "LayerTime": 25000,
+            "FirstLayerTime": 200000,
+            "NumberofBottomLayers": 4,
+            "ResinPriceL": 45
+          },
+		  {
+            "PercentageOfPrintMaterialConsideredEmpty": 10,
+            "Name": "Hard Amber 50 Microns",
+            "SliceHeight": 0.05,
+            "LayerTime": 16000,
+            "FirstLayerTime": 200000,
+            "NumberofBottomLayers": 4,
+            "ResinPriceL": 45
+          },
+		  {
+            "PercentageOfPrintMaterialConsideredEmpty": 10,
+            "Name": "Hard Amber 100 Microns",
+            "SliceHeight": 0.1,
+            "LayerTime": 20000,
+            "FirstLayerTime": 200000,
+            "NumberofBottomLayers": 4,
+            "ResinPriceL": 45
+          },
+		  {
+            "PercentageOfPrintMaterialConsideredEmpty": 10,
+            "Name": "Hard Color 50 Microns",
+            "SliceHeight": 0.05,
+            "LayerTime": 20000,
+            "FirstLayerTime": 200000,
+            "NumberofBottomLayers": 4,
+            "ResinPriceL": 45
+          },
+		  {
+            "PercentageOfPrintMaterialConsideredEmpty": 10,
+            "Name": "Hard Color 100 Microns",
+            "SliceHeight": 0.1,
+            "LayerTime": 25000,
+            "FirstLayerTime": 200000,
+            "NumberofBottomLayers": 4,
+            "ResinPriceL": 45
+          }
+          ]
+      },
+      "MachineConfigurationName": "Photocentric 10",
+      "SlicingProfileName": "Daylight Resin Hard - Red 25 micron",
+      "AutoStart": true,
+      "Calibrated": false
+    },
+    "started": true,
+    "shutterOpen": false,
+    "displayDeviceID": "Photocentric Custom Display",
+    "currentSlicePauseTime": 0,
+    "status": "Ready",
+    "printPaused": false,
+    "cachedBulbHours": null,
+    "printInProgress": false
+  }

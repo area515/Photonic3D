@@ -59,7 +59,7 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(slicingProfile.getDirection()).thenReturn(BuildDirection.Bottom_Up);
 		Mockito.when(printer.getGCodeControl()).thenReturn(gCode);
 		Mockito.when(slicingProfile.getgCodeLift()).thenReturn("Lift z");
-		Mockito.doCallRealMethod().when(gCode).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString());
+		Mockito.doCallRealMethod().when(gCode).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString(), Mockito.anyBoolean());
 		Mockito.when(printer.getConfiguration().getMachineConfig()).thenReturn(machine);
 		Mockito.when(printer.getConfiguration().getMachineConfig().getMonitorDriverConfig()).thenReturn(monitorConfig);
 		return printJob;
@@ -127,7 +127,7 @@ public class AbstractPrintFileProcessorTest {
 		DataAid aid = processor.initializeJobCacheWithDataAid(printJob);
 		aid.customizer.setNextStep(PrinterStep.PerformExposure);
 		processor.printImageAndPerformPostProcessing(aid, image);
-		Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(1)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString());
+		Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(1)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString(), Mockito.anyBoolean());
 	}
 
 	@Test
@@ -140,7 +140,7 @@ public class AbstractPrintFileProcessorTest {
 		try {
 			aid.customizer.setNextStep(PrinterStep.PerformExposure);
 			processor.printImageAndPerformPostProcessing(aid, image);
-			Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(1)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString());
+			Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(1)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString(), true);
 		} catch (IllegalArgumentException e) {
 			Assert.assertEquals("The result of your lift distance script needs to evaluate to an instance of java.lang.Number", e.getMessage());
 		}
@@ -156,7 +156,7 @@ public class AbstractPrintFileProcessorTest {
 		try {
 			aid.customizer.setNextStep(PrinterStep.PerformExposure);
 			processor.printImageAndPerformPostProcessing(aid, image);
-			Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(1)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString());
+			Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(1)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString(), Mockito.anyBoolean());
 		} catch (IllegalArgumentException e) {
 			Assert.assertEquals("The result of your lift distance script needs to evaluate to an instance of java.lang.Number", e.getMessage());
 		}
@@ -234,6 +234,6 @@ public class AbstractPrintFileProcessorTest {
 		aid.customizer.setNextStep(PrinterStep.PerformExposure);
 		processor.printImageAndPerformPostProcessing(aid, image);
 		//The two executes are for getZLiftDistanceGCode and the life gcode itself
-		Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(2)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString());
+		Mockito.verify(printJob.getPrinter().getGCodeControl(), Mockito.times(2)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString(), Mockito.anyBoolean());
 	}
 }

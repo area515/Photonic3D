@@ -20,7 +20,7 @@ public class MachineConfig implements Named {
 	
 	public static class CorrectionMask {
 	}
-
+	
 	public static class MotorsDriverConfig {
 		@XmlElement(name="DriverType")
 		private String driverType = "eGENERIC";
@@ -131,8 +131,12 @@ public class MachineConfig implements Named {
 	private MonitorDriverConfig monitorDriverConfig;
 	@XmlElement(name="PauseOnPrinterResponseRegEx")
 	private String pauseOnPrinterResponseRegEx;
+	@XmlElement(name="PrinterResponseTimeoutMillis")
+	private Integer printerResponseTimeoutMillis;
 	@XmlElement(name="OverrideModelNormalsWithRightHandRule")
 	private Boolean overrideModelNormalsWithRightHandRule;
+	@XmlElement(name="RestartSerialOnTimeout")
+	private Boolean restartSerialOnTimeout;
 	private String name;
 
 	@XmlTransient
@@ -230,6 +234,23 @@ public class MachineConfig implements Named {
 		this.overrideModelNormalsWithRightHandRule = overrideModelNormalsWithRightHandRule;
 	}
 	
+	@XmlTransient
+	public Integer getPrinterResponseTimeoutMillis() {
+		return printerResponseTimeoutMillis;
+	}
+	public void setPrinterResponseTimeoutMillis(Integer printerResponseTimeoutMillis) {
+		this.printerResponseTimeoutMillis = printerResponseTimeoutMillis;
+	}
+	
+	@XmlTransient
+	public Boolean getRestartSerialOnTimeout() {
+		return restartSerialOnTimeout;
+	}
+	public void setRestartSerialOnTimeout(Boolean restartSerialOnTimeout) {
+		this.restartSerialOnTimeout = restartSerialOnTimeout;
+	}
+
+
 	@XmlTransient
 	public String getOSMonitorID() {
 		return monitorDriverConfig.osMonitorID;

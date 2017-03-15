@@ -23,6 +23,21 @@
 					<input class="form-control" type="checkbox" ng-model="printersController.currentPrinter.configuration.machineConfig.OverrideModelNormalsWithRightHandRule">
 				</div>
 			</div>
+			<div class="list-group">
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-clock-o pull-left"></i>
+					<h4>Printer response timeout (ms)</h4>
+					<input type="number" class="form-control" placeholder="millis" ng-model="printersController.currentPrinter.configuration.machineConfig.PrinterResponseTimeoutMillis">
+				</div>
+			</div>
+			<div class="list-group">
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-undo pull-left"></i>
+					<h4>Restart serial on timeout</h4>
+					<input class="form-control" type="checkbox" ng-model="printersController.currentPrinter.configuration.machineConfig.RestartSerialOnTimeout">
+				</div>
+			</div>
+			
 			<div class="panel-footer">
 				<span ng-include="'cardFooter.html'"></span>
 			</div>

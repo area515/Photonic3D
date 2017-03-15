@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -204,7 +203,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 					
 					// print out comments
 					//logger.info("Ignored line:{}", currentLine);
-					printer.getGCodeControl().executeGCodeWithTemplating(printJob, currentLine);
+					printer.getGCodeControl().executeGCodeWithTemplating(printJob, currentLine, true);
 			}
 			
 			return printer.isPrintActive()?JobStatus.Completed:printer.getStatus();
@@ -227,10 +226,6 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 				}
 			}
 		}
-	}
-	
-	public static File buildExtractionDirectoryForJob(String archive, UUID jobId) {
-		return Paths.get(HostProperties.Instance().getWorkingDir().toString(), archive, jobId.toString()).toFile();
 	}
 	
 	public static File buildExtractionDirectory(String archive) {

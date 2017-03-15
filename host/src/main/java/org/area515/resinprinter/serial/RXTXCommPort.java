@@ -21,7 +21,9 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 	protected InputStream inputStream;
 	private OutputStream outputStream;
 	private SerialPort serialPort;
-
+	private ComPortSettings settings;
+	private int timeout;
+	
 	@Override
 	public void open(String printerName, int timeout, ComPortSettings settings) throws AlreadyAssignedException, InappropriateDeviceException {
 		if (settings == null) {
@@ -43,6 +45,8 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 			throw new InappropriateDeviceException("Speed hasn't been configured for this device(" + settings.getPortName() + ").");
 		}
 		
+		this.settings = settings;
+		this.timeout = timeout;
 		String portName = settings.getPortName();
 		try {
 			CommPortIdentifier identifier = CommPortIdentifier.getPortIdentifier(portName);
@@ -115,6 +119,12 @@ public abstract class RXTXCommPort implements SerialCommunicationsPort {
 	@Override
 	public void write(byte[] gcode) throws IOException {
 		outputStream.write(gcode);
+	}
+
+	@Override
+	public void restartCommunications() throws AlreadyAssignedException, InappropriateDeviceException {
+		close();
+		open(name, timeout, settings);
 	}
 
 	public String toString() {

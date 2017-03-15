@@ -34,6 +34,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
+import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.network.LinuxNetworkManager;
@@ -74,7 +75,6 @@ public class HostProperties {
 	private File printDir;
 	private String hostGUI;
 	private boolean fakeSerial = false;
-	private boolean fakedisplay = false;
 	private boolean removeJobOnCompletion = true;
 	private boolean forceCalibrationOnFirstUse = false;
 	private boolean limitLiveStreamToOneCPU = false;
@@ -82,6 +82,7 @@ public class HostProperties {
 	private List<Class<Feature>> featureClasses = new ArrayList<Class<Feature>>();
 	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
 	private List<PrintFileProcessor> printFileProcessors = new ArrayList<PrintFileProcessor>();
+	private List<GraphicsOutputInterface> displayDevices = new ArrayList<GraphicsOutputInterface>();
 	private Class<SerialCommunicationsPort> serialPortClass;
 	private Class<NetworkManager> networkManagerClass;
 	
@@ -187,10 +188,9 @@ public class HostProperties {
 		uploadDirString = configurationProperties.getProperty("uploaddir");
 		
 		fakeSerial = new Boolean(configurationProperties.getProperty("fakeserial", "false"));
-		fakedisplay = new Boolean(configurationProperties.getProperty("fakedisplay", "false"));
 		hostGUI = configurationProperties.getProperty("hostGUI", "resources");
 		visibleCards = Arrays.asList(configurationProperties.getProperty("visibleCards", "printers,printJobs,printables,users,settings").split(","));
-				
+		
 		//This loads features
 		for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
 			String currentPropertyString = currentProperty.getKey() + "";
@@ -199,8 +199,8 @@ public class HostProperties {
 				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
 					try {
 						featureClasses.add((Class<Feature>)Class.forName(currentPropertyString));
-					} catch (ClassNotFoundException e) {
-						logger.error("Failed to load feature:{}", currentPropertyString);
+					} catch (NoClassDefFoundError | UnsatisfiedLinkError | ClassNotFoundException e) {
+						logger.error("Failed to load Feature:" + currentPropertyString, e);
 					}
 				}
 			}
@@ -214,8 +214,8 @@ public class HostProperties {
 				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
 					try {
 						notificationClasses.add((Class<Notifier>)Class.forName(currentPropertyString));
-					} catch (ClassNotFoundException e) {
-						logger.error("Failed to load notifier:{}", currentPropertyString);
+					} catch (NoClassDefFoundError | UnsatisfiedLinkError | ClassNotFoundException e) {
+						logger.error("Failed to load Notifier:" + currentPropertyString, e);
 					}
 				}
 			}
@@ -230,8 +230,24 @@ public class HostProperties {
 					try {
 						PrintFileProcessor processor = ((Class<PrintFileProcessor>)Class.forName(currentPropertyString)).newInstance();
 						printFileProcessors.add(processor);
-					} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-						logger.error("Failed to load PrintFileProcessor:{}", currentPropertyString);
+					} catch (NoClassDefFoundError | UnsatisfiedLinkError | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+						logger.error("Failed to load PrintFileProcessor:" + currentPropertyString, e);
+					}
+				}
+			}
+		}
+		
+		//This loads displayDevices
+		for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
+			String currentPropertyString = currentProperty.getKey() + "";
+			if (currentPropertyString.startsWith("displayDevice.")) {
+				currentPropertyString = currentPropertyString.replace("displayDevice.", "");
+				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
+					try {
+						GraphicsOutputInterface device = ((Class<GraphicsOutputInterface>)Class.forName(currentPropertyString)).newInstance();
+						displayDevices.add(device);
+					} catch (NoClassDefFoundError | UnsatisfiedLinkError | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+						logger.error("Failed to load DisplayDevice:" + currentPropertyString, e);
 					}
 				}
 			}
@@ -425,7 +441,16 @@ public class HostProperties {
 	}
 
 	public int getVersionNumber() {
-		return versionNumber;
+		if (releaseTagName == null) {
+			return 0;
+		}
+		
+		String release = releaseTagName.replaceAll("[^\\d]", "");
+		if (release.length() == 0) {
+			return 0;
+		}
+		
+		return Integer.valueOf(release);
 	}
 
 	public String getReleaseTagName() {
@@ -440,7 +465,7 @@ public class HostProperties {
 		return printerHostPort;
 	}
 
-	public String hostGUI() {
+	public String getHostGUIDir() {
 		return hostGUI;
 	}
 	
@@ -458,10 +483,6 @@ public class HostProperties {
 	
 	public boolean getFakeSerial(){
 		return fakeSerial;
-	}
-	
-	public boolean getFakeDisplay(){
-		return fakedisplay;
 	}
 	
 	public String getSSLKeypairPassword() {
@@ -502,6 +523,10 @@ public class HostProperties {
 	
 	public List<PrintFileProcessor> getPrintFileProcessors() {
 		return printFileProcessors;
+	}
+	
+	public List<GraphicsOutputInterface> getDisplayDevices() {
+		return displayDevices;
 	}
 	
 	public boolean isUseSSL() {
@@ -595,6 +620,7 @@ public class HostProperties {
 										Boolean.valueOf(properties.getProperty("mail.smtp.starttls.enable")));
 		return settings;
 	}
+	
 	public void saveEmailSettings(CwhEmailSettings settings) {
 		Properties emailProperties = new Properties();
 		StringBuilder toEmails = new StringBuilder();

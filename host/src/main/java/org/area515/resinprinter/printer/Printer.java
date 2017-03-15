@@ -1,29 +1,16 @@
 package org.area515.resinprinter.printer;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Frame;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsDevice;
-import java.awt.Insets;
-import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.swing.JFrame;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.display.DisplayManager;
+import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.gcode.GCodeControl;
 import org.area515.resinprinter.job.JobStatus;
@@ -38,19 +25,12 @@ public class Printer {
 	private PrinterConfiguration configuration;
 	
 	//For Display
-	private Frame refreshFrame;
-	private DisplayState displayState = DisplayState.Blank;
-	private int gridSquareSize;
-	private Point calibrationXY;
-	private BufferedImage displayImage;
+	private GraphicsOutputInterface refreshFrame;
 	private boolean started;
 	private boolean shutterOpen;
 	private Integer bulbHours;
-	private String displayDeviceID;
 	private long currentSlicePauseTime;
-	private int sliceNumber;
-	private Font defaultFont;
-	private Insets frameInsets;
+	private String displayDeviceID;
 	
 	//For Serial Ports
 	private SerialCommunicationsPort printerFirmwareSerialPort;
@@ -145,10 +125,10 @@ public class Printer {
 			if (this.status != null && this.status.isPaused()) {
 				jobContinued.signalAll();
 			}
-			
+			logger.info("Moving from status:" + this.status + " to status:" + status);
 			this.status = status;
 			if (!status.isPrintInProgress()) {
-				sliceNumber = 0;
+				refreshFrame.resetSliceCount();
 			}
 		} finally {
 			statusLock.unlock();
@@ -194,92 +174,11 @@ public class Printer {
 		}
 	}
 	
-	public void setGraphicsData(final GraphicsDevice device) {
-		refreshFrame = new JFrame() {
-			private static final long serialVersionUID = 5024551291098098753L;
-
-			@Override
-			public void paint(Graphics g) {
-				//super.paint(g);
-				
-				Rectangle screenSize = refreshFrame.getGraphicsConfiguration().getBounds();
-				Graphics2D g2 = (Graphics2D)g;
-				switch (displayState) {
-				case Blank :
-					g2.setBackground(Color.black);
-					g2.clearRect(0, 0, screenSize.width, screenSize.height);
-					return;
-				case Grid :
-					g2.setBackground(Color.black);
-					g2.clearRect(0, 0, screenSize.width, screenSize.height);
-					g2.setColor(Color.RED);
-					for (int x = 0; x < screenSize.width; x += gridSquareSize) {
-						g2.drawLine(x, 0, x, screenSize.height);
-					}
-					
-					for (int y = 0; y < screenSize.height; y += gridSquareSize) {
-						g2.drawLine(0, y, screenSize.width, y);
-					}
-					return;
-				case Calibration :
-					g2.setBackground(Color.black);
-					g2.clearRect(0, 0, screenSize.width, screenSize.height);
-					g2.setColor(Color.RED);
-					int startingX = screenSize.width / 2 - calibrationXY.x / 2;
-					int startingY = screenSize.height / 2 - calibrationXY.y / 2;
-					int halfLengthOfDimLines = 50;
-					
-					//X Dimension lines
-					g2.drawLine(startingX                  , screenSize.height / 2 - halfLengthOfDimLines, startingX                  , screenSize.height / 2 + halfLengthOfDimLines);
-					g2.drawLine(startingX + calibrationXY.x, screenSize.height / 2 - halfLengthOfDimLines, startingX + calibrationXY.x, screenSize.height / 2 + halfLengthOfDimLines);
-					
-					//Y Dimension lines
-					g2.drawLine(screenSize.width / 2 - halfLengthOfDimLines, startingY                  , screenSize.width / 2 + halfLengthOfDimLines, startingY);
-					g2.drawLine(screenSize.width / 2 - halfLengthOfDimLines, startingY + calibrationXY.y, screenSize.width / 2 + halfLengthOfDimLines, startingY + calibrationXY.y);
-										
-					//Vertical line of cross
-					g2.drawLine(screenSize.width / 2, startingY, screenSize.width / 2, startingY + calibrationXY.y);
-
-					//Horizontal line of cross
-					g2.setStroke(new BasicStroke(5, 0, 0, 1.0f, new float[]{10, 10}, 2.0f));
-					g2.drawLine(startingX, screenSize.height / 2, startingX + calibrationXY.x, screenSize.height / 2);
-					return;
-				case CurrentSlice :
-					g2.drawImage(displayImage, null, screenSize.width / 2 - displayImage.getWidth() / 2, screenSize.height / 2 - displayImage.getHeight() / 2);
-					if (device.getIDstring().equalsIgnoreCase(DisplayManager.SIMULATED_DISPLAY)) {
-						g2.setColor(Color.RED);
-						g2.setFont(defaultFont);
-						g2.drawString("Slice:" + sliceNumber, frameInsets.left, frameInsets.top + g2.getFontMetrics().getHeight());
-					}
-					return;
-				}
-			}
-		};
-
-		if (device.getIDstring().equalsIgnoreCase(DisplayManager.SIMULATED_DISPLAY)) {
-			refreshFrame.setTitle("Printer Simulation");
-			defaultFont = refreshFrame.getFont();
-			refreshFrame.setVisible(true);
-			refreshFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-			refreshFrame.setMinimumSize(new Dimension(500, 500));
-			frameInsets = refreshFrame.getInsets();
-		} else {
-			refreshFrame.setUndecorated(true);
-			device.setFullScreenWindow(refreshFrame);
-			//This can only be done with a real graphics device since it would reassign the printer Simulation
-			//OLD getConfiguration().getMachineConfig().setOSMonitorID(device.getDefaultConfiguration().getDevice().getIDstring());
-			getConfiguration().getMachineConfig().setOSMonitorID(device.getIDstring());
-			
-			// hide mouse in full screen
-			Toolkit toolkit = Toolkit.getDefaultToolkit();
-		    Point hotSpot = new Point(0,0);
-		    BufferedImage cursorImage = new BufferedImage(1, 1, BufferedImage.TRANSLUCENT); 
-		    Cursor invisibleCursor = toolkit.createCustomCursor(cursorImage, hotSpot, "InvisibleCursor");        
-		    refreshFrame.setCursor(invisibleCursor);
-		}
-
-		this.displayDeviceID = device.getIDstring();
-		Rectangle screenSize = refreshFrame.getGraphicsConfiguration().getBounds();
+	public void initializeAndAssignGraphicsOutputInterface(final GraphicsOutputInterface device, final String displayDeviceID) {
+		this.displayDeviceID = displayDeviceID;
+		this.refreshFrame = device.initializeDisplay(displayDeviceID);
+		
+		Rectangle screenSize = refreshFrame.getBoundary();
 		getConfiguration().getMachineConfig().getMonitorDriverConfig().setDLP_X_Res(screenSize.width);
 		getConfiguration().getMachineConfig().getMonitorDriverConfig().setDLP_Y_Res(screenSize.height);
 	}
@@ -287,31 +186,33 @@ public class Printer {
 	public String getDisplayDeviceID() {
 		return displayDeviceID;
 	}
-
-	public void showBlankImage() {
-		displayState = DisplayState.Blank;		
-		refreshFrame.repaint();
+	
+	public void showBlankImage() {	
+		refreshFrame.showBlankImage();
 	}
 	
 	public void showCalibrationImage(int xPixels, int yPixels) {
-		displayState = DisplayState.Calibration;
-		calibrationXY = new Point(xPixels, yPixels);
-		refreshFrame.repaint();
+		refreshFrame.showCalibrationImage(xPixels, yPixels);
 	}
 	
 	public void showGridImage(int pixels) {
-		displayState = DisplayState.Grid;
-		gridSquareSize = pixels;
-		refreshFrame.repaint();
+		refreshFrame.showGridImage(pixels);
 	}
 	
 	public void showImage(BufferedImage image) {
-		sliceNumber++;
-		displayState = DisplayState.CurrentSlice;		
-		displayImage = image;
-		refreshFrame.repaint();
+		refreshFrame.showImage(image);
 	}
 	
+	@JsonIgnore
+	@XmlTransient
+	public boolean isDisplayBusy() {
+		if (refreshFrame == null) {
+			return false;
+		}
+		
+		return refreshFrame.isDisplayBusy();
+	}
+
 	@JsonIgnore
 	@XmlTransient
 	public boolean isProjectorPowerControlSupported() {
@@ -428,10 +329,15 @@ public class Printer {
 		if (refreshFrame != null) {
 			refreshFrame.dispose();
 		}
-		bulbHours = null;
 		started = false;
 	}
 
+	public void disassociateDisplay() {
+		this.bulbHours = null;
+		this.refreshFrame = null;
+		this.displayDeviceID = null;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

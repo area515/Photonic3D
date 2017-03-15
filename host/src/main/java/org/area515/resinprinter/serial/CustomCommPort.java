@@ -41,6 +41,10 @@ public class CustomCommPort implements SerialCommunicationsPort {
 		//Do nothing
 		return null;
 	}
+	
+	@Override
+	public void restartCommunications() {
+	}
 
 	public String toString() {
 		return name;

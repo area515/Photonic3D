@@ -23,6 +23,7 @@ import org.area515.util.Log4jTimer;
 
 public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> implements Previewable {
 	public static String STL_OVERHEAD = "stlOverhead";
+	public static final String TOO_LARGE = "This file is too large for Photonic3D to load:";
 
 	private static final Logger logger = LogManager.getLogger();
 
@@ -127,7 +128,7 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 					dataAid.sliceHeight / 2, 
 					true, 
 					overrideNormals,
-					new CloseOffMend());//*/
+					new CloseOffMend());
 			dataAid.slicer.loadFile(new FileInputStream(dataAid.printJob.getJobFile()), null, null);
 			dataAid.printJob.setTotalSlices(dataAid.slicer.getZMaxIndex() - dataAid.slicer.getZMinIndex());
 			//Get the slicer queued up for the first image;
@@ -137,6 +138,8 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			return renderer.call().getPrintableImage();
 		} catch (IOException | JobManagerException e) {
 			throw new SliceHandlingException(e);
+		} catch (OutOfMemoryError e) {
+			throw new SliceHandlingException(TOO_LARGE + aid.printJob.getJobFile(), e);
 		}
 	}
 

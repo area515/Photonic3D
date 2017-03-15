@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
@@ -22,31 +23,33 @@ import freemarker.template.TemplateException;
 
 public abstract class GCodeControl {
 	public static Logger logger = LogManager.getLogger();
-	public int SUGGESTED_TIMEOUT_FOR_ONE_GCODE = 1000 * 60 * 2;//2 minutes
+	private int SUGGESTED_TIMEOUT_FOR_ONE_GCODE = 1000 * 60 * 2;//2 minutes
 	private Pattern GCODE_RESPONSE_PATTERN = Pattern.compile("(?i)(?:(o?k|e?rror:|a?larm:)(.*)|<?([^>]*)>|\\[?([^]]*)\\])\r?\n");
 	
     private Printer printer;
     private ReentrantLock gCodeLock = new ReentrantLock();
     private StringBuilder builder = new StringBuilder();
     private int parseLocation = 0;
+    private int gcodeTimeout;
+    private boolean restartSerialOnTimeout;
     
     public GCodeControl(Printer printer) {
     	this.printer = printer;
-    	//Don't do this it MUST be lazy loaded!
-    	//this.port = printer.getSerialPort();
+    	this.gcodeTimeout = printer.getConfiguration().getMachineConfig().getPrinterResponseTimeoutMillis() != null?printer.getConfiguration().getMachineConfig().getPrinterResponseTimeoutMillis():SUGGESTED_TIMEOUT_FOR_ONE_GCODE;
+    	this.restartSerialOnTimeout = printer.getConfiguration().getMachineConfig().getRestartSerialOnTimeout() != null?printer.getConfiguration().getMachineConfig().getRestartSerialOnTimeout():false;
     }
 	
     private Printer getPrinter() {
     	return printer;
     }
     
-	private PrinterResponse readUntilOkOrStoppedPrinting(Printer printer) throws IOException {
+	private PrinterResponse readUntilOkOrStoppedPrinting(boolean exitIfPrintInactive) throws IOException {
 		PrinterResponse line = null;
 		StringBuilder responseBuilder = new StringBuilder();
 		ParseState state = null;
 		Matcher matcher = null;
 		do {
-			state = IOUtilities.readLine(printer, getPrinter().getPrinterFirmwareSerialPort(), builder, parseLocation, SUGGESTED_TIMEOUT_FOR_ONE_GCODE, IOUtilities.CPU_LIMITING_DELAY);
+			state = IOUtilities.readLine(exitIfPrintInactive?getPrinter():null, getPrinter().getPrinterFirmwareSerialPort(), builder, parseLocation, gcodeTimeout, IOUtilities.CPU_LIMITING_DELAY);
 			parseLocation = state.parseLocation;
 			if (state.currentLine != null) {
 				if (line == null) {
@@ -60,6 +63,13 @@ public abstract class GCodeControl {
 			
 			logger.info("lineRead: {}", state.currentLine);
 		} while (matcher != null && !matcher.matches());
+		if (state.timeout && restartSerialOnTimeout) {
+			try {
+				getPrinter().getPrinterFirmwareSerialPort().restartCommunications();
+			} catch (AlreadyAssignedException | InappropriateDeviceException e) {
+				throw new IOException("Problems restarting serial port:" + getPrinter().getPrinterFirmwareSerialPort(), e);
+			}
+		}
 		return line;
 	}
 	
@@ -84,7 +94,7 @@ public abstract class GCodeControl {
         	for (int attempt = 0; mustAttempt; attempt++) {
 	        	logger.info("Write {}: {}", attempt, cmd);
 	        	getPrinter().getPrinterFirmwareSerialPort().write(cmd.getBytes());
-	        	PrinterResponse response = readUntilOkOrStoppedPrinting(printer);
+	        	PrinterResponse response = readUntilOkOrStoppedPrinting(true);
 	        	if (response == null) {
 	        		return "";//I think this should be null, but I'm preserving backwards compatibility
 	        	}
@@ -92,13 +102,14 @@ public abstract class GCodeControl {
 	        	if (isPausableError(response.getLastLineMatcher(), printJob)) {
 	        		attempt++;
 	        		printJob.setErrorDescription(response.getLastLineMatcher().group(2));
-	        		printer.setStatus(JobStatus.PausedWithWarning);
-	        		NotificationManager.jobChanged(printer, printJob);
+	        		logger.info("Received error from printer:" + response.getLastLineMatcher().group(2));
+	        		getPrinter().setStatus(JobStatus.PausedWithWarning);
+	        		NotificationManager.jobChanged(getPrinter(), printJob);
 	        		
 	        		//Allow the user to manipulate the printer while paused
 	        		gCodeLock.unlock();
 	        		try {
-	        			mustAttempt = printer.waitForPauseIfRequired();
+	        			mustAttempt = getPrinter().waitForPauseIfRequired();
 	        		} finally {
 	        			gCodeLock.lock();
 	        		}
@@ -124,7 +135,7 @@ public abstract class GCodeControl {
         	
         	logger.info("Write: {}", cmd);
         	getPrinter().getPrinterFirmwareSerialPort().write(cmd.getBytes());
-        	PrinterResponse response = readUntilOkOrStoppedPrinting(null);
+        	PrinterResponse response = readUntilOkOrStoppedPrinting(false);
         	if (response == null) {
         		return "";
         	}
@@ -205,7 +216,7 @@ public abstract class GCodeControl {
 		}
     }
     
-    public String executeGCodeWithTemplating(PrintJob printJob, String gcodes) throws InappropriateDeviceException {
+    public String executeGCodeWithTemplating(PrintJob printJob, String gcodes, boolean stopSendingGCodeWhenPrintInactive) throws InappropriateDeviceException {
 		Pattern gCodePattern = Pattern.compile("\\s*([^;]*)\\s*(;.*)?", Pattern.CASE_INSENSITIVE);
 		try {
 			if (gcodes == null || gcodes.trim().isEmpty()) {
@@ -219,7 +230,7 @@ public abstract class GCodeControl {
 			}
 			
 			for (String gcode : gcodes.split("[\r]?\n")) {
-				if (!printJob.getPrinter().isPrintActive()) {
+				if (stopSendingGCodeWhenPrintInactive && !printJob.getPrinter().isPrintActive()) {
 					break;
 				}
 				

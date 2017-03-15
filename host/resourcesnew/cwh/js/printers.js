@@ -10,10 +10,12 @@
 		this.loadingProfilesMessage = "--- Loading slicing profiles from server ---"
 		this.loadingMachineConfigMessage = "--- Loading machine configurations from server ---"
 		this.autodirect = $location.search().autodirect;
-		function refreshSelectedPrinter(printerList) {
+		
+		//TODO: Instead of having this method we should understand how the selected printer gets out of sync and fix that
+		function refreshSelectedPrinterAndAutodirectIfNecessary(printerList) {
         	var foundPrinter = false;
         	if (printerList.length == 1 && printerList[0].started && controller.autodirect != 'disabled') {
-        		controller.currentPrinter = printer;
+        		controller.currentPrinter = printerList[0];
         		controller.gotoPrinterControls();
         		foundPrinter = true;
         	} else {
@@ -27,6 +29,7 @@
 	        			printersStarted += 1;
 	        			currPrinter = printer;
 	        		}
+	        		
 	        		if (controller.currentPrinter != null && printer.configuration.name === controller.currentPrinter.configuration.name) {
 	        			controller.currentPrinter = printer;
 	        			foundPrinter = true;
@@ -46,11 +49,11 @@
 		function refreshPrinters() {
 	        $http.get('/services/printers/list').success(function(data) {
 	        	$scope.printers = data;
-	        	refreshSelectedPrinter(data);
+	        	refreshSelectedPrinterAndAutodirectIfNecessary(data);
 	        });
 	    }
 		
-		function executeActionAndRefreshPrinters(command, message, service, targetPrinter, postTargetPrinter) {
+		function executeActionAndRefreshPrinters(command, message, service, targetPrinter, postTargetPrinter, shouldRefreshPrinterList) {
 			if (targetPrinter == null) {
     			$scope.$emit("MachineResponse", {machineResponse: {command:command, message:message, successFunction:null, afterErrorFunction:null}});
 		        return;
@@ -59,6 +62,11 @@
 			if (postTargetPrinter) {
 			   $http.post(service, targetPrinter).then(
 	       			function(response) {
+	       				if (shouldRefreshPrinterList) {
+	       					refreshPrinters();
+	       					refreshSlicingProfiles();
+	       					refreshMachineConfigurations();
+	       				}
 	       			}, 
 	       			function(response) {
  	        			$scope.$emit("HTTPError", {status:response.status, statusText:response.data});
@@ -69,7 +77,7 @@
 		    } else {
 		       $http.get(service + printerName).then(
 		       		function(response) {
-		        		$scope.$emit("MachineResponse", {machineResponse: response.data, successFunction:refreshPrinters, afterErrorFunction:null});
+		        		$scope.$emit("MachineResponse", {machineResponse: response.data, successFunction:shouldRefreshPrinterList?refreshPrinters:null, afterErrorFunction:null});
 		       		}, 
 		       		function(response) {
 	 	        		$scope.$emit("HTTPError", {status:response.status, statusText:response.data});
@@ -86,12 +94,12 @@
 			openSavePrinterDialog(editTitle, false);
 		}
 
-		$scope.savePrinter = function savePrinter(printer, renameProfiles) {
-			if (renameProfiles) {
+		$scope.savePrinter = function savePrinter(printer, isNewPrinter) {
+			if (isNewPrinter) {//Rename the profiles to what the user entered if this is a new printer
 				controller.editPrinter.configuration.MachineConfigurationName = controller.editPrinter.configuration.name;
 				controller.editPrinter.configuration.SlicingProfileName = controller.editPrinter.configuration.name;
 			}
-			executeActionAndRefreshPrinters("Save Printer", "No printer selected to save.", '/services/printers/save', printer, true);
+			executeActionAndRefreshPrinters("Save Printer", "No printer selected to save.", '/services/printers/save', printer, true, isNewPrinter);
 	        controller.editPrinter = null;
 	        controller.openType = null;
 	        photonicUtils.clearPreviewExternalState();
@@ -164,16 +172,16 @@
 
 		this.startCurrentPrinter = function startCurrentPrinter() {
 			$('#start-btn').attr('class', 'fa fa-refresh fa-spin');
-			executeActionAndRefreshPrinters("Start Printer", "No printer selected to start.", '/services/printers/start/', controller.currentPrinter, false);
+			executeActionAndRefreshPrinters("Start Printer", "No printer selected to start.", '/services/printers/start/', controller.currentPrinter, false, true);
 		}
 		
 		this.stopCurrentPrinter = function stopCurrentPrinter() {
 			$('#stop-btn').attr('class', 'fa fa-refresh fa-spin');			
-			executeActionAndRefreshPrinters("Stop Printer", "No printer selected to Stop.", '/services/printers/stop/', controller.currentPrinter, false);
+			executeActionAndRefreshPrinters("Stop Printer", "No printer selected to Stop.", '/services/printers/stop/', controller.currentPrinter, false, true);
 		}
 		
 		this.deleteCurrentPrinter = function deleteCurrentPrinter() {
-			executeActionAndRefreshPrinters("Delete Printer", "No printer selected to Delete.", '/services/printers/delete/', controller.currentPrinter, false);
+			executeActionAndRefreshPrinters("Delete Printer", "No printer selected to Delete.", '/services/printers/delete/', controller.currentPrinter, false, true);
 	        controller.currentPrinter = null;
 		}
 		
@@ -220,17 +228,21 @@
 					controller.loadingFontsMessage = "Select a font...";
 				});
 		
-		$http.get('/services/machine/slicingProfiles/list').success(
-				function (data) {
-					controller.slicingProfiles = data;
-					controller.loadingProfilesMessage = "Select a slicing profile...";
-				});
+		function refreshSlicingProfiles() {
+			$http.get('/services/machine/slicingProfiles/list').success(
+					function (data) {
+						controller.slicingProfiles = data;
+						controller.loadingProfilesMessage = "Select a slicing profile...";
+					});
+		}
 		
-		$http.get('/services/machine/machineConfigurations/list').success(
-				function (data) {
-					controller.machineConfigurations = data;
-					controller.loadingMachineConfigMessage = "Select a machine configuration...";
-				});
+		function refreshMachineConfigurations() {
+			$http.get('/services/machine/machineConfigurations/list').success(
+					function (data) {
+						controller.machineConfigurations = data;
+						controller.loadingMachineConfigMessage = "Select a machine configuration...";
+					});
+		}
 		
 		$http.get("https://api.github.com/repos/" + $scope.repo + "/contents/host/" + PRINTERS_DIRECTORY + "?ref=" + BRANCH).success(
 			function (data) {
@@ -242,7 +254,12 @@
 			photonicUtils.testScript(controller, scriptName, returnType, script);
 		};
 		
-		controller.inkDetectors = [{name:"Visual Ink Detector", className:"org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector"}];
+		controller.inkDetectors = [
+		                           {name:"Visual Ink Detector", className:"org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector"},
+		                           {name:"Digital GPIO Ink Detector", className:"org.area515.resinprinter.inkdetection.gpio.GpioDigitalPinInkDetector"}
+		                          ];
+		refreshSlicingProfiles();
+		refreshMachineConfigurations();
 		refreshPrinters();
 	}])
 

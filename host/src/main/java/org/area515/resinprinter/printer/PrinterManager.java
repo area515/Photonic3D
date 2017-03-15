@@ -1,7 +1,6 @@
 package org.area515.resinprinter.printer;
 
 
-import java.awt.GraphicsDevice;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.DisplayManager;
+import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
@@ -117,7 +117,7 @@ public class PrinterManager {
 		try {
 			printer = new Printer(currentConfiguration);
 			String monitorId = currentConfiguration.getMachineConfig().getOSMonitorID();
-			GraphicsDevice graphicsDevice = null;
+			GraphicsOutputInterface graphicsDevice = null;
 			if (monitorId != null) {
 				graphicsDevice = DisplayManager.Instance().getDisplayDevice(currentConfiguration.getMachineConfig().getOSMonitorID());
 			} else {
@@ -157,24 +157,26 @@ public class PrinterManager {
 			logger.info("Printer started:{}", printer);
 			return printer;
 		} catch (JobManagerException | AlreadyAssignedException | InappropriateDeviceException e) {
-			logger.error("Error starting printer:" + currentConfiguration, e);
-			DisplayManager.Instance().removeAssignment(printer);
-			SerialManager.Instance().removeAssignments(printer);
-			if (printer != null) {
-				printer.close();
-			}
+			handleError(printer, currentConfiguration, e);
 			throw e;
-		} catch (Exception e) {
-			logger.error("Error starting printer:" + currentConfiguration, e);
-			DisplayManager.Instance().removeAssignment(printer);
-			SerialManager.Instance().removeAssignments(printer);
-			if (printer != null) {
-				printer.close();
-			}
-			throw new InappropriateDeviceException("Internal error on server");
+		} catch (Throwable e) {
+			handleError(printer, currentConfiguration, e);
+			throw new InappropriateDeviceException("Internal error on server", e);
 		} finally {
 			printerLock.unlock();
 		}
+	}
+	
+	private void handleError(Printer printer, PrinterConfiguration currentConfiguration, Throwable e) {
+		logger.error("Error starting printer:" + currentConfiguration, e);
+		try {
+			if (printer != null) {
+				printer.close();
+			}
+		} finally {
+			DisplayManager.Instance().removeAssignment(printer);
+			SerialManager.Instance().removeAssignments(printer);
+		}		
 	}
 	
 	public void assignPrinter(PrintJob newJob, Printer printer) throws AlreadyAssignedException {

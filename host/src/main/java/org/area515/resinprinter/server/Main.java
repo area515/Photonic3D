@@ -118,7 +118,7 @@ public class Main {
         // In this example it is the current directory but it can be configured to anything that the jvm has access to.
         resource_handler.setDirectoriesListed(true);
         resource_handler.setWelcomeFiles(new String[]{ "index.html" });
-        resource_handler.setResourceBase(HostProperties.Instance().hostGUI());
+        resource_handler.setResourceBase(HostProperties.Instance().getHostGUIDir());
         
 	    //Angular is pretty messed up when it comes to link rewriting: https://github.com/angular/angular.js/issues/4608
 	    //I can't believe we need to server side changes to fix this!!! https://github.com/angular-ui/ui-router/wiki/Frequently-Asked-Questions#how-to-configure-your-server-to-work-with-html5mode

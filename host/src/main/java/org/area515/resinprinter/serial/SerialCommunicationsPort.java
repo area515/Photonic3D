@@ -13,4 +13,5 @@ public interface SerialCommunicationsPort {
 	public String getName();
 	public void write(byte[] data) throws IOException;
 	public byte[] read() throws IOException;
+	public void restartCommunications() throws AlreadyAssignedException, InappropriateDeviceException;
 }
