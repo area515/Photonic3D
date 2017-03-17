@@ -82,7 +82,7 @@
 						<span class="input-group-btn">
 							<button class="btn btn-primary" type="button" ng-click="printerControlsController.executeGCode(gCodeToSend)">Go</button>
 						</span>
-						<input type="text" class="form-control" ng-model="printerControlsController.gCodeToSend" placeholder="gcode">
+						<input type="text" class="form-control" on-enter="printerControlsController.executeGCode(gCodeToSend)" ng-model="printerControlsController.gCodeToSend" placeholder="gcode">
 					</div>
 					<textarea class="form-control" ng-model="printerControlsController.gcodeProcessing" rows="6"></textarea>
 				</div>
