@@ -11,7 +11,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,7 +81,7 @@ public class HostProperties {
 	private boolean forceCalibrationOnFirstUse = false;
 	private boolean limitLiveStreamToOneCPU = false;
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
-	private List<Class<Feature>> featureClasses = new ArrayList<Class<Feature>>();
+	private Map<Class<Feature>, String> featureClasses = new HashMap<Class<Feature>, String>();
 	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
 	private List<PrintFileProcessor> printFileProcessors = new ArrayList<PrintFileProcessor>();
 	private List<GraphicsOutputInterface> displayDevices = new ArrayList<GraphicsOutputInterface>();
@@ -198,7 +200,7 @@ public class HostProperties {
 				currentPropertyString = currentPropertyString.replace("feature.", "");
 				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
 					try {
-						featureClasses.add((Class<Feature>)Class.forName(currentPropertyString));
+						featureClasses.put((Class<Feature>)Class.forName(currentPropertyString), configurationProperties.getProperty("featureSettings." + currentPropertyString));
 					} catch (NoClassDefFoundError | UnsatisfiedLinkError | ClassNotFoundException e) {
 						logger.error("Failed to load Feature:" + currentPropertyString, e);
 					}
@@ -273,7 +275,7 @@ public class HostProperties {
 		try {
 			userManagementFeature = configurationProperties.getProperty("UserManagementFeatureImplementation", KeystoreLoginService.class.getName());
 			Class<Feature> userManagementFeatureClass = (Class<Feature>)Class.forName(userManagementFeature);
-			featureClasses.add(userManagementFeatureClass);
+			featureClasses.put(userManagementFeatureClass, configurationProperties.getProperty("featureSettings." + userManagementFeatureClass.getName()));
 		} catch (ClassNotFoundException e) {
 			logger.error("Failed to load UserManagementFeatureImplementation:{}", userManagementFeature);
 		}
@@ -513,7 +515,7 @@ public class HostProperties {
 		return networkManagerClass;
 	}
 	
-	public List<Class<Feature>> getFeatures() {
+	public Map<Class<Feature>, String> getFeatures() {
 		return featureClasses;
 	}
 	

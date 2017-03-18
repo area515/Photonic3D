@@ -59,7 +59,7 @@ public class X509FriendshipFeature implements FriendshipFeature {
 	}
 	
 	@Override
-	public void start(URI startURI) throws Exception {
+	public void start(URI startURI, String settings) throws Exception {
 		this.server = RendezvousClient.getServer(startURI);
 	}
 	

@@ -3,9 +3,10 @@ package org.area515.resinprinter.inkdetection;
 import java.io.IOException;
 
 import org.area515.resinprinter.printer.Printer;
+import org.area515.util.DynamicJSonSettings;
 
 public interface PrintMaterialDetector {
-	public void initializeDetector(PrintMaterialDetectorSettings settings);
+	public void initializeDetector(DynamicJSonSettings settings);
 	/**
 	 * This method is executed synchronously with the printing process to ensure the print material is settled to a 
 	 * point where it can be measured properly. For example, a VisualPrintMaterialDetector would want to take a

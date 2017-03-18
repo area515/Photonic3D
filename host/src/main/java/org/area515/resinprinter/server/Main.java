@@ -37,6 +37,8 @@ import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 /*
  * References:
  * http://news-anand.blogspot.com/2012/05/today-i-am-going-tell-you-how-to-create.html
@@ -48,15 +50,7 @@ public class Main {
     private static final Logger logger = LogManager.getLogger();
     
     public static final String AUTHENTICATION_SCHEME = Constraint.__BASIC_AUTH;
-	public static ScheduledExecutorService GLOBAL_EXECUTOR = new ScheduledThreadPoolExecutor(3, new ThreadFactory() {
-		private AtomicInteger threads = new AtomicInteger();
-		@Override
-		public Thread newThread(Runnable r) {
-			Thread thread = new Thread(r, "PrintJobProcessorThread-" + threads.incrementAndGet());
-			thread.setDaemon(true);
-			return thread;
-		}
-	});
+	public static ScheduledExecutorService GLOBAL_EXECUTOR = new ScheduledThreadPoolExecutor(8, new ThreadFactoryBuilder().setNameFormat("PrintJobProcessorThread-%d").setDaemon(true).build());
 	
 	public static void setupAuthentication(ServletContextHandler context, UserManagementFeature loginService) {
         //All below is user based security

@@ -3,8 +3,8 @@ package org.area515.resinprinter.inkdetection.gpio;
 import java.io.IOException;
 
 import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
-import org.area515.resinprinter.inkdetection.PrintMaterialDetectorSettings;
 import org.area515.resinprinter.printer.Printer;
+import org.area515.util.DynamicJSonSettings;
 
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
@@ -38,7 +38,7 @@ public class GpioDigitalPinInkDetector implements PrintMaterialDetector, GpioPin
 	}
 
 	@Override
-	public void initializeDetector(PrintMaterialDetectorSettings settings) {
+	public void initializeDetector(DynamicJSonSettings settings) {
 		Pin rPin = null;
 		if (settings != null) {
 			Object pin = settings.getSettings().get("Pin");

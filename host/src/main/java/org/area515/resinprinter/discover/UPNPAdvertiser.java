@@ -72,7 +72,7 @@ public class UPNPAdvertiser implements Feature {
 	}
 	
 	@Override
-	public void start(URI webPresentationURI) {
+	public void start(URI webPresentationURI, String settings) {
 		try {
 			UDN udn = UDN.uniqueSystemIdentifier(getSetup().deviceName + getSetup().deviceReleaseString + getSetup().manufacturer);
 			DeviceType type = new UDADeviceType(getSetup().deviceType, getSetup().deviceVersion);
