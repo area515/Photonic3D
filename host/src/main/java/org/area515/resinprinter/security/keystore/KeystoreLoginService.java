@@ -161,7 +161,7 @@ public class KeystoreLoginService implements UserManagementFeature<String[], Pho
 	}
 
 	@Override
-	public void start(URI uri) {
+	public void start(URI uri, String settings) {
 		if (!keyFile.exists()) {
 			return;
 		}

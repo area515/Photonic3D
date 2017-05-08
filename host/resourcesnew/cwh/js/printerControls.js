@@ -74,7 +74,7 @@
 			$http.get("services/printers/motors" + (isOn?"On":"Off") + "/" + printerName).then(gCodeSuccess, errorFunction)
 		}
         this.executeGCode = function executeGCode() {
-			$http.get("services/printers/executeGCode/" + printerName + "/" + controller.gCodeToSend).then(gCodeSuccess, errorFunction)
+			$http.get("services/printers/executeGCode/" + encodeURIComponent(printerName) + "/" + encodeURIComponent(controller.gCodeToSend)).then(gCodeSuccess, errorFunction)
 		}
         this.projector = function projector(startStop) {
 			$http.get("services/printers/" + startStop + "Projector/" + printerName).then(gCodeSuccess, errorFunction)

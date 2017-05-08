@@ -1,10 +1,9 @@
 package org.area515.resinprinter.plugin;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,14 +13,14 @@ import org.area515.resinprinter.server.HostProperties;
 
 public class FeatureManager {
 	private static final Logger logger = LogManager.getLogger();
-	private static List<Feature> features = null;
+	private static Map<Feature, String> features = null;
 	
 	private static void initFeatures() {
-		features = new ArrayList<Feature>();
-		List<Class<Feature>> featureClasses = HostProperties.Instance().getFeatures();
-		for (Class<Feature> currentClass : featureClasses) {
+		features = new HashMap<Feature, String>();
+		Map<Class<Feature>, String> featureClasses = HostProperties.Instance().getFeatures();
+		for (Entry<Class<Feature>, String> currentEntry : featureClasses.entrySet()) {
 			try {
-				features.add(currentClass.newInstance());
+				features.put(currentEntry.getKey().newInstance(), currentEntry.getValue());
 			} catch (Exception e) {
 				logger.error("Couldn't create feature", e);
 			}
@@ -34,9 +33,9 @@ public class FeatureManager {
 			initFeatures();
 		}
 		
-		for (Feature currentFeature : features) {
+		for (Entry<Feature, String> currentFeature : features.entrySet()) {
 			try {
-				currentFeature.start(uri);
+				currentFeature.getKey().start(uri, currentFeature.getValue());
 			} catch (Exception e) {
 				logger.error("Couldn't start feature", e);
 			}
@@ -44,7 +43,7 @@ public class FeatureManager {
 	}
 	
 	public static void shutdown() {
-		for (Feature currentFeature : features) {
+		for (Feature currentFeature : features.keySet()) {
 			currentFeature.stop();
 		}
 	}
@@ -55,7 +54,7 @@ public class FeatureManager {
 		}
 		
 		Map<String, FriendshipFeature> friendshipFeatures = new HashMap<String, FriendshipFeature>();
-		for (Feature currentFeature : features) {
+		for (Feature currentFeature : features.keySet()) {
 			if (currentFeature instanceof FriendshipFeature) {
 				friendshipFeatures.put(((FriendshipFeature) currentFeature).getName(), (FriendshipFeature)currentFeature);
 			}
@@ -69,7 +68,7 @@ public class FeatureManager {
 			initFeatures();
 		}
 		
-		for (Feature currentFeature : features) {
+		for (Feature currentFeature : features.keySet()) {
 			if (currentFeature instanceof UserManagementFeature) {
 				return (UserManagementFeature)currentFeature;
 			}

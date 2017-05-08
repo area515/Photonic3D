@@ -61,7 +61,7 @@ public class USBUploader implements Feature {
 	}
 	
 	@Override
-	public void start(URI uri) {
+	public void start(URI uri, String settings) {
 		masterRoots = new HashMap<>();
 		for (File root : listRoots()) {
 			masterRoots.put(root.getAbsolutePath(), root);

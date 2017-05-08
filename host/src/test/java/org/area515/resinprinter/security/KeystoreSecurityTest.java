@@ -101,7 +101,7 @@ public class KeystoreSecurityTest {
 		
 		String testUsername = "<>!@#$%^&*()~` ,.;'[]-=?:\"{}|\\frank,cn=Wes";//Ensure they can't perform a name spoof
 		
-		service1.start(null);
+		service1.start(null, null);
 		Assert.assertNull(service1.login(testUsername, testUsername, null));
 		PhotonicUser insertUser = new PhotonicUser(testUsername, testUsername, null, testUsername, new String[]{PhotonicUser.FULL_RIGHTS}, false);
 		PhotonicUser user = service1.update(insertUser);

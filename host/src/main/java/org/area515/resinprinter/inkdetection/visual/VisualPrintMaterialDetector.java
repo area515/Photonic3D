@@ -18,10 +18,10 @@ import javax.ws.rs.core.StreamingOutput;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
-import org.area515.resinprinter.inkdetection.PrintMaterialDetectorSettings;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.services.MediaService;
+import org.area515.util.DynamicJSonSettings;
 
 public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 	private static final Logger logger = LogManager.getLogger();
@@ -176,7 +176,7 @@ public class VisualPrintMaterialDetector implements PrintMaterialDetector {
 	}
 
 	@Override
-	public void initializeDetector(PrintMaterialDetectorSettings settings) {
+	public void initializeDetector(DynamicJSonSettings settings) {
 		//No custom settings right now.
 	}
 }

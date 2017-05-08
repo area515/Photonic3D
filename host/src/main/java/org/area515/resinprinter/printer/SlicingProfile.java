@@ -9,9 +9,9 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
-import org.area515.resinprinter.inkdetection.PrintMaterialDetectorSettings;
 import org.area515.resinprinter.job.InkDetector;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.util.DynamicJSonSettings;
 import org.area515.util.TemplateEngine;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -133,13 +133,13 @@ public class SlicingProfile implements Named {
 	    private double resinPriceL;
 		private InkDetector detector;
 		@XmlElement(name="PrintMaterialDetectorSettings")
-		private PrintMaterialDetectorSettings printMaterialDetectorSettings;
+		private DynamicJSonSettings printMaterialDetectorSettings;
 		
 		@XmlTransient
-		public PrintMaterialDetectorSettings getPrintMaterialDetectorSettings() {
+		public DynamicJSonSettings getPrintMaterialDetectorSettings() {
 			return printMaterialDetectorSettings;
 		}
-		public void setPrintMaterialDetectorSettings(PrintMaterialDetectorSettings printMaterialDetectorSettings) {
+		public void setPrintMaterialDetectorSettings(DynamicJSonSettings printMaterialDetectorSettings) {
 			this.printMaterialDetectorSettings = printMaterialDetectorSettings;
 		}
 		

@@ -1,48 +1,124 @@
 package org.area515.resinprinter.util.cron;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.plugin.Feature;
-import org.area515.resinprinter.server.Main;
+import org.area515.util.DynamicJSonSettings;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class CronFeature implements Feature {
     private static final Logger logger = LogManager.getLogger();
 
     private List<CronTask> taskList = new ArrayList<CronTask>();
+	public static ScheduledExecutorService CRON_EXECUTOR = new ScheduledThreadPoolExecutor(10, new ThreadFactoryBuilder().setNameFormat("CronThread-%d").setDaemon(true).build());
 	
-	public static class CronTask implements Callable {
+	public static class CronTask implements Callable<Object> {
 		private String taskName;
 		private Runnable runnable;
-		private Callable callable;
+		private Callable<?> callable;
 		private CronPredictor predictor;
-		private ScheduledFuture future;
+		private ScheduledFuture<?> future;
 		private boolean canceledTask;
 		
-		public CronTask(String taskName, Runnable runnable, SchedulingPattern pattern) {
-			this.taskName = taskName;
-			this.runnable = runnable;
-			this.predictor = new CronPredictor(pattern);
-		}
+		private String taskClassName;
+		private String cronString;
+		private DynamicJSonSettings taskSettings;
 		
-		public CronTask(String taskName, Callable callable, SchedulingPattern pattern) {
-			this.taskName = taskName;
-			this.callable = callable;
-			this.predictor = new CronPredictor(pattern);
+		public CronTask() {
 		}
-		
+
+		@JsonProperty
+		public DynamicJSonSettings getTaskSettings() {
+			return taskSettings;
+		}
+		public void setTaskSettings(DynamicJSonSettings taskSettings) {
+			this.taskSettings = taskSettings;
+		}
+
+		@JsonProperty
+		public void setCronString(String cronString) {
+			this.cronString = cronString;
+		}
+		public void setTaskName(String taskName) {
+			this.taskName = taskName;
+		}
+	
+		@JsonProperty
+		public String getTaskName() {
+			return taskName;
+		}
+		public String getCronString() {
+			return cronString;
+		}
+
+		@JsonProperty
+		public String getTaskClassName() {
+			return taskClassName;
+		}
+		public void setTaskClassName(String taskClassName) {
+			this.taskClassName = taskClassName;
+		}
+
+		private void initializeIfNecessary() throws RejectedExecutionException {
+			//If we are already initialized, let's get out of here.
+			if (predictor != null) {
+				return;
+			}
+			
+			predictor = new CronPredictor(cronString);
+			
+			if (taskClassName == null) {
+				throw new RejectedExecutionException("Cron task:" + taskName + " doesn't have a taskClassName set");
+			}
+			
+			try {
+				Class<?> runnableOrCallableClass = Class.forName(taskClassName);
+				Object runnableOrCallable = runnableOrCallableClass.newInstance();
+				if (runnableOrCallable instanceof Runnable) {
+					runnable = (Runnable)runnableOrCallable;
+				} else if (runnableOrCallable instanceof Callable) {
+					callable = (Callable<?>)runnableOrCallable;
+				} else {
+					throw new RejectedExecutionException(runnableOrCallable + " class:" + runnableOrCallableClass + " not an instance of Runnable or Callable");
+				}
+				BeanUtils.populate(runnableOrCallable, getTaskSettings() == null?null:getTaskSettings().getSettings());
+			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+				logger.error("Couldn't create class:" + taskClassName, e);
+			}
+		}
+
+		@SuppressWarnings("unchecked")
 		public synchronized void scheduleNextRun() throws RejectedExecutionException {
 			if (canceledTask) {
 				throw new RejectedExecutionException("Task cannot be executed again since it has been cancelled.");
 			}
-			future = Main.GLOBAL_EXECUTOR.schedule(this, predictor.nextMatchingTime() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+			
+			initializeIfNecessary();
+			
+			long nextExecution = predictor.nextMatchingTime();
+			future = CRON_EXECUTOR.schedule(this, nextExecution - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+			
+			logger.info("Scheduled task:" + taskName + " for:" + new Date(nextExecution));
 		}
 
 		public synchronized boolean cancel() {
@@ -75,15 +151,40 @@ public class CronFeature implements Feature {
 			    throw t;
 			}
 		}
+		
+		public String toString() {
+			return taskName;
+		}
 	}
 	
 	@Override
-	public void start(URI uri) throws Exception {
+	public void start(URI uri, String cronTasks) throws Exception {
+		if (cronTasks == null) {
+			logger.info("No cron tasks were setup");
+			return;
+		}
 		
+		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+		try {
+			CronTask[] cronTask = mapper.readValue(cronTasks, new TypeReference<CronTask[]>(){});
+			Collections.addAll(taskList, cronTask);
+		} catch (IOException e) {
+			throw new IllegalArgumentException(cronTasks + " didn't parse correctly.", e);
+		}
+
+		for (CronTask task : taskList) {
+			try {
+				task.scheduleNextRun();
+			} catch (RejectedExecutionException e) {
+				logger.error("Couldn't schedule task:" + task.getTaskName(), e);
+			}
+		}
 	}
 
 	@Override
 	public void stop() {
-		
+		for (CronTask task : taskList) {
+			task.cancel();
+		}
 	}
 }
