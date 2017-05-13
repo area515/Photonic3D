@@ -13,8 +13,18 @@ public class ConsoleCommPort implements SerialCommunicationsPort {
 	private int readCount;
 	private int timeout;
 	
-	public ConsoleCommPort() {
-		this.name = this.name + ":" + consoleNumber++;
+	private ConsoleCommPort() {
+	}
+	
+	private ConsoleCommPort(int consoleNumber) {
+		this.name = this.name + ":" + consoleNumber;
+	}
+	
+	public static ConsoleCommPort getSelectableConsoleCommPort() {
+		return new ConsoleCommPort();
+	}
+	public static ConsoleCommPort getNextAvailableConsoleCommPort() {
+		return new ConsoleCommPort(consoleNumber++);
 	}
 	
 	@Override

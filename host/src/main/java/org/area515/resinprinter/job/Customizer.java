@@ -4,19 +4,16 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.ref.SoftReference;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
 
+import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.util.TemplateEngine;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -28,7 +25,6 @@ public class Customizer {
 	private boolean supportsAffineTransformSettings;        //True means supported/False means not supported
 	private AffineTransformSettings affineTransformSettings;//null means it's not used event if this customizer does support the AffineTransform
 	private String externalImageAffectingState;
-	private SoftReference<BufferedImage> origSliceCache = null;
 	private Double zScale = 1.0;
 	private String cacheId;
 	private int nextSlice = 0;
@@ -123,9 +119,9 @@ public class Customizer {
 			this.affineTransformScriptCalculator = affineTransformScriptCalculator;
 		}
 
-		public AffineTransform createAffineTransform(DataAid aid, BufferedImage buildPlatformImage, BufferedImage printImage) throws ScriptException {
+		public AffineTransform createAffineTransform(DataAid aid, ScriptEngine engine, BufferedImage buildPlatformImage, BufferedImage printImage) throws ScriptException {
 			if (affineTransformScriptCalculator != null && affineTransformScriptCalculator.trim().length() > 0) {
-				return (AffineTransform)TemplateEngine.runScriptInImagingContext(buildPlatformImage, printImage, aid.printJob, aid.printer, aid.scriptEngine, null, affineTransformScriptCalculator, "Affine transform rendering script", false);
+				return (AffineTransform)TemplateEngine.runScriptInImagingContext(buildPlatformImage, printImage, aid.printJob, aid.printer, engine, null, affineTransformScriptCalculator, "Affine transform rendering script", false);
 				//AffineTransform affineTransform = (AffineTransform)TemplateEngine.runScript(aid.printJob, aid.printer, aid.scriptEngine, affineTransformScriptCalculator, "Affine transform rendering script", overrides);
 			}
 			
@@ -169,8 +165,8 @@ public class Customizer {
 		this.nextStep = nextStep;
 	}
 
-	public AffineTransform createAffineTransform(DataAid aid, BufferedImage buildPlatformImage, BufferedImage printImage) throws ScriptException {
-		return this.affineTransformSettings.createAffineTransform(aid, buildPlatformImage, printImage);
+	public AffineTransform createAffineTransform(DataAid aid, ScriptEngine scriptEngine, BufferedImage buildPlatformImage, BufferedImage printImage) throws ScriptException {
+		return this.affineTransformSettings.createAffineTransform(aid, scriptEngine, buildPlatformImage, printImage);
 	} 
 
 	public String getPrintableExtension() {
@@ -242,7 +238,7 @@ public class Customizer {
 			return cacheId;
 		}
 		
-		cacheId = "";//This is a trick to stop the original cacheId from being included into the next cacheId computed
+		cacheId = "";//This is a trick to stop the original cacheId from being included into the next computed cacheId 
 		try {
 			MessageDigest m = MessageDigest.getInstance("SHA1");
 			m.reset();
@@ -263,22 +259,31 @@ public class Customizer {
 		this.cacheId = null;
 	}
 	
-	@JsonIgnore
-	public BufferedImage getOrigSliceCache() {
-		if (origSliceCache == null) {
-			return null;
-		}
-		
-		return origSliceCache.get();
+	@Override
+	public int hashCode() {
+		String cacheId = getCacheId();
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((cacheId == null) ? 0 : cacheId.hashCode());
+		return result;
 	}
-
-	@JsonIgnore
-	public void setOrigSliceCache(BufferedImage origSliceCache) {
-		if (origSliceCache == null) {
-			this.origSliceCache = null;
-			return;
-		}
-		
-		this.origSliceCache = new SoftReference<BufferedImage>(origSliceCache);
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Customizer other = (Customizer) obj;
+		String cacheId = getCacheId();
+		String otherCacheId = other.getCacheId();
+		if (cacheId == null) {
+			if (otherCacheId != null)
+				return false;
+		} else if (!cacheId.equals(otherCacheId))
+			return false;
+		return true;
 	}
 }

@@ -30,7 +30,7 @@ import org.area515.resinprinter.stl.Point3d;
 import org.area515.resinprinter.stl.Shape3d;
 import org.area515.resinprinter.stl.Triangle3d;
 import org.area515.resinprinter.stl.XYComparatord;
-import org.area515.util.Log4jTimer;
+import org.area515.util.Log4jUtil;
 
 public class ZSlicer {
     private static final Logger logger = LogManager.getLogger();
@@ -609,7 +609,7 @@ public class ZSlicer {
 		  //Effectively, this loop is log n due to the sort into XYComparator
 		  
 		  logger.info("===================");
-		  logger.info("ZSlice started", ()->Log4jTimer.startTimer("sliceTime"));
+		  logger.info("ZSlice started", ()->Log4jUtil.startTimer("sliceTime"));
 		  Set<Line3d> zIntersectionsBySortedX = new TreeSet<Line3d>(new XYComparatord(Triangle3d.EQUAL_TOLERANCE));
 		  for (Triangle3d triangle : stlFile.getTriangles()) {
 			  if (watchedTriangles != null && watchedTriangles.contains(triangle)) {
@@ -641,7 +641,7 @@ public class ZSlicer {
 			  }//*/
 		  }
 		  
-		  logger.info("IntersectionTime:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("IntersectionTime:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  logger.debug("===================");
 		  logger.debug("zIntersectionsBySortedX:{}", zIntersectionsBySortedX.size());
 		  logger.debug("completedFillInLoops:{}", completedFillInLoops.size());
@@ -673,7 +673,7 @@ public class ZSlicer {
 			  workingLoops.add(newLoop);
 		  }
 		  
-		  logger.info("Primary linkage search:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Primary linkage search:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 
 		  if (logger.isDebugEnabled()) {
 			  logger.debug("===================");
@@ -691,7 +691,7 @@ public class ZSlicer {
 			  }
 			  logger.debug("workingLoops lines:{}", value);
 			  logger.debug("===================");//*/
-			  logger.debug("Debug print time:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+			  logger.debug("Debug print time:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  }
 		  
 		  //Empirically I've found that about half of all loops need to be joined with this method
@@ -720,7 +720,7 @@ public class ZSlicer {
 			  workingLoops.remove(0);
 		  }
 		  
-		  logger.info("Secondary linkage search:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Secondary linkage search:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 
 		  if (logger.isDebugEnabled()) {
 			  logger.debug("===================");
@@ -744,7 +744,7 @@ public class ZSlicer {
 			  }
 			  logger.debug("brokenLoops lines:{}", value);
 			  logger.debug("===================");
-			  logger.debug("Print broken loops:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+			  logger.debug("Print broken loops:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  }
 		  
 		  //empirically I've found that this block of code will only execute 1 in 100 times.
@@ -836,13 +836,13 @@ public class ZSlicer {
 				  }
 			  }
 			  
-			  logger.info("Stl error capturing:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+			  logger.info("Stl error capturing:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  }
 
 		  //close loops manually since we couldn't find a solution for these broken loops
 		  if (fixBrokenLoops != null && brokenLoops.size() > 0) {
 			  fixBrokenLoops.mendPolygon(this, brokenLoops, completedFillInLoops);
-			  logger.info("Broken loop mending:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+			  logger.info("Broken loop mending:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  }
 		  
 		  //Preperation work for the Scanline algorithm
@@ -869,7 +869,7 @@ public class ZSlicer {
 				 }
 			 }
 		  }
-		  logger.info("Break scanline up into pieces:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Break scanline up into pieces:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 
 		  List<Future<ScanlineFillPolygonWork>> completedWork = new ArrayList<Future<ScanlineFillPolygonWork>>();
 		  for (int y = 0; y < breakupSize; y++) {
@@ -887,7 +887,7 @@ public class ZSlicer {
 					  z);
 			  completedWork.add(pool.submit(work));
 		  }
-		  logger.info("Submit scanline work:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Submit scanline work:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  
 		  fillInScanLines = new ArrayList<Line3d>();
 		  buildArea = 0;
@@ -907,13 +907,13 @@ public class ZSlicer {
 					logger.error("Error in executing polygon work", e);
 				}
 		  }
-		  logger.info("Wait for scanline work:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Wait for scanline work:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  
 		  //I'm not sure I want to do this. It just traces the polygon but doesn't provide much value other than an edge blur.
 		  logger.debug("Polygons");
 		  logger.debug("======");
           fillInPolygons = compilePolygons(completedFillInLoops);
-		  logger.info("Compile polygons:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Compile polygons:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 			  
 		  if (logger.isDebugEnabled()) {
 	          logger.debug("TOTALS");
@@ -928,15 +928,15 @@ public class ZSlicer {
 			  }
 			  logger.debug("Working Loops({}):{}",workingLoops.size(), workingLoops);
 			  logger.debug("======");//*/
-			  logger.debug("Print working loops:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+			  logger.debug("Print working loops:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  }
 		  pool.shutdown();
-		  logger.info("ZSlice complete:{}", ()->Log4jTimer.completeTimer("sliceTime"));
+		  logger.info("ZSlice complete:{}", ()->Log4jUtil.completeTimer("sliceTime"));
 		  return completedFillInLoops;
 	 }
 	 
 	 public void loadFile(InputStream stream, Double buildPlatformXPixels, Double buildPlatformYPixels) throws IOException {
-		  logger.info("Load file start", ()->Log4jTimer.startTimer("fileLoadTime"));
+		  logger.info("Load file start", ()->Log4jUtil.startTimer("fileLoadTime"));
 		  stlFile.load(stream, rewriteNormalsWithRightHandRule);
  
 		if (imageOffsetX == null) {
@@ -957,7 +957,7 @@ public class ZSlicer {
 				imageOffsetY = -stlFile.getYmin() / precisionScaler * pixelsPerMMY;
 			}
 		}
-		logger.info("Load file stop:{}", ()->Log4jTimer.completeTimer("fileLoadTime"));
+		logger.info("Load file stop:{}", ()->Log4jUtil.completeTimer("fileLoadTime"));
 	 }
 	 
 	 public int getZIndex() {

@@ -5,8 +5,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,49 +23,6 @@ public class PrintJobManager {
 	private static PrintJobManager INSTANCE;
 	
 	private ConcurrentHashMap<UUID, PrintJob> printJobsByJobId = new ConcurrentHashMap<UUID, PrintJob>();
-	
-	public class JobCloser implements Runnable {
-		private Printer printer;
-		private Future<JobStatus> futureJobStatus;
-		private PrintJob newJob;
-		
-		public JobCloser(Printer printer, Future<JobStatus> futureJobStatus, PrintJob job) {
-			this.printer = printer;
-			this.futureJobStatus = futureJobStatus;
-			this.newJob = job;
-		}
-		
-		@Override
-		public void run() {
-			try {
-				//You can't change the state of the job after this point. Too many processes are waiting for the future jobStatus for a final outcome of the job
-				printer.setStatus(futureJobStatus.get());
-				logger.info("Job Success:{}", Thread.currentThread().getName());
-				NotificationManager.jobChanged(printer, newJob);
-			} catch (Throwable e) {
-				logger.error("Job Failed:" + Thread.currentThread().getName(), e);
-				printer.setStatus(JobStatus.Failed);
-				NotificationManager.jobChanged(printer, newJob);
-			} finally {
-				newJob.setElapsedTime(System.currentTimeMillis() - newJob.getStartTime());
-				
-				//Don't need to close the printer or dissassociate the serial and display devices
-				printer.showBlankImage();
-				if (HostProperties.Instance().isRemoveJobOnCompletion()) {
-					PrintJobManager.Instance().removeJob(newJob);
-				}
-				
-				//If we don't do this, the next print will carry the last pause along with it and make falsify the slicing time.
-				printer.setCurrentSlicePauseTime(0);
-				PrinterManager.Instance().removeAssignment(newJob);
-				newJob.setPrintFileProcessor(new StubPrintFileProcessor<>(newJob.getPrintFileProcessor()));
-				
-				//Set the jobstatus back on the printer to Ready
-				printer.setStatus(JobStatus.Ready);
-				logger.info("Job Ended:{}", Thread.currentThread().getName());
-			}
-		}
-	}
 	
 	public static PrintJobManager Instance() {
 		if (INSTANCE == null) {
@@ -108,19 +65,49 @@ public class PrintJobManager {
 		newJob.setCurrentSlice(0);
 		newJob.setTotalSlices(0);
 
-		Future<JobStatus> futureJobStatus = null;
+		CompletableFuture<JobStatus> futureJobStatus = null;
 		try {
 			PrinterManager.Instance().assignPrinter(newJob, printer);
-			PrintJobProcessingThread worker = new PrintJobProcessingThread(newJob, printer);
-			futureJobStatus = Main.GLOBAL_EXECUTOR.submit(worker);
+			PrintJobSupplier worker = new PrintJobSupplier(newJob, printer);
+			futureJobStatus = CompletableFuture.supplyAsync(worker, Main.GLOBAL_EXECUTOR);
 			newJob.setPrintFileProcessor(worker.getPrintFileProcessor());
 			newJob.initializePrintJob(futureJobStatus);
 		} catch (AlreadyAssignedException e) {
 			printJobsByJobId.remove(newJob.getId());
 			throw e;
-		} finally {
+		} finally { 
 			//Trigger all job completion tasks after job is complete
-			Main.GLOBAL_EXECUTOR.submit(new JobCloser(printer, futureJobStatus, newJob));
+			futureJobStatus.whenComplete((status, exeption) -> {
+				try {
+					//You can't change the state of the job after this point. Too many processes are waiting for the future jobStatus for a final outcome of the job
+					if (status != null) {
+						printer.setStatus(status);
+						logger.info("Job Success:{}", Thread.currentThread().getName());
+						NotificationManager.jobChanged(printer, newJob);
+					} else {
+						logger.error("Job Failed:" + Thread.currentThread().getName(), exeption);
+						printer.setStatus(JobStatus.Failed);
+						NotificationManager.jobChanged(printer, newJob);
+					}
+				} finally {
+					newJob.setElapsedTime(System.currentTimeMillis() - newJob.getStartTime());
+					
+					//Don't need to close the printer or dissassociate the serial and display devices
+					printer.showBlankImage();
+					if (HostProperties.Instance().isRemoveJobOnCompletion()) {
+						PrintJobManager.Instance().removeJob(newJob);
+					}
+					
+					//If we don't do this, the next print will carry the last pause along with it and make falsify the slicing time.
+					printer.setCurrentSlicePauseTime(0);
+					PrinterManager.Instance().removeAssignment(newJob);
+					newJob.setPrintFileProcessor(new StubPrintFileProcessor<>(newJob.getPrintFileProcessor()));
+					
+					//Set the jobstatus back on the printer to Ready
+					printer.setStatus(JobStatus.Ready);
+					logger.info("Job Ended:{}", Thread.currentThread().getName());
+				}
+			});
 		}
 		return newJob;		
 	}

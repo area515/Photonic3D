@@ -260,7 +260,12 @@
 		
 		this.writeDrainHoldCode = function writeDrainHoldCode() {
 			controller.currentCustomizer.imageManipulationCalculator = 
-			"var drainHoleInMM = { centerX:centerX, centerY:centerY, widthX:5, widthY:5, depth:5};\n\n" +
+			"var drainHoleInMM = {\n" +
+			"  centerX:centerX,\n" +
+			"  centerY:centerY,\n" +
+			"  widthX:5,\n" +
+			"  widthY:5,\n" +
+			"  depth:5};\n\n" +
 			"if (($CURSLICE * $LayerThickness) <= drainHoleInMM.depth) {\n" +
 			"   buildPlatformGraphics.setColor(java.awt.Color.BLACK);\n" + 
 			"   buildPlatformGraphics.fillOval(\n" +
@@ -275,19 +280,22 @@
 		
 		this.writeDuplicationGridCode = function writeDuplicationGridCode() {
 			controller.currentCustomizer.imageManipulationCalculator = 
-				"var gridDataInMM = {distanceBetweenImagesX: 1, distanceBetweenImagesY: 1, numberOfRows:3, numberOfColumns:3 };\n\n" +
+				"var gridDataInMM = {\n" +
+				"  distanceBetweenImagesX: 1,\n" +
+				"  distanceBetweenImagesY: 1,\n" +
+				"  numberOfRows:3,\n" +
+				"  numberOfColumns:3};\n\n" +
 				"for (var x = 0; x < gridDataInMM.numberOfColumns; x++) {\n" +
 				"   for (var y = 0; y < gridDataInMM.numberOfRows; y++) {\n" +
 				"      if (x > 0 || y > 0) {\n" +
 				"         var currentTransform = new java.awt.geom.AffineTransform(affineTransform);\n" +
 				"         currentTransform.translate(\n" +
-				"            (x * gridDataInMM.distanceBetweenImagesX * pixelsPerMMX) + (x * printImage.getWidth()),\n" +
-				"            (y * gridDataInMM.distanceBetweenImagesY * pixelsPerMMY) + (y * printImage.getHeight()));\n" +
+				"            (x * gridDataInMM.distanceBetweenImagesX * pixelsPerMMX) + (x * printableShape.getWidth()),\n" +
+				"            (y * gridDataInMM.distanceBetweenImagesY * pixelsPerMMY) + (y * printableShape.getHeight()));\n" +
 				"         buildPlatformGraphics.drawImage(printImage, currentTransform, null);\n" +
 				"      }\n" +
 				"   }\n" +
 				"}\n";
-				
 				controller.clearExternalCacheAndSaveCustomizer();
 		};
 		

@@ -199,8 +199,8 @@ public class Printer {
 		refreshFrame.showGridImage(pixels);
 	}
 	
-	public void showImage(BufferedImage image) {
-		refreshFrame.showImage(image);
+	public void showImage(BufferedImage image, boolean performFullUpdate) {
+		refreshFrame.showImage(image, performFullUpdate);
 	}
 	
 	@JsonIgnore

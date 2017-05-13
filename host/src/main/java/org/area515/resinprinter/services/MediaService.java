@@ -36,7 +36,7 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.util.security.PhotonicUser;
-import org.area515.util.Log4jTimer;
+import org.area515.util.Log4jUtil;
 
 import com.coremedia.iso.boxes.Container;
 import com.google.common.io.ByteStreams;
@@ -134,7 +134,7 @@ public class MediaService {
 		
 		@Override
 		public void write(OutputStream output) throws IOException, WebApplicationException {
-			logger.debug("Image snapshot start", ()->Log4jTimer.startTimer("PictureTimer"));
+			logger.debug("Image snapshot start", ()->Log4jUtil.startTimer("PictureTimer"));
 			String[] streamingCommand = HostProperties.Instance().getImagingCommand();
 			String[] replacedCommands = new String[streamingCommand.length];
 			for (int t = 0; t < streamingCommand.length; t++) {
@@ -146,7 +146,7 @@ public class MediaService {
 			try {
 				Process imagingProcess = Runtime.getRuntime().exec(replacedCommands);
 				ByteStreams.copy(imagingProcess.getInputStream(), output);
-				logger.debug("Image snapshot complete {}ms", ()-> Log4jTimer.completeTimer("PictureTimer"));
+				logger.debug("Image snapshot complete {}ms", ()-> Log4jUtil.completeTimer("PictureTimer"));
 			} finally {
 				if (inputStream != null) {
 					try {
@@ -182,7 +182,7 @@ public class MediaService {
 		public void write(OutputStream outputStream) throws IOException, WebApplicationException {
 			while (true) {//Stream forever until they tell us to quit.
 				try {
-					logger.debug("Client asking to stream", ()->Log4jTimer.startTimer("ClientStreamTimer"));
+					logger.debug("Client asking to stream", ()->Log4jUtil.startTimer("ClientStreamTimer"));
 					
 					byte[] imageData = nextLiveStreamImage.get();
 					Future<Object> run = liveStreamingThrottlingService.submit(new Callable<Object>() {
@@ -197,9 +197,9 @@ public class MediaService {
 							return null;
 						}
 					});
-					logger.debug("Client waiting to stream image {}ms", ()->Log4jTimer.splitTimer("ClientStreamTimer"));
+					logger.debug("Client waiting to stream image {}ms", ()->Log4jUtil.splitTimer("ClientStreamTimer"));
 					run.get();//It may seem strange to setup a future and then run get, but this limits the concurrency level in the event we have a crazy amount of clients
-					logger.debug("Client streamed image {}ms", ()-> Log4jTimer.completeTimer("ClientStreamTimer"));
+					logger.debug("Client streamed image {}ms", ()-> Log4jUtil.completeTimer("ClientStreamTimer"));
 					
 					//We've been asked to close nicely from the browser instead of the user just closing the page.
 					if (closeNow != null) {

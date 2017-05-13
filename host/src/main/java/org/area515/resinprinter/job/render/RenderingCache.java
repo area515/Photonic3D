@@ -36,10 +36,6 @@ public class RenderingCache {
 		imageSync.invalidate(imageToBuild);
 	}
 	
-	public ReentrantLock getSpecificLock(Object imageToBuild) {
-		return getOrCreateIfMissing(imageToBuild).getLock();
-	}
-	
 	public ReentrantLock getCurrentLock() {
 		return getOrCreateIfMissing(currentImagePointer).getLock();
 	}

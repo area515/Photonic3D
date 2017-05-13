@@ -68,7 +68,7 @@ public class GraphicsDeviceOutputInterface implements GraphicsOutputInterface {
 	}
 
 	@Override
-	public void showImage(BufferedImage image) {
+	public void showImage(BufferedImage image, boolean performFullUpdate) {
 		throw new IllegalStateException("You should never call showImage from this class");
 	}
 

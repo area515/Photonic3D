@@ -15,6 +15,10 @@ public class ExceptionMarshaller implements ExceptionMapper<Exception> {
 
     public Response toResponse(Exception e) {
 		logger.error("Error caught by exception marshaller and relayed to browser", e);
+		if (e.getMessage() == null) {
+			return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity("Internal server error").build();
+		}
+		
 		return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity(e.getMessage()).build();
 	}
 }

@@ -4,9 +4,9 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import javax.script.Compilable;
 import javax.script.CompiledScript;
@@ -15,6 +15,7 @@ import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
 
@@ -41,10 +42,11 @@ public class PrintJob {
 	private volatile boolean overrideZLiftDistance;
 	private volatile double zLiftDistance;
 
+	private DataAid dataAid;
 	private UUID id = UUID.randomUUID();
 	private File jobFile;
 	private Printer printer;
-	private Future<JobStatus> futureJobStatus;
+	private CompletableFuture<JobStatus> futureJobStatus;
 	private CountDownLatch futureJobStatusAssigned = new CountDownLatch(1);
 	private Map<String, CompiledScript> scriptsByName = new HashMap<>();
 
@@ -58,6 +60,14 @@ public class PrintJob {
 		return id;
 	}
 	
+	@JsonIgnore
+	DataAid getDataAid() {
+		return dataAid;
+	}
+	void setDataAid(DataAid dataAid) {
+		this.dataAid = dataAid;
+	}
+
 	@JsonIgnore
 	public File getJobFile() {
 		return jobFile;
@@ -151,9 +161,10 @@ public class PrintJob {
 		return JobStatus.Failed;
 	}
 	
-	public void initializePrintJob(Future<JobStatus> futureJobStatus) {
+	public void initializePrintJob(CompletableFuture<JobStatus> futureJobStatus) {
 		this.futureJobStatus = futureJobStatus;
 		futureJobStatusAssigned.countDown();
+		futureJobStatus.whenComplete((s, e) -> scriptsByName.clear());
 	}
 	
 	public String getErrorDescription() {

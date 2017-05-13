@@ -3,8 +3,9 @@ package org.area515.resinprinter.job.render;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.concurrent.Callable;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
@@ -12,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
+import org.area515.util.Log4jUtil;
 
 public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 	private static final Logger logger = LogManager.getLogger();
@@ -30,26 +32,44 @@ public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 	}
 	
 	public RenderedData call() throws JobManagerException {
+		return applyTransformsToRenderedData(imageIndexToBuild, imageIndexToBuild);
+	}
+	
+	public ScriptEngine getScriptEngine() {
+		return aid.cache.getOrCreateIfMissing(imageIndexToBuild).getScriptEngine();
+	}
+
+	protected RenderedData applyTransformsToRenderedData(Object preImageCacheIndex, Object transformToCacheIndex) throws JobManagerException {
 		long startTime = System.currentTimeMillis();
-		Lock lock = aid.cache.getSpecificLock(imageIndexToBuild);
-		lock.lock();
+		RenderedData preImageCache = aid.cache.getOrCreateIfMissing(preImageCacheIndex);
+		RenderedData transformToCache = aid.cache.getOrCreateIfMissing(transformToCacheIndex);
+		ReentrantLock preImageLock = preImageCache.getLock();
+		ReentrantLock transformToLock = transformToCache.getLock();
+		preImageLock.lock();
+		transformToLock.lock();
 		try {
-			RenderedData imageData = aid.cache.getOrCreateIfMissing(imageIndexToBuild);
-			BufferedImage image = renderImage(imageData.getPreTransformedImage());
-			imageData.setPreTransformedImage(image);
-			BufferedImage after = processor.applyImageTransforms(aid, image);
-			imageData.setPrintableImage(after);
+			//Do not try to optimize this call out, we need to depend on our ImageRenderer to determine if they want to load a file or not, see: org.area515.resinprinter.twodim.SimpleImageRenderer
+			BufferedImage image = renderImage(preImageCache.getPreTransformedImage());
+			preImageCache.setPreTransformedImage(image);
+			logger.trace("Writing applyTransformsToRenderedData1pre" + preImageCacheIndex + ":{}", () -> Log4jUtil.logImage(image, "applyTransformsToRenderedData1pre" + preImageCacheIndex + ".png"));
+
+			BufferedImage after = processor.applyImageTransforms(aid, preImageCache.getScriptEngine(), image);
+			transformToCache.setPrintableImage(after);
+			logger.trace("Writing applyTransformsToRenderedData2pre" + transformToCacheIndex + ":{}", () -> Log4jUtil.logImage(image, "applyTransformsToRenderedData2pre" + transformToCacheIndex + ".png"));
+			logger.trace("Writing applyTransformsToRenderedData3after" + transformToCacheIndex + ":{}", () -> Log4jUtil.logImage(after, "applyTransformsToRenderedData3after" + transformToCacheIndex + ".png"));
+
 			if (!aid.optimizeWithPreviewMode) {
-				long pixelArea = computePixelArea(image);
-				imageData.setArea((double)pixelArea);
-				logger.info("Loaded {} with {} non-black pixels in {}ms", imageIndexToBuild, pixelArea, System.currentTimeMillis()-startTime);
+				long pixelArea = computePixelArea(image);//TODO: shouldn't this be after?
+				transformToCache.setArea((double)pixelArea);
+				logger.info("Loaded {} with {} non-black pixels in {}ms", transformToCacheIndex, pixelArea, System.currentTimeMillis()-startTime);
 			}
-			return imageData;
+			return transformToCache;
 		} catch (ScriptException e) {
 			logger.error(e);
 			throw new JobManagerException("Unable to render image", e);
 		} finally {
-			lock.unlock();
+			transformToLock.unlock();
+			preImageLock.unlock();
 		}
 	}
 	

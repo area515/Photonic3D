@@ -19,6 +19,7 @@ import org.area515.resinprinter.services.MachineServiceTest;
 import org.area515.resinprinter.services.TestScriptAndTemplating;
 import org.area515.resinprinter.slice.CheckSlicePoints;
 import org.area515.resinprinter.stl.ZSlicingGeometry;
+import org.area515.resinprinter.util.cron.RunCronPredictor;
 import org.area515.util.IOUtilitiesTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -45,6 +46,7 @@ import org.junit.runners.Suite;
 	TestByteSession.class,
 	TestCustomizer.class,
 	MachineServiceTest.class,
+	RunCronPredictor.class
 })
 
 public class FullTestSuite {

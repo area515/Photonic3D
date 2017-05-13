@@ -544,7 +544,8 @@ public class PrinterService {
 			GraphicsOutputInterface device = null;
 			if (printer.isStarted()) {
 				device = DisplayManager.Instance().getDisplayDevice(printer.getDisplayDeviceID());
-			} else {
+			}
+			if (!printer.isStarted() || device == null) {
 				device = DisplayManager.Instance().getDisplayDevice(currentConfiguration.getMachineConfig().getOSMonitorID());
 			}
 			currentConfiguration.getSlicingProfile().setxResolution(device.getBoundary().width);

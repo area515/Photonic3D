@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.CloseReason;
@@ -22,7 +23,6 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
-import org.area515.resinprinter.job.StaticJobStatusFuture;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.JacksonEncoder;
@@ -116,7 +116,7 @@ public class WebSocketPrintJobNotifier implements Notifier {
 			try {
 				//This just mocks up a printJob it's not a real print job, it's just something we can notify our clients with.
 				PrintJob job = new PrintJob(fileUploaded);
-				job.initializePrintJob(new StaticJobStatusFuture(JobStatus.Ready));
+				job.initializePrintJob(CompletableFuture.completedFuture(JobStatus.Ready));
 				currentSession.getAsyncRemote().sendObject(new PrintJobEvent(job, NotificationEvent.FileUploadComplete));
 			} catch (Exception e) {
 				logger.error("Error sending event to websocket:" + currentSession.getId(), e);

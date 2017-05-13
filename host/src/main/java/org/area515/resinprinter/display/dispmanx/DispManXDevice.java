@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.GraphicsDeviceOutputInterface;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.util.Log4jTimer;
+import org.area515.util.Log4jUtil;
 
 import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
@@ -162,13 +162,13 @@ public class DispManXDevice implements GraphicsOutputInterface {
 			destPixels = new Memory(pitch * image.getHeight());
 		}
 		
-		logger.debug("loadBitmapARGB8888 alg started:{}", () -> Log4jTimer.startTimer(IMAGE_REALIZE_TIMER));
+		logger.debug("loadBitmapARGB8888 alg started:{}", () -> Log4jUtil.startTimer(IMAGE_REALIZE_TIMER));
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
         		destPixels.setInt((y*(pitch / bytesPerPixel) + x) * bytesPerPixel, image.getRGB(x, y));
             }
         }
-		logger.debug("loadBitmapARGB8888 alg complete:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
+		logger.debug("loadBitmapARGB8888 alg complete:{}", () -> Log4jUtil.completeTimer(IMAGE_REALIZE_TIMER));
 
         width.setValue(image.getWidth());
         height.setValue(image.getHeight());
@@ -203,19 +203,19 @@ public class DispManXDevice implements GraphicsOutputInterface {
 	
 	@Override
 	public void showCalibrationImage(int xPixels, int yPixels) {
-		logger.debug("Calibration assigned:{}", () -> Log4jTimer.startTimer(IMAGE_REALIZE_TIMER));
+		logger.debug("Calibration assigned:{}", () -> Log4jUtil.startTimer(IMAGE_REALIZE_TIMER));
 		showBlankImage();
 		initializeCalibrationAndGridImage();
 		Graphics2D graphics = (Graphics2D)calibrationAndGridImage.createGraphics();
 		GraphicsOutputInterface.showCalibration(graphics, bounds, xPixels, yPixels);
 		graphics.dispose();
 		calibrationAndGridPixels = showImage(calibrationAndGridPixels, calibrationAndGridImage);
-		logger.debug("Calibration realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
+		logger.debug("Calibration realized:{}", () -> Log4jUtil.completeTimer(IMAGE_REALIZE_TIMER));
 	}
 	
 	@Override
 	public void showGridImage(int pixels) {
-		logger.debug("Grid assigned:{}", () -> Log4jTimer.startTimer(IMAGE_REALIZE_TIMER));
+		logger.debug("Grid assigned:{}", () -> Log4jUtil.startTimer(IMAGE_REALIZE_TIMER));
 		showBlankImage();
 		initializeCalibrationAndGridImage();
 		Graphics2D graphics = (Graphics2D)calibrationAndGridImage.createGraphics();
@@ -223,7 +223,7 @@ public class DispManXDevice implements GraphicsOutputInterface {
 		graphics.dispose();
 		
 		calibrationAndGridPixels = showImage(calibrationAndGridPixels, calibrationAndGridImage);		
-		logger.debug("Grid realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
+		logger.debug("Grid realized:{}", () -> Log4jUtil.completeTimer(IMAGE_REALIZE_TIMER));
 	}
 	
 	private Memory showImage(Memory memory, BufferedImage image) {
@@ -300,8 +300,8 @@ public class DispManXDevice implements GraphicsOutputInterface {
 	}
 	
 	@Override
-	public void showImage(BufferedImage image) {
-		logger.debug("Image assigned:{}", () -> Log4jTimer.startTimer(IMAGE_REALIZE_TIMER));
+	public void showImage(BufferedImage image, boolean performFullUpdate) {
+		logger.debug("Image assigned:{}", () -> Log4jUtil.startTimer(IMAGE_REALIZE_TIMER));
 		if (image.getWidth() == imageWidth && image.getHeight() == imageHeight) {
 			imagePixels = showImage(imagePixels, image);
 		} else {
@@ -309,7 +309,7 @@ public class DispManXDevice implements GraphicsOutputInterface {
 		}
 		imageWidth = image.getWidth();
 		imageHeight = image.getHeight();
-		logger.debug("Image realized:{}", () -> Log4jTimer.completeTimer(IMAGE_REALIZE_TIMER));
+		logger.debug("Image realized:{}", () -> Log4jUtil.completeTimer(IMAGE_REALIZE_TIMER));
 	}
 	
 	@Override

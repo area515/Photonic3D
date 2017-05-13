@@ -50,7 +50,7 @@ public class Main {
     private static final Logger logger = LogManager.getLogger();
     
     public static final String AUTHENTICATION_SCHEME = Constraint.__BASIC_AUTH;
-	public static ScheduledExecutorService GLOBAL_EXECUTOR = new ScheduledThreadPoolExecutor(8, new ThreadFactoryBuilder().setNameFormat("PrintJobProcessorThread-%d").setDaemon(true).build());
+	public static ScheduledExecutorService GLOBAL_EXECUTOR = new ScheduledThreadPoolExecutor(20, new ThreadFactoryBuilder().setNameFormat("PrintJobProcessorThread-%d").setDaemon(true).build());
 	
 	public static void setupAuthentication(ServletContextHandler context, UserManagementFeature loginService) {
         //All below is user based security
