@@ -534,10 +534,18 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 	}
 
 	public DataAid getDataAid(PrintJob job) {
+		if (job == null) {
+			return null;
+		}
+		
 		return job.getDataAid();
 	}
 	
 	public void clearDataAid(PrintJob job) {
+		if (job == null) {
+			return;
+		}
+	
 		job.setDataAid(null);
 	}
 }

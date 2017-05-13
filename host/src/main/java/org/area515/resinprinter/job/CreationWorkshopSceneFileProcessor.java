@@ -332,7 +332,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		try {
 			unpackDir(processingFile);
 		} catch (IOException e) {
-			throw new JobManagerException("Couldn't unpack new job:" + processingFile + " into working directory:" + extractDirectory);
+			throw new JobManagerException("Couldn't unpack new job:" + processingFile + " into working directory:" + extractDirectory, e);
 		}
 	}
 
@@ -415,8 +415,6 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 			String basename = FilenameUtils.removeExtension(jobFile.getName());
 			logger.info("BaseName: {}", FilenameUtils.removeExtension(basename));
 			//findGcodeFile(jobFile);
-		} catch (IOException ioe) {
-			throw ioe;
 		} finally {
 			zipFile.close();
 		}
