@@ -7,7 +7,7 @@ import org.junit.Test;
 
 public class RunCronPredictor {
 	@Test
-	public void main(String[] args) {
+	public void main() {
 		Date currentDate = new Date();
 		CronPredictor cron = new CronPredictor(currentDate.getMinutes() + " * * * *", currentDate);
 		System.out.println(currentDate + "->" + cron.nextMatchingDate());
