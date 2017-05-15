@@ -32,45 +32,36 @@ public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 	}
 	
 	public RenderedData call() throws JobManagerException {
-		return applyTransformsToRenderedData(imageIndexToBuild, imageIndexToBuild);
-	}
-	
-	public ScriptEngine getScriptEngine() {
-		return aid.cache.getOrCreateIfMissing(imageIndexToBuild).getScriptEngine();
-	}
-
-	protected RenderedData applyTransformsToRenderedData(Object preImageCacheIndex, Object transformToCacheIndex) throws JobManagerException {
 		long startTime = System.currentTimeMillis();
-		RenderedData preImageCache = aid.cache.getOrCreateIfMissing(preImageCacheIndex);
-		RenderedData transformToCache = aid.cache.getOrCreateIfMissing(transformToCacheIndex);
+		RenderedData preImageCache = aid.cache.getOrCreateIfMissing(imageIndexToBuild);
 		ReentrantLock preImageLock = preImageCache.getLock();
-		ReentrantLock transformToLock = transformToCache.getLock();
 		preImageLock.lock();
-		transformToLock.lock();
 		try {
 			//Do not try to optimize this call out, we need to depend on our ImageRenderer to determine if they want to load a file or not, see: org.area515.resinprinter.twodim.SimpleImageRenderer
 			BufferedImage image = renderImage(preImageCache.getPreTransformedImage());
 			preImageCache.setPreTransformedImage(image);
-			logger.trace("Writing applyTransformsToRenderedData1pre" + preImageCacheIndex + ":{}", () -> Log4jUtil.logImage(image, "applyTransformsToRenderedData1pre" + preImageCacheIndex + ".png"));
+			logger.trace("Writing applyTransformsToRenderedData1pre" + imageIndexToBuild + ":{}", () -> Log4jUtil.logImage(image, "applyTransformsToRenderedData1pre" + imageIndexToBuild + ".png"));
 
 			BufferedImage after = processor.applyImageTransforms(aid, preImageCache.getScriptEngine(), image);
-			transformToCache.setPrintableImage(after);
-			logger.trace("Writing applyTransformsToRenderedData2pre" + transformToCacheIndex + ":{}", () -> Log4jUtil.logImage(image, "applyTransformsToRenderedData2pre" + transformToCacheIndex + ".png"));
-			logger.trace("Writing applyTransformsToRenderedData3after" + transformToCacheIndex + ":{}", () -> Log4jUtil.logImage(after, "applyTransformsToRenderedData3after" + transformToCacheIndex + ".png"));
+			preImageCache.setPrintableImage(after);
+			logger.trace("Writing applyTransformsToRenderedData2pre" + imageIndexToBuild + ":{}", () -> Log4jUtil.logImage(image, "applyTransformsToRenderedData2pre" + imageIndexToBuild + ".png"));
 
 			if (!aid.optimizeWithPreviewMode) {
 				long pixelArea = computePixelArea(image);//TODO: shouldn't this be after?
-				transformToCache.setArea((double)pixelArea);
-				logger.info("Loaded {} with {} non-black pixels in {}ms", transformToCacheIndex, pixelArea, System.currentTimeMillis()-startTime);
+				preImageCache.setArea((double)pixelArea);
+				logger.info("Loaded {} with {} non-black pixels in {}ms", imageIndexToBuild, pixelArea, System.currentTimeMillis()-startTime);
 			}
-			return transformToCache;
+			return preImageCache;
 		} catch (ScriptException e) {
 			logger.error(e);
 			throw new JobManagerException("Unable to render image", e);
 		} finally {
-			transformToLock.unlock();
 			preImageLock.unlock();
 		}
+	}
+	
+	public ScriptEngine getScriptEngine() {
+		return aid.cache.getOrCreateIfMissing(imageIndexToBuild).getScriptEngine();
 	}
 	
 	abstract public BufferedImage renderImage(BufferedImage image) throws JobManagerException;

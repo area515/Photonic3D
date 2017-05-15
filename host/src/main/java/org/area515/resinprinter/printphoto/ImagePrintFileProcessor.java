@@ -53,7 +53,6 @@ public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProc
 	@Override
 	public TwoDimensionalImageRenderer createRenderer(DataAid aid, AbstractPrintFileProcessor<?, ?> processor, Object imageIndexToBuild) {
 		return new TwoDimensionalImageRenderer(aid, processor, imageIndexToBuild) {
-			@Override
 			public BufferedImage loadImageFromFile(PrintJob job) throws JobManagerException {
 				try {
 					return ImageIO.read(job.getJobFile());

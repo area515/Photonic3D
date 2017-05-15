@@ -14,8 +14,11 @@ public class Log4jUtil {
 	public static Map<String, String> GLOBAL = new HashMap<>();
 
 	public static boolean logImage(final BufferedImage img, final String fileName) {
+		if (img == null) {
+			return false;
+		}
 		try {
-			ImageIO.write(img, "png",  new File(fileName));
+			ImageIO.write(img, "png",  new File(fileName.replaceAll(":", "").replaceAll("/", "").replaceAll("\\\\", "")));
 			return true;
 		} catch (IOException e) {
 			return false;

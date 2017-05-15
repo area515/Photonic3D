@@ -24,7 +24,17 @@ public abstract class TwoDimensionalImageRenderer extends CurrentImageRenderer {
 		super(aid, processor, imageIndexToBuild);
 		newImage = startImageLoad(aid.printJob);
 	}
-
+	
+	protected BufferedImage waitForImage() throws JobManagerException {
+		try {
+			return newImage.get();
+		} catch (InterruptedException e) {
+			throw new JobManagerException("Interrupted while waiting to load image", e);
+		} catch (ExecutionException e) {
+			throw new JobManagerException("Failure occurred while loading image", e);
+		}
+	}
+	
 	//TODO: There is a race condition that causes this method to be called twice. This is awefully wasteful!
 	private Future<BufferedImage> startImageLoad(final PrintJob printJob) {
 		return Main.GLOBAL_EXECUTOR.submit(new Callable<BufferedImage>() {
@@ -41,23 +51,19 @@ public abstract class TwoDimensionalImageRenderer extends CurrentImageRenderer {
 		});
 	}
 	
-	public final BufferedImage renderImage(BufferedImage imageToDisplay) throws JobManagerException {
+	public BufferedImage renderImage(BufferedImage imageToDisplay) throws JobManagerException {
 		if (imageToDisplay != null) {
 			return imageToDisplay;
 		}
 		
-		try {
-			imageToDisplay = scaleImageAndDetectEdges(aid.printJob);
-		} catch (InterruptedException |ExecutionException e) {
-			throw new JobManagerException("Couldn't load image", e);
-		}
-		
+		imageToDisplay = scaleImageAndDetectEdges(aid.printJob);
 		return imageToDisplay;
 	}
 
-	public BufferedImage scaleImageAndDetectEdges(PrintJob printJob) throws InterruptedException, ExecutionException {
+	public BufferedImage scaleImageAndDetectEdges(PrintJob printJob) throws JobManagerException {
 		SlicingProfile profile = printJob.getPrinter().getConfiguration().getSlicingProfile();
-		BufferedImage image = newImage.get();
+		BufferedImage image = waitForImage();
+		
 		Boolean scaleToFit = printJob.getPrinter().getConfiguration().getSlicingProfile().getTwoDimensionalSettings().isScaleImageToFitPrintArea();
 		if (scaleToFit != null && scaleToFit) {
 			int actualWidth = profile.getxResolution() - image.getWidth();

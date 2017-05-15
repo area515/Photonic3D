@@ -11,7 +11,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,8 +30,8 @@ public class TextImageRenderer extends TwoDimensionalImageRenderer {
 	}
    
 	@Override
-	public BufferedImage scaleImageAndDetectEdges(PrintJob printJob) throws InterruptedException, ExecutionException {
-		return newImage.get();
+	public BufferedImage scaleImageAndDetectEdges(PrintJob printJob) throws JobManagerException {
+		return waitForImage();
 	}
 
 	public Font buildFont(DataAid data) {

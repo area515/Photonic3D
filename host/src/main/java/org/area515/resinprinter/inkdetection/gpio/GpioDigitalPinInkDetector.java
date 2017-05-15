@@ -33,7 +33,7 @@ public class GpioDigitalPinInkDetector implements PrintMaterialDetector, GpioPin
 
 	@Override
 	public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-		remainingResin = (pinLowIsLow && event.getState() == PinState.LOW) || 
+		remainingResin = (pinLowIsLow && event.getState() == PinState.LOW) ||
 				         (!pinLowIsLow && event.getState() == PinState.HIGH)?0:Float.MAX_VALUE;
 	}
 
@@ -48,6 +48,12 @@ public class GpioDigitalPinInkDetector implements PrintMaterialDetector, GpioPin
 				rPin = RaspiPin.getPinByAddress(Integer.parseInt((String)pin));
 			} else if (pin instanceof Number) {
 				rPin = RaspiPin.getPinByAddress(((Number)pin).intValue());
+			}
+			Object pinFormat = settings.getSettings().get("PinLowIsLowInk");
+			if (pinFormat instanceof String) {
+				pinLowIsLow = Boolean.getBoolean((String)pinFormat);
+			} else if (pinFormat instanceof Boolean) {
+				pinLowIsLow = (Boolean)pinFormat;
 			}
 		} else {
 			rPin = RaspiPin.getPinByAddress(0);

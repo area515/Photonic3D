@@ -24,7 +24,7 @@
 						</div>
 					</div>
 					<div class="list-group">
-						<a ng-class="{active:printable.name == printablesController.currentPrintable.name}" ng-repeat="printable in printablesController.printables"
+						<a ng-class="{active:printable.name == printablesController.currentPrintable.name && printable.extension == printablesController.currentPrintable.extension}" ng-repeat="printable in printablesController.printables"
 							class="list-group-item"
 				 			ng-click="printablesController.changeCurrentPrintable(printable)">
 								<i class="pull-left fa fa-2x" ng-class="printablesController.getPrintableIconClass(printable)"></i>
