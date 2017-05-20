@@ -1,6 +1,5 @@
 package org.area515.resinprinter.job;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
@@ -47,13 +46,5 @@ public class PrintJobSupplier implements Supplier<JobStatus> {
 			logger.error("Execution failure.", e);
 			return JobStatus.Failed;
 		}
-	}
-	
-	public static void main(String[] args) throws Exception {
-		CompletableFuture future = CompletableFuture.runAsync(() -> {System.out.println("first");try {Thread.sleep(5000);} catch(InterruptedException e) {};throw new IllegalArgumentException("ehhdl");});
-		System.out.println(future.whenComplete((c, r) -> System.out.println("After 5 seconds")));
-		System.out.println("stuff");
-		Thread.sleep(10000);
-		System.out.println("ober");
 	}
 }
