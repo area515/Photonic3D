@@ -1,12 +1,7 @@
 package org.area515.resinprinter.text;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 
-import javax.script.ScriptException;
-
-import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;

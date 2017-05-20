@@ -50,6 +50,8 @@ import org.area515.resinprinter.stl.Shape3d;
 import org.area515.resinprinter.stl.Triangle3d;
 
 public class SliceBrowser extends JSplitPane {
+	private static final long serialVersionUID = 7919446439764262367L;
+
 	private PrinterTools tools;
 	
 	private int firstSlice = 1;
@@ -61,7 +63,7 @@ public class SliceBrowser extends JSplitPane {
 	//"C:\\Users\\wgilster\\git\\Creation-Workshop-Host\\host\\src\\test\\resources\\org\\area515\\resinprinter\\slice\\CornerBracket_2.stl"
 	
 	//private String firstFile = "C:\\Users\\wgilster\\Documents\\fdhgg.stl";//1,200,670
-	private String firstFile = "C:\\Users\\wgilster\\uploaddir\\johnny-test pieces 1.stl";
+	private String firstFile = "C:\\Users\\wgilster\\git\\Photonic3DWes\\host\\src\\test\\resources\\org\\area515\\resinprinter\\slice\\50x100a.stl";
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\NonManifoldBox.stl";//-19
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl";
 //	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";//95

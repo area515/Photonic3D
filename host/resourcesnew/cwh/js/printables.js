@@ -290,9 +290,39 @@
 				"      if (x > 0 || y > 0) {\n" +
 				"         var currentTransform = new java.awt.geom.AffineTransform(affineTransform);\n" +
 				"         currentTransform.translate(\n" +
-				"            (x * gridDataInMM.distanceBetweenImagesX * pixelsPerMMX) + (x * printableShape.getWidth()),\n" +
-				"            (y * gridDataInMM.distanceBetweenImagesY * pixelsPerMMY) + (y * printableShape.getHeight()));\n" +
+				"            Math.round(x * gridDataInMM.distanceBetweenImagesX * pixelsPerMMX) + (x * printableShape.getWidth()),\n" +
+				"            Math.round(y * gridDataInMM.distanceBetweenImagesY * pixelsPerMMY) + (y * printableShape.getHeight()));\n" +
 				"         buildPlatformGraphics.drawImage(printImage, currentTransform, null);\n" +
+				"      }\n" +
+				"   }\n" +
+				"}\n";
+				controller.clearExternalCacheAndSaveCustomizer();
+		};
+		
+		this.writeDuplicationGridWithVariableExposureTimeCode = function writeDuplicationGridWithVariableExposureTimeCode() {
+			controller.currentCustomizer.imageManipulationCalculator = 
+				"var gridDataInMM = {\n" +
+				"  distanceBetweenImagesX: 1,\n" +
+				"  distanceBetweenImagesY: 1,\n" +
+				"  numberOfRows:3,\n" +
+				"  numberOfColumns:3,\n" +
+				"  exposureTimeDecrementMillis:1000};\n\n" +
+				"for (var x = 0; x < gridDataInMM.numberOfColumns; x++) {\n" +
+				"   for (var y = 0; y < gridDataInMM.numberOfRows; y++) {\n" +
+				"      if (x > 0 || y > 0) {\n" +
+				"         var currentTransform = new java.awt.geom.AffineTransform(affineTransform);\n" +
+				"         currentTransform.translate(\n" +
+				"            Math.round(x * gridDataInMM.distanceBetweenImagesX * pixelsPerMMX) + (x * printableShape.getWidth()),\n" +
+				"            Math.round(y * gridDataInMM.distanceBetweenImagesY * pixelsPerMMY) + (y * printableShape.getHeight()));\n" +
+				"         buildPlatformGraphics.drawImage(printImage, currentTransform, null);\n" +
+				"         exposureTimers.add({\n" +
+				"            delayMillis:$LayerTime - ((y * gridDataInMM.numberOfColumns) + x) * gridDataInMM.exposureTimeDecrementMillis,\n" + 
+				"            parameter:currentTransform.createTransformedShape(printableShape),\n" +
+                "            function:function(blackRect) {\n" +
+                "               buildPlatformGraphics.setColor(java.awt.Color.BLACK);\n" +
+                "               buildPlatformGraphics.fill(blackRect);\n" + 
+				"            }\n" + 
+				"         });\n" +
 				"      }\n" +
 				"   }\n" +
 				"}\n";
