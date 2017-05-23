@@ -278,6 +278,18 @@
 			controller.clearExternalCacheAndSaveCustomizer();
 		};
 		
+		this.writeCenteredTextCode = function writeCenteredTextCode() {
+			controller.currentCustomizer.imageManipulationCalculator = 
+				"var serial = \"123456\";\n" +
+				"var twoDFont = job.buildFont();\n" +
+				"var metrics = buildPlatformGraphics.getFontMetrics(twoDFont);\n" +
+				"buildPlatformGraphics.setFont(twoDFont);\n" +
+				"buildPlatformGraphics.setColor(java.awt.Color.WHITE);\n" +
+				"buildPlatformGraphics.drawString(serial, centerX - metrics.stringWidth(serial) / 2, centerY - metrics.getHeight() / 2 + metrics.getAscent());\n"
+				
+				controller.clearExternalCacheAndSaveCustomizer();
+		};
+			
 		this.writeDuplicationGridCode = function writeDuplicationGridCode() {
 			controller.currentCustomizer.imageManipulationCalculator = 
 				"var gridDataInMM = {\n" +
@@ -328,6 +340,44 @@
 				"}\n";
 				controller.clearExternalCacheAndSaveCustomizer();
 		};
+		
+		this.writeDuplicationGridWithSerialNumber = function() {
+			controller.currentCustomizer.imageManipulationCalculator = 
+			        "var gridDataInMM = {\n" + 
+					"  distanceBetweenImagesX: 1,\n" + 
+					"  distanceBetweenImagesY: 1,\n" + 
+					"  numberOfRows:3,\n" + 
+					"  numberOfColumns:3,\n" + 
+					"  startingSerialNumber:888,\n" + 
+					"  serialNumberCenterXPixels: printableShape.getWidth() / 2,\n" + 
+					"  serialNumberCenterYPixels: printableShape.getHeight() / 2,\n" + 
+					"  serialNumberDepth:0.5};\n\n" + 
+					"var twoDFont = job.buildFont();\n" + 
+					"var metrics = buildPlatformGraphics.getFontMetrics(twoDFont);\n" + 
+					"var oldTransform = buildPlatformGraphics.getTransform();\n" + 
+					"buildPlatformGraphics.setFont(twoDFont);\n" + 
+					"buildPlatformGraphics.setColor(java.awt.Color.BLACK);\n" + 
+					"for (var x = 0; x < gridDataInMM.numberOfColumns; x++) {\n" + 
+					"   for (var y = 0; y < gridDataInMM.numberOfRows; y++) {\n" + 
+					"      var currentTransform = new java.awt.geom.AffineTransform(affineTransform);\n" + 
+					"      if (x > 0 || y > 0) {\n" + 
+					"         currentTransform.translate(\n" + 
+					"            Math.round(x * gridDataInMM.distanceBetweenImagesX * pixelsPerMMX) + (x * printableShape.getWidth()),\n" + 
+					"            Math.round(y * gridDataInMM.distanceBetweenImagesY * pixelsPerMMY) + (y * printableShape.getHeight()));\n" + 
+					"         buildPlatformGraphics.drawImage(printImage, currentTransform, null);\n" + 
+					"      }\n" + 
+					"      if (($CURSLICE * $LayerThickness) <= gridDataInMM.serialNumberDepth) {\n" + 
+					"         buildPlatformGraphics.setTransform(currentTransform);\n" +
+					"         var nextSerialNumber = new java.lang.Integer(gridDataInMM.startingSerialNumber + (x * gridDataInMM.numberOfRows) + y).toString(16).toUpperCase();\n" + 
+					"         buildPlatformGraphics.drawString(nextSerialNumber, \n" + 
+					"            gridDataInMM.serialNumberCenterXPixels - metrics.stringWidth(nextSerialNumber) / 2, \n" + 
+					"            gridDataInMM.serialNumberCenterYPixels - metrics.getHeight() / 2 + metrics.getAscent());\n" + 
+					"         buildPlatformGraphics.setTransform(oldTransform);\n" + 
+					"      }\n" + 
+					"   }\n" + 
+					"}\n";
+					controller.clearExternalCacheAndSaveCustomizer();
+		}
 		
 		this.write3dTwistCode = function write3dTwistCode() {
 			controller.currentCustomizer.affineTransformSettings.affineTransformScriptCalculator = 

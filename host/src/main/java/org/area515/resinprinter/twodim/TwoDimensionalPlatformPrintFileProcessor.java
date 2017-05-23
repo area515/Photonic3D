@@ -151,15 +151,17 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 	}
 	
 	@Override
-	public BufferedImage renderPreviewImage(final DataAid aid) throws SliceHandlingException {
+	public BufferedImage renderPreviewImage(final DataAid dataAid) throws SliceHandlingException {
 		try {
-			int platformSlices = getSuggestedPlatformLayerCount(aid);
-			TwoDimensionalImageRenderer extrusionRenderer = createRenderer(aid, this, Boolean.TRUE);
-			CurrentImageRenderer platformRenderer = buildPlatformRenderer(aid, Boolean.FALSE, platformSlices, extrusionRenderer);
+			int platformSlices = getSuggestedPlatformLayerCount(dataAid);
+			dataAid.printJob.setTotalSlices(platformSlices + getSuggested2DExtrusionLayerCount(dataAid));
+			
+			TwoDimensionalImageRenderer extrusionRenderer = createRenderer(dataAid, this, Boolean.TRUE);
+			CurrentImageRenderer platformRenderer = buildPlatformRenderer(dataAid, Boolean.FALSE, platformSlices, extrusionRenderer);
 			
 			//We do this because there could be actions in here that are executed that the extrusionRenderer depends on being executed first
 			platformRenderer.call().getPrintableImage();
-			CurrentImageRenderer targetRenderer = aid.customizer.getNextSlice() < platformSlices?
+			CurrentImageRenderer targetRenderer = dataAid.customizer.getNextSlice() < platformSlices?
 					platformRenderer:
 					extrusionRenderer;
 			return targetRenderer.call().getPrintableImage();

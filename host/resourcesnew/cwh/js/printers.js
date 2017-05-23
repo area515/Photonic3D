@@ -170,6 +170,140 @@
 			openSavePrinterDialog(editTitle, true);
 		}
 
+		this.writePegExposureCode = function writePegExposureCode() {
+			controller.currentPrinter.configuration.slicingProfile.TwoDimensionalSettings.PlatformCalculator = 
+				    "var pegSettingsMM = {\n" +
+					"  rows: 5,\n" +
+					"  columns: 5,\n" +
+					"  fontDepth: .5,\n" +
+					"  fontPointSize: 42,\n" +
+					"  startingOverhangDegrees: 45,\n" +
+					"  degreeIncrement: 5,\n" +
+					"  pegDiameter: 3,\n" +
+					"  pegStandHeight: 1,\n" +
+					"  pegStandWidth: 5,\n" +
+					"  distanceBetweenStands: 1,\n" +
+					"  exposureTimeDecrementMillis: 1000};\n\n" +
+					"var pegStandCount = pegSettingsMM.pegStandHeight / $LayerThickness;\n" +
+					"var fontCount = pegSettingsMM.fontDepth / $LayerThickness;\n" +
+					"var pegSettingsPixels = {\n" +
+					"  pegDiameterX: pegSettingsMM.pegDiameter * pixelsPerMMX,\n" +
+					"  pegDiameterY: pegSettingsMM.pegDiameter * pixelsPerMMY,\n" +
+					"  pegStandWidthX: pegSettingsMM.pegStandWidth * pixelsPerMMX,\n" +
+					"  pegStandWidthY: pegSettingsMM.pegStandWidth * pixelsPerMMY,\n" +
+					"  distanceBetweenStandsX: pegSettingsMM.distanceBetweenStands * pixelsPerMMX,\n" +
+					"  distanceBetweenStandsY: pegSettingsMM.distanceBetweenStands * pixelsPerMMY,\n" +
+					"  pegStandDifferenceOffsetX: ((pegSettingsMM.pegStandWidth * pixelsPerMMX) - (pegSettingsMM.pegDiameter * pixelsPerMMX)) / 2,\n" +
+					"  pegStandDifferenceOffsetY: ((pegSettingsMM.pegStandWidth * pixelsPerMMY) - (pegSettingsMM.pegDiameter * pixelsPerMMY)) / 2\n" +
+					"}\n" +
+					"if ($CURSLICE < pegStandCount) {\n" +
+					"   for (var x = 0; x < pegSettingsMM.columns; x++) {\n" +
+					"      for (var y = 0; y < pegSettingsMM.rows; y++) {\n" +
+					"         var overhangAngle = pegSettingsMM.startingOverhangDegrees + y * pegSettingsMM.degreeIncrement;\n" +
+					"         var startingX = x * pegSettingsPixels.pegStandWidthX + x * pegSettingsPixels.distanceBetweenStandsX;\n" +
+					"         var startingY = y * pegSettingsPixels.pegStandWidthY + y * pegSettingsPixels.distanceBetweenStandsY;\n" +
+					"         buildPlatformGraphics.setColor(java.awt.Color.WHITE);\n" +
+					"         buildPlatformGraphics.fillRect(\n" +
+					"            startingX,\n" +
+					"            startingY,\n" +
+					"            pegSettingsPixels.pegStandWidthX,\n" +
+					"            pegSettingsPixels.pegStandWidthY);\n" +
+					"         if ($CURSLICE < fontCount) {\n" +
+					"            buildPlatformGraphics.setColor(java.awt.Color.BLACK);\n" +
+					"            buildPlatformGraphics.setFont(new java.awt.Font(\"Dialog\", 0, pegSettingsMM.fontPointSize));\n" +
+					"            buildPlatformGraphics.drawString(overhangAngle + \"\", startingX, startingY + pegSettingsPixels.pegStandWidthY);\n" +
+					"         }\n" +
+					"         exposureTimers.add({\n" +
+					"             delayMillis:$LayerTime - (pegSettingsMM.exposureTimeDecrementMillis * x),\n" + 
+					"             parameter:{x:startingX, y:startingY, width:pegSettingsPixels.pegStandWidthX, height:pegSettingsPixels.pegStandWidthY},\n" +
+					"             function:function(blackRect) {\n" +
+					"                buildPlatformGraphics.setColor(java.awt.Color.BLACK);\n" +
+					"                buildPlatformGraphics.fillRect(\n" +
+					"                   blackRect.x,\n" +
+					"                   blackRect.y,\n" +
+					"                   blackRect.width,\n" +
+					"                   blackRect.height);\n" +
+					"             }\n" +
+					"         });\n" +
+					"      }\n" +
+					"   }\n" +
+					"} else {\n" +
+					"   for (var x = 0; x < pegSettingsMM.columns; x++) {\n" +
+					"      for (var y = 0; y < pegSettingsMM.rows; y++) {\n" +
+					"         var overhangAngle = pegSettingsMM.startingOverhangDegrees + y * pegSettingsMM.degreeIncrement;\n" +
+					"         var singleOverhangIncrement = java.lang.Math.tan(java.lang.Math.toRadians(overhangAngle)) * $LayerThickness * pixelsPerMMX;\n" +
+					"         var circleOffsetX = pegSettingsPixels.pegStandDifferenceOffsetX * ((x + 1) * 2 - 1) + (singleOverhangIncrement * ($CURSLICE - pegStandCount)) + (x * pegSettingsPixels.pegDiameterX) + (x * pegSettingsPixels.distanceBetweenStandsX);\n" +
+					"         var circleOffsetY = pegSettingsPixels.pegStandDifferenceOffsetY * ((y + 1) * 2 - 1) + (y * pegSettingsPixels.pegDiameterY) + (y * pegSettingsPixels.distanceBetweenStandsY);\n" +
+					"         buildPlatformGraphics.fillOval(\n" +
+					"            circleOffsetX,\n" +
+					"            circleOffsetY,\n" +
+					"            pegSettingsPixels.pegDiameterX,\n" +
+					"            pegSettingsPixels.pegDiameterY);\n" +
+					"         exposureTimers.add({\n" +
+					"             delayMillis:$LayerTime - (pegSettingsMM.exposureTimeDecrementMillis * x),\n" +
+					"             parameter:{x:circleOffsetX, y:circleOffsetY, width:pegSettingsPixels.pegDiameterX, height:pegSettingsPixels.pegDiameterY},\n" +
+					"             function:function(blackRect) {\n" +
+					"                buildPlatformGraphics.setColor(java.awt.Color.BLACK);\n" +
+					"                buildPlatformGraphics.fillOval(\n" +
+					"                   blackRect.x,\n" +
+					"                   blackRect.y,\n" +
+					"                   blackRect.width,\n" +
+					"                   blackRect.height);\n" +
+					"             }\n" +
+					"         });\n" +
+					"      }\n" +
+					"   }\n" +
+					"}\n";
+		}
+		
+		this.writeHBridgeCode = function writeHBridgeCode() {
+			controller.currentPrinter.configuration.slicingProfile.TwoDimensionalSettings.PlatformCalculator = 
+				        "var hBridgeInMM = {\n" +
+						"   wallWidth:1,\n" +
+						"   gapLength:4,\n" +
+						"   firstGapWidth:5,\n" +
+						"   numberOfGapsInRow:6,\n" +
+						"   gapWidthIncrement:3,\n" +
+						"   distanceBetweenRows:1,\n" +
+						"   numberOfRows:5,\n" +
+						"   exposureTimeDecrementMillis:1000\n" +
+						"  };\n\n" +
+						"var wallWidthX = hBridgeInMM.wallWidth * pixelsPerMMX;\n" +
+						"var wallWidthY = hBridgeInMM.wallWidth * pixelsPerMMY;\n" +
+						"var gapLengthY = hBridgeInMM.gapLength * pixelsPerMMY;\n" +
+						"var lastTermOfSeries = hBridgeInMM.firstGapWidth + hBridgeInMM.gapWidthIncrement * (hBridgeInMM.numberOfGapsInRow - 1);\n" +
+						"var totalWidthX = ((hBridgeInMM.wallWidth + hBridgeInMM.wallWidth * hBridgeInMM.numberOfGapsInRow) + (hBridgeInMM.numberOfGapsInRow * (hBridgeInMM.firstGapWidth + lastTermOfSeries) / 2)) * pixelsPerMMX;\n" +
+						"var startX = centerX - totalWidthX / 2;\n" +
+						"var startY = hBridgeInMM.numberOfRows * (hBridgeInMM.gapLength * 2 + hBridgeInMM.wallWidth) + (hBridgeInMM.numberOfRows - 1) * hBridgeInMM.distanceBetweenRows;\n" +
+						"startY = centerY - startY * pixelsPerMMY / 2;\n" +
+						"var currentY = startY;\n" +
+						"buildPlatformGraphics.setColor(java.awt.Color.WHITE);\n" +
+						"for (var currentRow = 0; currentRow < hBridgeInMM.numberOfRows; currentRow++) {\n" +
+						"   var currentX = startX;\n" +
+						"   for (var currentGap = 0; currentGap < hBridgeInMM.numberOfGapsInRow; currentGap ++) {\n" +
+						"      if ($CURSLICE + 1 < job.totalSlices) {\n" +
+						"         buildPlatformGraphics.fillRect(currentX, currentY, wallWidthX, gapLengthY * 2 + wallWidthY);\n" +
+						"         currentX += wallWidthX + (hBridgeInMM.firstGapWidth + (hBridgeInMM.gapWidthIncrement * currentGap)) * pixelsPerMMX;\n" +
+						"      }\n" +
+						"   }\n" +
+						"   if ($CURSLICE + 1 < job.totalSlices) {\n" +
+						"      buildPlatformGraphics.fillRect(currentX, currentY, wallWidthX, gapLengthY * 2 + wallWidthY);\n" +
+						"      buildPlatformGraphics.fillRect(startX, currentY + gapLengthY, totalWidthX, wallWidthY);\n" +
+						"   } else {\n" +
+						"      buildPlatformGraphics.fillRect(startX, currentY, totalWidthX, gapLengthY * 2 + wallWidthY);\n" +
+						"      exposureTimers.add({\n" +
+						"      	  delayMillis:$LayerTime - (hBridgeInMM.exposureTimeDecrementMillis * currentRow),\n" + 
+						"         parameter:{x:startX, y:currentY, width:totalWidthX, height:gapLengthY * 2 + wallWidthY},\n" + 
+						"         function:function(blackRect) {\n" +
+						"            buildPlatformGraphics.setColor(java.awt.Color.BLACK);\n" +
+						"            buildPlatformGraphics.fillRect(blackRect.x, blackRect.y, blackRect.width, blackRect.height);\n" +
+						"         }\n" +
+						"      });\n" +
+						"   }\n" +
+						"   currentY += gapLengthY * 2 + wallWidthY + hBridgeInMM.distanceBetweenRows * pixelsPerMMY;\n" +
+						"}\n";
+		}
+		
 		this.startCurrentPrinter = function startCurrentPrinter() {
 			$('#start-btn').attr('class', 'fa fa-refresh fa-spin');
 			executeActionAndRefreshPrinters("Start Printer", "No printer selected to start.", '/services/printers/start/', controller.currentPrinter, false, true);

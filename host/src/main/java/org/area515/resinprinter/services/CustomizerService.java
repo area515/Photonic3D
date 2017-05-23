@@ -71,7 +71,7 @@ public class CustomizerService {
 	 		if (printerName == null || printerName.isEmpty()) {
 	 			//if customizer doesn't have a printer stored, set first active printer as printer
 	 			try {
-	 				activePrinter = PrinterService.INSTANCE.getFirstAvailablePrinter();				
+	 				activePrinter = PrinterService.INSTANCE.getFirstAvailablePrinter();
 	 			} catch (NoPrinterFoundException e) {
 	 				throw new NoPrinterFoundException("No printers found for slice preview. You must have a started printer or specify a valid printer in the Customizer.");
 	 			}
@@ -104,7 +104,7 @@ public class CustomizerService {
 	 		printJob.setCustomizer(customizer);
 	 		printJob.setPrintFileProcessor(processor);
 	 		printJob.setCurrentSlice(customizer.getNextSlice());
-	 		
+
 			return ((AbstractPrintFileProcessor<?,?>)processor).initializeJobCacheWithDataAid(printJob);
 	       }
 	     });

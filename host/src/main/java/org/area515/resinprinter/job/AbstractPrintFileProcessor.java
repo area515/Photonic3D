@@ -3,8 +3,6 @@ package org.area515.resinprinter.job;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Paint;
-import java.awt.Rectangle;
-import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -549,12 +547,5 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		}
 	
 		job.setDataAid(null);
-	}
-	
-	public static void main(String[] args) {
-		AffineTransform transform = new AffineTransform();
-		transform.translate(10, 10);
-		Shape shape = transform.createTransformedShape(new Rectangle(0, 0, 10, 10));
-		System.out.println(shape);
 	}
 }
