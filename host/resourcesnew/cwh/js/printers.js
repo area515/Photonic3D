@@ -261,7 +261,7 @@
 				        "var hBridgeInMM = {\n" +
 						"   wallWidth:1,\n" +
 						"   gapLength:4,\n" +
-						"   firstGapWidth:5,\n" +
+						"   firstGapWidth:3,\n" +
 						"   numberOfGapsInRow:6,\n" +
 						"   gapWidthIncrement:3,\n" +
 						"   distanceBetweenRows:1,\n" +

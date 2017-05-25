@@ -156,13 +156,13 @@ public class DispManXDevice implements GraphicsOutputInterface {
 			destPixels = new Memory(pitch * image.getHeight());
 		}
 		
-		logger.debug("loadBitmapARGB8888 alg started:{}", () -> Log4jUtil.startTimer(IMAGE_REALIZE_TIMER));
+		logger.debug("loadBitmapARGB8888 alg started:{}", () -> Log4jUtil.splitTimer(IMAGE_REALIZE_TIMER));
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
         		destPixels.setInt((y*(pitch / bytesPerPixel) + x) * bytesPerPixel, image.getRGB(x, y));
             }
         }
-		logger.debug("loadBitmapARGB8888 alg complete:{}", () -> Log4jUtil.completeTimer(IMAGE_REALIZE_TIMER));
+		logger.debug("loadBitmapARGB8888 alg complete:{}", () -> Log4jUtil.splitTimer(IMAGE_REALIZE_TIMER));
 
         width.setValue(image.getWidth());
         height.setValue(image.getHeight());
