@@ -15,7 +15,7 @@ import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.render.CurrentImageRenderer;
-import org.area515.resinprinter.job.render.RenderedData;
+import org.area515.resinprinter.job.render.RenderingContext;
 import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
 import org.area515.util.Log4jUtil;
 import org.area515.util.TemplateEngine;
@@ -25,9 +25,9 @@ public class PlatformImageRenderer extends CurrentImageRenderer {
 	protected static final String EXTRUSION_IMAGE = "lastExtrusionImage";
 	
 	private int totalPlatformSlices;
-	private TwoDimensionalImageRenderer extrusionImageRenderer;
+	private CurrentImageRenderer extrusionImageRenderer;
 	
-	public PlatformImageRenderer(DataAid aid, AbstractPrintFileProcessor<?,?> processor, Object imageIndexToBuild, int totalPlatformSlices, TwoDimensionalImageRenderer extrusionImageRenderer) {
+	public PlatformImageRenderer(DataAid aid, AbstractPrintFileProcessor<?,?> processor, Object imageIndexToBuild, int totalPlatformSlices, CurrentImageRenderer extrusionImageRenderer) {
 		super(aid, processor, imageIndexToBuild);
 		this.totalPlatformSlices = totalPlatformSlices;
 		this.extrusionImageRenderer = extrusionImageRenderer;
@@ -61,8 +61,8 @@ public class PlatformImageRenderer extends CurrentImageRenderer {
 			throw new JobManagerException("This printer doesn't have 2D platform rendering calculator setup");
 		}
 		
-		RenderedData platformToRender = aid.cache.getOrCreateIfMissing(imageIndexToBuild);
-		RenderedData extrusionImageData = aid.cache.getOrCreateIfMissing(EXTRUSION_IMAGE);
+		RenderingContext platformToRender = aid.cache.getOrCreateIfMissing(imageIndexToBuild);
+		RenderingContext extrusionImageData = aid.cache.getOrCreateIfMissing(EXTRUSION_IMAGE);
 		ReentrantLock lock = platformToRender.getLock();
 		lock.lock();
 		try {

@@ -7,10 +7,7 @@ import java.util.concurrent.Future;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.job.render.CurrentImageRenderer;
-import org.area515.resinprinter.job.render.RenderedData;
-import org.area515.resinprinter.server.Main;
-import org.area515.resinprinter.twodim.SimpleImageRenderer;
+import org.area515.resinprinter.job.render.RenderingContext;
 
 public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 	private static final Logger logger = LogManager.getLogger();
@@ -57,24 +54,22 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 			// Preload first image then loop
 			if (imgIter.hasNext()) {
 				File imageFile = imgIter.next();
-				CurrentImageRenderer currentRendering = new SimpleImageRenderer(dataAid, this, imageFile);
-				Future<RenderedData> prepareImage = Main.GLOBAL_EXECUTOR.submit(currentRendering);
+				Future<RenderingContext> prepareImage = startImageRendering(dataAid, imageFile);
 				boolean slicePending = true;
 
 				do {
 
-					JobStatus status = performPreSlice(dataAid, currentRendering.getScriptEngine(), null);
+					JobStatus status = performPreSlice(dataAid, dataAid.currentlyRenderingImage.getScriptEngine(), null);
 					if (status != null) {
 						return status;
 					}
 
-					RenderedData imageData = prepareImage.get();
+					RenderingContext imageData = prepareImage.get();
 					dataAid.cache.setCurrentRenderingPointer(imageFile);
 					
 					if (imgIter.hasNext()) {
 						imageFile = imgIter.next();
-						currentRendering = new SimpleImageRenderer(dataAid, this, imageFile);
-						prepareImage = Main.GLOBAL_EXECUTOR.submit(currentRendering);
+						prepareImage = startImageRendering(dataAid, imageFile);
 					} else {
 						slicePending = false;
 					}

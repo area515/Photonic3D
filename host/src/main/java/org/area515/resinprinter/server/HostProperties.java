@@ -38,6 +38,7 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.network.LinuxNetworkManager;
 import org.area515.resinprinter.network.NetworkManager;
@@ -70,8 +71,10 @@ public class HostProperties {
 	public static String MACHINE_EXTENSION = ".machine";
 	public File MACHINE_DIR = new File(System.getProperty("user.home"), "Machines");
 	private static String PRINTER_EXTENSION = ".printer";
-	private File printerDir = new File(System.getProperty("user.home"), "3dPrinters");
-
+	private File printerDir = new File(System.getProperty("user.home"), "3dPrinters");	
+	public static String CUSTOMIZER_EXTENSION = ".customizer";
+	private File CUSTOMIZER_DIR = new File(System.getProperty("user.home"), "Customizers");
+	
 	private static HostProperties INSTANCE = null;
 	private File uploadDir;
 	private File printDir;
@@ -700,6 +703,50 @@ public class HostProperties {
 		return configurations;
 	}
 	
+	public Customizer loadCustomizer(String customizerName) throws InappropriateDeviceException {
+		if (!CUSTOMIZER_DIR.exists() && !CUSTOMIZER_DIR.mkdirs()) {
+			throw new InappropriateDeviceException("Couldn't create customizer directory:" + CUSTOMIZER_DIR);
+		}
+
+		File currentFile = new File(CUSTOMIZER_DIR, customizerName + CUSTOMIZER_EXTENSION);
+		if (!currentFile.exists()) {
+			return null;
+		}
+		
+		JAXBContext jaxbContext;
+		try {
+			jaxbContext = JAXBContext.newInstance(Customizer.class);
+			Unmarshaller jaxbUnMarshaller = jaxbContext.createUnmarshaller();
+			
+			Customizer customizer = (Customizer)jaxbUnMarshaller.unmarshal(currentFile);
+			
+			logger.info("Loaded customizer for:{}", customizer);
+			return customizer;
+		} catch (JAXBException e) {
+			throw new InappropriateDeviceException("Problem marshalling customizer from:" + currentFile, e);
+		}
+	}
+	
+	public Customizer saveCustomizer(Customizer customizer) throws InappropriateDeviceException {
+		if (!CUSTOMIZER_DIR.exists() && !CUSTOMIZER_DIR.mkdirs()) {
+			throw new InappropriateDeviceException("Couldn't create customizer directory:" + CUSTOMIZER_DIR);
+		}
+
+		File currentFile = new File(CUSTOMIZER_DIR, customizer.getName() + CUSTOMIZER_EXTENSION);
+		JAXBContext jaxbContext;
+		try {
+			jaxbContext = JAXBContext.newInstance(Customizer.class);
+			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+			jaxbMarshaller.marshal(customizer, currentFile);
+			logger.info("Saved customizer for:{}", customizer);
+			NotificationManager.hostSettingsChanged();
+			return customizer;
+		} catch (JAXBException e) {
+			throw new InappropriateDeviceException("Problem marshalling customizer from:" + currentFile, e);
+		}
+	}
+	
 	public List<PrinterConfiguration> getPrinterConfigurations() {
 		if (configurations != null) {
 			return new ArrayList<PrinterConfiguration>(configurations.values());
@@ -748,7 +795,7 @@ public class HostProperties {
 				//We do not want to start the printer here
 				configurations.put(configuration.getName(), configuration);
 				
-				logger.info("Created printer configuration for:{}", configuration);
+				logger.info("Loaded printer configuration for:{}", configuration);
 			} catch (JAXBException e) {
 				logger.error("Problem marshalling printer configurations from:" + currentFile, e);
 			}
@@ -868,6 +915,7 @@ public class HostProperties {
 			IOUtils.closeQuietly(stream);
 		}
 	}
+	
 	public void hostStartupComplete() {
 		Properties oneTimeInstall = new Properties();
 		oneTimeInstall.setProperty("performedOneTimeInstall", "true");

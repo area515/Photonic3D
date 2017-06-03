@@ -19,7 +19,6 @@ import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
-import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
 import org.area515.resinprinter.services.PrinterService;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -27,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PrintJob {
 	private volatile int totalSlices = 0;
-	private volatile int currentSlice = 0;
 	private volatile long currentSliceTime = 0;
 	private volatile long averageSliceTime = 0;
 	private volatile long startTime = 0;
@@ -124,11 +122,24 @@ public class PrintJob {
 		this.totalSlices = totalSlices;
 	}
 	
+	@JsonIgnore
+	public int getRenderingSlice(){
+		return dataAid.getRenderingSlice();
+	}
+
 	public int getCurrentSlice(){
-		return currentSlice;
+		if (dataAid == null || dataAid.customizer == null) {
+			return -1;
+		}
+		
+		return dataAid.customizer.getNextSlice();
 	}
 	public void setCurrentSlice(int currentSlice){
-		this.currentSlice = currentSlice;
+		if (dataAid == null || dataAid.customizer == null) {
+			return;
+		}
+		
+		this.dataAid.customizer.setNextSlice(currentSlice);
 	}
 
 	public long getCurrentSliceTime(){
@@ -332,15 +343,15 @@ public class PrintJob {
 		this.currentSliceCost = currentSliceCost;
 	}
 	
-	public void addNewSlice(long sliceTime, Double buildAreaInMM) {
+	public void completeRenderingSlice(long sliceTime, Double buildAreaInMM) {
 		sliceTime -= getPrinter().getCurrentSlicePauseTime();
 		getPrinter().setCurrentSlicePauseTime(0);
 		InkConfig inkConfig = getPrinter().getConfiguration().getSlicingProfile().getSelectedInkConfig();
+		int currentSlice = dataAid.completeRenderingSlice();
 		averageSliceTime = ((averageSliceTime * currentSlice) + sliceTime) / (currentSlice + 1);
 		elapsedTime = System.currentTimeMillis() - startTime;
 		
 		currentSliceTime = sliceTime;
-		currentSlice++;
 		
 		if (buildAreaInMM != null && buildAreaInMM > 0) {
 			double buildVolume = buildAreaInMM * inkConfig.getSliceHeight();

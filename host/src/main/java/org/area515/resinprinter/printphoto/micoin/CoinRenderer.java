@@ -11,7 +11,7 @@ import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
-import org.area515.resinprinter.job.render.RenderedData;
+import org.area515.resinprinter.job.render.RenderingContext;
 import org.area515.resinprinter.twodim.TwoDimensionalImageRenderer;
 import org.area515.util.Log4jUtil;
 
@@ -28,9 +28,9 @@ public class CoinRenderer extends TwoDimensionalImageRenderer {
 	public BufferedImage renderImage(BufferedImage imageToDisplay) throws JobManagerException {
 		if (imageToDisplay == null) {
 			imageToDisplay = scaleImageAndDetectEdges(aid.printJob);
-			RenderedData firstData = aid.cache.getOrCreateIfMissing(FIRST_IMAGE);
-			RenderedData middleData = aid.cache.getOrCreateIfMissing(MIDDLE_IMAGE);
-			RenderedData lastData = aid.cache.getOrCreateIfMissing(LAST_IMAGE);
+			RenderingContext firstData = aid.cache.getOrCreateIfMissing(FIRST_IMAGE);
+			RenderingContext middleData = aid.cache.getOrCreateIfMissing(MIDDLE_IMAGE);
+			RenderingContext lastData = aid.cache.getOrCreateIfMissing(LAST_IMAGE);
 			int width = imageToDisplay.getWidth();
 			int height = imageToDisplay.getHeight();
 			firstData.setPreTransformedImage(imageToDisplay.getSubimage(0, 0, width/3, height));
@@ -43,7 +43,6 @@ public class CoinRenderer extends TwoDimensionalImageRenderer {
 		}
 		
 		CoinFileProcessor processor = (CoinFileProcessor)aid.printJob.getPrintFileProcessor();
-		
 		int extrusionCount = processor.getSuggested2DExtrusionLayerCount(aid);
 		int platformCount = processor.getSuggestedPlatformLayerCount(aid);
 		int imageIndex = aid.printJob.getCurrentSlice();

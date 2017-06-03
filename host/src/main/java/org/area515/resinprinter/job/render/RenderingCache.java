@@ -13,17 +13,17 @@ import com.google.common.cache.LoadingCache;
 
 public class RenderingCache {
 	private static final Logger logger = LogManager.getLogger();
-	private LoadingCache<Object, RenderedData> imageSync = CacheBuilder.newBuilder().softValues().build(
-			new CacheLoader<Object, RenderedData>() {
+	private LoadingCache<Object, RenderingContext> imageSync = CacheBuilder.newBuilder().softValues().build(
+			new CacheLoader<Object, RenderingContext>() {
 				@Override
-				public RenderedData load(Object key) throws Exception {
-					return new RenderedData();
+				public RenderingContext load(Object key) throws Exception {
+					return new RenderingContext();
 				}
 			});
 	
 	private Object currentImagePointer = Boolean.TRUE;
 
-	public RenderedData getOrCreateIfMissing(Object imageToBuild) {
+	public RenderingContext getOrCreateIfMissing(Object imageToBuild) {
 		try {
 			return imageSync.get(imageToBuild);
 		} catch (ExecutionException e) {

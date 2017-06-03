@@ -3,6 +3,7 @@ package org.area515.resinprinter.text;
 import java.io.File;
 
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.twodim.TwoDimensionalImageRenderer;
@@ -45,7 +46,7 @@ public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileP
 	}
 
 	@Override
-	public TwoDimensionalImageRenderer createRenderer(DataAid aid, AbstractPrintFileProcessor<?, ?> processor, Object imageIndexToBuild) {
+	public TwoDimensionalImageRenderer createTwoDimensionalRenderer(DataAid aid, Object imageIndexToBuild) {
 		return new TextImageRenderer(aid, this, imageIndexToBuild);
 	}
 }

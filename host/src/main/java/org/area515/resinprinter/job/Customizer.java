@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.util.TemplateEngine;
@@ -17,6 +18,7 @@ import org.area515.util.TemplateEngine;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@XmlRootElement
 public class Customizer {
 	private String name;
 	private String printerName;
@@ -257,6 +259,10 @@ public class Customizer {
 	}
 	public void setCacheId(String cacheId) {
 		this.cacheId = null;
+	}
+	
+	public String toString() {
+		return getCacheId();
 	}
 	
 	@Override

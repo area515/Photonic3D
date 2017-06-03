@@ -2,7 +2,7 @@
 	var cwhApp = angular.module('cwhApp');
 	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', 'photonicUtils', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket, photonicUtils) {
 		controller = this;
-		
+	
 		this.currentPrintable = null;
 		this.currentCustomizer = null;
 		this.currentPrinter = null;

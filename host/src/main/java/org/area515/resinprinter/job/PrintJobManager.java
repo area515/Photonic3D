@@ -61,8 +61,7 @@ public class PrintJobManager {
 			logger.info(newJob.getCustomizer());
 		}
 		
-		//TODO: These should be set by customizer
-		newJob.setCurrentSlice(0);
+		//TODO: These should be set by customizer. Right now, each FileProcessor sets those values independently newJob.setCurrentSlice(0);
 		newJob.setTotalSlices(0);
 
 		CompletableFuture<JobStatus> futureJobStatus = null;

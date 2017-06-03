@@ -13,7 +13,7 @@ import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.render.CurrentImageRenderer;
-import org.area515.resinprinter.job.render.RenderedData;
+import org.area515.resinprinter.job.render.RenderingContext;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.server.Main;
 
@@ -40,7 +40,7 @@ public abstract class TwoDimensionalImageRenderer extends CurrentImageRenderer {
 		return Main.GLOBAL_EXECUTOR.submit(new Callable<BufferedImage>() {
 			@Override
 			public BufferedImage call() throws Exception {
-				RenderedData twoDimensionalImage = aid.cache.getOrCreateIfMissing(imageIndexToBuild);
+				RenderingContext twoDimensionalImage = aid.cache.getOrCreateIfMissing(imageIndexToBuild);
 				//This is a short circuit to stop from loading the image from file every time a renderer is created.
 				if (twoDimensionalImage.getPreTransformedImage() != null) {
 					return null;

@@ -28,7 +28,8 @@ import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.job.Customizer.PrinterStep;
-import org.area515.resinprinter.job.render.RenderedData;
+import org.area515.resinprinter.job.render.CurrentImageRenderer;
+import org.area515.resinprinter.job.render.RenderingContext;
 import org.area515.resinprinter.job.render.RenderingCache;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
@@ -46,6 +47,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 	public static final String EXPOSURE_TIMER = "exposureTime";
 	
 	public static class DataAid {
+		private Integer renderingSlice;
 		public Printer printer;
 		public PrintJob printJob;
 		public PrinterConfiguration configuration;
@@ -63,7 +65,9 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		private AffineTransform affineTransform;
 		public RenderingCache cache = new RenderingCache();
 		public Customizer customizer;
-
+		public Customizer originalCustomizer;
+		public CurrentImageRenderer currentlyRenderingImage;
+		
 		public DataAid(PrintJob printJob) throws JobManagerException {
 			this.printJob = printJob;
 			printer = printJob.getPrinter();
@@ -98,7 +102,9 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			if (customizer.getZScale() == null) {
 				customizer.setZScale(1.0);
 			}
+			
 			//We must make sure our customizer is perfectly setup at this point, everyone should be able to depend on our customizer after this setup process
+			//saveOriginalCustomizer();
 			
 			//This file processor requires an ink configuration
 			if (inkConfiguration == null) {
@@ -126,8 +132,54 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			
 			return this.affineTransform;
 		}
+		
+		public int getRenderingSlice() {
+			if (customizer == null) {
+				return -1;
+			}
+			
+			if (renderingSlice == null) {
+				startSlice();
+			}
+			
+			return renderingSlice;
+		}
+		
+		public int startSlice(){
+			if (renderingSlice == null) {
+				if (customizer == null) {
+					return -1;
+				}
+				
+				renderingSlice = customizer.getNextSlice();
+				return renderingSlice;
+			}
+			
+			return renderingSlice++;
+		}
+		
+		public int completeRenderingSlice() {
+			int sliceJustRendered = customizer.getNextSlice();
+			customizer.setNextSlice(sliceJustRendered + 1);
+			customizer.setNextStep(PrinterStep.PerformPreSlice);
+			CustomizerService.INSTANCE.addOrUpdateCustomizer(customizer);
+			return sliceJustRendered;
+		}
 	}
 	
+	public Future<RenderingContext> startImageRendering(DataAid aid, Object imageIndexToBuild) {
+		aid.currentlyRenderingImage = createRenderer(aid, imageIndexToBuild);
+		aid.startSlice();
+		if (aid.currentlyRenderingImage == null) {
+			return null;
+		}
+		
+		return Main.GLOBAL_EXECUTOR.submit(aid.currentlyRenderingImage);
+	}
+	
+	
+	public abstract CurrentImageRenderer createRenderer(DataAid aid, Object imageIndexToBuild);
+
 	@Override
 	public Double getBuildAreaMM(PrintJob printJob) {
 		DataAid aid = getDataAid(printJob);
@@ -404,7 +456,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			aid.printJob.getZLiftSpeed(), buildArea);
 		
 		//Perform area and cost manipulations for current slice
-		aid.printJob.addNewSlice(System.currentTimeMillis() - aid.currentSliceTime, buildArea);
+		aid.printJob.completeRenderingSlice(System.currentTimeMillis() - aid.currentSliceTime, buildArea);
 		
 		//Notify the client that the printJob has increased the currentSlice
 		NotificationManager.jobChanged(aid.printer, aid.printJob);
@@ -431,6 +483,8 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			aid.printer.setProjectorPowerStatus(false);
 		}
 
+		//saveOriginalCustomizer();
+		
 		return JobStatus.Completed;
 	}
 
@@ -513,7 +567,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 	
 	public BufferedImage buildPreviewSlice(Customizer customizer, DataAid dataAid) throws NoPrinterFoundException, SliceHandlingException {
 		try {
-			RenderedData data = dataAid.cache.getOrCreateIfMissing(customizer);
+			RenderingContext data = dataAid.cache.getOrCreateIfMissing(customizer);
 			BufferedImage preImage = data.getPreTransformedImage();
 			if (preImage == null) {
 				dataAid.optimizeWithPreviewMode = true;
@@ -541,6 +595,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		return job.getDataAid();
 	}
 	
+	//TODO: Not sure this is necessary. What if we just killed the rendering cache
 	public void clearDataAid(PrintJob job) {
 		if (job == null) {
 			return;

@@ -2,12 +2,12 @@ package org.area515.resinprinter.twodim;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.Future;
 
+import javax.imageio.ImageIO;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
@@ -16,97 +16,128 @@ import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.Previewable;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.render.CurrentImageRenderer;
-import org.area515.resinprinter.job.render.RenderedData;
+import org.area515.resinprinter.job.render.RenderingContext;
 import org.area515.resinprinter.job.render.RenderingCache;
 import org.area515.resinprinter.printer.SlicingProfile.TwoDimensionalSettings;
-import org.area515.resinprinter.server.Main;
+import org.area515.resinprinter.services.PrintJobService;
 
 public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends AbstractPrintFileProcessor<T,E> implements Previewable {
-    private static final Logger logger = LogManager.getLogger();
+    public class TwoDimensionalDataAid extends DataAid {
+    	public int totalPlatformSlices;
+    	public int totalExtrusionSlices;
+    	public int platformSlices;
+    	public int extrusionSlices;
+    	public TwoDimensionalImageRenderer platformSizeInitializer;
+    	
+    	public TwoDimensionalDataAid(PrintJob printJob) throws JobManagerException {
+    		super(printJob);
+    	}
+    }
     
 	@Override
 	public void prepareEnvironment(final File processingFile, final PrintJob printJob) throws JobManagerException {
 		DataAid aid;
 		try {
 			aid = initializeJobCacheWithDataAid(printJob);
-			createRenderer(aid, this, Boolean.TRUE);
+			createTwoDimensionalRenderer(aid, Boolean.TRUE);
 		} catch (InappropriateDeviceException e) {
 			throw new JobManagerException("Couldn't create job", e);
 		}
 	}
 	
-	protected CurrentImageRenderer buildPlatformRenderer(DataAid dataAid, Object nextRenderingPointer, int totalPlatformSlices, TwoDimensionalImageRenderer platformSizeInitializer) {
+	@Override
+	public DataAid createDataAid(PrintJob printJob) throws JobManagerException {
+		return new TwoDimensionalDataAid(printJob);
+	}
+
+	protected CurrentImageRenderer buildPlatformRenderer(DataAid dataAid, Object nextRenderingPointer, int totalPlatformSlices, CurrentImageRenderer platformSizeInitializer) {
 		return new PlatformImageRenderer(dataAid, this, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer);
+	}
+	
+	public abstract TwoDimensionalImageRenderer createTwoDimensionalRenderer(DataAid aid, Object imageIndexToBuild);
+	
+	@Override
+	public final CurrentImageRenderer createRenderer(DataAid aid, Object imageIndexToBuild) {
+		TwoDimensionalDataAid dataAid = (TwoDimensionalDataAid)aid;
+		if (dataAid.platformSlices <= 0 && dataAid.extrusionSlices <= 0) {
+			return null;
+		}
+		
+		if (dataAid.platformSizeInitializer == null) {
+			dataAid.platformSizeInitializer = createTwoDimensionalRenderer(dataAid, imageIndexToBuild);
+		}
+
+		if (dataAid.platformSlices > 0) {
+			dataAid.platformSlices--;
+			return buildPlatformRenderer(dataAid, imageIndexToBuild, dataAid.totalPlatformSlices, dataAid.platformSizeInitializer);
+		}
+		
+		//Clear cache so that the text will render for the first time and not use the build platform cache
+		if (dataAid.extrusionSlices == dataAid.totalExtrusionSlices) {
+			dataAid.cache.clearCache(Boolean.TRUE);
+			dataAid.cache.clearCache(Boolean.FALSE);
+		}
+		
+		dataAid.extrusionSlices--;
+		return createTwoDimensionalRenderer(dataAid, imageIndexToBuild);
+	}
+
+	protected void setupSlices(PrintJob printJob, TwoDimensionalDataAid dataAid, int suggestedPlatformSlices, int suggestedExtrusionSlices) {
+		int startingSlice = dataAid.customizer.getNextSlice();
+		dataAid.platformSlices = suggestedPlatformSlices;
+		dataAid.extrusionSlices = suggestedExtrusionSlices;
+		dataAid.totalPlatformSlices = dataAid.platformSlices;
+		dataAid.totalExtrusionSlices = dataAid.extrusionSlices;
+		
+		if (startingSlice > dataAid.platformSlices) {
+			startingSlice -= dataAid.platformSlices;
+			dataAid.platformSlices = 0;
+		} else {
+			dataAid.platformSlices -= startingSlice;
+			startingSlice = 0;
+		}
+		
+		if (startingSlice > dataAid.extrusionSlices) {
+			startingSlice -= dataAid.extrusionSlices;
+			dataAid.extrusionSlices = 0;
+		} else {
+			dataAid.extrusionSlices -= startingSlice;
+			startingSlice = 0;
+		}
+		
+		//Total slices must be set to the actual total number of slices that are in the model
+		printJob.setTotalSlices(dataAid.totalPlatformSlices + dataAid.totalExtrusionSlices);
 	}
 	
 	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
-		DataAid dataAid = getDataAid(printJob);
+		TwoDimensionalDataAid dataAid = (TwoDimensionalDataAid)getDataAid(printJob);
 		try {
 			performHeader(dataAid);
-			
-			int startingSlice = dataAid.customizer.getNextSlice();
-			int platformSlices = getSuggestedPlatformLayerCount(dataAid);
-			int totalPlatformSlices = platformSlices;
-			int extrusionSlices = getSuggested2DExtrusionLayerCount(dataAid);
-			
-			if (startingSlice >= platformSlices) {
-				platformSlices = 0;
-				startingSlice -= platformSlices;
-			}
-			extrusionSlices -= startingSlice;
-			
-			printJob.setTotalSlices(platformSlices + extrusionSlices);
+			setupSlices(printJob, dataAid, getSuggestedPlatformLayerCount(dataAid), getSuggested2DExtrusionLayerCount(dataAid));
 			RenderingCache printState = dataAid.cache;
 			Boolean nextRenderingPointer = (Boolean)printState.getCurrentRenderingPointer();
-			Future<RenderedData> currentImage = null;
-			TwoDimensionalImageRenderer platformSizeInitializer = null;
-			CurrentImageRenderer currentRendering = null;
-			if (platformSlices > 0) {
-				platformSizeInitializer = createRenderer(dataAid, this, nextRenderingPointer);
-				currentRendering = buildPlatformRenderer(dataAid, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer);
-				currentImage = Main.GLOBAL_EXECUTOR.submit(currentRendering);
-			} else {
-				currentRendering = createRenderer(dataAid, this, nextRenderingPointer);
-				currentImage = Main.GLOBAL_EXECUTOR.submit(currentRendering);
-			}
-			while (platformSlices > 0 || extrusionSlices > 0) {
+			Future<RenderingContext> currentImage = startImageRendering(dataAid, nextRenderingPointer);		
+			while (currentImage != null) {
 				
 				//Performs all of the duties that are common to most print files
-				JobStatus status = performPreSlice(dataAid, currentRendering.getScriptEngine(), null);
+				JobStatus status = performPreSlice(dataAid, dataAid.currentlyRenderingImage.getScriptEngine(), null);
 				if (status != null) {
 					return status;
 				}
 				
 				//Wait until the image has been properly rendered. Most likely, it's already done though...
-				RenderedData rendered = currentImage.get();
+				RenderingContext rendered = currentImage.get();
 				
 				//Now that the image has been rendered, we can make the switch to use the pointer that we were using while we were rendering
 				printState.setCurrentRenderingPointer(nextRenderingPointer);
 				
-				//Get the next pointer in line to start rendering the image into
+				//Get the next pointer in line to start rendering the next image into
 				nextRenderingPointer = !nextRenderingPointer;
 				
 				//Start to render the next image while we are waiting for the current image to cure
-				if (platformSlices > 1) {
-					currentRendering = buildPlatformRenderer(dataAid, nextRenderingPointer, totalPlatformSlices, platformSizeInitializer);
-					currentImage = Main.GLOBAL_EXECUTOR.submit(currentRendering);
-					platformSlices--;
-				} else if (extrusionSlices > 1) {
-					//Clear cache so that the text will render for the first time and not use the build platform cache
-					if (platformSlices == 1) {
-						platformSlices--;
-						dataAid.cache.clearCache(Boolean.TRUE);
-						dataAid.cache.clearCache(Boolean.FALSE);
-					} else {
-						extrusionSlices--;
-					}
-					currentRendering = createRenderer(dataAid, this, nextRenderingPointer);
-					currentImage = Main.GLOBAL_EXECUTOR.submit(currentRendering);
-				} else {
-					extrusionSlices--;
-				}
-
+				currentImage = startImageRendering(dataAid, nextRenderingPointer);
+				
 				//Performs all of the duties that are common to most print files
 				status = printImageAndPerformPostProcessing(dataAid, rendered.getScriptEngine(), rendered.getPrintableImage());
 				if (status != null) {
@@ -151,24 +182,18 @@ public abstract class TwoDimensionalPlatformPrintFileProcessor<T,E> extends Abst
 	}
 	
 	@Override
-	public BufferedImage renderPreviewImage(final DataAid dataAid) throws SliceHandlingException {
+	public BufferedImage renderPreviewImage(final DataAid aid) throws SliceHandlingException {
 		try {
-			int platformSlices = getSuggestedPlatformLayerCount(dataAid);
-			dataAid.printJob.setTotalSlices(platformSlices + getSuggested2DExtrusionLayerCount(dataAid));
+			TwoDimensionalDataAid dataAid = (TwoDimensionalDataAid)aid;
+			setupSlices(aid.printJob, dataAid, getSuggestedPlatformLayerCount(dataAid), getSuggested2DExtrusionLayerCount(dataAid));
+			CurrentImageRenderer renderer = createRenderer(dataAid, Boolean.TRUE);
+			if (renderer == null) {
+				return ImageIO.read(PrintJobService.class.getResourceAsStream("noimageavailable.png"));
+			}
 			
-			TwoDimensionalImageRenderer extrusionRenderer = createRenderer(dataAid, this, Boolean.TRUE);
-			CurrentImageRenderer platformRenderer = buildPlatformRenderer(dataAid, Boolean.FALSE, platformSlices, extrusionRenderer);
-			
-			//We do this because there could be actions in here that are executed that the extrusionRenderer depends on being executed first
-			platformRenderer.call().getPrintableImage();
-			CurrentImageRenderer targetRenderer = dataAid.customizer.getNextSlice() < platformSlices?
-					platformRenderer:
-					extrusionRenderer;
-			return targetRenderer.call().getPrintableImage();
-		} catch (JobManagerException e) {
+			return renderer.call().getPrintableImage();
+		} catch (IOException | JobManagerException e) {
 			throw new SliceHandlingException(e);
 		}
 	}
-	
-	public abstract TwoDimensionalImageRenderer createRenderer(DataAid aid, AbstractPrintFileProcessor<?,?> processor, Object imageIndexToBuild);
 }

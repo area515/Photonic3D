@@ -7,6 +7,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.twodim.TwoDimensionalImageRenderer;
@@ -51,8 +52,8 @@ public class ImagePrintFileProcessor extends TwoDimensionalPlatformPrintFileProc
 	}
 
 	@Override
-	public TwoDimensionalImageRenderer createRenderer(DataAid aid, AbstractPrintFileProcessor<?, ?> processor, Object imageIndexToBuild) {
-		return new TwoDimensionalImageRenderer(aid, processor, imageIndexToBuild) {
+	public TwoDimensionalImageRenderer createTwoDimensionalRenderer(DataAid aid, Object imageIndexToBuild) {
+		return new TwoDimensionalImageRenderer(aid, this, imageIndexToBuild) {
 			public BufferedImage loadImageFromFile(PrintJob job) throws JobManagerException {
 				try {
 					return ImageIO.read(job.getJobFile());

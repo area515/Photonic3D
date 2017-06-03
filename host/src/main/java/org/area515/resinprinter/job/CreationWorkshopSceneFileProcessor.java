@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -31,8 +32,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.exception.SliceHandlingException;
-import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
-import org.area515.resinprinter.job.render.RenderedData;
+import org.area515.resinprinter.job.render.CurrentImageRenderer;
+import org.area515.resinprinter.job.render.RenderingContext;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
@@ -62,6 +63,11 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		return false;
 	}
 	
+	@Override
+	public CurrentImageRenderer createRenderer(DataAid aid, Object imageIndexToBuild) {
+		return new SimpleImageRenderer(aid, this, imageIndexToBuild);
+	}
+
 	protected SortedMap<String, File> findImages(File jobFile) throws JobManagerException {
 		String [] extensions = {"png", "PNG"};
 		boolean recursive = true;
@@ -100,11 +106,9 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 				throw new IOException("No Image Found for index:" + dataAid.customizer.getNextSlice());
 			}
 			File imageFile = imgIter.next();
-			
-			SimpleImageRenderer renderer = new SimpleImageRenderer(dataAid, this, imageFile);
-			RenderedData stdImage = renderer.call();
+			RenderingContext stdImage = startImageRendering(dataAid, imageFile).get();
 			return stdImage.getPrintableImage();
-		} catch (IOException | JobManagerException e) {
+		} catch (IOException | JobManagerException | InterruptedException | ExecutionException e) {
 			throw new SliceHandlingException(e);
 		}
 	}
@@ -154,11 +158,11 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 						} else {
 							if (startOfLastImageDisplay > -1) {
 					//printJob.setCurrentSliceTime(System.currentTimeMillis() - startOfLastImageDisplay);
-								printJob.addNewSlice(System.currentTimeMillis() - startOfLastImageDisplay, null);
+								printJob.completeRenderingSlice(System.currentTimeMillis() - startOfLastImageDisplay, null);
 							}
 							startOfLastImageDisplay = System.currentTimeMillis();
 							
-							RenderedData data = aid.cache.getOrCreateIfMissing(Boolean.TRUE);
+							RenderingContext data = aid.cache.getOrCreateIfMissing(Boolean.TRUE);
 							BufferedImage oldImage = data.getPrintableImage();
 							int incoming = Integer.parseInt(matcher.group(1));
 					//printJob.setCurrentSlice(incoming);

@@ -7,14 +7,14 @@ import javax.script.ScriptEngine;
 
 import org.area515.resinprinter.server.HostProperties;
 
-public class RenderedData {
+public class RenderingContext {
 	private BufferedImage image;
 	private BufferedImage preTransformedImage;
 	private Double area;
 	private ReentrantLock lock = new ReentrantLock();
 	private ScriptEngine scriptEngine = HostProperties.Instance().buildScriptEngine();
 	
-	public RenderedData() {
+	public RenderingContext() {
 	}
 	
 	public void setPrintableImage(BufferedImage image) {
