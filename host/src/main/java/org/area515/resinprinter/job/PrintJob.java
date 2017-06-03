@@ -124,6 +124,10 @@ public class PrintJob {
 	
 	@JsonIgnore
 	public int getRenderingSlice(){
+		if (dataAid == null) {
+			return -1;
+		}
+		
 		return dataAid.getRenderingSlice();
 	}
 

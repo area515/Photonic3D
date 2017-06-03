@@ -810,7 +810,7 @@ public class HostProperties {
 		return configurations.get(name);
 	}
 	
-	private static <T> T deepCopyJAXB(T object, Class<T> clazz) throws JAXBException {
+	public static <T> T deepCopyJAXB(T object, Class<T> clazz) throws JAXBException {
 	    JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
 	    JAXBElement<T> contentObject = new JAXBElement<T>(new QName(clazz.getSimpleName()), clazz, object);
 	    JAXBSource source = new JAXBSource(jaxbContext, contentObject);

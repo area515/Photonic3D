@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
+import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
@@ -36,11 +38,15 @@ import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.printer.SlicingProfile.InkConfig;
+import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.services.CustomizerService;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.util.Log4jUtil;
 import org.area515.util.TemplateEngine;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProcessor<G,E>{
 	private static final Logger logger = LogManager.getLogger();
@@ -104,7 +110,11 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			}
 			
 			//We must make sure our customizer is perfectly setup at this point, everyone should be able to depend on our customizer after this setup process
-			//saveOriginalCustomizer();
+			try {
+				originalCustomizer = HostProperties.deepCopyJAXB(customizer, Customizer.class);
+			} catch (JAXBException e) {
+				throw new JobManagerException("Couldn't copy customizer", e);
+			}
 			
 			//This file processor requires an ink configuration
 			if (inkConfiguration == null) {
@@ -113,6 +123,11 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			
 			//TODO: how do I integrate slicingProfile.getLiftDistance()
 			sliceHeight = inkConfiguration.getSliceHeight();
+		}
+		
+		//This puts the customizer back into the original state and saves it so that completed prints will start from the original location that the user requested.
+		public void saveOriginalCustomizer() {
+			CustomizerService.INSTANCE.addOrUpdateCustomizer(originalCustomizer);
 		}
 		
 		public void clearAffineTransformCache() {
@@ -483,7 +498,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			aid.printer.setProjectorPowerStatus(false);
 		}
 
-		//saveOriginalCustomizer();
+		aid.saveOriginalCustomizer();
 		
 		return JobStatus.Completed;
 	}
