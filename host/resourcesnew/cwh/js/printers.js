@@ -13,39 +13,36 @@
 		this.loadingMachineConfigMessage = "--- Loading machine configurations from server ---"
 		this.autodirect = $location.search().autodirect;
 		
+		function findAPrinterThatTheUserMostLikelyWantsToWorkWith(printerList) {
+			//There is only one printer. So it's likely they want to work with this printer
+			if (printerList.length == 1) {
+				return printerList[0];
+			}
+			
+			var firstStartedPrinter = null;
+        	for (var i = 0; i < printerList.length; i++) {
+        		//If the user has already selected a printer. It's very likely that they want to work with it...
+        		if (controller.currentPrinter != null && printerList[i].configuration.name === controller.currentPrinter.configuration.name) {
+        			return printerList[i];
+        		}
+
+        		if (firstStartedPrinter == null && printerList[i].started) {
+        			firstStartedPrinter = printerList[i];
+        		}
+        		
+        		//TODO: Isn't it more likely that they want to work with a printer that is printing than one that is simply just started?
+        	}
+        	
+        	//As the name implies, this will return the first started printer. There is a decent chance they want to work with it.
+        	return firstStartedPrinter;
+		}
+		
 		//TODO: Instead of having this method we should understand how the selected printer gets out of sync and fix that
 		function refreshSelectedPrinterAndAutodirectIfNecessary(printerList) {
-        	var foundPrinter = false;
-        	if (printerList.length == 1 && printerList[0].started && controller.autodirect != 'disabled') {
-        		controller.currentPrinter = printerList[0];
-        		controller.gotoPrinterControls();
-        		foundPrinter = true;
-        	} else {
-        		var printersStarted = 0;
-        		var currPrinter = null;
-	        	for (var i = 0; i < printerList.length; i++) {
-					// had to change as for ___ of ____ isn't supported in IE11 :(
-		        		if (printersStarted > 1) {
-		        			break;
-		        		}
-		        		if (printerList[i].started) {
-		        			printersStarted += 1;
-		        			currPrinter = printerList[i];
-		        		}
-		        		if (controller.currentPrinter != null && printerList[i].configuration.name === controller.currentPrinter.configuration.name) {
-		        			controller.currentPrinter = printerList[i];
-		        			foundPrinter = true;
-		        		}
-		        	}
-	        	if (printersStarted == 1 && controller.autodirect != 'disabled') {
-	        		controller.currentPrinter = currPrinter;
-	        		controller.gotoPrinterControls();
-	        		foundPrinter = true;
-	        	}
-        	}
-        	if (!foundPrinter) {
-        		controller.currentPrinter = null;
-        	}
+			controller.currentPrinter = findAPrinterThatTheUserMostLikelyWantsToWorkWith(printerList);
+			if (controller.autodirect != 'disabled') {
+				controller.gotoPrinterControls();
+			}
         }
 		
 		function refreshPrinters() {
