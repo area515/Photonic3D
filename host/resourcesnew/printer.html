@@ -58,15 +58,15 @@
 			<label>Slicing Profile</label>
 			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.SlicingProfileName}}
 			<div class="btn-group pull-right" style=" padding-bottom: 5px;" >
-				<button class="btn btn-primary" ng-disabled="printersController.currentPrinter.started" ng-click="savePrinter(settingsController.currentPrinter)" >
+				<button class="btn btn-primary" ng-disabled="printersController.currentPrinter.started" ng-click="savePrinter(printersController.currentPrinter)" >
 					<i class="fa fa-pencil" style="width: 0px";></i>
 					<span>Save</span>
 				</button>
-				<button class="btn btn-danger" ng-disabled="printersController.currentPrinter.started" ng-click="settingsController.deleteSlicingProfile(settingsController.currentPrinter.configuration.slicingProfile.name)">
+				<button class="btn btn-danger" ng-disabled="printersController.currentPrinter.started" ng-click="printersController.deleteSlicingProfile(printersController.currentPrinter.configuration.slicingProfile.name)">
 					<i class="fa fa-trash-o" style="width: 0px"></i> 
 					<span>Remove</span>
 				</button>
-				<button class="btn btn-success" ng-disabled="printersController.currentPrinter.started" ng-click="settingsController.copySlicingProfile('Copy slicing profile')">
+				<button class="btn btn-success" ng-disabled="printersController.currentPrinter.started" ng-click="printersController.copySlicingProfile('Copy slicing profile')">
 					<i class="fa fa-plus" style="width: 0px"></i> 
 					<span>Copy</span>
 				</button>
@@ -83,15 +83,15 @@
 			<label>Ink Configuration</label>
 			<h4 class="list-group-item-heading">{{printersController.currentPrinter.configuration.slicingProfile.SelectedInk}}
 			<div class="btn-group pull-right" style=" padding-bottom: 5px;" >
-				<button class="btn btn-primary" ng-disabled="printersController.currentPrinter.started" ng-click="savePrinter(settingsController.currentPrinter)" >
+				<button class="btn btn-primary" ng-disabled="printersController.currentPrinter.started" ng-click="savePrinter(printersController.currentPrinter)" >
 					<i class="fa fa-pencil" style="width: 0px";></i>
 					<span>Save</span>
 				</button>
-				<button class="btn btn-danger" ng-disabled="printersController.currentPrinter.started" ng-click="settingsController.deleteCurrentResinProfile(settingsController.currentPrinter.configuration.slicingProfile)">
+				<button class="btn btn-danger" ng-disabled="printersController.currentPrinter.started" ng-click="printersController.deleteCurrentResinProfile(settingsController.currentPrinter.configuration.slicingProfile)">
 					<i class="fa fa-trash-o" style="width: 0px"></i> 
 					<span>Remove</span>
 				</button>
-				<button class="btn btn-success" ng-disabled="printersController.currentPrinter.started" ng-click="settingsController.openSaveResinDialog('Add Resin Profile')">
+				<button class="btn btn-success" ng-disabled="printersController.currentPrinter.started" ng-click="printersController.openSaveResinDialog('Add Resin Profile')">
 					<i class="fa fa-plus" style="width: 0px"></i> 
 					<span>Create</span>
 				</button>
