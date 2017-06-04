@@ -29,7 +29,14 @@ import org.mockito.stubbing.Answer;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({
+	"javax.management.*", 
+	"com.sun.xml.bind.v2.*", 
+	"com.sun.xml.bind.v2.model.impl.*", 
+	"javax.xml.bind.*", 
+	"javax.xml.datatype.*", 
+	"javax.xml.namespace.*",
+	"javax.xml.transform.*"})
 @RunWith(PowerMockRunner.class)
 public class AbstractPrintFileProcessorTest {
 	private BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_4BYTE_ABGR);
