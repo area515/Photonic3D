@@ -6,6 +6,8 @@
 		var BRANCH = "master";
 		var REPO = $scope.repo;
 		
+		var tempSLicingProfile;
+		
 		this.loadingFontsMessage = "--- Loading fonts from server ---"
 		this.loadingProfilesMessage = "--- Loading slicing profiles from server ---"
 		this.loadingMachineConfigMessage = "--- Loading machine configurations from server ---"
@@ -21,20 +23,20 @@
         	} else {
         		var printersStarted = 0;
         		var currPrinter = null;
-	        	for (printer of printerList) {
-	        		if (printersStarted > 1) {
-	        			break;
-	        		}
-	        		if (printer.started) {
-	        			printersStarted += 1;
-	        			currPrinter = printer;
-	        		}
-	        		
-	        		if (controller.currentPrinter != null && printer.configuration.name === controller.currentPrinter.configuration.name) {
-	        			controller.currentPrinter = printer;
-	        			foundPrinter = true;
-	        		}
-	        	}
+	        	for (var i = 0; i < printerList.length; i++) {
+					// had to change as for ___ of ____ isn't supported in IE11 :(
+		        		if (printersStarted > 1) {
+		        			break;
+		        		}
+		        		if (printerList[i].started) {
+		        			printersStarted += 1;
+		        			currPrinter = printerList[i];
+		        		}
+		        		if (controller.currentPrinter != null && printerList[i].configuration.name === controller.currentPrinter.configuration.name) {
+		        			controller.currentPrinter = printerList[i];
+		        			foundPrinter = true;
+		        		}
+		        	}
 	        	if (printersStarted == 1 && controller.autodirect != 'disabled') {
 	        		controller.currentPrinter = currPrinter;
 	        		controller.gotoPrinterControls();
