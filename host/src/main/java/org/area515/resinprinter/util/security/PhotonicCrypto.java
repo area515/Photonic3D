@@ -20,7 +20,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -151,7 +150,7 @@ public class PhotonicCrypto {
 	}
 	
 	public boolean isAsymetricEncryption(String algorithm) {
-		return algorithm != null && algorithm.equalsIgnoreCase("rsa");
+		return algorithm != null && (algorithm.equalsIgnoreCase("rsa") || algorithm.equalsIgnoreCase("EC"));
 	}
 	
 	public Message buildCertificateTrustMessage(UUID toUser) throws CertificateEncodingException {
@@ -292,20 +291,19 @@ public class PhotonicCrypto {
 		keyMessage.setTo(UUID.fromString(userIdAndName[0]));
 		userIdAndName = LdapUtils.getUserIdAndName(((X509Certificate)signer.getCertificate()).getSubjectDN().getName());
 		keyMessage.setFrom(UUID.fromString(userIdAndName[0]));
-		keyMessage.setEncryptionAlgorithm("RSA");
+		keyMessage.setEncryptionAlgorithm(signer.getPrivateKey().getAlgorithm());//RSA only right now
 		
 		remoteCrypto.encryptor.checkValidity(new Date());
 		KeyGenerator keyGen = KeyGenerator.getInstance("AES");
 		keyGen.init(AES_KEY_SIZE * 8);
 		byte[] keyCreatorSeed = keyGen.generateKey().getEncoded();
 		byte[] keyBytes = keyGen.generateKey().getEncoded();
-		Cipher encrypt=Cipher.getInstance("RSA");
+		Cipher encrypt=Cipher.getInstance(remoteCrypto.encryptor.getPublicKey().getAlgorithm());//RSA only right now
 		encrypt.init(Cipher.ENCRYPT_MODE, remoteCrypto.encryptor.getPublicKey());
 		encrypt.update(Base64.getEncoder().encode(keyCreatorSeed));
 		encrypt.update(new byte[]{10});
 		byte[] ivAndKey = encrypt.doFinal(Base64.getEncoder().encode(keyBytes));
 		keyMessage.setData(ivAndKey);
-		
 		verifier.checkValidity(new Date());
 		Signature sig = Signature.getInstance(verifier.getSigAlgName());
 		sig.initSign(signer.getPrivateKey());
