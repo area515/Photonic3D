@@ -2,10 +2,10 @@ package org.area515.resinprinter.stl;
 
 import java.util.Comparator;
 
-public class XYComparatord implements Comparator<Shape3d> {
+public class XYComparatorNormalImportantd implements Comparator<Shape3d> {
 	private double tolerance;
 	
-	public XYComparatord(double tolerance) {
+	public XYComparatorNormalImportantd(double tolerance) {
 		this.tolerance = tolerance;
 	}
 	
@@ -26,8 +26,22 @@ public class XYComparatord implements Comparator<Shape3d> {
 			return 0;
 		}
 		
-		if (first instanceof Point3d && ((Point3d) first).pointCompare((Point3d)second) == 0) {
-			return 0;
+		if (first instanceof Point3d && 
+			second instanceof Point3d && 
+			((Point3d) first).pointCompare((Point3d)second) == 0) {
+			Point3d normal1 = ((Point3d) first).getNormal();
+			Point3d normal2 = ((Point3d)second).getNormal();
+			if (normal1 == null) {
+				if (normal2 == null) {
+					return 0;
+				} else {
+					return -1;
+				}
+			} else if (normal2 != null) {
+				return normal1.pointCompare(normal2);
+			} else {
+				return 1;//first.hashCode() - second.hashCode();
+			}
 		}
 		
 		if (first instanceof Line3d && second instanceof Line3d) {
@@ -57,6 +71,8 @@ public class XYComparatord implements Comparator<Shape3d> {
 			if (comp != 0) {
 				return comp;
 			}
+			
+			return compare(((Line3d)first).getNormal(), ((Line3d)second).getNormal());
 		}
 		
 		double value = first.getMinX() - second.getMinX();

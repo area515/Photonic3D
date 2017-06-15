@@ -32,6 +32,58 @@
   "zSliceOffset" : 0.05
 }, {
   "points" : [ {
+    "x" : 502,
+    "y" : 230,
+    "sliceNumber" : 1
+  }, {
+    "x" : 603,
+    "y" : 230,
+    "sliceNumber" : 1
+  }, {
+    "x" : 596,
+    "y" : 235,
+    "sliceNumber" : 1
+  }, {
+    "x" : 750,
+    "y" : 235,
+    "sliceNumber" : 1
+  }, {
+    "x" : 749,
+    "y" : 240,
+    "sliceNumber" : 1
+  }, {
+    "x" : 593,
+    "y" : 240,
+    "sliceNumber" : 1
+  }, {
+    "x" : 508,
+    "y" : 135,
+    "sliceNumber" : 1
+  }, {
+    "x" : 751,
+    "y" : 135,
+    "sliceNumber" : 1
+  }, {
+    "x" : 749,
+    "y" : 370,
+    "sliceNumber" : 4
+  }, {
+    "x" : 750,
+    "y" : 135,
+    "sliceNumber" : 14
+  }, {
+    "x" : 751,
+    "y" : 135,
+    "sliceNumber" : 19
+  } ],
+  "fileName" : "50x100a.stl",
+  "stlScale" : 1.0,
+  "pixelsPerMMX" : 5.0,
+  "pixelsPerMMY" : 5.0,
+  "zSliceResolution" : 0.1,
+  "zSliceOffset" : 0.0
+}, {
+  "points" : [ {
     "x" : 511,
     "y" : 150,
     "sliceNumber" : 0

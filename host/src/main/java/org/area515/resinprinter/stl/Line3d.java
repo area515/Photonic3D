@@ -8,7 +8,7 @@ public class Line3d implements Shape3d {
 	private Point3d two;
 	private Point3d normal;
 	private Face3d originatingFace;//This is usually a Triangle3d
-	private double slope;
+	private double inverseSlope;
 	private double xintercept;
 	
 	public Line3d(Point3d one, Point3d two, Point3d normal, Face3d originatingFace, boolean swapIfNecessary) {
@@ -22,8 +22,12 @@ public class Line3d implements Shape3d {
 
 		this.originatingFace = originatingFace;
 		this.normal = normal != null?normal:new Point3d(this.one.y - this.two.y, this.one.x - this.two.x, this.two.z - this.one.z);//Uses counterclockwise rule in coop with Triangle3d creation in ZSlicer constructor
-		this.slope = (this.one.x - this.two.x) / (this.one.y - this.two.y);
-		this.xintercept = -(slope * this.one.y - this.one.x);
+		this.inverseSlope = (this.one.x - this.two.x) / (this.one.y - this.two.y);
+		this.xintercept = -(inverseSlope * this.one.y - this.one.x);
+	}
+	
+	public boolean isInfiniteInverseSlope() {
+		return Double.isInfinite(inverseSlope);
 	}
 	
 	public boolean intersects(double x1, double y1, double x2, double y2) {
@@ -31,7 +35,7 @@ public class Line3d implements Shape3d {
 	}
 	
 	public double getXIntersectionPoint(double y) {
-		return slope * y + xintercept;
+		return inverseSlope * y + xintercept;
 	}
 	
 	public double getMinX() {
@@ -92,12 +96,12 @@ public class Line3d implements Shape3d {
 		if (getClass() != obj.getClass())
 			return false;
 		Line3d other = (Line3d) obj;
-		if ((one == other.one || (one != null && one.pointEquals(other.one))) &&
-			(two == other.two || (two != null && two.pointEquals(other.two)))) {
+		if ((one == other.one || (one != null && one.pointCompare(other.one) == 0)) &&
+			(two == other.two || (two != null && two.pointCompare(other.two) == 0))) {
 			return true;
 		}
-		if ((one == other.two || (two != null && two.pointEquals(other.one))) &&
-			(two == other.one || (one != null && one.pointEquals(other.two)))) {
+		if ((one == other.two || (two != null && two.pointCompare(other.one) == 0)) &&
+			(two == other.one || (one != null && one.pointCompare(other.two) == 0))) {
 			return true;
 		}
 		return false;

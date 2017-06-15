@@ -159,7 +159,7 @@ public class Triangle3d implements Shape3d, Face3d, Comparable<Triangle3d> {
 	public int compareTo(Triangle3d o) {
 		boolean equals = true;
 		for (int t = 0; t < 3; t++) {
-			if (!points[t].pointEquals(o.points[t])) {
+			if (points[t].pointCompare(o.points[t]) != 0) {
 				equals = false;
 			}
 		}
