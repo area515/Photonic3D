@@ -233,6 +233,9 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 	public final DataAid initializeJobCacheWithDataAid(PrintJob printJob) throws InappropriateDeviceException, JobManagerException {
 		DataAid aid = createDataAid(printJob);
 		printJob.setDataAid(aid);
+		
+		//Notify the client that the printJob has changed the current slice from -1 to 1 and totalSlices are properly set now as well.
+		NotificationManager.jobChanged(aid.printer, aid.printJob);
 		return aid;
 	}
 	
@@ -349,14 +352,14 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		Future<?>[] futures = new Future[timerCount];
 		for (int t = 0; t < timerCount; t++) {
 			final int i = t;
-			logger.info("Exposure timer[" + i + "] started");
+			logger.info("Exposure timer[{}] will start in: {}ms", i, delay[t]);
 			futures[i] = Main.GLOBAL_EXECUTOR.schedule(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						logger.info("Exposure timer[" + i + "] complete:" + invocable.invokeMethod(function[i], "function", parameter[i]));
+						logger.info("Exposure timer[{}] started:{}", i, invocable.invokeMethod(function[i], "function", parameter[i]));
 						aid.printer.showImage(sliceImage, false);
-						logger.info("Exposure timer[" + i + "] realized");
+						logger.info("Exposure timer[{}] complete", i);
 					} catch (NoSuchMethodException e) {
 						logger.error("Exposure timer function[" + i + "] not found", e);
 					} catch (ScriptException e) {
@@ -422,8 +425,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		
 		//End all timers
 		for (int t = 0; t < timerFutures.length; t++) {
-			timerFutures[t].cancel(true);
-			logger.info("Exposure timer[" + t + "] cancelled");
+			logger.info("Exposure timer[{}] cancel:{}", t, timerFutures[t].cancel(true));
 		}
 		
 		//Reset exposureTimers to blank object

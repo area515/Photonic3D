@@ -279,19 +279,17 @@
 						"buildPlatformGraphics.setColor(java.awt.Color.WHITE);\n" +
 						"for (var currentRow = 0; currentRow < hBridgeInMM.numberOfRows; currentRow++) {\n" +
 						"   var currentX = startX;\n" +
-						"   for (var currentGap = 0; currentGap < hBridgeInMM.numberOfGapsInRow; currentGap ++) {\n" +
-						"      if ($CURSLICE + 1 < job.totalSlices) {\n" +
+						"   if ($CURSLICE < job.totalSlices) {\n" +
+						"      for (var currentGap = 0; currentGap < hBridgeInMM.numberOfGapsInRow; currentGap ++) {\n" +
 						"         buildPlatformGraphics.fillRect(currentX, currentY, wallWidthX, gapLengthY * 2 + wallWidthY);\n" +
 						"         currentX += wallWidthX + (hBridgeInMM.firstGapWidth + (hBridgeInMM.gapWidthIncrement * currentGap)) * pixelsPerMMX;\n" +
 						"      }\n" +
-						"   }\n" +
-						"   if ($CURSLICE + 1 < job.totalSlices) {\n" +
 						"      buildPlatformGraphics.fillRect(currentX, currentY, wallWidthX, gapLengthY * 2 + wallWidthY);\n" +
 						"      buildPlatformGraphics.fillRect(startX, currentY + gapLengthY, totalWidthX, wallWidthY);\n" +
 						"   } else {\n" +
 						"      buildPlatformGraphics.fillRect(startX, currentY, totalWidthX, gapLengthY * 2 + wallWidthY);\n" +
 						"      exposureTimers.add({\n" +
-						"      	  delayMillis:$LayerTime - (hBridgeInMM.exposureTimeDecrementMillis * currentRow),\n" + 
+						"         delayMillis:$LayerTime - (hBridgeInMM.exposureTimeDecrementMillis * currentRow),\n" + 
 						"         parameter:{x:startX, y:currentY, width:totalWidthX, height:gapLengthY * 2 + wallWidthY},\n" + 
 						"         function:function(blackRect) {\n" +
 						"            buildPlatformGraphics.setColor(java.awt.Color.BLACK);\n" +
