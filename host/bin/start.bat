@@ -3,6 +3,8 @@
 @echo off
 setlocal
 
+rem TODO: Check if java is installed and if not install!
+
 rem // Get repo version from config.properties
 rem this is for when the code works properly on windows with updateRepo, watchout the 10 characters could be wrong!
 rem for /F "delims=" %%a in ('findstr /I "updateRepo" %HOMEPATH%/3dPrinters/config.properties') do set "updateRepo=%%a"
