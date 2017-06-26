@@ -32,6 +32,7 @@ if NOT exist %CD%\curl\bin\curl.exe (
 echo installing curl
 IF NOT exist curl.zip (
 bitsadmin.exe /transfer "Curl" https://github.com/%updateRepo%/raw/master/host/bin/curl.zip "%cd%\curl.zip"
+unzip -o curl.zip
 ) ELSE (
 unzip -o curl.zip
 )
