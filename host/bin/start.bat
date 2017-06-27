@@ -11,11 +11,15 @@ rem for /F "delims=" %%a in ('findstr /I "updateRepo" %HOMEPATH%/3dPrinters/conf
 
 for /F "delims=" %%a in ('findstr /I "printerProfileRepo" config.properties') do set "updateRepo=%%a"
 
-IF "%updateRepo%"=="" (
-	set updateRepo=area515/Photonic3D
+IF NOT "%1"=="" (
+    set updateRepo=%1
 ) ELSE (
+  IF "%updateRepo%"=="" (
+	set updateRepo=area515/Photonic3D
+  ) ELSE (
 	rem set updateRepo=%updateRepo:~10% when changing to updateREpo
 	set updateRepo=%updateRepo:~19%
+  )
 )
 
 echo %updateRepo%
