@@ -61,11 +61,12 @@
 			if (postTargetPrinter) {
 			   $http.post(service, targetPrinter).then(
 	       			function(response) {
-	       				if (shouldRefreshPrinterList) {
-	       					refreshPrinters();
-	       					refreshSlicingProfiles();
-	       					refreshMachineConfigurations();
+	       				if (!shouldRefreshPrinterList) {
+	       					controller.currentPrinter = targetPrinter;
 	       				}
+       					refreshPrinters();
+       					refreshSlicingProfiles();
+       					refreshMachineConfigurations();
 	       			}, 
 	       			function(response) {
  	        			$scope.$emit("HTTPError", {status:response.status, statusText:response.data});

@@ -64,7 +64,7 @@ public class SliceBrowser extends JSplitPane {
 	//"C:\\Users\\wgilster\\git\\Creation-Workshop-Host\\host\\src\\test\\resources\\org\\area515\\resinprinter\\slice\\CornerBracket_2.stl"
 	
 	//private String firstFile = "C:\\Users\\wgilster\\Documents\\fdhgg.stl";//1,200,670
-	private String firstFile = "C:\\Users\\wgilster\\git\\Photonic3DWes\\host\\src\\test\\resources\\org\\area515\\resinprinter\\slice\\CornerBracket_2.stl";
+	private String firstFile = "C:\\Users\\wgilster\\git\\Photonic3DWes\\host\\src\\test\\resources\\org\\area515\\resinprinter\\slice\\YHD-101 Corners 121 that crashes the JVM.stl";
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\NonManifoldBox.stl";//-19
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl";
 //	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";//95
