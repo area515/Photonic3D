@@ -46,5 +46,5 @@ public class SwaggerMetadata {
 	public static final String NOTIFICATION_MANAGER_SUFFIX = ", a notification will be sent to the NotificationManager. The NotificationManager will then notify all registered implementations of <b class=\"code\">org.area515.resinprinter.notification.Notifier</b>. Implemenations of Notifier are currently Email and WebSockets.";
 	public static final String DIAGNOSTIC_DUMP_PREFIX = "Perform a diagnostic dump that contains system properties, log4j properties, startup logs, cwh logs, configuration properties, stacktrace, xml representation of printers and photonic3d log";
 	public static final String PRINT_FILE_PROCESSOR = "PrintFileProcessors are registered in the <b class=\"code\">config.properties</b> under the <b class=\"code\">notify.[classname.of.PrintFileProcessor.implementation]=true</b>";
-
+	public static final String RESOURCE_NOT_FOUND = "The reqest was unsuccessful because the resource was not found";
 }

@@ -495,12 +495,17 @@ public class MachineService {
 	@ApiOperation(value = "Deletes a machine configuration(by name) from the machine config directory of Photonic 3D host.")
 	@ApiResponses(value = {
 	        @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+	        @ApiResponse(code = 404, message = SwaggerMetadata.RESOURCE_NOT_FOUND),
 	        @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@DELETE
 	@Path("machineConfigurations/{machineConfigurationName}")
-	public void deleteMachineConfiguration(@PathParam("machineConfigurationName") String machineConfig) throws JAXBException {
+	public Response deleteMachineConfiguration(@PathParam("machineConfigurationName") String machineConfig) throws JAXBException {
 		File machineFile = new File(HostProperties.Instance().MACHINE_DIR, machineConfig + HostProperties.MACHINE_EXTENSION);
-		machineFile.delete();
+		if (!machineFile.delete()) {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+		
+		return Response.ok().build();
 	}
 	
 	
@@ -533,11 +538,16 @@ public class MachineService {
 	@ApiOperation(value = "Deletes a slicing profile from the slicing profile directory of Photonic 3D host.")
 	@ApiResponses(value = {
 	        @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+	        @ApiResponse(code = 404, message = SwaggerMetadata.RESOURCE_NOT_FOUND),
 	        @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@DELETE
 	@Path("slicingProfiles/{slicingProfileName}")
-	public void deleteSlicingProfile(@PathParam("slicingProfileName") String profile) throws JAXBException {
+	public Response deleteSlicingProfile(@PathParam("slicingProfileName") String profile) throws JAXBException {
 		File profileFile = new File(HostProperties.Instance().PROFILES_DIR, profile + HostProperties.PROFILES_EXTENSION);
-		profileFile.delete();
+		if (!profileFile.delete()) {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+		
+		return Response.ok().build();
 	}
 }

@@ -20,7 +20,7 @@ import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Printer {
+public class Printer implements Named {
     private static final Logger logger = LogManager.getLogger();
 	private PrinterConfiguration configuration;
 	
@@ -77,6 +77,9 @@ public class Printer {
 	@JsonIgnore
 	public String getName() {
 		return configuration.getName();
+	}
+	public void setName(String name) {
+		configuration.setName(name);
 	}
 	
 	@XmlTransient
