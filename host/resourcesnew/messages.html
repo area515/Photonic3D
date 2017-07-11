@@ -1,0 +1,37 @@
+<div class="panel panel-default">
+	<div class="panel-heading clearfix">
+		<i class="fa fa-2x fa-envelope-open-o pull-left"></i>
+		<h3 class="panel-title pull-left">Messages</h3>
+	    <div class="btn-group pull-right">
+			<button class="btn btn-success" ng-disabled="currentUser == null" ng-click="createNewMessage()">
+				<i id="start-btn" class="fa fa-plus"></i> 
+				<span>Create</span>
+			</button>
+			<button class="btn btn-danger" ng-disabled="currentMessage == null" ng-click="deleteCurrentMessage()">
+				<i id="stop-btn" class="fa fa-trash-o"></i> 
+				<span>Remove</span>
+			</button>
+	    </div>
+	</div>
+	
+	<div class="list-group">
+		<a ng-repeat="message in messages" 
+		   class="list-group-item" 
+		   ng-class="{active:currentMessage.id == message.id}"
+		   ng-click="changeCurrentMessage(message)">
+ 			<span class="pull-left fa-stack fa-lg">
+				<i class="fa fa-stack-1x fa-2x fa-user"></i>
+			</span>
+			<h4 class="list-group-item-heading">From:{{message.fromUser.name}}</h4>
+			<p class="list-group-item-text">Message:{{message.message}}</p>
+		</a>
+		<div class="list-group-item" ng-show="messages.length == 0">
+			<i class="pull-left fa fa-2x fa-exclamation-triangle"></i>
+			<h3 class="list-group-item-heading" >Nobody loves ya</h3>
+		</div>
+	</div>
+			
+	<div class="panel-footer">
+		<span ng-include="'cardFooter.html'"></span>
+	</div>
+</div>

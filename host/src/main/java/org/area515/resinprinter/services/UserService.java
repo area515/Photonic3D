@@ -18,6 +18,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -43,15 +44,31 @@ public class UserService {
 	public static UserService INSTANCE = new UserService();
 	private ConcurrentHashMap<UUID, List<Message>> transientMessages = new ConcurrentHashMap<>();
 	
-	public class Message {
+	public static class Message {
 		private PhotonicUser fromUser;
 		private PhotonicUser toUser;
+		private UUID id;
 		private String message;
 		
-		public Message(PhotonicUser fromUser, PhotonicUser toUser, String message) {
+		private Message() {
+		}
+		
+		private Message(UUID id) {
+			this.id = id;
+		}
+		
+		public Message(PhotonicUser fromUser, PhotonicUser toUser, UUID id, String message) {
 			this.fromUser = fromUser;
 			this.toUser = toUser;
 			this.message = message;
+			this.id = id;
+		}
+
+		public UUID getId() {
+			return id;
+		}
+		public void setId(UUID id) {
+			this.id = id;
 		}
 
 		public PhotonicUser getFromUser() {
@@ -79,10 +96,7 @@ public class UserService {
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + getOuterType().hashCode();
-			result = prime * result + ((fromUser == null) ? 0 : fromUser.hashCode());
-			result = prime * result + ((message == null) ? 0 : message.hashCode());
-			result = prime * result + ((toUser == null) ? 0 : toUser.hashCode());
+			result = prime * result + ((id == null) ? 0 : id.hashCode());
 			return result;
 		}
 
@@ -95,28 +109,12 @@ public class UserService {
 			if (getClass() != obj.getClass())
 				return false;
 			Message other = (Message) obj;
-			if (!getOuterType().equals(other.getOuterType()))
-				return false;
-			if (fromUser == null) {
-				if (other.fromUser != null)
+			if (id == null) {
+				if (other.id != null)
 					return false;
-			} else if (!fromUser.equals(other.fromUser))
-				return false;
-			if (message == null) {
-				if (other.message != null)
-					return false;
-			} else if (!message.equals(other.message))
-				return false;
-			if (toUser == null) {
-				if (other.toUser != null)
-					return false;
-			} else if (!toUser.equals(other.toUser))
+			} else if (!id.equals(other.id))
 				return false;
 			return true;
-		}
-
-		private UserService getOuterType() {
-			return UserService.this;
 		}
 	}
 	
@@ -129,6 +127,22 @@ public class UserService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Set<PhotonicUser> getKnownUsers() {
     	return FeatureManager.getUserManagementFeature().getUsers();
+    }
+    
+    @ApiOperation(value = "Returns the user that you are logged in as.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@GET
+	@Path("users/whoAmI")
+	@Produces(MediaType.APPLICATION_JSON)
+	public PhotonicUser whoAmI(@Context HttpServletRequest request) throws UserManagementException {
+		PhotonicUser user = (PhotonicUser)request.getUserPrincipal();
+		if (user == null) {
+			throw new UserManagementException("You have to be logged in to know who you are.");
+		}
+
+    	return user;
     }
     
     @ApiOperation(value = "Creates a new local Photonic 3d user.")
@@ -165,6 +179,7 @@ public class UserService {
 		FeatureManager.getUserManagementFeature().remove(FeatureManager.getUserManagementFeature().getUser(UUID.fromString(userId)));
 		return Response.status(Status.OK).build();
     }
+    
     
     @ApiOperation(value = "Trusts a new remote Photonic 3d user as a new friend. "
     		+ "A 'Friend' in Photonic3d is nothing more than a remote user that has been given rights to perform actions on your printer.")
@@ -233,22 +248,28 @@ public class UserService {
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR)})
-	@GET
-	@Path("messages/create/{toUserId}")
+	@PUT
+	@Path("messages")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void createMessage(
-    		String messageString,
-    		@PathParam("toUserId")
-    		String toUserId,
+    public Message createMessage(
+    		Message message,
     		@Context HttpServletRequest request) throws UserManagementException {
 		PhotonicUser fromUser = (PhotonicUser)request.getUserPrincipal();
 		if (fromUser == null) {
 			throw new UserManagementException("You have to be logged in to chat.");
 		}
 		
-		PhotonicUser toUser = FeatureManager.getUserManagementFeature().getUser(UUID.fromString(toUserId));
+		if (message.getToUser() == null) {
+			throw new UserManagementException("You must specifiy a user to send the message to.");
+		}
+		
+		if (message.getToUser().getUserId() == null) {
+			throw new UserManagementException("You must specifiy a userId to send the message to.");
+		}
+		
+		PhotonicUser toUser = FeatureManager.getUserManagementFeature().getUser(message.getToUser().getUserId());
 		if (toUser.isRemote()) {
-			throw new UserManagementException("To send this message to a remote user, append 'services/remote/execute/" + toUserId + "/' to the front of your restful request.");
+			throw new UserManagementException("To send this message to a remote user, append 'services/remote/execute/" + message.getToUser().getUserId() + "/' to the front of your restful request.");
 		}
 		
 		List<Message> messages = new ArrayList<Message>();
@@ -257,41 +278,43 @@ public class UserService {
 			messages = oldMessages;
 		}
 		
-		Message message = new Message(fromUser, toUser, messageString);
-		messages.add(message);
+		Message newMessage = new Message(fromUser, toUser, UUID.randomUUID(), message.getMessage());
+		messages.add(newMessage);
+		return newMessage;
     }
     
     @RolesAllowed({PhotonicUser.FULL_RIGHTS, PhotonicUser.USER_ADMIN, PhotonicUser.CHAT})
-    @ApiOperation(value = "Removes a P2P message from the transient message store, making sure the caller was the original sender.")
+    @ApiOperation(value = "Removes a P2P message from the transient message store, making sure the caller was the recipiant of the message.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR)})
-	@GET
-	@Path("messages/remove")
+	@DELETE
+	@Path("messages/{messageId}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void removeMessage(
-    		Message messageToRemove,
+    public Response removeMessage(
+    		@PathParam("messageId")
+    		UUID messageId,
     		@Context HttpServletRequest request) throws UserManagementException {
     	
-		PhotonicUser fromUser = (PhotonicUser)request.getUserPrincipal();
-		if (fromUser == null) {
+		PhotonicUser callerUser = (PhotonicUser)request.getUserPrincipal();
+		if (callerUser == null) {
 			throw new UserManagementException("You have to be logged in to chat.");
 		}
 		
-		if (!fromUser.equals(messageToRemove.getFromUser())) {
-			throw new UserManagementException("You can't remove a message that wasn't from you");
-		}
-		
-		List<Message> messages = transientMessages.get(messageToRemove.getToUser().getUserId());
+		List<Message> messages = transientMessages.get(callerUser.getUserId());
 		if (messages == null) {
-			return;
+			return Response.status(Response.Status.NOT_FOUND).build();
 		}
 		
-		messages.remove(messageToRemove);
+		if (!messages.remove(new Message(messageId))) {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+		
+		return Response.ok().build();
     }
 
     @RolesAllowed({PhotonicUser.FULL_RIGHTS, PhotonicUser.USER_ADMIN, PhotonicUser.CHAT})
-    @ApiOperation(value = "Removes a P2P message from the transient message store, making sure the caller was the original sender.")
+    @ApiOperation(value = "Retrieves all P2P message from the transient message store that belong to the requesting user.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR)})
@@ -299,7 +322,6 @@ public class UserService {
 	@Path("messages/list")
     @Consumes(MediaType.APPLICATION_JSON)
     public List<Message> getMessages(@Context HttpServletRequest request) throws UserManagementException {
-    	
 		PhotonicUser user = (PhotonicUser)request.getUserPrincipal();
 		if (user == null) {
 			throw new UserManagementException("You have to be logged in to chat.");

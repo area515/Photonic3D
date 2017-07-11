@@ -15,6 +15,6 @@ public class PrinterServiceTest {
 		printer.getConfiguration().setName(printerName);
 		PrinterService.INSTANCE.savePrinter(printer);
 		PrinterService.INSTANCE.deletePrinter(printerName);
-		Assert.assertTrue(MachineServiceTest.isFound(PrinterService.INSTANCE.getPrinters(), printerName));
+		Assert.assertTrue(!MachineServiceTest.isFound(PrinterService.INSTANCE.getPrinters(), printerName));
 	}
 }
