@@ -6,6 +6,8 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
+import org.area515.resinprinter.printer.PrinterConfiguration;
+
 public interface GraphicsOutputInterface {
 	public boolean isDisplayBusy();	//It's not necessary, but it's helpful to let the user know(via a gui) that the display might be busy
 	public void resetSliceCount();
@@ -17,7 +19,7 @@ public interface GraphicsOutputInterface {
 	public Rectangle getBoundary();
 	public String getIDstring();
 	public String buildIDString();
-	public GraphicsOutputInterface initializeDisplay(String displayId);
+	public GraphicsOutputInterface initializeDisplay(String displayId, PrinterConfiguration configuration);
 	
 	public static void showGrid(Graphics2D g2, Rectangle screenSize, int gridSquareSize) {
 		g2.setBackground(Color.black);

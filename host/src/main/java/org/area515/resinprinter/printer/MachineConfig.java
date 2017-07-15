@@ -8,6 +8,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.area515.resinprinter.display.FullScreenMode;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -67,6 +69,8 @@ public class MachineConfig implements Named {
 		private int monitorBottom;
 		@XmlElement(name="UseMask")
 		private boolean useMask;
+		@XmlElement(name="FullScreenMode")
+		private FullScreenMode fullScreenMode;
 		
 		@XmlTransient
 		public boolean isUseMask() {
@@ -98,6 +102,18 @@ public class MachineConfig implements Named {
 		}
 		public void setComPortSettings(ComPortSettings comPortSettings) {
 			this.comPortSettings = comPortSettings;
+		}
+		
+		@XmlTransient
+		public FullScreenMode getFullScreenMode() {
+			if (fullScreenMode == null) {
+				return FullScreenMode.NeverUseFullScreen;
+			}
+			
+			return fullScreenMode;
+		}
+		public void setFullScreenMode(FullScreenMode fullScreenMode) {
+			this.fullScreenMode = fullScreenMode;
 		}
 	}
 	
@@ -249,8 +265,7 @@ public class MachineConfig implements Named {
 	public void setRestartSerialOnTimeout(Boolean restartSerialOnTimeout) {
 		this.restartSerialOnTimeout = restartSerialOnTimeout;
 	}
-
-
+	
 	@XmlTransient
 	public String getOSMonitorID() {
 		return monitorDriverConfig.osMonitorID;

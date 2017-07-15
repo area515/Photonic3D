@@ -179,7 +179,7 @@ public class Printer implements Named {
 	
 	public void initializeAndAssignGraphicsOutputInterface(final GraphicsOutputInterface device, final String displayDeviceID) {
 		this.displayDeviceID = displayDeviceID;
-		this.refreshFrame = device.initializeDisplay(displayDeviceID);
+		this.refreshFrame = device.initializeDisplay(displayDeviceID, getConfiguration());
 		
 		Rectangle screenSize = refreshFrame.getBoundary();
 		getConfiguration().getMachineConfig().getMonitorDriverConfig().setDLP_X_Res(screenSize.width);

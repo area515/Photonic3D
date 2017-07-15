@@ -10,7 +10,8 @@
 		$scope.parities = ["Even", "Mark", "None", "Odd", "Space"];
 		$scope.stopBits = ["None", "One", "1.5", "Two"];
 		$scope.dataBits = [5, 6, 7, 8, 9];
-
+		$scope.fullScreenModes = ["AlwaysUseFullScreen", "NeverUseFullScreen", "UseFullScreenWhenExclusiveIsAvailable"];
+		
 		$http.get('/services/machine/serialPorts/list').success(
 				function (data) {
 					$scope.serialPorts = data;

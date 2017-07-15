@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.util.Log4jUtil;
 
 import com.sun.jna.Memory;
@@ -333,7 +334,7 @@ public class DispManXDevice implements GraphicsOutputInterface {
 	}
 
 	@Override
-	public GraphicsOutputInterface initializeDisplay(String displayId) {
+	public GraphicsOutputInterface initializeDisplay(String displayId, PrinterConfiguration configuration) {
 		return this;
 	}
 }
