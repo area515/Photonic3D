@@ -141,7 +141,7 @@
 	        $http.get(printer.url).success(
 	        		function (data) {
 	        			controller.editPrinter = JSON.parse(window.atob(data.content));
-	        			$scope.savePrinter(controller.editPrinter, false);
+	        			$scope.savePrinter(controller.editPrinter, true);
 	        		}).error(
     				function (data, status, headers, config, statusText) {
  	        			$scope.$emit("HTTPError", {status:status, statusText:data});
