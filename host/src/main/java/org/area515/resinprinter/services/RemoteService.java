@@ -74,8 +74,8 @@ public class RemoteService {
 			+ " <div class='code'>The remote user must have been given the <b class=\"code\">login</b> & <b class=\"code\">userAdmin</b> roles.</div>"
 			+ " <div class='code'>The local user must send a friend request using the \"" + PhotonicCrypto.FEATURE_NAME + "\" feature to the remote user.</div>"
 			+ " <div class='code'>The remote user must accept the friend request from the local user.</div>"
-			+ " <div class='code'>The remote user must must give the <b class=\"code\">login</b> role to their new friend(the local user).</div>"
-			+ " <div class='code'>The remote user must must give any other role to their new friend(the local user) that coresponds with the restful function they would like to grant access.</div>"
+			+ " <div class='code'>The remote user must give the <b class=\"code\">login</b> role to their new friend(the local user).</div>"
+			+ " <div class='code'>The remote user must give any other role to their new friend(the local user) that coresponds with the restful function they would like to grant access.</div>"
 			+ " <div class='code'>The local user must be logged in to their own instance of Photonic 3D to sign and encrypt the message(this restful function).</div>"
 			+ " <div class='code'>The remote user must be logged in to their own instance of Photonic 3D in order to verify and decrypt all incoming messages(restful functions) from the local user.</div>"
 			+ "";

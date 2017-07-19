@@ -65,6 +65,12 @@ public class TextImageRenderer extends TwoDimensionalImageRenderer {
         	totalHeight += rect.getHeight();
         }
         
+        if (maxWidth < 1) {
+        	maxWidth = 1;
+        }
+        if (totalHeight < 1) {
+        	totalHeight = 1;
+        }
 		BufferedImage textImage = new BufferedImage((int)maxWidth, (int)totalHeight, BufferedImage.TYPE_4BYTE_ABGR);
 		Graphics2D textGraphics = (Graphics2D)textImage.getGraphics();
 		textGraphics.setFont(font);

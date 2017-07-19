@@ -12,7 +12,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -43,7 +42,6 @@ import org.area515.resinprinter.server.HostProperties;
 import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.util.security.PhotonicUser;
 import org.area515.util.Log4jUtil;
-import org.eclipse.jetty.http.HttpStatus;
 
 import com.coremedia.iso.boxes.Container;
 import com.google.common.io.ByteStreams;
