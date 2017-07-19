@@ -1,4 +1,5 @@
    {  
+   "configuration":{  
       "name":"KLD-2150-T1",
       "machineConfigName":"KLD-2150-T1",
       "slicingProfileName":"KLD-2150-T1",
@@ -88,5 +89,6 @@
          "selectedInkConfigIndex":0,
          "zliftDistanceGCode":"M650 D${ZLiftDist} S${ZLiftRate}",
          "zliftSpeedGCode":"M650 D${ZLiftDist} S${ZLiftRate}"
+      }
       }
    }
