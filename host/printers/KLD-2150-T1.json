@@ -46,7 +46,6 @@
          "LiftFeedRate":50.0,
          "FlipX":false,
          "FlipY":true,
-         "notes":null,
          "gCodeHeader":"G21 ;Set units to be mm\nG91 ;Relative Positioning\nG28 ; Home Printer\nM650 D${ZLiftDist} S${ZLiftRate} P0; CWH Template Preferences\nM17 ;Enable motors\n;<Delay> 3000\nM400\nM106\n",
          "gCodeFooter":"M18 ;Disable Motors\nM107 ;switch uv off\nG1 Z40; Lift up\n;<Completed>",
          "gCodePreslice":null,
