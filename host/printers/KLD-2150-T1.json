@@ -71,7 +71,7 @@
                "PrintMaterialDetector":null,
                "Name":"Default",
                "SliceHeight":0.1,
-               "NumberOfFirstLayers":7,
+               "NumberofBottomLayers":7,
                "ResinPriceL":65.0,
                "FirstLayerExposureTime":70000,
                "PercentageOfInkConsideredEmpty":10.0,
