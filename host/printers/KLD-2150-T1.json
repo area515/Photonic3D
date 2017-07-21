@@ -33,7 +33,7 @@
             "OSMonitorID":":0.0"
          },
          "PauseOnPrinterResponseRegEx":null,
-         "OverrideModelNormalsWithRightHandRule":null,
+         "OverrideModelNormalsWithRightHandRule":null
       },
       "slicingProfile":{  
          "DotsPermmX":13.33157894736842,
