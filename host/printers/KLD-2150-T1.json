@@ -29,11 +29,11 @@
             },
             "UseMask":false,
             "DLP_X_Res":2560.0,
-            "DLP_Y_Res":1600.0
+            "DLP_Y_Res":1600.0,
+            "OSMonitorID":":0.0"
          },
          "PauseOnPrinterResponseRegEx":null,
          "OverrideModelNormalsWithRightHandRule":null,
-         "OSMonitorID":":0.0"
       },
       "slicingProfile":{  
          "DotsPermmX":13.33157894736842,
