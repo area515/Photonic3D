@@ -78,7 +78,7 @@
                "LayerTime":16000
             }
          ],
-         "SelectedInkConfigName":"Default",
+         "SelectedInk":"Default",
          "SelectedInkConfigIndex":0,
          "ZliftDistanceGCode":"M650 D${ZLiftDist} S${ZLiftRate}",
          "ZliftSpeedGCode":"M650 D${ZLiftDist} S${ZLiftRate}"
