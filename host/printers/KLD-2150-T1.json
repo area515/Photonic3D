@@ -79,8 +79,8 @@
             }
          ],
          "SelectedInk":"Default",
-         "zLiftDistanceGCode":"M650 D${ZLiftDist} S${ZLiftRate}",
-         "zLiftSpeedGCode":"M650 D${ZLiftDist} S${ZLiftRate}"
+         "zliftDistanceGCode":"M650 D${ZLiftDist} S${ZLiftRate}",
+         "zliftSpeedGCode":"M650 D${ZLiftDist} S${ZLiftRate}"
       }
       }
    }
