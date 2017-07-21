@@ -68,14 +68,14 @@
          },
          "InkConfig":[  
             {  
-               "printMaterialDetector":null,
-               "name":"Default",
-               "sliceHeight":0.1,
-               "numberOfFirstLayers":7,
-               "resinPriceL":65.0,
-               "firstLayerExposureTime":70000,
-               "percentageOfInkConsideredEmpty":10.0,
-               "exposureTime":16000
+               "PrintMaterialDetector":null,
+               "Name":"Default",
+               "SliceHeight":0.1,
+               "NumberOfFirstLayers":7,
+               "ResinPriceL":65.0,
+               "FirstLayerExposureTime":70000,
+               "PercentageOfInkConsideredEmpty":10.0,
+               "ExposureTime":16000
             }
          ],
          "SelectedInkConfigName":"Default",
