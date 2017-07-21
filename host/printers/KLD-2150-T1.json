@@ -75,7 +75,7 @@
                "ResinPriceL":65.0,
                "FirstLayerTime":70000,
                "PercentageOfPrintMaterialConsideredEmpty":10.0,
-               "ExposureTime":16000
+               "LayerTime":16000
             }
          ],
          "SelectedInkConfigName":"Default",
