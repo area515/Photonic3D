@@ -12,7 +12,7 @@
             "ComPortSettings":{  
                "PortName":"Autodetect 3d printer firmware",
                "Speed":115200,
-               "Satabits":8,
+               "Databits":8,
                "Parity":"None",
                "Stopbits":"One",
                "Handshake":"None"
