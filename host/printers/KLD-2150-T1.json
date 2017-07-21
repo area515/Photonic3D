@@ -1,8 +1,6 @@
    {  
    "configuration":{  
       "name":"KLD-2150-T1",
-      "machineConfigName":"KLD-2150-T1",
-      "slicingProfileName":"KLD-2150-T1",
       "autoStart":false,
       "calibrated":false,
       "machineConfig":{  
