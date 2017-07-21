@@ -73,7 +73,7 @@
                "SliceHeight":0.1,
                "NumberofBottomLayers":7,
                "ResinPriceL":65.0,
-               "FirstLayerExposureTime":70000,
+               "FirstLayerTime":70000,
                "PercentageOfInkConsideredEmpty":10.0,
                "ExposureTime":16000
             }
