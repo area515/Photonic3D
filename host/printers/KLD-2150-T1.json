@@ -56,7 +56,7 @@
          "ProjectorGradientCalculator":"var bulbCenter = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\nvar bulbFocus = new Packages.java.awt.geom.Point2D.Double($buildPlatformXPixels / 2, $buildPlatformYPixels / 2);\nvar totalSizeOfGradient = $buildPlatformXPixels > $buildPlatformYPixels?$buildPlatformXPixels:$buildPlatformYPixels;\nvar fractions = [0.0, 1.0];\n//Let's start with 20% opaque in the center of the projector bulb\nvar colors = [new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.2), new Packages.java.awt.Color(0.0, 0.0, 0.0, 0.0)];\nnew Packages.java.awt.RadialGradientPaint(\n\tbulbCenter,\n\ttotalSizeOfGradient,\n\tbulbFocus,\n\tfractions,\n\tcolors,\n\tjava.awt.MultipleGradientPaint.CycleMethod.NO_CYCLE)",
          "ExposureTimeCalculator":"var value = $FirstLayerTime;\nif ($CURSLICE > $NumFirstLayers) {\n\tvalue = $LayerTime\n}\nvalue",
          "TwoDimensionalSettings":{  
-            "font":{  
+            "Font":{  
                "Name":"Dialog",
                "Size":200
             },
