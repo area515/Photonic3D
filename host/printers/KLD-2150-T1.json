@@ -1,7 +1,6 @@
    {  
    "configuration":{  
       "name":"KLD-2150-T1",
-      "calibrated":false,
       "machineConfig":{  
          "platformXSize":134.0,
          "platformYSize":75.0,
