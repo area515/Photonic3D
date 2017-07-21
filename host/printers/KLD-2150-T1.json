@@ -32,9 +32,8 @@
             "DLP_Y_Res":1600.0
          },
          "PauseOnPrinterResponseRegEx":null,
-         "overrideModelNormalsWithRightHandRule":null,
-         "name":"KLD-2150-T1",
-         "osmonitorID":":0.0"
+         "OverrideModelNormalsWithRightHandRule":null,
+         "OsmonitorID":":0.0"
       },
       "slicingProfile":{  
          "DotsPermmX":13.33157894736842,
