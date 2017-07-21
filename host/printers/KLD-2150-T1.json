@@ -27,7 +27,7 @@
                "Stopbits":"One",
                "Handshake":"None"
             },
-            "useMask":false,
+            "UseMask":false,
             "DLP_X_Res":2560.0,
             "DLP_Y_Res":1600.0
          },
