@@ -36,10 +36,8 @@ deploy:
     on:
       tags: true
       condition: -n "$GITHUB_ACCESS_TOKEN"
-#  - provider: bintray
-#    file: ".bintray.yml"
-#    user: $BINTRAY_USER
-#    key: $BINTRAY_API_KEY
-#    dry-run: $SKIP_BINTRAY
-#    on:
-#      all_branches: true
+after_deploy:
+  - gem install travis
+  - curl -LO https://raw.github.com/stephanmg/travis-dependent-builds/master/trigger.sh
+  - chmod +x trigger.sh
+  - ./trigger.sh $PI_REPO_USER $PI_REPO_NAME $PI_REPO_BRANCH $GITHUB_ACCESS_TOKEN
