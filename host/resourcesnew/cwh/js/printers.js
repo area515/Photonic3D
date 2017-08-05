@@ -433,6 +433,9 @@
 		}
 		
         this.gotoPrinterControls = function gotoPrinterControls() {
+        	if (controller.currentPrinter == null) {
+        		return;
+        	}
         	$location.path('/printerControlsPage').search({printerName: controller.currentPrinter.configuration.name})
         };
 		

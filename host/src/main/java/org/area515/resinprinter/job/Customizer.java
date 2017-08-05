@@ -262,7 +262,7 @@ public class Customizer {
 	}
 	
 	public String toString() {
-		return getCacheId();
+		return name + " " + getCacheId();
 	}
 	
 	@Override

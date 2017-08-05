@@ -16,7 +16,6 @@ import org.area515.resinprinter.client.Main;
 import org.area515.resinprinter.plugin.Feature;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
-import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.UpnpServiceImpl;
 import org.fourthline.cling.binding.annotations.AnnotationLocalServiceBinder;
 import org.fourthline.cling.controlpoint.ControlPoint;
@@ -90,7 +89,7 @@ public class UPNPAdvertiser implements Feature {
 					null);
 			
 			List<Icon> icons = new ArrayList<Icon>();
-			File iconFiles[] = new File(HostProperties.Instance().getHostGUIDir(), "favicon").listFiles(new FilenameFilter() {
+			File iconFiles[] = new File(HostProperties.Instance().getFirstActiveSkin().getResourceBase(), "favicon").listFiles(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
 					name = name.toLowerCase();

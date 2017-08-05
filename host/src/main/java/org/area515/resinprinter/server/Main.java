@@ -1,15 +1,20 @@
 package org.area515.resinprinter.server;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.naming.InvalidNameException;
+import javax.servlet.ServletException;
 import javax.websocket.server.ServerContainer;
 
 import org.apache.logging.log4j.LogManager;
@@ -51,6 +56,7 @@ public class Main {
     
     public static final String AUTHENTICATION_SCHEME = Constraint.__BASIC_AUTH;
 	public static ScheduledExecutorService GLOBAL_EXECUTOR = new ScheduledThreadPoolExecutor(20, new ThreadFactoryBuilder().setNameFormat("PrintJobProcessorThread-%d").setDaemon(true).build());
+	private static Server server;
 	
 	public static void setupAuthentication(ServletContextHandler context, UserManagementFeature loginService) {
         //All below is user based security
@@ -82,7 +88,7 @@ public class Main {
      	context.setSecurityHandler(csh);
 	}
 	
-	public static void main(String[] args) throws Exception {
+	public static void startServer() {
 		logger.info("=================================================================");
 		logger.info("=================================================================");
 		logger.info("Photonic3D started");
@@ -99,20 +105,17 @@ public class Main {
 		 * Start server
 		 */
 
-		final Server server = new Server(port);
-		 
-		/*
-		 * Setup ResourceHandler for html files
-		 */
-		
-		 // Create the ResourceHandler. It is the object that will handle the request for a given file. It is
-        // a Jetty Handler object so it is suitable for chaining with other handlers as you will see in other examples.
-        ResourceHandler resource_handler = new ResourceHandler();
-        // Configure the ResourceHandler. Setting the resource base indicates where the files should be served out of.
-        // In this example it is the current directory but it can be configured to anything that the jvm has access to.
-        resource_handler.setDirectoriesListed(true);
-        resource_handler.setWelcomeFiles(new String[]{ "index.html" });
-        resource_handler.setResourceBase(HostProperties.Instance().getHostGUIDir());
+		server = new Server(port);
+		List<ResourceHandler> resourceHandlers = new ArrayList<ResourceHandler>();
+		for (Skin skin : HostProperties.Instance().getSkins()) {
+			if (skin.isActive()) {
+				ResourceHandler resource_handler = new ResourceHandler();
+		        resource_handler.setDirectoriesListed(true);
+		        resource_handler.setWelcomeFiles(skin.getWelcomeFiles());
+		        resource_handler.setResourceBase(skin.getResourceBase());
+		        resourceHandlers.add(resource_handler);
+			}
+		}
         
 	    //Angular is pretty messed up when it comes to link rewriting: https://github.com/angular/angular.js/issues/4608
 	    //I can't believe we need to server side changes to fix this!!! https://github.com/angular-ui/ui-router/wiki/Frequently-Asked-Questions#how-to-configure-your-server-to-work-with-html5mode
@@ -139,34 +142,50 @@ public class Main {
 		
 		// Add the ResourceHandler to the server.
 		HandlerList handlers = new HandlerList();
-        handlers.setHandlers(new Handler[] { videoContext, serviceContext, resource_handler, rewritePagesHandler, new DefaultHandler() });
+		Handler[] allHandlers = new Handler[4 + resourceHandlers.size()];
+		allHandlers[0] = videoContext;
+		allHandlers[1] = serviceContext;
+		System.arraycopy(resourceHandlers.toArray(), 0, allHandlers, 2, resourceHandlers.size());
+		allHandlers[2 + resourceHandlers.size()] = rewritePagesHandler;
+		allHandlers[3 + resourceHandlers.size()] = new DefaultHandler();
+        handlers.setHandlers(allHandlers);
         server.setHandler(handlers);
 
         String externallyAccessableIP = HostProperties.Instance().getExternallyAccessableName();
 		if (externallyAccessableIP == null) {
-			//Don't do this: 127.0.0.1 on Linux!
+			//Don't do this below, it turns out to be 127.0.0.1 on Linux!
 			//getSetup().externallyAccessableIP = InetAddress.getLocalHost().getHostAddress();
 			
-			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-			while (interfaces.hasMoreElements()) {
-				NetworkInterface currentInterface = interfaces.nextElement();
-				if (currentInterface.isLoopback() || currentInterface.isVirtual()) {
-					continue;
-				}
-				
-				Enumeration<InetAddress> addresses = currentInterface.getInetAddresses();
-				while (addresses.hasMoreElements()) {
-					InetAddress address = addresses.nextElement();
-					if (address.getAddress().length == 4) {//Make sure it's ipv4
-						externallyAccessableIP = address.getHostAddress();
+			try {
+				Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+				while (interfaces.hasMoreElements()) {
+					NetworkInterface currentInterface = interfaces.nextElement();
+					if (currentInterface.isLoopback() || currentInterface.isVirtual()) {
+						continue;
+					}
+					
+					Enumeration<InetAddress> addresses = currentInterface.getInetAddresses();
+					while (addresses.hasMoreElements()) {
+						InetAddress address = addresses.nextElement();
+						if (address.getAddress().length == 4) {//Make sure it's ipv4
+							externallyAccessableIP = address.getHostAddress();
+						}
 					}
 				}
+			} catch (SocketException e) {
+				logger.error("Couldn't enumerate network interfaces, which means there isn't a network available. This is fatal!", e);
+				System.exit(1);
 			}
 		}
 		
 		//Determine if we are going to use SSL
 		if (HostProperties.Instance().isUseSSL()) {
-			JettySecurityUtils.secureContext(externallyAccessableIP, serviceContext, server);
+			try {
+				JettySecurityUtils.secureContext(externallyAccessableIP, serviceContext, server);
+			} catch (InvalidNameException | IOException | GeneralSecurityException e) {
+				logger.error("Couldn't setup a secure HTTP context. This is fatal!", e);
+				System.exit(2);
+			}
 		}
 		
 		//Determine if we are going to use user authentication
@@ -174,9 +193,18 @@ public class Main {
 			setupAuthentication(serviceContext, FeatureManager.getUserManagementFeature());
 		}
 		
-		URI startURI = new URI("http" + (HostProperties.Instance().isUseSSL()?"s://":"://") + externallyAccessableIP + ":" + port);
-		ServerContainer container = WebSocketServerContainerInitializer.configureContext(serviceContext);
-		NotificationManager.start(startURI, container);
+		URI startURI = null;
+		try {
+			startURI = new URI("http" + (HostProperties.Instance().isUseSSL()?"s://":"://") + externallyAccessableIP + ":" + port);
+			ServerContainer container = WebSocketServerContainerInitializer.configureContext(serviceContext);
+			NotificationManager.start(startURI, container);
+		} catch (URISyntaxException e) {
+			logger.error("The IP address(possibly setup in your config.properties) called:" + externallyAccessableIP + " is malformed!", e);
+			System.exit(3);
+		} catch (ServletException e) {
+			logger.error("Couldn't initialize the servlet engine. This is fatal!", e);
+			System.exit(4);
+		}
 		
 		//Start server before we start broadcasting!
 		try {
@@ -191,24 +219,7 @@ public class Main {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				try {
-					FeatureManager.shutdown();
-				} catch (Exception e) {
-					logger.error("Error shutting down BroadcastManager", e);
-				}
-				try {
-					NotificationManager.shutdown();
-				} catch (Exception e) {
-					logger.error("Error shutting down NotificationManager", e);
-				}
-				try {
-					server.stop();
-				} catch (Exception e) {
-					logger.error("Error stopping Photonic3D http server", e);
-				} finally {
-					server.destroy();
-					logger.info("Shutdown Complete");
-				}
+				Main.stopServer();
 			}
 		});
 		
@@ -222,6 +233,45 @@ public class Main {
 
 		//At this point we can safely say that a startup is officially complete.
 		HostProperties.Instance().hostStartupComplete();
+	}
+	
+	public static void stopServer() {
+		try {
+			FeatureManager.shutdown();
+		} catch (Exception e) {
+			logger.error("Error shutting down BroadcastManager", e);
+		}
+		try {
+			NotificationManager.shutdown();
+		} catch (Exception e) {
+			logger.error("Error shutting down NotificationManager", e);
+		}
+		try {
+			server.stop();
+		} catch (Exception e) {
+			logger.error("Error stopping Photonic3D http server", e);
+		} finally {
+			server.destroy();
+			logger.info("=================================================================");
+			logger.info("=================================================================");
+			logger.info("Shutdown Complete");
+			logger.info("=================================================================");
+			logger.info("=================================================================");
+		}
+	}
+	
+	public static void restartServer() {
+		stopServer();
+		logger.info("=================================================================");
+		logger.info("=================================================================");
+		logger.info("Photonic3D will now restart");
+		logger.info("=================================================================");
+		logger.info("=================================================================");
+		startServer();
+	}
+	
+	public static void main(String[] args) throws Exception {
+		startServer();
 		
 		//Wait in the Main method until we are shutdown by the OS
 		try {
