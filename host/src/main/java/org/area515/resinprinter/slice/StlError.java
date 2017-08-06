@@ -1,10 +1,10 @@
 package org.area515.resinprinter.slice;
 
+import org.area515.resinprinter.stl.Face3d;
 import org.area515.resinprinter.stl.Line3d;
-import org.area515.resinprinter.stl.Triangle3d;
 
 public class StlError {
-	private Triangle3d triangle;
+	private Face3d face;
 	private Line3d nonManifoldEdge;
 	private ErrorType type;
 	
@@ -13,22 +13,22 @@ public class StlError {
 		Insideout
 	}
 	
-	public StlError(Triangle3d triangle, Line3d nonManifoldEdge) {
-		this.triangle = triangle;
+	public StlError(Face3d face, Line3d nonManifoldEdge) {
+		this.face = face;
 		this.nonManifoldEdge = nonManifoldEdge;
 		this.type = ErrorType.NonManifold;
 	}
 	
-	public StlError(Triangle3d triangle, ErrorType type) {
-		this.triangle = triangle;
+	public StlError(Face3d face, ErrorType type) {
+		this.face = face;
 		this.type = type;
 	}
 
-	public Triangle3d getTriangle() {
-		return triangle;
+	public Face3d getFace() {
+		return face;
 	}
-	public void setTriangle(Triangle3d triangle) {
-		this.triangle = triangle;
+	public void setFace(Face3d triangle) {
+		this.face = triangle;
 	}
 
 	public Line3d getNonManifoldEdge() {
@@ -46,6 +46,6 @@ public class StlError {
 	}
 	
 	public String toString() {
-		return type + " triangle:" + triangle + (nonManifoldEdge != null?(" edge:" + nonManifoldEdge):"");
+		return type + " triangle:" + face + (nonManifoldEdge != null?(" edge:" + nonManifoldEdge):"");
 	}
 }

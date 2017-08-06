@@ -11,6 +11,10 @@
 									<i class="fa fa-pencil"></i>
 									<span>Edit</span>
 								</button>
+								<button class="btn btn-primary" ng-disabled="!currentUser.remote" ng-click="trustFriend()">
+									<i class="fa fa-handshake-o"></i> 
+									<span>Trust</span>
+								</button>
 								<button class="btn btn-danger" ng-disabled="currentUser == null" ng-click="deleteCurrentUser()">
 									<i class="fa fa-trash-o"></i> 
 									<span>Remove</span>
@@ -23,7 +27,8 @@
 						</div>
 					</div>
 					<div class="list-group">
-							<a ng-class="{active:user.userId == currentUser.userId}" ng-repeat="user in users"
+							<a ng-class="{active:user.userId == currentUser.userId}" 
+							    ng-repeat="user in users"
 								class="list-group-item"
 					 			ng-click="changeCurrentUser(user)">
 					 			<span class="pull-left fa-stack fa-lg">
@@ -43,17 +48,8 @@
 					</div>			
 				</div>
 			</div>
-			<div class="col-sm-7 bootcards-cards">
-				<span ng-include="'user.html'"></span>
+			<div class="col-sm-7 bootcards-cards" ng-show="myUser != null">
+				<span ng-include="'messages.html'"></span>
 			</div>
 		</div>	
 	</div>
-		
-	<div class="modal fade" id="graphScript" tabindex="-1" role="dialog" aria-labelledby="editModal" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<span ng-include="'graphScript.html'"></span>
-			</div>
-		</div>
-	</div>
-	

@@ -11,7 +11,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,26 +30,8 @@ public class TextImageRenderer extends TwoDimensionalImageRenderer {
 	}
    
 	@Override
-	public BufferedImage scaleImageAndDetectEdges(PrintJob printJob) throws InterruptedException, ExecutionException {
-		return newImage.get();
-	}
-
-	public Font buildFont(DataAid data) {
-		TwoDimensionalSettings cwhTwoDim = data.slicingProfile.getTwoDimensionalSettings();
-		org.area515.resinprinter.printer.SlicingProfile.Font cwhFont = cwhTwoDim != null?cwhTwoDim.getFont():new org.area515.resinprinter.printer.SlicingProfile.Font();
-		if (cwhFont == null) {
-			cwhFont = PrinterService.DEFAULT_FONT;
-		}
-		
-		if (cwhFont.getName() == null) {
-			cwhFont.setName(PrinterService.DEFAULT_FONT.getName());
-		}
-		
-		if (cwhFont.getSize() == 0) {
-			cwhFont.setSize(PrinterService.DEFAULT_FONT.getSize());
-		}
-		
-		return new Font(cwhFont.getName(), Font.PLAIN, cwhFont.getSize());
+	public BufferedImage scaleImageAndDetectEdges(PrintJob printJob) throws JobManagerException {
+		return waitForImage();
 	}
 	
 	private Object[] readTextDataFromFile(File textFile) throws JobManagerException {
@@ -70,7 +51,7 @@ public class TextImageRenderer extends TwoDimensionalImageRenderer {
 
         chickenEggGraphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         chickenEggGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		Font font = buildFont(aid);
+		Font font = textFile.buildFont();
 		chickenEggGraphics.setFont(font);
 		FontMetrics metrics = chickenEggGraphics.getFontMetrics();
 		double maxWidth = 0;
@@ -84,6 +65,12 @@ public class TextImageRenderer extends TwoDimensionalImageRenderer {
         	totalHeight += rect.getHeight();
         }
         
+        if (maxWidth < 1) {
+        	maxWidth = 1;
+        }
+        if (totalHeight < 1) {
+        	totalHeight = 1;
+        }
 		BufferedImage textImage = new BufferedImage((int)maxWidth, (int)totalHeight, BufferedImage.TYPE_4BYTE_ABGR);
 		Graphics2D textGraphics = (Graphics2D)textImage.getGraphics();
 		textGraphics.setFont(font);

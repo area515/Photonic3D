@@ -15,6 +15,17 @@ public class ExceptionMarshaller implements ExceptionMapper<Exception> {
 
     public Response toResponse(Exception e) {
 		logger.error("Error caught by exception marshaller and relayed to browser", e);
-		return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity(e.getMessage()).build();
+		
+		Throwable t = e;
+		//TODO: Adding this in causes popups to occur when a file is clicked in the printables area that doesn't support image preview.
+		/*while (t.getCause() != null) {
+			t = t.getCause();
+		}*/
+		
+		if (t.getMessage() == null) {
+			return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity("Internal server error").build();
+		}
+		
+		return Response.status(Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity(t.getMessage()).build();
 	}
 }

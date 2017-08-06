@@ -3,13 +3,18 @@ package org.area515.resinprinter.job.render;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class RenderedData {
+import javax.script.ScriptEngine;
+
+import org.area515.resinprinter.server.HostProperties;
+
+public class RenderingContext {
 	private BufferedImage image;
 	private BufferedImage preTransformedImage;
 	private Double area;
 	private ReentrantLock lock = new ReentrantLock();
-
-	public RenderedData() {
+	private ScriptEngine scriptEngine = HostProperties.Instance().buildScriptEngine();
+	
+	public RenderingContext() {
 	}
 	
 	public void setPrintableImage(BufferedImage image) {
@@ -35,5 +40,9 @@ public class RenderedData {
 	
 	public ReentrantLock getLock() {
 		return lock;
+	}
+
+	public ScriptEngine getScriptEngine() {
+		return scriptEngine;
 	}
 }

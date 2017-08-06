@@ -3,8 +3,9 @@ package org.area515.resinprinter.job.render;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.concurrent.Callable;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
@@ -12,8 +13,9 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
+import org.area515.util.Log4jUtil;
 
-public abstract class CurrentImageRenderer implements Callable<RenderedData> {
+public abstract class CurrentImageRenderer implements Callable<RenderingContext> {
 	private static final Logger logger = LogManager.getLogger();
 	protected Object imageIndexToBuild;
 	protected AbstractPrintFileProcessor<?,?> processor;
@@ -29,28 +31,37 @@ public abstract class CurrentImageRenderer implements Callable<RenderedData> {
 		return new BufferedImage(renderedWidth, renderedHeight, BufferedImage.TYPE_4BYTE_ABGR);
 	}
 	
-	public RenderedData call() throws JobManagerException {
+	public RenderingContext call() throws JobManagerException {
 		long startTime = System.currentTimeMillis();
-		Lock lock = aid.cache.getSpecificLock(imageIndexToBuild);
-		lock.lock();
+		RenderingContext preImageCache = aid.cache.getOrCreateIfMissing(imageIndexToBuild);
+		ReentrantLock preImageLock = preImageCache.getLock();
+		preImageLock.lock();
 		try {
-			RenderedData imageData = aid.cache.getOrCreateIfMissing(imageIndexToBuild);
-			BufferedImage image = renderImage(imageData.getPreTransformedImage());
-			imageData.setPreTransformedImage(image);
-			BufferedImage after = processor.applyImageTransforms(aid, image);
-			imageData.setPrintableImage(after);
+			//Do not try to optimize this call out, we need to depend on our ImageRenderer to determine if they want to load a file or not, see: org.area515.resinprinter.twodim.SimpleImageRenderer
+			BufferedImage image = renderImage(preImageCache.getPreTransformedImage());
+			preImageCache.setPreTransformedImage(image);
+			logger.trace("Writing applyTransformsToRenderedData1pre" + imageIndexToBuild + ":{}", () -> Log4jUtil.logImage(image, "applyTransformsToRenderedData1pre" + imageIndexToBuild + ".png"));
+
+			BufferedImage after = processor.applyImageTransforms(aid, preImageCache.getScriptEngine(), image);
+			preImageCache.setPrintableImage(after);
+			logger.trace("Writing applyTransformsToRenderedData2pre" + imageIndexToBuild + ":{}", () -> Log4jUtil.logImage(image, "applyTransformsToRenderedData2pre" + imageIndexToBuild + ".png"));
+
 			if (!aid.optimizeWithPreviewMode) {
-				long pixelArea = computePixelArea(image);
-				imageData.setArea((double)pixelArea);
+				long pixelArea = computePixelArea(image);//TODO: shouldn't this be after?
+				preImageCache.setArea((double)pixelArea);
 				logger.info("Loaded {} with {} non-black pixels in {}ms", imageIndexToBuild, pixelArea, System.currentTimeMillis()-startTime);
 			}
-			return imageData;
+			return preImageCache;
 		} catch (ScriptException e) {
 			logger.error(e);
 			throw new JobManagerException("Unable to render image", e);
 		} finally {
-			lock.unlock();
+			preImageLock.unlock();
 		}
+	}
+	
+	public ScriptEngine getScriptEngine() {
+		return aid.cache.getOrCreateIfMissing(imageIndexToBuild).getScriptEngine();
 	}
 	
 	abstract public BufferedImage renderImage(BufferedImage image) throws JobManagerException;

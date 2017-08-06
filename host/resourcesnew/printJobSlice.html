@@ -5,6 +5,7 @@
 	</div>
 	<div class="panel-body">
 	   <span>Last slice time: {{printJobsController.currentPrintJob.currentSliceTime | number}}ms</span>
+	   <span>Platform Height: {{(printJobsController.currentPrintJob.currentSlice + 1) * printJobsController.currentPrintJob.printer.configuration.slicingProfile.InkConfig[printJobsController.currentPrintJob.printer.configuration.slicingProfile.selectedInkConfigIndex].SliceHeight | number : 2}}mm</span>
 	   <span class="pull-right">Last slice cost: {{printJobsController.currentPrintJob.currentSliceCost | number : 5}}</span>
 	</div>
 	<img ng-src="{{printJobsController.currentSliceImage}}" class="img-responsive"/>

@@ -67,14 +67,47 @@ public class Point3d implements Shape3d {
 			Math.ceil(z) == Math.ceil(otherPoint.z);
 	}
 
-	public boolean pointEquals(Point3d other) {
+	//Does this point belong to a horizontal line?
+	public boolean isInfiniteInverseSlopeOnIntegerBoundry() {
+		return Double.isNaN(this.x) && Double.isNaN(this.y) && Double.isNaN(this.z);
+	}
+	
+	public int pointCompare(Point3d other) {
+		boolean thisInfiniteSlopeOnIntegerBoundry = isInfiniteInverseSlopeOnIntegerBoundry();
+		boolean otherInfiniteSlopeOnIntegerBoundry =  other.isInfiniteInverseSlopeOnIntegerBoundry();
+		if (thisInfiniteSlopeOnIntegerBoundry) {
+			if (otherInfiniteSlopeOnIntegerBoundry) {
+				return 0;
+			}
+			
+			return 1;
+		} else if (otherInfiniteSlopeOnIntegerBoundry){
+			return -1;
+		}
+		
 		double xdiff = this.x - other.x;
 		double ydiff = this.y - other.y;
 		double zdiff = this.z - other.z;
 		
-		return xdiff <= Triangle3d.EQUAL_TOLERANCE && xdiff >= -Triangle3d.EQUAL_TOLERANCE &&
-			ydiff <= Triangle3d.EQUAL_TOLERANCE && ydiff >= -Triangle3d.EQUAL_TOLERANCE &&
-			zdiff <= Triangle3d.EQUAL_TOLERANCE && zdiff >= -Triangle3d.EQUAL_TOLERANCE;
+		if (xdiff > Triangle3d.EQUAL_TOLERANCE) {
+			return -1;
+		}
+		if (xdiff < -Triangle3d.EQUAL_TOLERANCE) {
+			return 1;
+		}
+		if (ydiff > Triangle3d.EQUAL_TOLERANCE) {
+			return -1;
+		}
+		if (ydiff < -Triangle3d.EQUAL_TOLERANCE) {
+			return 1;
+		}
+		if (zdiff > Triangle3d.EQUAL_TOLERANCE) {
+			return -1;
+		}
+		if (zdiff < -Triangle3d.EQUAL_TOLERANCE) {
+			return 1;
+		}
+		return 0;
 	}
 	
 	@Override

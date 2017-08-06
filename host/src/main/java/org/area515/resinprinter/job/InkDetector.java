@@ -7,10 +7,10 @@ import java.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.inkdetection.PrintMaterialDetector;
-import org.area515.resinprinter.inkdetection.PrintMaterialDetectorSettings;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.Main;
+import org.area515.util.DynamicJSonSettings;
 
 public class InkDetector {
 	public static final String DETECTION_ERROR = "Error occurred while performing ink detection";
@@ -48,7 +48,7 @@ public class InkDetector {
 		}
 	}
 	
-	public InkDetector(Printer printer, PrintJob job, PrintMaterialDetector detector, PrintMaterialDetectorSettings settings, float percentageConsideredEmpty) {
+	public InkDetector(Printer printer, PrintJob job, PrintMaterialDetector detector, DynamicJSonSettings settings, float percentageConsideredEmpty) {
 		this.printer = printer;
 		this.detector = detector;
 		this.printMaterialRemainingForEmpty = percentageConsideredEmpty;

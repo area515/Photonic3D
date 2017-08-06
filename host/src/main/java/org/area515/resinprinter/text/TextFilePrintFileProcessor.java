@@ -1,13 +1,9 @@
 package org.area515.resinprinter.text;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 
-import javax.script.ScriptException;
-
-import org.area515.resinprinter.exception.SliceHandlingException;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.twodim.TwoDimensionalImageRenderer;
@@ -50,7 +46,7 @@ public class TextFilePrintFileProcessor extends TwoDimensionalPlatformPrintFileP
 	}
 
 	@Override
-	public TwoDimensionalImageRenderer createRenderer(DataAid aid, AbstractPrintFileProcessor<?, ?> processor, Object imageIndexToBuild) {
+	public TwoDimensionalImageRenderer createTwoDimensionalRenderer(DataAid aid, Object imageIndexToBuild) {
 		return new TextImageRenderer(aid, this, imageIndexToBuild);
 	}
 }

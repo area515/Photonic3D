@@ -26,7 +26,7 @@ public class XYComparatord implements Comparator<Shape3d> {
 			return 0;
 		}
 		
-		if (first instanceof Point3d && ((Point3d) first).pointEquals((Point3d)second)) {
+		if (first instanceof Point3d && ((Point3d) first).pointCompare((Point3d)second) == 0) {
 			return 0;
 		}
 		

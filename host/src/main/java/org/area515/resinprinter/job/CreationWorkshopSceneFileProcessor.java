@@ -12,9 +12,13 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -27,14 +31,19 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.exception.SliceHandlingException;
+import org.area515.resinprinter.job.render.CurrentImageRenderer;
+import org.area515.resinprinter.job.render.RenderingContext;
 import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.twodim.SimpleImageRenderer;
 import org.area515.util.IOUtilities;
 
-public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcessor<Object,Object> {
+import se.sawano.java.text.AlphanumericComparator;
+
+public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcessor<Object,Object> implements Previewable {
 	private static final Logger logger = LogManager.getLogger();
-	private HashMap<PrintJob, BufferedImage> currentlyDisplayedImage = new HashMap<PrintJob, BufferedImage>();
 	
 	@Override
 	public String[] getFileExtensions() {
@@ -55,8 +64,53 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 	}
 	
 	@Override
-	public BufferedImage getCurrentImage(PrintJob processingFile) {
-		return currentlyDisplayedImage.get(processingFile);
+	public CurrentImageRenderer createRenderer(DataAid aid, Object imageIndexToBuild) {
+		return new SimpleImageRenderer(aid, this, imageIndexToBuild);
+	}
+
+	protected SortedMap<String, File> findImages(File jobFile) throws JobManagerException {
+		String [] extensions = {"png", "PNG"};
+		boolean recursive = true;
+		
+		Collection<File> files =
+				FileUtils.listFiles(buildExtractionDirectory(jobFile.getName()),
+				extensions, recursive);
+
+		TreeMap<String, File> images = new TreeMap<>(new AlphanumericComparator());
+
+		for (File file : files) {
+			images.put(file.getName(), file);
+		}
+		
+		return images;
+	}
+
+	@Override
+	public BufferedImage renderPreviewImage(DataAid dataAid) throws SliceHandlingException {
+		try {
+			prepareEnvironment(dataAid.printJob.getJobFile(), dataAid.printJob);
+			
+			SortedMap<String, File> imageFiles = findImages(dataAid.printJob.getJobFile());
+			
+			dataAid.printJob.setTotalSlices(imageFiles.size());
+			Iterator<File> imgIter = imageFiles.values().iterator();
+	
+			// Preload first image then loop
+			int sliceIndex = dataAid.customizer.getNextSlice();
+			while (imgIter.hasNext() && sliceIndex > 0) {
+				sliceIndex--;
+				imgIter.next();
+			}
+			
+			if (!imgIter.hasNext()) {
+				throw new IOException("No Image Found for index:" + dataAid.customizer.getNextSlice());
+			}
+			File imageFile = imgIter.next();
+			RenderingContext stdImage = startImageRendering(dataAid, imageFile).get();
+			return stdImage.getPrintableImage();
+		} catch (IOException | JobManagerException | InterruptedException | ExecutionException e) {
+			throw new SliceHandlingException(e);
+		}
 	}
 
 	@Override
@@ -104,29 +158,27 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 						} else {
 							if (startOfLastImageDisplay > -1) {
 					//printJob.setCurrentSliceTime(System.currentTimeMillis() - startOfLastImageDisplay);
-								printJob.addNewSlice(System.currentTimeMillis() - startOfLastImageDisplay, null);
+								printJob.completeRenderingSlice(System.currentTimeMillis() - startOfLastImageDisplay, null);
 							}
 							startOfLastImageDisplay = System.currentTimeMillis();
 							
-							BufferedImage oldImage = null;
-							if (currentlyDisplayedImage != null) {
-								oldImage = currentlyDisplayedImage.get(printJob);
-							}
+							RenderingContext data = aid.cache.getOrCreateIfMissing(Boolean.TRUE);
+							BufferedImage oldImage = data.getPrintableImage();
 							int incoming = Integer.parseInt(matcher.group(1));
 					//printJob.setCurrentSlice(incoming);
 							String imageNumber = String.format("%0" + padLength + "d", incoming);
 							String imageFilename = FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png";
 							File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
 							BufferedImage newImage = ImageIO.read(imageFile);
-							newImage = applyImageTransforms(aid, newImage);
+							newImage = applyImageTransforms(aid, data.getScriptEngine(), newImage);
 							// applyBulbMask(aid, (Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
-							currentlyDisplayedImage.put(printJob, newImage);
+							data.setPrintableImage(newImage);
 							logger.info("Show picture: {}", imageFilename);
 							
 							//Notify the client that the printJob has increased the currentSlice
 							NotificationManager.jobChanged(printer, printJob);
 
-							printer.showImage(currentlyDisplayedImage.get(printJob));
+							printer.showImage(data.getPrintableImage(), true);
 							
 							if (oldImage != null) {
 								oldImage.flush();
@@ -217,14 +269,8 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 				} catch (IOException e) {
 				}
 			}
-			
-			if (currentlyDisplayedImage != null) {
-				BufferedImage image = currentlyDisplayedImage.get(printJob);
-				if (image != null) {
-					currentlyDisplayedImage.get(printJob).flush();
-					currentlyDisplayedImage.remove(printJob);
-				}
-			}
+			aid.cache.clearCache(Boolean.TRUE);
+			clearDataAid(printJob);
 		}
 	}
 	
@@ -290,7 +336,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		try {
 			unpackDir(processingFile);
 		} catch (IOException e) {
-			throw new JobManagerException("Couldn't unpack new job:" + processingFile + " into working directory:" + extractDirectory);
+			throw new JobManagerException("Couldn't unpack new job:" + processingFile + " into working directory:" + extractDirectory, e);
 		}
 	}
 
@@ -373,8 +419,6 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 			String basename = FilenameUtils.removeExtension(jobFile.getName());
 			logger.info("BaseName: {}", FilenameUtils.removeExtension(basename));
 			//findGcodeFile(jobFile);
-		} catch (IOException ioe) {
-			throw ioe;
 		} finally {
 			zipFile.close();
 		}

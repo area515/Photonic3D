@@ -1,0 +1,61 @@
+<form class="form-horizontal" >
+	<div class="modal-header">
+			<div class="btn-group pull-left">
+				<button class="btn btn-danger" data-dismiss="modal" ng-click="cancel()">
+					Cancel
+				</button>
+			</div>
+			
+			<div class="btn-group pull-right">
+				<button class="btn btn-success" data-dismiss="modal" ng-click="save()">
+					Save
+				</button>
+			</div>
+			
+			<h4 class="modal-title">
+					{{title}}
+			</h4>
+	</div>
+	<div class="modal-body">
+			<div class="panel panel-default">
+			<div class="list-group">
+			<div class="list-group-item">
+					<i class="fa fa-2x fa-hashtag pull-left"></i>
+					<h4 style="width: 40%; display: inline-table;">Name Resin Profile</h4>
+					<input style="width: 50%; display: inline; float: right;" type="text" class="form-control" placeholder="name" ng-model="inkConfigArr.Name">
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-money pull-left"></i>
+					<h4 style="width: 40%; display: inline-table;">Resin Price Per Liter (£)	</h4>
+					<input type="number" style="width: 50%; display: inline; float: right;" class="form-control" placeholder="£" step="0.01" ng-model="inkConfigArr.ResinPriceL">
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-reorder pull-left"></i>
+					<h4 style="width: 40%; display: inline-table;">Slice Height (mm)</h4>
+					<input style="width: 50%; display: inline; float: right;" type="number" step="0.01" class="form-control" placeholder="mm" ng-model="inkConfigArr.SliceHeight">
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-fire pull-left"></i>
+					<h4 style="width: 40%; display: inline-table;">Exposure Time (ms)</h4>
+					<input style="width: 50%; display: inline; float: right;" type="number" step="0.01" class="form-control" placeholder="mm" ng-model="inkConfigArr.LayerTime">
+				</div>
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-sort-numeric-asc pull-left"></i>
+					<h4 style="width: 40%; display: inline-table;">Number Of First Layers</h4>
+					<input style="width: 50%; display: inline; float: right;" type="number" class="form-control" placeholder="count" ng-model="inkConfigArr.NumberofBottomLayers">
+				</div>
+				<div class="list-group-item">
+					<span class="fa-stack fa-2x pull-left">
+						<i style="line-height: initial" class="fa fa-stack-1x fa-fire"></i>
+						<i style="line-height: initial" class="fa fa-stack-1x fa-reorder"></i>
+					</span>
+					<h4 style="width: 40%; display: inline-table; line-height: initial">Exposure Time For First Layers (ms)</h4>
+					<input style="width: 50%; display: inline; float: right;" type="number" class="form-control" placeholder="ms" ng-model="inkConfigArr.FirstLayerTime">
+				</div>				
+				<div class="list-group-item">
+					<i class="fa fa-2x fa-code pull-left"></i>
+					<h4 style="width: 40%; display: inline-table;">PercentageOfPrintMaterialConsideredEmpty</h4>
+					<input style="width: 50%; display: inline; float: right;" type="number" step="0.01" class="form-control" placeholder="%" ng-model="inkConfigArr.PercentageOfPrintMaterialConsideredEmpty">
+				</div>
+			</div>
+

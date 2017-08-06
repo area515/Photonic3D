@@ -39,6 +39,16 @@
 					</select>
 				</div>
 			</div>
+			<div class="form-group">
+				<label class="col-xs-4 control-label">Full Screen Mode</label>
+				<div class="col-xs-8">
+					<select name="type" class="form-control" 
+						ng-model="editPrinter.configuration.machineConfig.MonitorDriverConfig.FullScreenMode" 
+						ng-options="mode for mode in fullScreenModes">
+					  <option value="" selected>Select a full screen mode...</option>
+					</select>
+				</div>
+			</div>
 			<div cwh-comport
 				serialportlabel="'Motors Serial Port'"
 				ng-model="editPrinter.configuration.machineConfig.MotorsDriverConfig.ComPortSettings"

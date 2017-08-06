@@ -20,17 +20,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 
+import javax.lang.model.type.ErrorType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.area515.resinprinter.slice.StlError.ErrorType;
 import org.area515.resinprinter.stl.BrokenFace3d;
 import org.area515.resinprinter.stl.Face3d;
 import org.area515.resinprinter.stl.Line3d;
+import org.area515.resinprinter.stl.MultiTriangleFace;
 import org.area515.resinprinter.stl.Point3d;
 import org.area515.resinprinter.stl.Shape3d;
 import org.area515.resinprinter.stl.Triangle3d;
 import org.area515.resinprinter.stl.XYComparatord;
-import org.area515.util.Log4jTimer;
+import org.area515.util.Log4jUtil;
 
 public class ZSlicer {
     private static final Logger logger = LogManager.getLogger();
@@ -194,9 +196,9 @@ public class ZSlicer {
 		  LinkageDiscovery completedLinkage = LinkageDiscovery.NoLinkFound;
 		  Line3d firstInCurrentWorkingLoop = currentWorkingLoop.get(0);
 		  Line3d lastInCurrentWorkingLoop = currentWorkingLoop.get(currentWorkingLoop.size() - 1);
-		  if (currentLine.getPointTwo().pointEquals(firstInCurrentWorkingLoop.getPointOne())) {
+		  if (currentLine.getPointTwo().pointCompare(firstInCurrentWorkingLoop.getPointOne()) == 0) {
 			  //Check to determine if this loop is closed
-			  if (currentLine.getPointOne().pointEquals(lastInCurrentWorkingLoop.getPointTwo())) {
+			  if (currentLine.getPointOne().pointCompare(lastInCurrentWorkingLoop.getPointTwo()) == 0) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 1 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
@@ -204,9 +206,9 @@ public class ZSlicer {
 			  }
 			  
 			  currentWorkingLoop.add(0, currentLine);
-		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointEquals(currentLine.getPointOne())) {
+		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointCompare(currentLine.getPointOne()) == 0) {
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointOne().pointEquals(currentLine.getPointTwo())) {
+			  if (firstInCurrentWorkingLoop.getPointOne().pointCompare(currentLine.getPointTwo()) == 0) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 2 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
@@ -214,9 +216,9 @@ public class ZSlicer {
 			  }
 			  
 			  currentWorkingLoop.add(currentLine);
-		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointEquals(currentLine.getPointTwo())) {
+		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointCompare(currentLine.getPointTwo()) == 0) {
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointOne().pointEquals(currentLine.getPointOne())) {
+			  if (firstInCurrentWorkingLoop.getPointOne().pointCompare(currentLine.getPointOne()) == 0) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 3 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
@@ -225,9 +227,9 @@ public class ZSlicer {
 			  
 			  currentLine.swap();
 			  currentWorkingLoop.add(currentLine);  
-		  } else if (currentLine.getPointOne().pointEquals(firstInCurrentWorkingLoop.getPointOne())) {
+		  } else if (currentLine.getPointOne().pointCompare(firstInCurrentWorkingLoop.getPointOne()) == 0) {
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointTwo().pointEquals(currentLine.getPointTwo())) {
+			  if (firstInCurrentWorkingLoop.getPointTwo().pointCompare(currentLine.getPointTwo()) == 0) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 4 with [{}] links (Link line)", currentWorkingLoop.size() + 1);
 			  } else {
@@ -247,10 +249,10 @@ public class ZSlicer {
 		  Line3d lastInCurrentWorkingLoop = currentWorkingLoop.get(currentWorkingLoop.size() - 1);
 		  Line3d firstInOtherWorkingLoop = otherWorkingLoop.get(0);
 		  Line3d lastInOtherWorkingLoop = otherWorkingLoop.get(otherWorkingLoop.size() - 1);
-		  if (lastInOtherWorkingLoop.getPointTwo().pointEquals(firstInCurrentWorkingLoop.getPointOne())) {
+		  if (lastInOtherWorkingLoop.getPointTwo().pointCompare(firstInCurrentWorkingLoop.getPointOne()) == 0) {
 			  logger.debug("Found Link: 1 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
-			  if (firstInOtherWorkingLoop.getPointOne().pointEquals(lastInCurrentWorkingLoop.getPointTwo())) {
+			  if (firstInOtherWorkingLoop.getPointOne().pointCompare(lastInCurrentWorkingLoop.getPointTwo()) == 0) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 1 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
@@ -258,10 +260,10 @@ public class ZSlicer {
 			  }
 			  
 			  currentWorkingLoop.addAll(0, otherWorkingLoop);
-		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointEquals(firstInOtherWorkingLoop.getPointOne())) {
+		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointCompare(firstInOtherWorkingLoop.getPointOne()) == 0) {
 			  logger.debug("Found Link: 2 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointOne().pointEquals(lastInOtherWorkingLoop.getPointTwo())) {
+			  if (firstInCurrentWorkingLoop.getPointOne().pointCompare(lastInOtherWorkingLoop.getPointTwo()) == 0) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 2 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
@@ -269,10 +271,10 @@ public class ZSlicer {
 			  }
 			  
 			  currentWorkingLoop.addAll(otherWorkingLoop);
-		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointEquals(lastInOtherWorkingLoop.getPointTwo())) {
+		  } else if (lastInCurrentWorkingLoop.getPointTwo().pointCompare(lastInOtherWorkingLoop.getPointTwo()) == 0) {
 			  logger.debug("Found Link: 3 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointOne().pointEquals(firstInOtherWorkingLoop.getPointOne())) {
+			  if (firstInCurrentWorkingLoop.getPointOne().pointCompare(firstInOtherWorkingLoop.getPointOne()) == 0) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 3 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
@@ -284,10 +286,10 @@ public class ZSlicer {
 			  }
 			  Collections.reverse(otherWorkingLoop);
 			  currentWorkingLoop.addAll(otherWorkingLoop);					  
-		  } else if (firstInOtherWorkingLoop.getPointOne().pointEquals(firstInCurrentWorkingLoop.getPointOne())) {
+		  } else if (firstInOtherWorkingLoop.getPointOne().pointCompare(firstInCurrentWorkingLoop.getPointOne()) == 0) {
 			  logger.debug("Found Link: 4 with [{},{}] links (Link Loop)", currentWorkingLoop.size(), otherWorkingLoop.size());
 			  //Check to determine if this loop is closed
-			  if (firstInCurrentWorkingLoop.getPointTwo().pointEquals(lastInOtherWorkingLoop.getPointTwo())) {
+			  if (firstInCurrentWorkingLoop.getPointTwo().pointCompare(lastInOtherWorkingLoop.getPointTwo()) == 0) {
 				  completedLinkage = LinkageDiscovery.FoundCompletion;
 				  logger.debug("Completed Link: 4 with [{}] links (Link Loop)", currentWorkingLoop.size() + otherWorkingLoop.size());
 			  } else {
@@ -322,10 +324,10 @@ public class ZSlicer {
 				  
 				  //These are a double check for situations that should never happen other than if a single line(from a broken loop) was placed into the completedFillInLoops
 				  if (lines.size() > 1) {
-					  if (!lines.get(t).getPointTwo().pointEquals(lines.get(nextPoint).getPointOne())) {
+					  if (lines.get(t).getPointTwo().pointCompare(lines.get(nextPoint).getPointOne()) != 0) {
 						  logger.warn("Compare second point[{}]:{} to first point[{}]:{}", t, lines.get(t), nextPoint, lines.get(nextPoint));
 					  }
-					  if (!lines.get(t).getPointOne().pointEquals(lines.get(prevPoint).getPointTwo())) {
+					  if (lines.get(t).getPointOne().pointCompare(lines.get(prevPoint).getPointTwo()) != 0) {
 						  logger.warn("Compare first point[{}]:{} to second point[{}]:{}", t, lines.get(t), prevPoint, lines.get(prevPoint));
 					  }
 				  }
@@ -559,15 +561,15 @@ public class ZSlicer {
 			 Point3d checkPoint = brokenEnds[t];
 			 Point3d previousPoint = brokenEnds[t == 0?brokenEnds.length - 1:t-1];
 			 Point3d nextPoint = brokenEnds[t == brokenEnds.length - 1?0:t+1];
-			 if (checkPoint.pointEquals(beginning)) {
+			 if (checkPoint.pointCompare(beginning) == 0) {
 				 usedFaces.add(currentTriangleIndex);
 				 
 				 //First check if we can end this fiasco...
-				 if (nextPoint.pointEquals(ending)) {
+				 if (nextPoint.pointCompare(ending) == 0) {
 					 Line3d line = new Line3d(checkPoint, ending, null, currentBrokenFace, false);//TODO: Use proper normal
 					 path.add(line);
 					 return path;
-				 } else if (previousPoint.pointEquals(ending)) {
+				 } else if (previousPoint.pointCompare(ending) == 0) {
 					 Line3d line = new Line3d(checkPoint, ending, null, currentBrokenFace, false);//TODO: Use proper normal
 					 path.add(line);
 					 return path;
@@ -592,7 +594,7 @@ public class ZSlicer {
 	 }
 
 	 //used in org.area515.resinprinter.job.STLImageRenderer.STLImageRenderer
-	 public List<List<Line3d>> colorizePolygons(List<Triangle3d> watchedTriangles, List<Integer> watchedYs) {
+	 public List<List<Line3d>> colorizePolygons(List<Face3d> watchedTriangles, List<Integer> watchedYs) {
 		 
 		  sliceMaxX = -Integer.MAX_VALUE;
 		  sliceMaxY = -Integer.MAX_VALUE;
@@ -609,7 +611,8 @@ public class ZSlicer {
 		  //Effectively, this loop is log n due to the sort into XYComparator
 		  
 		  logger.info("===================");
-		  logger.info("ZSlice started", ()->Log4jTimer.startTimer("sliceTime"));
+		  logger.info("ZSlice started", ()->Log4jUtil.startTimer("sliceTime"));
+		  //TODO: This set assumes that normals should distingish separate points. Is that ok? Should we use: org.area515.resinprinter.stl.XYComparatorNormalImportantd
 		  Set<Line3d> zIntersectionsBySortedX = new TreeSet<Line3d>(new XYComparatord(Triangle3d.EQUAL_TOLERANCE));
 		  for (Triangle3d triangle : stlFile.getTriangles()) {
 			  if (watchedTriangles != null && watchedTriangles.contains(triangle)) {
@@ -641,7 +644,7 @@ public class ZSlicer {
 			  }//*/
 		  }
 		  
-		  logger.info("IntersectionTime:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("IntersectionTime:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  logger.debug("===================");
 		  logger.debug("zIntersectionsBySortedX:{}", zIntersectionsBySortedX.size());
 		  logger.debug("completedFillInLoops:{}", completedFillInLoops.size());
@@ -673,7 +676,7 @@ public class ZSlicer {
 			  workingLoops.add(newLoop);
 		  }
 		  
-		  logger.info("Primary linkage search:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Primary linkage search:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 
 		  if (logger.isDebugEnabled()) {
 			  logger.debug("===================");
@@ -691,7 +694,7 @@ public class ZSlicer {
 			  }
 			  logger.debug("workingLoops lines:{}", value);
 			  logger.debug("===================");//*/
-			  logger.debug("Debug print time:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+			  logger.debug("Debug print time:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  }
 		  
 		  //Empirically I've found that about half of all loops need to be joined with this method
@@ -720,7 +723,7 @@ public class ZSlicer {
 			  workingLoops.remove(0);
 		  }
 		  
-		  logger.info("Secondary linkage search:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Secondary linkage search:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 
 		  if (logger.isDebugEnabled()) {
 			  logger.debug("===================");
@@ -744,7 +747,7 @@ public class ZSlicer {
 			  }
 			  logger.debug("brokenLoops lines:{}", value);
 			  logger.debug("===================");
-			  logger.debug("Print broken loops:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+			  logger.debug("Print broken loops:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  }
 		  
 		  //empirically I've found that this block of code will only execute 1 in 100 times.
@@ -759,7 +762,7 @@ public class ZSlicer {
 				  
 				  //TODO: Somehow we are allowing a lost single point to find it's way to this code. That is indicitive of a bug earlier in the above sections
 				  if (currentLoop.size() == 1 &&
-					  currentLoop.get(0).getPointOne().pointEquals(currentLoop.get(0).getPointTwo())) {
+					  currentLoop.get(0).getPointOne().pointCompare(currentLoop.get(0).getPointTwo()) == 0) {
 					  continue;
 				  }
 				  
@@ -836,16 +839,43 @@ public class ZSlicer {
 				  }
 			  }
 			  
-			  logger.info("Stl error capturing:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+			  logger.info("Stl error capturing:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  }
-
+		  
+		  //Combine perfectly horizontal lines into a single line
+		  for (List<Line3d> currentPolygon : completedFillInLoops) {
+			  int polySize = currentPolygon.size();
+			  if (polySize < 2) {
+				  continue;
+			  }
+			  for (int lineSegmentIndex = 0; lineSegmentIndex < polySize; lineSegmentIndex++) {
+				  Line3d current = currentPolygon.get(lineSegmentIndex);
+				  int prevIndex = lineSegmentIndex == 0?polySize - 1:lineSegmentIndex - 1;
+				  Line3d previous = currentPolygon.get(prevIndex);
+				  if (current.isInfiniteInverseSlope() && 
+					  previous.isInfiniteInverseSlope() && 
+					  current.getPointOne().y == current.getPointTwo().y &&
+					  previous.getPointOne().y == previous.getPointTwo().y &&
+					  current.getPointOne().y == previous.getPointTwo().y) {
+					  if (current.getPointOne().pointCompare(previous.getPointTwo()) == 0) {
+						  currentPolygon.set(prevIndex, new Line3d(previous.getPointOne(), current.getPointTwo(), current.getNormal(), new MultiTriangleFace(current.getOriginatingFace(), previous.getOriginatingFace()), false));
+					  } else {
+						  logger.error("Point ordering is not what we expect in these lines previous:{}, current:{}", previous, current);
+					  }
+					  currentPolygon.remove(lineSegmentIndex);
+					  polySize--;
+					  lineSegmentIndex--;
+				  }
+			  }
+		  }
+		  
 		  //close loops manually since we couldn't find a solution for these broken loops
 		  if (fixBrokenLoops != null && brokenLoops.size() > 0) {
 			  fixBrokenLoops.mendPolygon(this, brokenLoops, completedFillInLoops);
-			  logger.info("Broken loop mending:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+			  logger.info("Broken loop mending:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  }
 		  
-		  //Preperation work for the Scanline algorithm
+		  //Preparation work for the Scanline algorithm
 		  Map<Integer, List<Line3d>> inRangeLines = new HashMap<Integer, List<Line3d>>();
 		  int breakupSize = (sliceMaxY - sliceMinY) / ScanlineFillPolygonWork.SMALLEST_UNIT_OF_WORK;
 		  if (completedFillInLoops.size() % ScanlineFillPolygonWork.SMALLEST_UNIT_OF_WORK > 0) {
@@ -869,7 +899,7 @@ public class ZSlicer {
 				 }
 			 }
 		  }
-		  logger.info("Break scanline up into pieces:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Break scanline up into pieces:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 
 		  List<Future<ScanlineFillPolygonWork>> completedWork = new ArrayList<Future<ScanlineFillPolygonWork>>();
 		  for (int y = 0; y < breakupSize; y++) {
@@ -879,6 +909,7 @@ public class ZSlicer {
 			  }
 			  
 			  ScanlineFillPolygonWork work = new ScanlineFillPolygonWork(
+					  this,
 					  inRange, 
 					  watchedTriangles,
 					  watchedYs,
@@ -887,7 +918,7 @@ public class ZSlicer {
 					  z);
 			  completedWork.add(pool.submit(work));
 		  }
-		  logger.info("Submit scanline work:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Submit scanline work:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  
 		  fillInScanLines = new ArrayList<Line3d>();
 		  buildArea = 0;
@@ -897,7 +928,7 @@ public class ZSlicer {
 					work = currentWork.get();
 					if (keepTrackOfErrors) {
 						  for (Face3d currentInsideOutPolygon : work.getInsideOutPolygons()) {
-							  errors.add(new StlError((Triangle3d)currentInsideOutPolygon, ErrorType.Insideout));
+							  errors.add(new StlError(currentInsideOutPolygon, StlError.ErrorType.Insideout));
 						  }
 					}
 					
@@ -907,13 +938,13 @@ public class ZSlicer {
 					logger.error("Error in executing polygon work", e);
 				}
 		  }
-		  logger.info("Wait for scanline work:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Wait for scanline work:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  
 		  //I'm not sure I want to do this. It just traces the polygon but doesn't provide much value other than an edge blur.
 		  logger.debug("Polygons");
 		  logger.debug("======");
           fillInPolygons = compilePolygons(completedFillInLoops);
-		  logger.info("Compile polygons:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+		  logger.info("Compile polygons:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 			  
 		  if (logger.isDebugEnabled()) {
 	          logger.debug("TOTALS");
@@ -928,15 +959,15 @@ public class ZSlicer {
 			  }
 			  logger.debug("Working Loops({}):{}",workingLoops.size(), workingLoops);
 			  logger.debug("======");//*/
-			  logger.debug("Print working loops:{}", ()->Log4jTimer.splitTimer("sliceTime"));
+			  logger.debug("Print working loops:{}", ()->Log4jUtil.splitTimer("sliceTime"));
 		  }
 		  pool.shutdown();
-		  logger.info("ZSlice complete:{}", ()->Log4jTimer.completeTimer("sliceTime"));
+		  logger.info("ZSlice complete:{}", ()->Log4jUtil.completeTimer("sliceTime"));
 		  return completedFillInLoops;
 	 }
 	 
 	 public void loadFile(InputStream stream, Double buildPlatformXPixels, Double buildPlatformYPixels) throws IOException {
-		  logger.info("Load file start", ()->Log4jTimer.startTimer("fileLoadTime"));
+		  logger.info("Load file start", ()->Log4jUtil.startTimer("fileLoadTime"));
 		  stlFile.load(stream, rewriteNormalsWithRightHandRule);
  
 		if (imageOffsetX == null) {
@@ -957,7 +988,7 @@ public class ZSlicer {
 				imageOffsetY = -stlFile.getYmin() / precisionScaler * pixelsPerMMY;
 			}
 		}
-		logger.info("Load file stop:{}", ()->Log4jTimer.completeTimer("fileLoadTime"));
+		logger.info("Load file stop:{}", ()->Log4jUtil.completeTimer("fileLoadTime"));
 	 }
 	 
 	 public int getZIndex() {

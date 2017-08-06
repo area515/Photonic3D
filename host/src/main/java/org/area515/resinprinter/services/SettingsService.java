@@ -1,5 +1,10 @@
 package org.area515.resinprinter.services;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 import java.util.List;
 
 import javax.annotation.security.RolesAllowed;
@@ -9,19 +14,14 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import com.fasterxml.jackson.core.io.JsonStringEncoder;
 
 import org.area515.resinprinter.server.CwhEmailSettings;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
+import org.area515.resinprinter.server.Skin;
 import org.area515.resinprinter.util.security.PhotonicUser;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 
 @Api(value="settings")
 @RolesAllowed(PhotonicUser.FULL_RIGHTS)
@@ -120,5 +120,15 @@ public class SettingsService {
 	@Path("hostInformation")
 	public void setHostInformation(HostInformation info) {
 		HostProperties.Instance().saveHostInformation(info);
+	}
+    
+    @ApiOperation(value="This method returns all of the GUI skins available on the machine")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+    @PUT
+	@Path("skins/list")
+	public List<Skin> getSkins() {
+		return HostProperties.Instance().getSkins();
 	}
 }

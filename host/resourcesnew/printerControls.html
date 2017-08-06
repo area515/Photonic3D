@@ -82,7 +82,7 @@
 						<span class="input-group-btn">
 							<button class="btn btn-primary" type="button" ng-click="printerControlsController.executeGCode(gCodeToSend)">Go</button>
 						</span>
-						<input type="text" class="form-control" ng-model="printerControlsController.gCodeToSend" placeholder="gcode">
+						<input type="text" class="form-control" on-enter="printerControlsController.executeGCode(gCodeToSend)" ng-model="printerControlsController.gCodeToSend" placeholder="gcode">
 					</div>
 					<textarea class="form-control" ng-model="printerControlsController.gcodeProcessing" rows="6"></textarea>
 				</div>
@@ -106,7 +106,7 @@
 			<div class="list-group">
 				<div class="list-group-item">
 					<i class="fa fa-2x fa-tv pull-left"></i>
-					<h4>Projector Power</h4>
+					<h4>Light Source Power</h4>
 					<span class="btn-group" >
 						<a class="btn btn-danger btn-sm" ng-click="printerControlsController.projector('stop')">
 							<b class="fa fa-toggle-off"></b> 

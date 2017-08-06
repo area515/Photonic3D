@@ -6,6 +6,8 @@ import java.awt.HeadlessException;
 
 import javax.swing.JFrame;
 
+import org.area515.resinprinter.printer.PrinterConfiguration;
+
 public class SimulatedDisplay extends GraphicsDeviceOutputInterface {
 	public static final String NAME = "Simulated display";
 	public int displayIndex;
@@ -29,7 +31,7 @@ public class SimulatedDisplay extends GraphicsDeviceOutputInterface {
 	}
 
 	@Override
-	public GraphicsOutputInterface initializeDisplay(String displayId) {
+	public GraphicsOutputInterface initializeDisplay(String displayId, PrinterConfiguration configuration) {
 		PrinterDisplayFrame refreshFrame = new PrinterDisplayFrame(displayId);
 		refreshFrame.setTitle(displayId);
 		refreshFrame.setVisible(true);

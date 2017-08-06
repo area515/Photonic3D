@@ -10,6 +10,8 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JFrame;
 
+import org.area515.resinprinter.printer.PrinterConfiguration;
+
 public class GraphicsDeviceOutputInterface implements GraphicsOutputInterface {
 	private String displayName;
 	private GraphicsDevice device;
@@ -68,7 +70,7 @@ public class GraphicsDeviceOutputInterface implements GraphicsOutputInterface {
 	}
 
 	@Override
-	public void showImage(BufferedImage image) {
+	public void showImage(BufferedImage image, boolean performFullUpdate) {
 		throw new IllegalStateException("You should never call showImage from this class");
 	}
 
@@ -78,7 +80,7 @@ public class GraphicsDeviceOutputInterface implements GraphicsOutputInterface {
 	}
 
 	@Override
-	public GraphicsOutputInterface initializeDisplay(String displayId) {
+	public GraphicsOutputInterface initializeDisplay(String displayId, PrinterConfiguration configuration) {
 		GraphicsDevice device;
 		try {
 			device = ((GraphicsDeviceOutputInterface)DisplayManager.Instance().getDisplayDevice(displayId)).device;
@@ -93,8 +95,10 @@ public class GraphicsDeviceOutputInterface implements GraphicsOutputInterface {
 		refreshFrame.setMinimumSize(dim);
 		refreshFrame.setSize(dim);
 		refreshFrame.setVisible(true);
-		if (device.isFullScreenSupported()) {
-			device.setFullScreenWindow(refreshFrame);//TODO: Does projector not support full screen
+		FullScreenMode fullScreenMode = configuration.getMachineConfig().getMonitorDriverConfig().getFullScreenMode();
+		if (fullScreenMode == FullScreenMode.AlwaysUseFullScreen || 
+			(fullScreenMode == FullScreenMode.UseFullScreenWhenExclusiveIsAvailable && device.isFullScreenSupported())) {
+			device.setFullScreenWindow(refreshFrame);
 		}
 		//This can only be done with a real graphics device since it would reassign the printer Simulation
 		//OLD getConfiguration().getMachineConfig().setOSMonitorID(device.getDefaultConfiguration().getDevice().getIDstring());

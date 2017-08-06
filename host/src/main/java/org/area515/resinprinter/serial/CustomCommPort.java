@@ -5,7 +5,6 @@ import java.io.IOException;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.ComPortSettings;
-import org.area515.resinprinter.printer.Printer;
 
 public class CustomCommPort implements SerialCommunicationsPort {
 	private String name;

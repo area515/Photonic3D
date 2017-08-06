@@ -1,12 +1,29 @@
 package org.area515.util;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
+
 import org.apache.logging.log4j.ThreadContext;
 
-public class Log4jTimer {
+public class Log4jUtil {
 	public static Map<String, String> GLOBAL = new HashMap<>();
+
+	public static boolean logImage(final BufferedImage img, final String fileName) {
+		if (img == null) {
+			return false;
+		}
+		try {
+			ImageIO.write(img, "png",  new File(fileName.replaceAll(":", "").replaceAll("/", "").replaceAll("\\\\", "")));
+			return true;
+		} catch (IOException e) {
+			return false;
+		}
+	}
 
 	public static long startTimer(String timerName) {
 		long newTime = System.currentTimeMillis();

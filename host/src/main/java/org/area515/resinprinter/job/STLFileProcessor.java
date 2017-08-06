@@ -12,14 +12,14 @@ import java.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.exception.SliceHandlingException;
-import org.area515.resinprinter.job.render.RenderedData;
+import org.area515.resinprinter.job.render.CurrentImageRenderer;
+import org.area515.resinprinter.job.render.RenderingContext;
 import org.area515.resinprinter.printer.BuildDirection;
-import org.area515.resinprinter.server.Main;
 import org.area515.resinprinter.slice.CloseOffMend;
 import org.area515.resinprinter.slice.StlError;
 import org.area515.resinprinter.slice.ZSlicer;
 import org.area515.resinprinter.stl.Triangle3d;
-import org.area515.util.Log4jTimer;
+import org.area515.util.Log4jUtil;
 
 public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triangle3d>, Set<StlError>> implements Previewable {
 	public static String STL_OVERHEAD = "stlOverhead";
@@ -30,6 +30,11 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 	@Override
 	public String[] getFileExtensions() {
 		return new String[]{"stl"};
+	}
+
+	@Override
+	public CurrentImageRenderer createRenderer(DataAid aid, Object imageIndexToBuild) {
+		return new STLImageRenderer(aid, this, imageIndexToBuild, false);
 	}
 
 	@Override
@@ -64,34 +69,28 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 			int endPoint = dataAid.slicingProfile.getDirection() == BuildDirection.Bottom_Up?(slicer.getZMaxIndex() + 1 - dataAid.customizer.getNextSlice()): (slicer.getZMinIndex() + 1);
 			dataAid.slicer.setZIndex(startPoint);
 			Boolean nextRenderingPointer = (Boolean)dataAid.cache.getCurrentRenderingPointer();
-			Future<RenderedData> currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, nextRenderingPointer, false));
-			
+			Future<RenderingContext> currentImage = startImageRendering(dataAid, nextRenderingPointer);
+			//renderingImage
 			//Everything needs to be setup in the dataByPrintJob before we start the header
 			performHeader(dataAid);
 			
 			for (int z = startPoint; dataAid.slicingProfile.getDirection().isSliceAvailable(z, endPoint) && dataAid.printer.isPrintActive(); z += dataAid.slicingProfile.getDirection().getVector()) {
 				
 				//Performs all of the duties that are common to most print files
-				JobStatus status = performPreSlice(dataAid, slicer.getStlErrors());
+				JobStatus status = performPreSlice(dataAid, dataAid.currentlyRenderingImage.getScriptEngine(), slicer.getStlErrors());
 				if (status != null) {
 					return status;
 				}
 				
-				logger.info("SliceOverheadStart:{}", ()->Log4jTimer.startTimer(STL_OVERHEAD));
+				logger.info("SliceOverheadStart:{}", ()->Log4jUtil.startTimer(STL_OVERHEAD));
 				
 				//Wait until the image has been properly rendered. Most likely, it's already done though...
-				BufferedImage image = currentImage.get().getPrintableImage();
+				RenderingContext renderedData = currentImage.get();
 				
-				logger.info("SliceOverhead:{}", ()->Log4jTimer.completeTimer(STL_OVERHEAD));
+				logger.info("SliceOverhead:{}", ()->Log4jUtil.completeTimer(STL_OVERHEAD));
 				
 				//Now that the image has been rendered, we can make the switch to use the pointer that we were using while we were rendering
 				dataAid.cache.setCurrentRenderingPointer(nextRenderingPointer);
-				
-				//Start the exposure timer
-				// logger.info("ExposureStart:{}", ()->Log4jTimer.startTimer(EXPOSURE_TIMER));
-				
-				//Cure the current image
-				//dataAid.printer.showImage(image);
 				
 				//Get the next pointer in line to start rendering the image into
 				nextRenderingPointer = !nextRenderingPointer;
@@ -99,11 +98,11 @@ public class STLFileProcessor extends AbstractPrintFileProcessor<Iterator<Triang
 				//Render the next image while we are waiting for the current image to cure
 				if (z < slicer.getZMaxIndex() + 1) {
 					slicer.setZIndex(z);
-					currentImage = Main.GLOBAL_EXECUTOR.submit(new STLImageRenderer(dataAid, this, nextRenderingPointer, false));
+					currentImage = startImageRendering(dataAid, nextRenderingPointer);
 				}
 				
 				//Performs all of the duties that are common to most print files
-				status = printImageAndPerformPostProcessing(dataAid, image);
+				status = printImageAndPerformPostProcessing(dataAid, renderedData.getScriptEngine(), renderedData.getPrintableImage());
 				if (status != null) {
 					return status;
 				}

@@ -11,7 +11,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +38,7 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.network.LinuxNetworkManager;
 import org.area515.resinprinter.network.NetworkManager;
@@ -68,28 +71,29 @@ public class HostProperties {
 	public static String MACHINE_EXTENSION = ".machine";
 	public File MACHINE_DIR = new File(System.getProperty("user.home"), "Machines");
 	private static String PRINTER_EXTENSION = ".printer";
-	private File printerDir = new File(System.getProperty("user.home"), "3dPrinters");
-
+	private File printerDir = new File(System.getProperty("user.home"), "3dPrinters");	
+	public static String CUSTOMIZER_EXTENSION = ".customizer";
+	private File CUSTOMIZER_DIR = new File(System.getProperty("user.home"), "Customizers");
+	
 	private static HostProperties INSTANCE = null;
 	private File uploadDir;
 	private File printDir;
-	private String hostGUI;
 	private boolean fakeSerial = false;
 	private boolean removeJobOnCompletion = true;
 	private boolean forceCalibrationOnFirstUse = false;
 	private boolean limitLiveStreamToOneCPU = false;
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
-	private List<Class<Feature>> featureClasses = new ArrayList<Class<Feature>>();
+	private Map<Class<Feature>, String> featureClasses = new HashMap<Class<Feature>, String>();
 	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
 	private List<PrintFileProcessor> printFileProcessors = new ArrayList<PrintFileProcessor>();
 	private List<GraphicsOutputInterface> displayDevices = new ArrayList<GraphicsOutputInterface>();
 	private Class<SerialCommunicationsPort> serialPortClass;
 	private Class<NetworkManager> networkManagerClass;
 	
-	private int versionNumber;
 	private String releaseTagName;
 	private List<String> visibleCards;
 	private String hexCodeBasedProjectorsJson;
+	private String skinsStringJson;
 	private String forwardHeader;
 	private CountDownLatch hostReady = new CountDownLatch(1);
 	private String scriptEngineLanguage = null;
@@ -188,8 +192,8 @@ public class HostProperties {
 		uploadDirString = configurationProperties.getProperty("uploaddir");
 		
 		fakeSerial = new Boolean(configurationProperties.getProperty("fakeserial", "false"));
-		hostGUI = configurationProperties.getProperty("hostGUI", "resources");
 		visibleCards = Arrays.asList(configurationProperties.getProperty("visibleCards", "printers,printJobs,printables,users,settings").split(","));
+		skinsStringJson = configurationProperties.getProperty("skins", "[{\"name\":\"Main skin\", \"welcomeFiles\":[\"index.htm\"], \"resourceBase\": \"resourcesnew\", \"active\": true}]");
 		
 		//This loads features
 		for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
@@ -198,7 +202,7 @@ public class HostProperties {
 				currentPropertyString = currentPropertyString.replace("feature.", "");
 				if ("true".equalsIgnoreCase(currentProperty.getValue() + "")) {
 					try {
-						featureClasses.add((Class<Feature>)Class.forName(currentPropertyString));
+						featureClasses.put((Class<Feature>)Class.forName(currentPropertyString), configurationProperties.getProperty("featureSettings." + currentPropertyString));
 					} catch (NoClassDefFoundError | UnsatisfiedLinkError | ClassNotFoundException e) {
 						logger.error("Failed to load Feature:" + currentPropertyString, e);
 					}
@@ -273,7 +277,7 @@ public class HostProperties {
 		try {
 			userManagementFeature = configurationProperties.getProperty("UserManagementFeatureImplementation", KeystoreLoginService.class.getName());
 			Class<Feature> userManagementFeatureClass = (Class<Feature>)Class.forName(userManagementFeature);
-			featureClasses.add(userManagementFeatureClass);
+			featureClasses.put(userManagementFeatureClass, configurationProperties.getProperty("featureSettings." + userManagementFeatureClass.getName()));
 		} catch (ClassNotFoundException e) {
 			logger.error("Failed to load UserManagementFeatureImplementation:{}", userManagementFeature);
 		}
@@ -329,7 +333,7 @@ public class HostProperties {
 			Properties newProperties = new Properties();
 			try {
 				newProperties.load(new FileInputStream(versionFile));
-				versionNumber = Integer.valueOf((String)newProperties.get("build.number")) - 1;
+				//versionNumber = Integer.valueOf((String)newProperties.get("build.number")) - 1;
 				releaseTagName = (String)newProperties.get("repo.version");
 			} catch (IOException e) {
 				logger.error("Version file is missing:{}", versionFile);
@@ -355,6 +359,16 @@ public class HostProperties {
 		this.sharedScriptEngine = this.buildScriptEngine();
 	}
 
+	public Skin getFirstActiveSkin() {
+		for (Skin skin : getSkins()) {
+			if (skin.isActive()) {
+				return skin;
+			}
+		}
+		
+		return null;
+	}
+	
 	private Properties getClasspathProperties() {
 		InputStream stream = HostProperties.class.getClassLoader().getResourceAsStream("config.properties");
 		if (stream == null) {
@@ -464,10 +478,6 @@ public class HostProperties {
 	public int getPrinterHostPort() {
 		return printerHostPort;
 	}
-
-	public String getHostGUIDir() {
-		return hostGUI;
-	}
 	
 	public File getUploadDir(){
 		return uploadDir;
@@ -513,7 +523,7 @@ public class HostProperties {
 		return networkManagerClass;
 	}
 	
-	public List<Class<Feature>> getFeatures() {
+	public Map<Class<Feature>, String> getFeatures() {
 		return featureClasses;
 	}
 	
@@ -666,6 +676,18 @@ public class HostProperties {
 		}
 	}
 	
+	public List<Skin> getSkins() {
+		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+		List<Skin> projectors;
+		try {
+			projectors = mapper.readValue(skinsStringJson, new TypeReference<List<Skin>>(){});
+			return projectors;
+		} catch (IOException e) {
+			logger.error("Problem loading skins json.", e);
+			return new ArrayList<Skin>();
+		}
+	}
+	
 	public <T extends Named> List<T> getConfigurations(File searchDirectory, String extension, Class<T> clazz) {
 		List<T> configurations = new ArrayList<T>();
 		
@@ -696,6 +718,50 @@ public class HostProperties {
 		}
 		
 		return configurations;
+	}
+	
+	public Customizer loadCustomizer(String customizerName) throws InappropriateDeviceException {
+		if (!CUSTOMIZER_DIR.exists() && !CUSTOMIZER_DIR.mkdirs()) {
+			throw new InappropriateDeviceException("Couldn't create customizer directory:" + CUSTOMIZER_DIR);
+		}
+
+		File currentFile = new File(CUSTOMIZER_DIR, customizerName + CUSTOMIZER_EXTENSION);
+		if (!currentFile.exists()) {
+			return null;
+		}
+		
+		JAXBContext jaxbContext;
+		try {
+			jaxbContext = JAXBContext.newInstance(Customizer.class);
+			Unmarshaller jaxbUnMarshaller = jaxbContext.createUnmarshaller();
+			
+			Customizer customizer = (Customizer)jaxbUnMarshaller.unmarshal(currentFile);
+			
+			logger.info("Loaded customizer for:{}", customizer);
+			return customizer;
+		} catch (JAXBException e) {
+			throw new InappropriateDeviceException("Problem marshalling customizer from:" + currentFile, e);
+		}
+	}
+	
+	public Customizer saveCustomizer(Customizer customizer) throws InappropriateDeviceException {
+		if (!CUSTOMIZER_DIR.exists() && !CUSTOMIZER_DIR.mkdirs()) {
+			throw new InappropriateDeviceException("Couldn't create customizer directory:" + CUSTOMIZER_DIR);
+		}
+
+		File currentFile = new File(CUSTOMIZER_DIR, customizer.getName() + CUSTOMIZER_EXTENSION);
+		JAXBContext jaxbContext;
+		try {
+			jaxbContext = JAXBContext.newInstance(Customizer.class);
+			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+			jaxbMarshaller.marshal(customizer, currentFile);
+			logger.info("Saved customizer for:{}", customizer);
+			NotificationManager.hostSettingsChanged();
+			return customizer;
+		} catch (JAXBException e) {
+			throw new InappropriateDeviceException("Problem marshalling customizer from:" + currentFile, e);
+		}
 	}
 	
 	public List<PrinterConfiguration> getPrinterConfigurations() {
@@ -746,7 +812,7 @@ public class HostProperties {
 				//We do not want to start the printer here
 				configurations.put(configuration.getName(), configuration);
 				
-				logger.info("Created printer configuration for:{}", configuration);
+				logger.info("Loaded printer configuration for:{}", configuration);
 			} catch (JAXBException e) {
 				logger.error("Problem marshalling printer configurations from:" + currentFile, e);
 			}
@@ -761,7 +827,7 @@ public class HostProperties {
 		return configurations.get(name);
 	}
 	
-	private static <T> T deepCopyJAXB(T object, Class<T> clazz) throws JAXBException {
+	public static <T> T deepCopyJAXB(T object, Class<T> clazz) throws JAXBException {
 	    JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
 	    JAXBElement<T> contentObject = new JAXBElement<T>(new QName(clazz.getSimpleName()), clazz, object);
 	    JAXBSource source = new JAXBSource(jaxbContext, contentObject);
@@ -866,6 +932,7 @@ public class HostProperties {
 			IOUtils.closeQuietly(stream);
 		}
 	}
+	
 	public void hostStartupComplete() {
 		Properties oneTimeInstall = new Properties();
 		oneTimeInstall.setProperty("performedOneTimeInstall", "true");

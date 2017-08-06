@@ -46,13 +46,16 @@ import javax.swing.tree.TreePath;
 import org.area515.resinprinter.slice.StlError.ErrorType;
 import org.area515.resinprinter.stl.Face3d;
 import org.area515.resinprinter.stl.Line3d;
+import org.area515.resinprinter.stl.MultiTriangleFace;
 import org.area515.resinprinter.stl.Shape3d;
 import org.area515.resinprinter.stl.Triangle3d;
 
 public class SliceBrowser extends JSplitPane {
+	private static final long serialVersionUID = 7919446439764262367L;
+
 	private PrinterTools tools;
 	
-	private int firstSlice = 1;
+	private int firstSlice = 125;
 	//95 CornerBracket_2.stl
 	//C:\\Users\\wgilster\\Desktop\\fdhgg.stl
 	//78;//"C:\\Users\\wgilster\\Documents\\ArduinoMegaEnclosure.stl";
@@ -61,7 +64,7 @@ public class SliceBrowser extends JSplitPane {
 	//"C:\\Users\\wgilster\\git\\Creation-Workshop-Host\\host\\src\\test\\resources\\org\\area515\\resinprinter\\slice\\CornerBracket_2.stl"
 	
 	//private String firstFile = "C:\\Users\\wgilster\\Documents\\fdhgg.stl";//1,200,670
-	private String firstFile = "C:\\Users\\wgilster\\uploaddir\\johnny-test pieces 1.stl";
+	private String firstFile = "C:\\Users\\wgilster\\git\\Photonic3DWes\\host\\src\\test\\resources\\org\\area515\\resinprinter\\slice\\YHD-101 Corners 121 that crashes the JVM.stl";
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\NonManifoldBox.stl";//-19
 //	private String firstFile = "C:\\Users\\wgilster\\Documents\\Fat_Guy_Statue.stl";
 //	private String firstFile = "C:\\Users\\wgilster\\AppData\\Local\\Temp\\uploaddir\\CornerBracket_2.stl";//95
@@ -132,10 +135,10 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 			getSliceTree().clearSelection();
 		}
 		
-		public List<Triangle3d> getSelectedTriangles() {
-			List<Triangle3d> triangles = new ArrayList<Triangle3d>();
+		public List<Face3d> getSelectedTriangles() {
+			List<Face3d> triangles = new ArrayList<Face3d>();
 			for (Line3d line : selectedLines) {
-				triangles.add((Triangle3d)line.getOriginatingFace());
+				triangles.add(line.getOriginatingFace());
 			}
 			
 			return triangles;
@@ -214,6 +217,12 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 							 
 							 if (face3d instanceof Triangle3d) {
 								 lineNode.add(new SliceBrowserTreeNode(slicer.translateTriangle((Triangle3d)face3d)));
+							 }
+							 
+							 if (face3d instanceof MultiTriangleFace) {
+								 for (Face3d face : ((MultiTriangleFace)face3d).getFaces()) {
+									 lineNode.add(new SliceBrowserTreeNode(slicer.translateTriangle((Triangle3d)face)));
+								 }
 							 }
 						 }
 					 }
@@ -388,6 +397,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 						newPoint.setX(e.getX());
 						joinFile.getPoints().add(newPoint);
 						SlicePointUtils.savePoints(points);
+						JOptionPane.showInputDialog("Points file saved to:", new File(SlicePointUtils.class.getResource("points.json").toURI()).getAbsolutePath());
 					} catch (IOException | URISyntaxException e1) {
 						e1.printStackTrace();
 					}
@@ -510,7 +520,7 @@ C:\Users\wgilster\Documents\ArduinoMegaEnclosureBottom.stl
 		testTriangleEqualButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				List<Triangle3d> triangles = sliceBrowserListener.getSelectedTriangles();
+				List<Face3d> triangles = sliceBrowserListener.getSelectedTriangles();
 				for (int t = 0; t < triangles.size() - 1; t++) {
 					System.out.print("Triangle:" + t + " = " + (t+1));
 					if (triangles.get(t).equals(triangles.get(t+1))) {

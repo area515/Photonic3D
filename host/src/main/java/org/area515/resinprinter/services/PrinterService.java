@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,6 +44,7 @@ import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.InkDetector;
 import org.area515.resinprinter.job.JobManagerException;
+import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.PrintJobManager;
 import org.area515.resinprinter.job.render.StubPrintFileProcessor;
@@ -544,7 +546,8 @@ public class PrinterService {
 			GraphicsOutputInterface device = null;
 			if (printer.isStarted()) {
 				device = DisplayManager.Instance().getDisplayDevice(printer.getDisplayDeviceID());
-			} else {
+			}
+			if (!printer.isStarted() || device == null) {
 				device = DisplayManager.Instance().getDisplayDevice(currentConfiguration.getMachineConfig().getOSMonitorID());
 			}
 			currentConfiguration.getSlicingProfile().setxResolution(device.getBoundary().width);
@@ -877,6 +880,7 @@ public class PrinterService {
 		StubPrintFileProcessor<Object,Object> processor = new StubPrintFileProcessor<>();
 		job.setPrintFileProcessor(processor);
 		job.setPrinter(printer);
+		job.initializePrintJob(CompletableFuture.completedFuture(JobStatus.Ready));
 		return job;
 	}
 	/*Fix the two places where we assign icons to all of the image types in javascript

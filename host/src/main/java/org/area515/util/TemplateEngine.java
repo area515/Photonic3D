@@ -2,10 +2,13 @@ package org.area515.util;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -13,6 +16,7 @@ import java.util.Map;
 
 import javax.script.Bindings;
 import javax.script.CompiledScript;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
@@ -94,16 +98,22 @@ public class TemplateEngine {
 		root.put("now", new Date());
 		root.put("shutterOpen", printer.isShutterOpen());
 		root.put("bulbHours", printer.getCachedBulbHours());
-		root.put("CURSLICE", job.getCurrentSlice());
+		root.put("CURSLICE", job.getRenderingSlice());
 		root.put("LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
 		root.put("ZDir", printer.getConfiguration().getSlicingProfile().getDirection().getVector());
-		root.put("ZLiftRate", job.getZLiftSpeed());
-		root.put("ZLiftDist", job.getZLiftDistance());
-		Double buildArea = job.getPrintFileProcessor().getBuildAreaMM(job);
+//TODO: Create a retract calculator
+//TODO: Create a computed ZLiftSpeed
+//TODO: Create a computed ZLiftDistance
+//TODO: What about race conditions on these varaibles?
+root.put("ZLiftRate", job.getZLiftSpeed());
+root.put("ZLiftDist", job.getZLiftDistance());
+Double buildArea = job.getPrintFileProcessor().getBuildAreaMM(job);
 		root.put("buildAreaMM", buildArea == null || buildArea < 0?null:buildArea);
 		root.put("LayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getExposureTime());
 		root.put("FirstLayerTime", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getFirstLayerExposureTime());
 		root.put("NumFirstLayers", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getNumberOfFirstLayers());
+//TODO: Computed Exposure Time
+//TODO: get all other computed values
 		root.put("SlideTiltVal", printer.getConfiguration().getSlicingProfile().getSlideTiltValue());
 		root.put("buildPlatformXPixels", printer.getConfiguration().getSlicingProfile().getxResolution());
 		root.put("buildPlatformYPixels", printer.getConfiguration().getSlicingProfile().getyResolution());
@@ -146,8 +156,8 @@ public class TemplateEngine {
 	}
 
 	public static Object runScriptInImagingContext(
-			BufferedImage imageToDisplay, 
-			BufferedImage targetImage, 
+			BufferedImage platformImage, 
+			BufferedImage printImage, 
 			PrintJob printJob, 
 			Printer printer, 
 			ScriptEngine scriptEngine, 
@@ -156,35 +166,46 @@ public class TemplateEngine {
 			String scriptName, 
 			boolean clearMasterImage) throws ScriptException {
 		
-		Graphics graphics = imageToDisplay.getGraphics();
+		Graphics graphics = platformImage.getGraphics();
 		if (clearMasterImage) {
 			graphics.setColor(Color.black);
-			graphics.fillRect(0, 0, imageToDisplay.getWidth(), imageToDisplay.getHeight());
+			graphics.fillRect(0, 0, platformImage.getWidth(), platformImage.getHeight());
 		}
 		graphics.setColor(Color.white);
 		
 		if (overrides == null) {
 			overrides = new HashMap<>();
 		}
-		overrides.put("buildPlatformImage", imageToDisplay);
+		overrides.put("buildPlatformImage", platformImage);
 		overrides.put("buildPlatformGraphics", graphics);
-		overrides.put("buildPlatformRaster", imageToDisplay.getRaster());
-		overrides.put("printImage", targetImage);
-		overrides.put("printGraphics", targetImage.getGraphics());
-		overrides.put("printRaster", targetImage.getRaster());
-		overrides.put("centerX", imageToDisplay.getWidth() / 2);//int centerX = aid.xResolution / 2;
-		overrides.put("centerY", imageToDisplay.getHeight() / 2);//int centerY = aid.yResolution / 2;
+		overrides.put("buildPlatformRaster", platformImage.getRaster());
+		overrides.put("printImage", printImage);
+		overrides.put("printGraphics", printImage.getGraphics());
+		overrides.put("printRaster", printImage.getRaster());
+		overrides.put("centerX", platformImage.getWidth() / 2);//int centerX = aid.xResolution / 2;
+		overrides.put("centerY", platformImage.getHeight() / 2);//int centerY = aid.yResolution / 2;
+		
+		Bindings bindings = scriptEngine.getBindings(ScriptContext.ENGINE_SCOPE);
+		if (!bindings.containsKey("exposureTimers")) {
+			ArrayList<?> timers = new ArrayList<>();
+			bindings.put("exposureTimers", timers);
+		}
 
-		return TemplateEngine.runScript(printJob, printer, scriptEngine, calculatorScript, scriptName, overrides);
+		if (!bindings.containsKey("printableShape")) {
+			bindings.put("printableShape", new Rectangle(0, 0, printImage.getWidth(), printImage.getHeight()));
+		}
+		
+		Object returnValue = TemplateEngine.runScript(printJob, printer, scriptEngine, calculatorScript, scriptName, overrides);
+		return returnValue;
 	}
 
 	public static Object runScript(PrintJob job, Printer printer, ScriptEngine engine, String script, String scriptName, Map<String, Object> overrides) throws ScriptException {
-		Bindings bindings = engine.createBindings();
+		Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
 		bindings.put("now", new Date());
 		bindings.put("$shutterOpen", printer.isShutterOpen());
 		Integer bulbHours = printer.getCachedBulbHours();
 		bindings.put("$bulbHours", bulbHours == null || bulbHours < 0?Double.NaN:new Double(bulbHours));
-		bindings.put("$CURSLICE", job.getCurrentSlice());
+		bindings.put("$CURSLICE", job.getRenderingSlice());
 		bindings.put("$LayerThickness", printer.getConfiguration().getSlicingProfile().getSelectedInkConfig().getSliceHeight());
 		bindings.put("$ZDir", printer.getConfiguration().getSlicingProfile().getDirection().getVector());
 		bindings.put("$ZLiftRate", job.getZLiftSpeed());
@@ -203,7 +224,7 @@ public class TemplateEngine {
 		bindings.put("job", job);
 		bindings.put("printer", printer);
 		bindings.put(ScriptEngine.FILENAME, scriptName);
-
+		
 		if (overrides != null) {
 			Iterator<Map.Entry<String, Object>> entries = overrides.entrySet().iterator();
 			while (entries.hasNext()) {

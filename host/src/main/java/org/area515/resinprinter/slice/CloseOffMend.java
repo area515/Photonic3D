@@ -15,10 +15,11 @@ public class CloseOffMend implements PolygonMendingMechanism {
 				  Point3d point1 = line1.getPointOne();
 				  Point3d point2 = line2.getPointTwo();
 				  Point3d normal;
-				  if (point1.x < point2.x) {
-					  normal = new Point3d(point2.y - point1.y, point2.x - point1.x, line1.getNormal().z - line2.getNormal().z);
-				  } else {
+				  if ((Math.signum(line1.getPointOne().x - line1.getPointTwo().x) == Math.signum(line1.getNormal().y) && Math.signum(line1.getNormal().y) != 0) ||
+					  (Math.signum(line1.getPointOne().y - line1.getPointTwo().y) == Math.signum(line1.getNormal().x))) {
 					  normal = new Point3d(point1.y - point2.y, point1.x - point2.x, line1.getNormal().z - line2.getNormal().z);
+				  } else {
+					  normal = new Point3d(point2.y - point1.y, point2.x - point1.x, line1.getNormal().z - line2.getNormal().z);
 				  }
 				  
 				  Line3d line = new Line3d(point2, point1, normal, null, false);

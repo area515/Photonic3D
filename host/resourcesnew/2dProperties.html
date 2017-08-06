@@ -54,6 +54,15 @@
 				<div class="list-group-item">
 					<i class="fa fa-2x fa-edit pull-left"></i>
 					<h4>Base Platform Calculator</h4>
+					<button class="btn btn-primary btn-sm" ng-click="printersController.writePegExposureCode()">
+						<b class="fa fa-thumbs-o-up"></b> 
+						<span>Peg Exposure Calibration</span>
+					</button>
+					<button class="btn btn-primary btn-sm" ng-click="printersController.writeHBridgeCode()">
+						<b class="fa fa-thumbs-o-up"></b> 
+						<span>H-Bridge Exposure Calibration</span>
+					</button>
+					
 					<div class="input-group"
 						cwh-testscript
 						placeholder="(no return value required yet)"

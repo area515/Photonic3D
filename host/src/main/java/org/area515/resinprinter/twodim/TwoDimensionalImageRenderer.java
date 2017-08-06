@@ -13,6 +13,7 @@ import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.PrintJob;
 import org.area515.resinprinter.job.render.CurrentImageRenderer;
+import org.area515.resinprinter.job.render.RenderingContext;
 import org.area515.resinprinter.printer.SlicingProfile;
 import org.area515.resinprinter.server.Main;
 
@@ -23,34 +24,46 @@ public abstract class TwoDimensionalImageRenderer extends CurrentImageRenderer {
 		super(aid, processor, imageIndexToBuild);
 		newImage = startImageLoad(aid.printJob);
 	}
-
+	
+	protected BufferedImage waitForImage() throws JobManagerException {
+		try {
+			return newImage.get();
+		} catch (InterruptedException e) {
+			throw new JobManagerException("Interrupted while waiting to load image", e);
+		} catch (ExecutionException e) {
+			throw new JobManagerException("Failure occurred while loading image", e);
+		}
+	}
+	
+	//TODO: There is a race condition that causes this method to be called twice. This is awefully wasteful!
 	private Future<BufferedImage> startImageLoad(final PrintJob printJob) {
 		return Main.GLOBAL_EXECUTOR.submit(new Callable<BufferedImage>() {
 			@Override
 			public BufferedImage call() throws Exception {
+				RenderingContext twoDimensionalImage = aid.cache.getOrCreateIfMissing(imageIndexToBuild);
+				//This is a short circuit to stop from loading the image from file every time a renderer is created.
+				if (twoDimensionalImage.getPreTransformedImage() != null) {
+					return null;
+				}
+				
 				return loadImageFromFile(printJob);
 			}
 		});
 	}
 	
-	public final BufferedImage renderImage(BufferedImage imageToDisplay) throws JobManagerException {
+	public BufferedImage renderImage(BufferedImage imageToDisplay) throws JobManagerException {
 		if (imageToDisplay != null) {
 			return imageToDisplay;
 		}
 		
-		try {
-			imageToDisplay = scaleImageAndDetectEdges(aid.printJob);
-		} catch (InterruptedException |ExecutionException e) {
-			throw new JobManagerException("Couldn't load image", e);
-		}
-
-		
+		imageToDisplay = scaleImageAndDetectEdges(aid.printJob);
 		return imageToDisplay;
 	}
 
-	public BufferedImage scaleImageAndDetectEdges(PrintJob printJob) throws InterruptedException, ExecutionException {
+	public BufferedImage scaleImageAndDetectEdges(PrintJob printJob) throws JobManagerException {
 		SlicingProfile profile = printJob.getPrinter().getConfiguration().getSlicingProfile();
-		BufferedImage image = newImage.get();
+		BufferedImage image = waitForImage();
+		
 		Boolean scaleToFit = printJob.getPrinter().getConfiguration().getSlicingProfile().getTwoDimensionalSettings().isScaleImageToFitPrintArea();
 		if (scaleToFit != null && scaleToFit) {
 			int actualWidth = profile.getxResolution() - image.getWidth();

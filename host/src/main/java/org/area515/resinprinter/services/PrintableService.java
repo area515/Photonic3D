@@ -198,7 +198,7 @@ public class PrintableService {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 400, message = SwaggerMetadata.USER_UNDERSTANDABLE_ERROR),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
-	@POST
+	@GET
 	@Path("/downloadPrintableFile/{filename}")
 	@Produces("application/octet-stream")
 	public StreamingOutput downloadPrintableFile(@PathParam("filename")String fileName) {

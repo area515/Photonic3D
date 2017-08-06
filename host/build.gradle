@@ -26,8 +26,7 @@ dependencies {
     exclude module: 'jsr311-api'
   }
 
-  //compile 'org.slf4j:log4j-over-slf4j:1.7.22'
-  //compile 'org.slf4j:jul-to-slf4j:1.7.22'
+  compile 'commons-beanutils:commons-beanutils:1.9.3'
   compile 'com.pi4j:pi4j-core:1.1'
   compile 'net.java.dev.jna:jna:4.2.2'
   compile 'org.apache.xmlgraphics:xmlgraphics-commons:1.5'
@@ -57,9 +56,9 @@ dependencies {
 
   compile 'com.jcraft:jsch:0.1.53'
   compile 'org.scream3r:jssc:2.8.0'
-  compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.8'
-  compile 'org.apache.logging.log4j:log4j-api:2.8'
-  compile 'org.apache.logging.log4j:log4j-core:2.8'
+  compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.8.2'
+  compile 'org.apache.logging.log4j:log4j-api:2.8.2'
+  compile 'org.apache.logging.log4j:log4j-core:2.8.2'
 
   compile 'org.apache.james:apache-mime4j:0.6.1'
 

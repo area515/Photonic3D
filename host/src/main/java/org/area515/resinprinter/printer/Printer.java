@@ -20,7 +20,7 @@ import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Printer {
+public class Printer implements Named {
     private static final Logger logger = LogManager.getLogger();
 	private PrinterConfiguration configuration;
 	
@@ -77,6 +77,9 @@ public class Printer {
 	@JsonIgnore
 	public String getName() {
 		return configuration.getName();
+	}
+	public void setName(String name) {
+		configuration.setName(name);
 	}
 	
 	@XmlTransient
@@ -176,7 +179,7 @@ public class Printer {
 	
 	public void initializeAndAssignGraphicsOutputInterface(final GraphicsOutputInterface device, final String displayDeviceID) {
 		this.displayDeviceID = displayDeviceID;
-		this.refreshFrame = device.initializeDisplay(displayDeviceID);
+		this.refreshFrame = device.initializeDisplay(displayDeviceID, getConfiguration());
 		
 		Rectangle screenSize = refreshFrame.getBoundary();
 		getConfiguration().getMachineConfig().getMonitorDriverConfig().setDLP_X_Res(screenSize.width);
@@ -199,8 +202,8 @@ public class Printer {
 		refreshFrame.showGridImage(pixels);
 	}
 	
-	public void showImage(BufferedImage image) {
-		refreshFrame.showImage(image);
+	public void showImage(BufferedImage image, boolean performFullUpdate) {
+		refreshFrame.showImage(image, performFullUpdate);
 	}
 	
 	@JsonIgnore

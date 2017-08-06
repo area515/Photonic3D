@@ -24,7 +24,7 @@
 						</div>
 					</div>
 					<div class="list-group">
-						<a ng-class="{active:printable.name == printablesController.currentPrintable.name}" ng-repeat="printable in printablesController.printables"
+						<a ng-class="{active:printable.name == printablesController.currentPrintable.name && printable.extension == printablesController.currentPrintable.extension}" ng-repeat="printable in printablesController.printables"
 							class="list-group-item"
 				 			ng-click="printablesController.changeCurrentPrintable(printable)">
 								<i class="pull-left fa fa-2x" ng-class="printablesController.getPrintableIconClass(printable)"></i>
@@ -251,10 +251,14 @@
 					<div class="list-group">
 						<div class="list-group-item">
 							<i class="fa fa-2x fa-circle pull-left"></i>
-							<h4>Drain hole</h4>
+							<h4>Annotations</h4>
 							<button class="btn btn-primary btn-sm" ng-click="printablesController.writeDrainHoldCode()">
 								<b class="fa fa-thumbs-o-up"></b> 
-								<span>Create</span>
+								<span>Drain Hole</span>
+							</button>
+							<button class="btn btn-primary btn-sm" ng-click="printablesController.writeCenteredTextCode()">
+								<b class="fa fa-thumbs-o-up"></b> 
+								<span>Serial Number</span>
 							</button>
 						</div>
 						
@@ -263,16 +267,28 @@
 							<h4>Duplication grid</h4>
 							<button class="btn btn-primary btn-sm" ng-click="printablesController.writeDuplicationGridCode()">
 								<b class="fa fa-thumbs-o-up"></b>
-								<span>Create</span>
+								<span>Normal</span>
+							</button>
+							<button class="btn btn-primary btn-sm" ng-click="printablesController.writeDuplicationGridWithVariableExposureTimeCode()">
+								<b class="fa fa-thumbs-o-up"></b>
+								<span>Variable Exposure Time</span>
+							</button>				
+							<button class="btn btn-primary btn-sm" ng-click="printablesController.writeDuplicationGridWithSerialNumber()">
+								<b class="fa fa-thumbs-o-up"></b>
+								<span>With Serial Number</span>
 							</button>
 						</div>
 						
 						<div class="list-group-item">
-				 			<i class="fa fa-2x fa-retweet pull-left"></i>
-							<h4>3D spiral</h4>
+				 			<i class="fa fa-2x fa-puzzle-piece pull-left"></i>
+							<h4>Misc</h4>
 							<button class="btn btn-primary btn-sm" ng-click="printablesController.write3dTwistCode()">
-								<b class="fa fa-thumbs-o-up"></b> 
-								<span>Create</span>
+								<b class="fa fa-retweet"></b> 
+								<span>3d Spiral</span>
+							</button> 
+							<button class="btn btn-primary btn-sm" ng-click="printablesController.correctAspectRatio()">
+								<b class="fa fa-chain"></b> 
+								<span>Correct Aspect Ratio</span>
 							</button> 
 						</div>
 						

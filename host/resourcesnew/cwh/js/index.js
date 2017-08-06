@@ -7,6 +7,20 @@
 		    };
 		}]);
 		
+		cwhApp.directive('onEnter', function () {
+		    return function (scope, element, attrs) {
+		        element.bind("keydown keypress", function (event) {
+		            if(event.which === 13) {
+		                scope.$apply(function (){
+		                    scope.$eval(attrs.onEnter);
+		                });
+
+		                event.preventDefault();
+		            }
+		        });
+		    };
+		});
+		
 		cwhApp.factory('photonicUtils', ['$http', '$rootScope', function($http, $rootScope) {
 	        return {
 	        	previewExternalStateId:firstCacheId,
@@ -58,6 +72,9 @@
 	    			}
 	    			if (processorContainer.printFileProcessor.friendlyName === 'Scalable Vector Graphics') {
 	    				return "fa-puzzle-piece";
+	    			}
+	    			if (processorContainer.printFileProcessor.friendlyName === 'Coin') {
+	    				return "fa-user-circle";
 	    			}
 	    			return "fa-question-circle";
 	    		},
