@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiResponses;
 import java.util.List;
 
 import javax.annotation.security.RolesAllowed;
+import javax.jws.WebParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -126,9 +127,43 @@ public class SettingsService {
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
-    @PUT
+    @GET
 	@Path("skins/list")
 	public List<Skin> getSkins() {
 		return HostProperties.Instance().getSkins();
+	}
+    
+    @ApiOperation(value="This method activates one of the GUI skins available on the machine")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+    @PUT
+	@Path("skins/activate/{skinName}")
+	public void activateSkin(@WebParam(name="skinName") String skinName) {
+    	List<Skin> skins = HostProperties.Instance().getSkins();
+    	for (Skin skin : skins) {
+    		if (skin.getName().equals(skinName)) {
+    			skin.setActive(true);
+    		}
+    	}
+    	
+		HostProperties.Instance().saveSkins(skins);
+	}
+    
+    @ApiOperation(value="This method deactivates one of the GUI skins available on the machine")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+    @PUT
+	@Path("skins/deactivate/{skinName}")
+	public void deactivateSkin(@WebParam(name="skinName") String skinName) {
+    	List<Skin> skins = HostProperties.Instance().getSkins();
+    	for (Skin skin : skins) {
+    		if (skin.getName().equals(skinName)) {
+    			skin.setActive(false);
+    		}
+    	}
+    	
+		HostProperties.Instance().saveSkins(skins);
 	}
 }

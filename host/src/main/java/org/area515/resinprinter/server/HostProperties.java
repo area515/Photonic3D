@@ -678,13 +678,22 @@ public class HostProperties {
 	
 	public List<Skin> getSkins() {
 		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
-		List<Skin> projectors;
 		try {
-			projectors = mapper.readValue(skinsStringJson, new TypeReference<List<Skin>>(){});
-			return projectors;
+			List<Skin> skins = mapper.readValue(skinsStringJson, new TypeReference<List<Skin>>(){});
+			return skins;
 		} catch (IOException e) {
 			logger.error("Problem loading skins json.", e);
 			return new ArrayList<Skin>();
+		}
+	}
+	
+	public void saveSkins(List<Skin> skins) {
+		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+		try {
+			skinsStringJson = mapper.writeValueAsString(skins);
+			saveProperty("skins", skinsStringJson);
+		} catch (IOException e) {
+			logger.error("Problem saving skins json.", e);
 		}
 	}
 	
