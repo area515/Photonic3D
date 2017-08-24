@@ -33,7 +33,35 @@
 					<span ng-include="'cardFooter.html'"></span>
 				</div>
 			</div>
+	
+			<div class="panel panel-default">
+				<div class="panel-heading clearfix">
+					<i class="fa fa-2x fa-paint-brush pull-left"></i>
+					<h4>Skin Setup </h4>
+				</div>
+
+				<form class="list-group">
+				<div class="list-group-item" ng-repeat="skins in availableSkins" >
+					<p class="list-group-item-">
+						name: {{skins.name}}
+					</p>
+					<p class="list-group-item-text">
+						Resource base: {{skins.resourceBase}}
+					</p>
+					<p class="list-group-item-text">
+						 	<input type="checkbox" id="{{skins.name}}-checkbox" ng-checked="{{skins.active}}" ng-click="settingsController.changeSkin(skins.name)"> Active: {{skins.active}}
+					</p>
+					
+				</div>
+				</form>
+
+				<div class="panel-footer">
+					<span ng-include="'cardFooter.html'"></span>
+				</div>
+			</div>
 	</div>
+
+
 	<div class="col-sm-4 bootcards-list" id="list">
 		<div class="panel panel-default">
 			<div class="panel-heading clearfix">
