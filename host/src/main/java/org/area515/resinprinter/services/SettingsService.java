@@ -193,7 +193,7 @@ public class SettingsService {
             @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
     @PUT
 	@Path("skins")
-	public void createSkin(Skin skin) {
+	public void upsertSkin(Skin skin) {
     	List<Skin> skins = HostProperties.Instance().getSkins();
     	boolean skinFound = false;
     	for (int t = 0; t < skins.size(); t++) {

@@ -61,20 +61,10 @@
 		    )
 		};
 		
-		this.changeSkin = function changeSkin(skinName){
-			console.log(skinName);
-			  if (document.getElementById(skinName + "-checkbox").checked) 
-			  {
-			     $http.put("services/settings/skins/activate/" + skinName, skinName)
-				    .then(function () {
-				    controller.loadSkins();
-		            })
-			  } else {
-			  	$http.put("services/settings/skins/deactivate/" + skinName, skinName)
-					.then(function () {
-				    controller.loadSkins();
-		        })
-			  }
+		this.saveSkin = function saveSkin(skin){
+		     $http.put("services/settings/skins", skin).then(function () {
+		    	 controller.loadSkins();
+	         })
 		};
 		
 		//TODO: this needs to be attached to more than just the cancel button so that we can kill the web socket.

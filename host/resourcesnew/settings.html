@@ -41,17 +41,16 @@
 				</div>
 
 				<form class="list-group">
-				<div class="list-group-item" ng-repeat="skins in availableSkins" >
+				<div class="list-group-item" ng-repeat="skin in availableSkins" >
 					<p class="list-group-item-">
-						name: {{skins.name}}
+						Name: {{skin.name}}
 					</p>
 					<p class="list-group-item-text">
-						Resource base: {{skins.resourceBase}}
+						Resource base: {{skin.resourceBase}}
 					</p>
 					<p class="list-group-item-text">
-						 	<input type="checkbox" id="{{skins.name}}-checkbox" ng-checked="{{skins.active}}" ng-click="settingsController.changeSkin(skins.name)"> Active: {{skins.active}}
+						<input type="checkbox" ng-model="skin.active" ng-click="settingsController.saveSkin(skin)">Active
 					</p>
-					
 				</div>
 				</form>
 
