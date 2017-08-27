@@ -332,7 +332,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		if (extractDirectory.exists()) {
 			deleteDirectory(extractDirectory);
 		}
-
+		
 		try {
 			unpackDir(processingFile);
 		} catch (IOException e) {

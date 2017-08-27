@@ -3,7 +3,6 @@ package org.area515.resinprinter.job;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.SortedMap;
 import java.util.concurrent.Future;
@@ -11,7 +10,6 @@ import java.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.job.render.RenderingContext;
-import org.area515.resinprinter.projector.ProjectorModel;
 import org.area515.util.DynamicJSonSettings;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -61,11 +59,16 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 	}
 	
 	@Override
+	public void prepareEnvironment(File processingFile, PrintJob printJob) throws JobManagerException {
+		super.prepareEnvironment(processingFile, printJob);
+		
+		loadContributionsFromSlacerFile(printJob);
+	}
+	
+	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
 		try {
 			DataAid dataAid = initializeJobCacheWithDataAid(printJob);
-
-			loadContributionsFromSlacerFile(printJob);
 			
 			SortedMap<String, File> imageFiles = findImages(printJob.getJobFile());
 
