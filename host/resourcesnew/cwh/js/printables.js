@@ -9,7 +9,7 @@
 		this.supportedFileTypes = null;
 		this.currentPreviewImg = null;
 		this.errorMsg = null;
-		this.projectImage = false;
+		this.projectImage = "fa-sun-o";
 		
 		this.handlePreviewError = function handlePreviewError() {
 			var printableName = encodeURIComponent(controller.currentPrintable.name);
@@ -153,9 +153,14 @@
 			this.saveCustomizer();
 		}
 		
-		this.setProjectImage = function setProjectImage(projectImage) {
+		this.setProjectImage = function setProjectImage() {
 			var serviceCall = null;
-			if (projectImage) {
+			var oldValue = null;
+			if (controller.projectImage != "fa-refresh fa-spin") {
+				oldValue = controller.projectImage;
+				controller.projectImage = "fa-refresh fa-spin";
+			}
+			if (oldValue == "fa-sun-o") {
 				serviceCall = "services/customizers/projectCustomizerOnPrinter/" + encodeURIComponent(controller.currentCustomizer.name);
 			} else {
 				if (controller.currentPrinter == null) {
@@ -166,8 +171,16 @@
 			}
 			
 			$http.get(serviceCall).success(function (data) {
-	        	controller.projectImage = projectImage;
-	        });
+	        	if (data.command == "blankscreenshown") {
+					controller.projectImage = "fa-sun-o";
+	        	} else {
+	        		controller.projectImage = "fa-certificate";
+	        	}
+	        }).error(function (data, status, headers, config, statusText) {
+	        	if (oldValue != null) {
+	        		controller.projectImage = oldValue;
+	        	}
+			});
 		}
 
 		this.resetTranslation = function resetTranslation() {
@@ -231,6 +244,10 @@
     		})
 	    };
 	    
+		$scope.downloadPrintable = function downloadPrintable(printableName) {
+        	$window.location.href = "services/printableService/downloadPrintableFile/" + encodeURIComponent(printableName);
+        }
+
 		//TODO: When we get an upload complete message, we need to refresh file list...
 		this.showUpload = function showUpload() {
 			var fileChosenModal = $uibModal.open({

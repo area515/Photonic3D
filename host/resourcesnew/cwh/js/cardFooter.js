@@ -12,6 +12,23 @@
 	        		})
 		}
 		
+		$scope.restorePhotonic = function restorePhotonic() {
+			var fileChosenModal = $uibModal.open({
+		        animation: true,
+		        templateUrl: 'upload.html',
+		        controller: 'UploadFileController',
+		        size: "lg",
+		        resolve: {
+		        	title: function () {return "Restore Photonic3D";},
+		        	supportedFileTypes: function () {return null},
+		        	getRestfulFileUploadURL: function () {return function (filename) {return '/services/machineService/restoreFromBackup';}},
+		        	getRestfulURLUploadURL: null
+		        }
+			});
+			
+			fileChosenModal.result.then(function (uploadedPrintable) {this.refreshPrintables()});
+		}
+		
 		$scope.downloadDiagnostic = function downloadDiagnostic() {
         	$window.location.href = "services/machine/downloadDiagnostic/LogBundle.zip";
         }

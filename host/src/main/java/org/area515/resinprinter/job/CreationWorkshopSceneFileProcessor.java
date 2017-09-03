@@ -328,15 +328,37 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 			}
 		}
 		
-		File extractDirectory = buildExtractionDirectory(processingFile.getName());
-		if (extractDirectory.exists()) {
-			deleteDirectory(extractDirectory);
-		}
-		
-		try {
-			unpackDir(processingFile);
-		} catch (IOException e) {
-			throw new JobManagerException("Couldn't unpack new job:" + processingFile + " into working directory:" + extractDirectory, e);
+		synchronized (processingFile.getAbsolutePath().intern()) {
+			File extractDirectory = buildExtractionDirectory(processingFile.getName());
+			long oldCRC = 0;
+			File crc32File = new File(extractDirectory, "CRC32");
+			if (crc32File.exists()) {
+				try {
+					oldCRC = Long.parseLong(FileUtils.readFileToString(crc32File));
+				} catch (IOException e) {
+					throw new JobManagerException("Couldn't compute CRC for:" + processingFile, e);
+				}
+			}
+	
+			try {
+				long newCRC = FileUtils.checksumCRC32(processingFile);
+				if (oldCRC == newCRC) {
+					logger.info("CRC checks match, reusing old structure:" + processingFile);
+					return;
+				}
+	
+				deleteDirectory(extractDirectory);
+				extractDirectory.mkdirs();
+				FileUtils.writeStringToFile(crc32File, newCRC + "");
+			} catch (IOException e) {
+				logger.error(e);
+			}
+	
+			try {
+				unpackDir(processingFile);
+			} catch (IOException e) {
+				throw new JobManagerException("Couldn't unpack new job:" + processingFile + " into working directory:" + extractDirectory, e);
+			}
 		}
 	}
 
