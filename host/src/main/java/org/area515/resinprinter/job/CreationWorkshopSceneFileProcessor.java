@@ -357,7 +357,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 			try {
 				unpackDir(processingFile);
 			} catch (IOException e) {
-				throw new JobManagerException("Couldn't unpack new job:" + processingFile + " into working directory:" + extractDirectory, e);
+				throw new JobManagerException("Couldn't unpack new job:" + processingFile + " into working directory:" + extractDirectory + " due to:" + e.getMessage(), e);
 			}
 		}
 	}

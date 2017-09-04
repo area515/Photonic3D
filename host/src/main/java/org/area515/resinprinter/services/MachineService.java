@@ -246,6 +246,7 @@ public class MachineService {
 	@POST
 	@Path("/restoreFromBackup")
 	@Consumes("application/octet-stream")
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response restoreFromBackup(InputStream istream) {
     	FileOutputStream output = null;
 		ZipFile zipFile = null;
@@ -306,11 +307,11 @@ public class MachineService {
 				
 				try {stream.close();} catch (IOException e) {}
 			}
-			return Response.status(Response.Status.OK).entity("Success").build();
+			return Response.status(Response.Status.OK).entity(new MachineResponse("Photonic3DRestore", true, "Please restart Photonic3D for these settings to take effect.")).build();
     	} catch (IOException e) {
 			String failure = "IO Failure while building temporary zip file.";
 			logger.error(failure, e);
-			return Response.status(Response.Status.BAD_REQUEST).entity(failure).build();
+			return Response.status(Response.Status.BAD_REQUEST).entity(new MachineResponse("Photonic3DRestore", false, failure)).build();
     	} finally {
 			if (output != null) {
 				try {output.close();} catch (IOException e) {}

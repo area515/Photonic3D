@@ -19,14 +19,16 @@
 		        controller: 'UploadFileController',
 		        size: "lg",
 		        resolve: {
-		        	title: function () {return "WARNING!!! Restore Photonic3D to Backup";},
+		        	title: function () {return "WARNING!!! Restore Photonic3D from Backup";},
 		        	supportedFileTypes: function () {return null},
-		        	getRestfulFileUploadURL: function () {return function (filename) {return '/services/machineService/restoreFromBackup';}},
+		        	getRestfulFileUploadURL: function () {return function (filename) {return '/services/machine/restoreFromBackup';}},
 		        	getRestfulURLUploadURL: null
 		        }
 			});
 			
-			fileChosenModal.result.then(function (uploadedPrintable) {this.refreshPrintables()});
+			fileChosenModal.closed.then(function (uploadedFile) {
+				alert("Please restart Photonic3D to have your new settings take effect.");
+			});
 		}
 		
 		$scope.downloadDiagnostic = function downloadDiagnostic() {
