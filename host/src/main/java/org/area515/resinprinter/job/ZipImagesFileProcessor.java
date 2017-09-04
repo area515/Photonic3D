@@ -67,8 +67,10 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 	
 	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
+		boolean footerAttempted = false;
+		DataAid dataAid = null;
 		try {
-			DataAid dataAid = initializeJobCacheWithDataAid(printJob);
+			dataAid = initializeJobCacheWithDataAid(printJob);
 			
 			SortedMap<String, File> imageFiles = findImages(printJob.getJobFile());
 
@@ -118,9 +120,19 @@ public class ZipImagesFileProcessor extends CreationWorkshopSceneFileProcessor {
 				} while (slicePending);
 			}
 
-			return performFooter(dataAid);
+			try {
+				return performFooter(dataAid);
+			} finally {
+				footerAttempted = true;
+			}
 		} finally {
-			clearDataAid(printJob);
+			try {
+				if (!footerAttempted && dataAid != null) {
+					performFooter(dataAid);
+				}
+			} finally {
+				clearDataAid(printJob);
+			}
 		}
 	}
 	

@@ -1,7 +1,7 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
 
-	cwhApp.controller("CardFooter", function ($scope, $http, $window) {
+	cwhApp.controller("CardFooter", function ($scope, $http, $window, $uibModal) {
 		$scope.executeDiagnostic = function executeDiagnostic() {
 	        $http.get("services/machine/executeDiagnostic").success(
 	        		function (data) {
@@ -19,7 +19,7 @@
 		        controller: 'UploadFileController',
 		        size: "lg",
 		        resolve: {
-		        	title: function () {return "Restore Photonic3D";},
+		        	title: function () {return "WARNING!!! Restore Photonic3D to Backup";},
 		        	supportedFileTypes: function () {return null},
 		        	getRestfulFileUploadURL: function () {return function (filename) {return '/services/machineService/restoreFromBackup';}},
 		        	getRestfulURLUploadURL: null

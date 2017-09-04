@@ -20,6 +20,7 @@ import org.area515.resinprinter.job.AbstractPrintFileProcessor;
 import org.area515.resinprinter.job.JobManagerException;
 import org.area515.resinprinter.job.JobStatus;
 import org.area515.resinprinter.job.PrintJob;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.render.CurrentImageRenderer;
 import org.area515.resinprinter.job.render.RenderingContext;
 import org.area515.resinprinter.server.Main;
@@ -59,8 +60,8 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 
 	@Override
 	public JobStatus processFile(PrintJob printJob) throws Exception {
-		final String MAIN_IMAGE = "lastExtrusionImage";
-
+		boolean footerAttempted = false;
+		DataAid dataAid = null;
 		try {
 			MinerDataAid data = (MinerDataAid)getDataAid(printJob);
 			MinerCube cube = data.cube.get();
@@ -112,9 +113,19 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 				}
 			}
 			
-			return performFooter(data);
+			try {
+				return performFooter(dataAid);
+			} finally {
+				footerAttempted = true;
+			}
 		} finally {
-			clearDataAid(printJob);
+			try {
+				if (!footerAttempted && dataAid != null) {
+					performFooter(dataAid);
+				}
+			} finally {
+				clearDataAid(printJob);
+			}
 		}
 	}
 	

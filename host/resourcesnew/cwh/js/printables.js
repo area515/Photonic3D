@@ -1,6 +1,6 @@
 (function() {
 	var cwhApp = angular.module('cwhApp');
-	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', 'cwhWebSocket', 'photonicUtils', function ($scope, $http, $location, $uibModal, $anchorScroll, cwhWebSocket, photonicUtils) {
+	cwhApp.controller("PrintablesController", ['$scope', '$http', '$location', '$uibModal', '$anchorScroll', '$window', 'cwhWebSocket', 'photonicUtils', function ($scope, $http, $location, $uibModal, $anchorScroll, $window, cwhWebSocket, photonicUtils) {
 		controller = this;
 	
 		this.currentPrintable = null;
@@ -244,8 +244,8 @@
     		})
 	    };
 	    
-		$scope.downloadPrintable = function downloadPrintable(printableName) {
-        	$window.location.href = "services/printableService/downloadPrintableFile/" + encodeURIComponent(printableName);
+		$scope.downloadPrintable = function downloadPrintable(printable) {
+        	$window.location.href = "services/printables/downloadPrintableFile/" + encodeURIComponent(printable.name + "." + printable.extension);
         }
 
 		//TODO: When we get an upload complete message, we need to refresh file list...

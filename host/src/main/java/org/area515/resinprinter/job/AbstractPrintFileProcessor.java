@@ -25,6 +25,7 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.area515.resinprinter.display.ControlFlow;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.exception.NoPrinterFoundException;
 import org.area515.resinprinter.exception.SliceHandlingException;
@@ -484,7 +485,9 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 			throw new IllegalStateException("initializeDataAid must be called before this method");
 		}
 
-		if (!aid.printer.isPrintActive()) {
+		if (!(aid.configuration.getMachineConfig().getFooterExecutionHandling() == ControlFlow.Always ||
+			(aid.printer.isPrintActive() && aid.configuration.getMachineConfig().getFooterExecutionHandling() == ControlFlow.OnSuccess) ||
+			(aid.printer.isPrintInProgress() && aid.configuration.getMachineConfig().getFooterExecutionHandling() == ControlFlow.OnSuccessAndCancellation))) {
 			return aid.printer.getStatus();
 		}
 		

@@ -504,6 +504,9 @@
 		                           {name:"Visual Ink Detector", className:"org.area515.resinprinter.inkdetection.visual.VisualPrintMaterialDetector"},
 		                           {name:"Digital GPIO Ink Detector", className:"org.area515.resinprinter.inkdetection.gpio.GpioDigitalPinInkDetector"}
 		                          ];
+		$scope.ControlFlows = [	"Always",
+		                        "OnSuccess",
+		                        "OnSuccessAndCancellation"];
 		refreshSlicingProfiles();
 		refreshMachineConfigurations();
 		refreshPrinters();

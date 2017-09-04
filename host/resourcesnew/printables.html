@@ -16,10 +16,11 @@
 									<span>Remove</span>
 								</button>
 								<button class="btn btn-primary" ng-click="printablesController.showUpload()">
-									<b class="fa fa-upload"></b> 
-									<span>Upload</span>
+									<b class="fa fa-upload"></b>
 								</button>
-								
+								<button class="btn btn-primary" ng-disabled="printablesController.currentPrintable == null" ng-click="downloadPrintable(printablesController.currentPrintable)">
+									<b class="fa fa-download"></b>
+								</button>
 						    </div>
 						</div>
 					</div>
@@ -59,9 +60,6 @@
 							<i class="fa fa-2x fa-desktop pull-left"></i>
 							<h3 class="panel-title pull-left">
 								Preview box for: {{printablesController.currentPrintable.name}}
-								<a class="pull-right" ng-click="printablesController.downloadPrintable(printable.name + printable.extension)">
-									<i class="fa fa-download"></i>
-								</a>
 							</h3>
 							<span class="btn-group pull-right" >
 								<button class="btn btn-success btn-sm" ng-click="printablesController.setProjectImage()" ng-disabled="printablesController.errorMsg || printablesController.projectImage == 'fa-refresh fa-spin'">
