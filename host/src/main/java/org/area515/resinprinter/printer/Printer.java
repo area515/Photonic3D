@@ -177,6 +177,10 @@ public class Printer implements Named {
 		}
 	}
 	
+	public BufferedImage createBufferedImageFromGraphicsOutputInterface(int x, int y) {
+		return refreshFrame.buildBufferedImage(x, y);
+	}
+	
 	public void initializeAndAssignGraphicsOutputInterface(final GraphicsOutputInterface device, final String displayDeviceID) {
 		this.displayDeviceID = displayDeviceID;
 		this.refreshFrame = device.initializeDisplay(displayDeviceID, getConfiguration());

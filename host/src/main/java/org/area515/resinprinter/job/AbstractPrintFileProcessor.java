@@ -554,7 +554,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		
 		logger.trace("Writing applyImageTransforms1Begin:{}", () -> Log4jUtil.logImage(imageToRender, "applyImageTransforms1Begin.png"));
 
-		BufferedImage imageToRenderAfterTransformations = new BufferedImage(aid.xResolution, aid.yResolution, BufferedImage.TYPE_4BYTE_ABGR);
+		BufferedImage imageToRenderAfterTransformations = aid.printer.createBufferedImageFromGraphicsOutputInterface(aid.xResolution, aid.yResolution);
 		Graphics2D graphicsAfterTransformations = (Graphics2D)imageToRenderAfterTransformations.getGraphics();
 		graphicsAfterTransformations.setColor(Color.BLACK);
 		graphicsAfterTransformations.fillRect(0, 0, aid.xResolution, aid.yResolution);

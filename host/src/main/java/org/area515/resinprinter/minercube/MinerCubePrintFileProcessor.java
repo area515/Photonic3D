@@ -88,7 +88,7 @@ public class MinerCubePrintFileProcessor extends AbstractPrintFileProcessor<Obje
 					return status;
 				}
 				
-				BufferedImage image = new BufferedImage(data.xResolution, data.yResolution, BufferedImage.TYPE_4BYTE_ABGR);
+				BufferedImage image = data.printer.createBufferedImageFromGraphicsOutputInterface(data.xResolution, data.yResolution);
 				Graphics2D graphics = (Graphics2D)image.getGraphics();
 				graphics.setColor(Color.black);
 				graphics.fillRect(0, 0, data.xResolution, data.yResolution);
