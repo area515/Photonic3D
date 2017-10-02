@@ -40,7 +40,7 @@ public class NativeMemoryBackedBufferedImage extends BufferedImage {
 		DataBuffer nativeScreenBuffer = new DataBuffer(DataBuffer.TYPE_INT, width * height) {
 			@Override
 			public int getElem(int bank, int i) {
-				return (buffer.get(i * 4)) | (buffer.get(i * 4 + 1) << 8) | (buffer.get(i * 4 + 2) << 16) | (buffer.get(i * 4 + 24));
+				return (buffer.get(i * 4)) | (buffer.get(i * 4 + 1) << 8) | (buffer.get(i * 4 + 2) << 16) | (buffer.get(i * 4 + 3) << 24);
 			}
 		  
 			
