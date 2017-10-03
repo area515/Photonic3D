@@ -23,8 +23,12 @@ public class SimpleImageRenderer extends CurrentImageRenderer {
 	@Override
 	public BufferedImage renderImage(BufferedImage image) throws JobManagerException {
 		try {
-			logger.info("Filename:" + imageIndexToBuild);
-			return ImageIO.read((File)imageIndexToBuild);
+			BufferedImage newImage = ImageIO.read((File)imageIndexToBuild);
+			if (newImage == null) {
+				logger.error("Invalid file:" + imageIndexToBuild);
+				throw new JobManagerException("BufferedImage returned null on:" + imageIndexToBuild);
+			}
+			return newImage;
 		} catch (IOException e) {
 			throw new JobManagerException("Unable to read image:" + imageIndexToBuild, e);
 		}

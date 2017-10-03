@@ -79,6 +79,10 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		TreeMap<String, File> images = new TreeMap<>(new AlphanumericComparator());
 
 		for (File file : files) {
+			if (file.getPath().contains("__MACOSX") && file.getName().startsWith(".")) {
+				continue;
+			}
+			
 			images.put(file.getName(), file);
 		}
 		
