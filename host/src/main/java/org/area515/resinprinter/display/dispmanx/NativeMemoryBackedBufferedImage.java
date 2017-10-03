@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DirectColorModel;
+import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.SinglePixelPackedSampleModel;
 import java.awt.image.WritableRaster;
@@ -25,7 +26,12 @@ public class NativeMemoryBackedBufferedImage extends BufferedImage {
 		return memory;
 	}
 	
-    public int getPitch() {
+    @Override
+	public int getType() {
+		return TYPE_INT_ARGB;
+	}
+
+	public int getPitch() {
         return ((4 * getWidth() + (getHeight())-1) & ~((getHeight())-1));
     }	    
     

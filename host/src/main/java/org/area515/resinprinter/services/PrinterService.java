@@ -449,7 +449,7 @@ public class PrinterService {
 		
 		TwoDimensionalSettings settings = new TwoDimensionalSettings();
 		settings.setFont(DEFAULT_FONT);
-		settings.setPlatformCalculator("var extrusionX = printImage.getWidth();\nvar extrusionY = printImage.getHeight();\nplatformGraphics.fillRoundRect(centerX - (extrusionX / 2), centerY - (extrusionY / 2), extrusionX, extrusionY, 50, 50);");
+		settings.setPlatformCalculator("var extrusionX = printImage.getWidth();\nvar extrusionY = printImage.getHeight();\nbuildPlatformGraphics.fillRoundRect(centerX - (extrusionX / 2), centerY - (extrusionY / 2), extrusionX, extrusionY, 50, 50);");
 		settings.setExtrusionHeightMM(1.5);
 		settings.setPlatformHeightMM(1.5);
 		settings.setEdgeDetectionDisabled(false);
