@@ -232,6 +232,8 @@ public class DispManXDevice implements GraphicsOutputInterface {
 	        
 	        if (!(image instanceof NativeMemoryBackedBufferedImage)) {
 	        	memory = loadBitmapARGB8888(image, memory, imageWidth, imageHeight, imagePitch);
+	        } else {
+	        	memory = ((NativeMemoryBackedBufferedImage)image).getMemory();
 	        }
 	        
 	        VC_RECT_T.ByReference sourceRect = new VC_RECT_T.ByReference();
