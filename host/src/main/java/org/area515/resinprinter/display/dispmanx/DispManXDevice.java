@@ -249,6 +249,8 @@ public class DispManXDevice implements GraphicsOutputInterface {
 	        	throw new IllegalArgumentException("Couldn't create resourceHandle for dispmanx");
 	        }
 	        
+	        logger.debug("ScreenWidth:" + bounds.getWidth() + " ScreenHeight:" + bounds.getHeight() + " ImageWidth:"+ imageWidth.getValue() + " ImageHeight:" + imageHeight.getValue());
+	        
 	        VC_RECT_T.ByReference sizeRect = new VC_RECT_T.ByReference();
 	        DispManX.INSTANCE.vc_dispmanx_rect_set(sizeRect, 0, 0, imageWidth.getValue(), imageHeight.getValue());
 	        int returnCode = DispManX.INSTANCE.vc_dispmanx_resource_write_data( 
