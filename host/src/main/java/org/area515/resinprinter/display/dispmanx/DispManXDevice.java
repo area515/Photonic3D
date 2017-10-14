@@ -234,6 +234,11 @@ public class DispManXDevice implements GraphicsOutputInterface {
 	        	memory = loadBitmapARGB8888(image, memory, imageWidth, imageHeight, imagePitch);
 	        } else {
 	        	memory = ((NativeMemoryBackedBufferedImage)image).getMemory();
+	    		int bytesPerPixel = 4;
+	    		int pitch = getPitch(bytesPerPixel * image.getWidth(), 32);
+	    		imagePitch.setValue(pitch);
+	    		imageWidth.setValue(image.getWidth());
+	    		imageHeight.setValue(image.getHeight());
 	        }
 	        
 	        VC_RECT_T.ByReference sourceRect = new VC_RECT_T.ByReference();
