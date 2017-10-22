@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -122,6 +123,13 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		return null;
 	}
 
+	private File buildImageFile(File gCodeFile, int padLength, int index) {
+		String imageNumber = String.format("%0" + padLength + "d", index);
+		String imageFilename = FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png";
+		File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
+		return imageFile;
+	}
+	
 	@Override
 	public JobStatus processFile(final PrintJob printJob) throws Exception {
 		File gCodeFile = findGcodeFile(printJob.getJobFile());
@@ -133,6 +141,9 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		try {
 			logger.info("Parsing file:{}", gCodeFile);
 			int padLength = determinePadLength(gCodeFile);
+			Future<RenderingContext> nextConFuture = startImageRendering(aid, buildImageFile(gCodeFile, padLength, 0));
+			int imageIndexCached = 0;
+			
 			stream = new BufferedReader(new FileReader(gCodeFile));
 			String currentLine;
 			Integer sliceCount = null;
@@ -165,28 +176,23 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 								printJob.completeRenderingSlice(System.currentTimeMillis() - startOfLastImageDisplay, null);
 							}
 							startOfLastImageDisplay = System.currentTimeMillis();
-							
-							RenderingContext data = aid.cache.getOrCreateIfMissing(Boolean.TRUE);
-							BufferedImage oldImage = data.getPrintableImage();
 							int incoming = Integer.parseInt(matcher.group(1));
-					//printJob.setCurrentSlice(incoming);
-							String imageNumber = String.format("%0" + padLength + "d", incoming);
-							String imageFilename = FilenameUtils.removeExtension(gCodeFile.getName()) + imageNumber + ".png";
-							File imageFile = new File(gCodeFile.getParentFile(), imageFilename);
-							BufferedImage newImage = ImageIO.read(imageFile);
-							newImage = applyImageTransforms(aid, data.getScriptEngine(), newImage);
-							// applyBulbMask(aid, (Graphics2D)newImage.getGraphics(), newImage.getWidth(), newImage.getHeight());
-							data.setPrintableImage(newImage);
-							logger.info("Show picture: {}", imageFilename);
+							
+							//This is to prevent a miscache in the event that someone built this file as 1 based or some other strange configuration.
+							if (incoming != imageIndexCached) {
+								nextConFuture = startImageRendering(aid, buildImageFile(gCodeFile, padLength, incoming));
+							}
+							imageIndexCached = incoming + 1;
+							RenderingContext context = nextConFuture.get();
+							
+							nextConFuture = startImageRendering(aid, buildImageFile(gCodeFile, padLength, incoming + 1));
+							BufferedImage newImage = applyImageTransforms(aid, context.getScriptEngine(), context.getPrintableImage());
+							logger.info("Show picture: {}", incoming);
 							
 							//Notify the client that the printJob has increased the currentSlice
 							NotificationManager.jobChanged(printer, printJob);
 
-							printer.showImage(data.getPrintableImage(), true);
-							
-							if (oldImage != null) {
-								oldImage.flush();
-							}
+							printer.showImage(context.getPrintableImage(), true);
 						}
 						continue;
 					}

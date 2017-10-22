@@ -197,7 +197,9 @@ public class PrintJob {
 		if (futureJobStatus != null && (futureJobStatus.isDone() || futureJobStatus.isCancelled())) {
 			try {
 				return futureJobStatus.get();
-			} catch (InterruptedException | ExecutionException e) {
+			} catch (InterruptedException e) {
+			} catch (ExecutionException e) {
+				return JobStatus.Failed;
 			}
 		}
 
