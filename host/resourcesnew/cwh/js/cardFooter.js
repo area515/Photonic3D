@@ -27,7 +27,9 @@
 			});
 			
 			fileChosenModal.closed.then(function (uploadedFile) {
-				alert("Please restart Photonic3D to have your new settings take effect.");
+				if (uploadedFile != null) {
+					alert("Please restart Photonic3D to have your new settings take effect.");
+				}
 			});
 		}
 		

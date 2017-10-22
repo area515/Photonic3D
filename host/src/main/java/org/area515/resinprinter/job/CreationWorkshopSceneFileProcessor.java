@@ -412,7 +412,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
             List<File> files = new ArrayList<File>(FileUtils.listFiles(buildExtractionDirectory(jobFile.getName()), extensions, recursive));
 
            if (files.size() > 1){
-            	throw new JobManagerException("More than one gcode file exists in print directory");
+            	throw new JobManagerException("More than one gcode file exists in print directory:" + files);
             }else if (files.size() == 0){
             	throw new JobManagerException("Gcode file was not found. Did you include the Gcode when you exported your scene?");
             }
