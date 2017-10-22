@@ -410,7 +410,13 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
             // This method will returns matched file as java.io.File
             //
             List<File> files = new ArrayList<File>(FileUtils.listFiles(buildExtractionDirectory(jobFile.getName()), extensions, recursive));
-
+            Iterator<File> iter = files.iterator();
+            for (File currentFile = iter.next(); iter.hasNext(); currentFile = iter.next()) {
+    			if (currentFile.getPath().contains("__MACOSX") && currentFile.getName().startsWith(".")) {
+    				iter.remove();
+    			}
+    		}
+            
            if (files.size() > 1){
             	throw new JobManagerException("More than one gcode file exists in print directory:" + files);
             }else if (files.size() == 0){
