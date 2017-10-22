@@ -176,6 +176,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 								printJob.completeRenderingSlice(System.currentTimeMillis() - startOfLastImageDisplay, null);
 							}
 							startOfLastImageDisplay = System.currentTimeMillis();
+							RenderingContext context = nextConFuture.get();
 							int incoming = Integer.parseInt(matcher.group(1));
 							
 							//This is to prevent a miscache in the event that someone built this file as 1 based or some other strange configuration.
@@ -183,10 +184,9 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 								nextConFuture = startImageRendering(aid, buildImageFile(gCodeFile, padLength, incoming));
 							}
 							imageIndexCached = incoming + 1;
-							RenderingContext context = nextConFuture.get();
 							
 							nextConFuture = startImageRendering(aid, buildImageFile(gCodeFile, padLength, incoming + 1));
-							BufferedImage newImage = applyImageTransforms(aid, context.getScriptEngine(), context.getPrintableImage());
+							//BufferedImage newImage = applyImageTransforms(aid, context.getScriptEngine(), context.getPrintableImage());
 							logger.info("Show picture: {}", incoming);
 							
 							//Notify the client that the printJob has increased the currentSlice
