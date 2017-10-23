@@ -141,7 +141,10 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 		try {
 			logger.info("Parsing file:{}", gCodeFile);
 			int padLength = determinePadLength(gCodeFile);
-			Future<RenderingContext> nextConFuture = startImageRendering(aid, buildImageFile(gCodeFile, padLength, 0));
+			File imageFileToRender = buildImageFile(gCodeFile, padLength, 0);
+			Future<RenderingContext> nextConFuture = startImageRendering(aid, imageFileToRender);
+			aid.cache.setCurrentRenderingPointer(imageFileToRender);
+
 			int imageIndexCached = 0;
 			
 			stream = new BufferedReader(new FileReader(gCodeFile));
@@ -178,14 +181,17 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 							startOfLastImageDisplay = System.currentTimeMillis();
 							RenderingContext context = nextConFuture.get();
 							int incoming = Integer.parseInt(matcher.group(1));
+							File currentImage = buildImageFile(gCodeFile, padLength, incoming);
+							aid.cache.setCurrentRenderingPointer(currentImage);
 							
 							//This is to prevent a miscache in the event that someone built this file as 1 based or some other strange configuration.
 							if (incoming != imageIndexCached) {
-								nextConFuture = startImageRendering(aid, buildImageFile(gCodeFile, padLength, incoming));
+								nextConFuture = startImageRendering(aid, currentImage);
 							}
 							imageIndexCached = incoming + 1;
 							
-							nextConFuture = startImageRendering(aid, buildImageFile(gCodeFile, padLength, incoming + 1));
+							imageFileToRender = buildImageFile(gCodeFile, padLength, incoming + 1);
+							nextConFuture = startImageRendering(aid, imageFileToRender);
 							//BufferedImage newImage = applyImageTransforms(aid, context.getScriptEngine(), context.getPrintableImage());
 							logger.info("Show picture: {}", incoming);
 							
