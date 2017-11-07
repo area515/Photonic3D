@@ -274,6 +274,11 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 					printer.getGCodeControl().executeGCodeWithTemplating(printJob, currentLine, true);
 			}
 			
+			//This is a special case where the gcode footer wasn't executed since the user cancelled the job and it didn't reach the end of the gcode file.
+			if (printer.getStatus() == JobStatus.Cancelling) {
+				performFooter(aid);
+			}
+			
 			return printer.isPrintActive()?JobStatus.Completed:printer.getStatus();
 		} catch (IOException e) {
 			logger.error("Error occurred while processing file.", e);
