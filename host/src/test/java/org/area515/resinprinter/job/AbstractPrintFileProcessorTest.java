@@ -7,6 +7,7 @@ import java.io.File;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
+import org.area515.resinprinter.display.ControlFlow;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.gcode.eGENERICGCodeControl;
 import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
@@ -214,7 +215,22 @@ public class AbstractPrintFileProcessorTest {
 			Mockito.verify(printJob.getPrintFileProcessor(), Mockito.times(2)).getBuildAreaMM(Mockito.any(PrintJob.class));
 		}
 	}
-
+	
+	@Test
+	public void TestThatFooterRunsSaveCustomizerMethod() throws Exception {
+		AbstractPrintFileProcessor processor = createNewPrintFileProcessor();
+		PrintJob printJob = createTestPrintJob(processor);
+		DataAid aid = Mockito.spy(processor.initializeJobCacheWithDataAid(printJob));
+		Mockito.when(printJob.getPrinter().isPrintActive()).thenReturn(false);
+		Mockito.when(printJob.getPrinter().isPrintInProgress()).thenReturn(true);
+		Mockito.when(aid.configuration.getMachineConfig().getFooterExecutionHandling()).thenReturn(ControlFlow.OnSuccessAndCancellation);
+		Mockito.when(aid.slicingProfile.getgCodeFooter()).thenReturn("Some Manufacturing GCode");
+		
+		processor.performFooter(aid);
+		Mockito.verify(aid, Mockito.times(1)).saveOriginalCustomizer();
+		Mockito.verify(aid.printer.getGCodeControl(), Mockito.times(1)).executeGCodeWithTemplating(Mockito.any(PrintJob.class), Mockito.anyString(), Mockito.anyBoolean());
+	}
+	
 	@Test
 	public void properGCodeCreated() throws Exception {
 		AbstractPrintFileProcessor processor = createNewPrintFileProcessor();
