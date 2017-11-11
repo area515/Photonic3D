@@ -109,7 +109,7 @@ public abstract class GCodeControl {
 	        		//Allow the user to manipulate the printer while paused
 	        		gCodeLock.unlock();
 	        		try {
-	        			mustAttempt = getPrinter().waitForPauseIfRequired();
+	        			mustAttempt = getPrinter().waitForPauseIfRequired(printJob.getPrintFileProcessor(), printJob.getDataAid());
 	        		} finally {
 	        			gCodeLock.lock();
 	        		}

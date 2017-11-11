@@ -74,10 +74,10 @@ public class PrintJob {
 	}
 
 	@JsonIgnore
-	DataAid getDataAid() {
+	public DataAid getDataAid() {
 		return dataAid;
 	}
-	void setDataAid(DataAid dataAid) {
+	public void setDataAid(DataAid dataAid) {
 		this.dataAid = dataAid;
 	}
 

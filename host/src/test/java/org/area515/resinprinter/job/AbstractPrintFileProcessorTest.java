@@ -63,7 +63,7 @@ public class AbstractPrintFileProcessorTest {
 		Mockito.when(printer.getPrinterFirmwareSerialPort()).thenReturn(serialPort);
 		Mockito.when(printJob.getPrintFileProcessor()).thenReturn(processor);
 		Mockito.when(printer.getConfiguration()).thenReturn(printerConfiguration);
-		Mockito.when(printer.waitForPauseIfRequired()).thenReturn(true);
+		Mockito.when(printer.waitForPauseIfRequired(Mockito.any(PrintFileProcessor.class), Mockito.any(DataAid.class))).thenReturn(true);
 		Mockito.when(printer.isPrintActive()).thenReturn(true);
 		Mockito.when(printerConfiguration.getSlicingProfile()).thenReturn(slicingProfile);
 		Mockito.when(slicingProfile.getSelectedInkConfig()).thenReturn(inkConfiguration);

@@ -245,6 +245,28 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		CustomizerService.INSTANCE.addOrUpdateCustomizer(customizer);
 	}
 	
+	public void performPauseGCode(DataAid aid) throws InappropriateDeviceException, IOException {
+		if (aid == null) {
+			throw new IllegalStateException("initializeDataAid must be called before this method");
+		}
+		
+		//Perform the gcode associated with the printer pause function
+		if (aid.slicingProfile.getgCodePause() != null && aid.slicingProfile.getgCodePause().trim().length() > 0) {
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodePause(), true);
+		}
+	}
+	
+	public void performResumeGCode(DataAid aid) throws InappropriateDeviceException, IOException {
+		if (aid == null) {
+			throw new IllegalStateException("initializeDataAid must be called before this method");
+		}
+		
+		//Perform the gcode associated with the printer resume function
+		if (aid.slicingProfile.getgCodeResume() != null && aid.slicingProfile.getgCodeResume().trim().length() > 0) {
+			aid.printer.getGCodeControl().executeGCodeWithTemplating(aid.printJob, aid.slicingProfile.getgCodeResume(), true);
+		}
+	}
+	
 	public void performHeader(DataAid aid) throws InappropriateDeviceException, IOException {
 		if (aid == null) {
 			throw new IllegalStateException("initializeDataAid must be called before this method");
@@ -301,7 +323,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		//Perform two actions at once here:
 		// 1. Pause if the user asked us to pause
 		// 2. Get out if the print is cancelled
-		if (!aid.printer.waitForPauseIfRequired()) {
+		if (!aid.printer.waitForPauseIfRequired(this, aid)) {
 			return aid.printer.getStatus();
 		}
 
@@ -437,7 +459,7 @@ public abstract class AbstractPrintFileProcessor<G,E> implements PrintFileProces
 		//Perform two actions at once here:
 		// 1. Pause if the user asked us to pause
 		// 2. Get out if the print is cancelled
-		if (!aid.printer.waitForPauseIfRequired()) {
+		if (!aid.printer.waitForPauseIfRequired(this, aid)) {
 			return aid.printer.getStatus();
 		}
 		

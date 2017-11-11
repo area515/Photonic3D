@@ -172,7 +172,7 @@ public class CreationWorkshopSceneFileProcessor extends AbstractPrintFileProcess
 							printer.showBlankImage();
 							
 							//This is the perfect time to wait for a pause if one is required.
-							printer.waitForPauseIfRequired();
+							printer.waitForPauseIfRequired(this, aid);
 						} else {
 							if (startOfLastImageDisplay > -1) {
 					//printJob.setCurrentSliceTime(System.currentTimeMillis() - startOfLastImageDisplay);

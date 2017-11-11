@@ -13,7 +13,10 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.gcode.GCodeControl;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor;
+import org.area515.resinprinter.job.AbstractPrintFileProcessor.DataAid;
 import org.area515.resinprinter.job.JobStatus;
+import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.projector.ProjectorModel;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 
@@ -138,7 +141,7 @@ public class Printer implements Named {
 		}
 	}
 	
-	public boolean waitForPauseIfRequired() {
+	public boolean waitForPauseIfRequired(PrintFileProcessor<?, ?> processor, DataAid aid) {
 		statusLock.lock();
 		try {
 			//Very important that this check is performed
@@ -147,7 +150,23 @@ public class Printer implements Named {
 			}
 			logger.info("Print has been paused.");
 			long startPause = System.currentTimeMillis();
+			
+			try {
+				if (processor instanceof AbstractPrintFileProcessor) {
+					((AbstractPrintFileProcessor)processor).performPauseGCode(aid);
+				}
+			} catch (IOException | InappropriateDeviceException e) {
+				logger.error("Error while executing pause gCode, but we will recover", e);
+			}
 			jobContinued.await();
+			try {
+				if (processor instanceof AbstractPrintFileProcessor) {
+					((AbstractPrintFileProcessor)processor).performResumeGCode(aid);
+				}
+			} catch (IOException | InappropriateDeviceException e) {
+				logger.error("Error while executing resume gCode, but we will recover", e);
+			}
+			
 			currentSlicePauseTime += System.currentTimeMillis() - startPause;
 			logger.info("Print has resumed.");
 			return isPrintActive();
