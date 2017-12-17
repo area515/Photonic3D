@@ -26,17 +26,19 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import javax.annotation.security.RolesAllowed;
@@ -68,6 +70,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.DisplayManager;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
+import org.area515.resinprinter.gcode.PrinterDriver;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.network.NetInterface;
 import org.area515.resinprinter.network.NetworkManager;
@@ -542,6 +545,86 @@ public class MachineService {
 		} catch (InstantiationException | IllegalAccessException e) {
 			logger.error("Error connecting to WifiSSID:" + network.getSsid(), e);
 		}
+	 }
+
+//TODO: If this method must exist(which it probably shouldn't), it should take the SSID for which the wirelessstrength is requested
+    @ApiOperation(value = "Enumerates the signal strength in dBm for the currently connected wireless host.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	 @GET
+	 @Path("wirelessNetworks/getWirelessStrength")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public String getWirelessStrength() {
+		Class<NetworkManager> managerClass = HostProperties.Instance().getNetworkManagerClass();
+		try {
+			NetworkManager networkManager = managerClass.newInstance();
+			List<NetInterface> interfaces = networkManager.getNetworkInterfaces();
+			String currentSSID = networkManager.getCurrentSSID();
+			String signal = "-100";
+
+			for (NetInterface network : interfaces) {
+				for (WirelessNetwork wnetwork : network.getWirelessNetworks()) {
+					if (wnetwork.getSsid().compareToIgnoreCase(currentSSID)==0){
+						signal = wnetwork.getSignalStrength();
+					}
+				}
+			}
+			
+			return signal;
+		} catch (InstantiationException | IllegalAccessException e) {
+			logger.error("Error retrieving wireless networks", e);
+			return null;
+		}
+	 }
+    
+ // Early modifications to support fetching of WiFi signal strength. Feel free to discard or replace as necessary.
+    @ApiOperation(value = "Enumerates Printer interfaces' IPs, MACs, HostName and SSID information.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	 @GET
+	 @Path("getNetworkHostConfiguration")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public Map getNetworkHostConfiguration() {
+		Class<NetworkManager> managerClass = HostProperties.Instance().getNetworkManagerClass();
+		try {
+			NetworkManager networkManager = managerClass.newInstance();
+			Map networkHost = new HashMap();
+			networkHost.put("MACs", networkManager.getMACs());
+			networkHost.put("IPs", networkManager.getIPs());
+			networkHost.put("Hostname",networkManager.getHostname());
+			networkHost.put("SSID",networkManager.getCurrentSSID());
+			return networkHost;
+		} catch (InstantiationException | IllegalAccessException e) {
+			logger.error("Error retrieving network host configuration", e);
+			return null;
+		}
+	 }
+    
+    @ApiOperation(value="Changes the hostname of the computer running Photonic.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, response=MachineResponse.class, message = SwaggerMetadata.MACHINE_RESPONSE),
+            @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@GET
+	@Path("setNetworkHostname/{hostname}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MachineResponse startProjector(@PathParam("hostname") String host) {
+    	if (Pattern.matches("^[a-zA-Z0-9\\-]+$", host)){
+    		try {
+    	    	Class<NetworkManager> managerClass = HostProperties.Instance().getNetworkManagerClass();
+    			NetworkManager networkManager = managerClass.newInstance();
+    			networkManager.setHostname(host);
+    			logger.debug("Set new hostname to: " + host);
+    			return new MachineResponse("setNetworkHostname", true, "Changed hostname to:" + host);
+    		} catch (InstantiationException | IllegalAccessException e) {
+    			logger.error("Error setting new hostname", e);
+    			return new MachineResponse("setNetworkHostname", false, e.getMessage());
+    		}
+    	} else{
+    		logger.error("Error setting new hostname - RegEx failed");
+    		throw new IllegalArgumentException("Hostname \""+host+"\" contained invalid characters. Please retry with uppercase, lowercase and numeric characters and hyphens [-] only.");
+    	}
     }
 	
     @ApiOperation(value = "Enumerates the list of serial ports available on the Photonic 3D host.")
@@ -577,17 +660,25 @@ public class MachineService {
 		 
 		 return deviceStrings;
 	}
-	 
     
-    
-	@ApiOperation(value = "Enumerates the list of machine configurations that are available on the Photonic 3D host.")
+	@ApiOperation(value = "Enumerates the list of printer drivers that are available on the Photonic 3D host.")
 	@ApiResponses(value = {
 	        @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
 	        @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
 	@GET
+	@Path("printerDrivers/list")
+	public List<PrinterDriver> getPrinterDrivers() {
+		return HostProperties.Instance().getPrinterDrivers();
+	}
+	
+	@ApiOperation(value = "Enumerates the list of machine configurations that are available on the Photonic 3D host.")
+	@ApiResponses(value = {
+	    @ApiResponse(code = 200, message = SwaggerMetadata.SUCCESS),
+	    @ApiResponse(code = 500, message = SwaggerMetadata.UNEXPECTED_ERROR)})
+	@GET
 	@Path("machineConfigurations/list")
 	public List<MachineConfig> getMachineConfigurations() {
-		return HostProperties.Instance().getConfigurations(HostProperties.Instance().MACHINE_DIR, HostProperties.MACHINE_EXTENSION, MachineConfig.class);
+	return HostProperties.Instance().getConfigurations(HostProperties.Instance().MACHINE_DIR, HostProperties.MACHINE_EXTENSION, MachineConfig.class);
 	}
 	
 	@ApiOperation(value = "Save a machine configuration to the machine config directory of Photonic 3D host.")

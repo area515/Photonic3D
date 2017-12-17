@@ -38,6 +38,8 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
+import org.area515.resinprinter.gcode.PrinterController;
+import org.area515.resinprinter.gcode.PrinterDriver;
 import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.PrintFileProcessor;
 import org.area515.resinprinter.network.LinuxNetworkManager;
@@ -88,7 +90,7 @@ public class HostProperties {
 	private ConcurrentHashMap<String, PrinterConfiguration> configurations;
 	private Map<Class<Feature>, String> featureClasses = new HashMap<Class<Feature>, String>();
 	private List<Class<Notifier>> notificationClasses = new ArrayList<Class<Notifier>>();
-	private List<PrintFileProcessor> printFileProcessors = new ArrayList<PrintFileProcessor>();
+	private List<PrintFileProcessor<?,?>> printFileProcessors = new ArrayList<PrintFileProcessor<?,?>>();
 	private List<GraphicsOutputInterface> displayDevices = new ArrayList<GraphicsOutputInterface>();
 	private Class<SerialCommunicationsPort> serialPortClass;
 	private Class<NetworkManager> networkManagerClass;
@@ -97,6 +99,7 @@ public class HostProperties {
 	private List<String> visibleCards;
 	private String hexCodeBasedProjectorsJson;
 	private String skinsStringJson;
+	private String printerDriversStringJson;
 	private String forwardHeader;
 	private CountDownLatch hostReady = new CountDownLatch(1);
 	private String scriptEngineLanguage = null;
@@ -197,6 +200,7 @@ public class HostProperties {
 		fakeSerial = new Boolean(configurationProperties.getProperty("fakeserial", "false"));
 		visibleCards = Arrays.asList(configurationProperties.getProperty("visibleCards", "printers,printJobs,printables,users,settings").split(","));
 		skinsStringJson = configurationProperties.getProperty("skins", "[{\"name\":\"Main skin\", \"welcomeFiles\":[\"index.htm\"], \"resourceBase\": \"resourcesnew\", \"active\": true}]");
+		printerDriversStringJson = configurationProperties.getProperty("printerDrivers", "[{\"driverClassName\":\"org.area515.resinprinter.gcode.eGENERICGCodeControl\",\"driverName\":\"eGENERIC\", \"prettyName\":\"Generic GCode\"}]");
 		
 		//This loads features
 		for (Entry<Object, Object> currentProperty : configurationProperties.entrySet()) {
@@ -535,13 +539,13 @@ public class HostProperties {
 		return notificationClasses;
 	}
 	
-	public List<PrintFileProcessor> getPrintFileProcessors() {
+	public List<PrintFileProcessor<?,?>> getPrintFileProcessors() {
 		return printFileProcessors;
 	}
 	
 	public List<GraphicsOutputInterface> getDisplayDevices() {
 		return displayDevices;
-	}
+	}	
 	
 	public boolean isUseSSL() {
 		return useSSL;
@@ -680,6 +684,17 @@ public class HostProperties {
 		}
 	}
 	
+	public List<PrinterDriver> getPrinterDrivers() {
+		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+		try {
+			List<PrinterDriver> skins = mapper.readValue(printerDriversStringJson, new TypeReference<List<PrinterDriver>>(){});
+			return skins;
+		} catch (IOException e) {
+			logger.error("Problem loading skins json.", e);
+			return new ArrayList<PrinterDriver>();
+		}
+	}
+
 	public List<Skin> getSkins() {
 		ObjectMapper mapper = new ObjectMapper(new JsonFactory());
 		try {

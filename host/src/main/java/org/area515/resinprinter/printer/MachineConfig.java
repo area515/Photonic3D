@@ -167,6 +167,7 @@ public class MachineConfig implements Named {
 		this.name = name;
 	}
 	
+	@XmlElement(name="FooterExecutionHandling")
 	@JsonProperty
 	public ControlFlow getFooterExecutionHandling() {
 		if (footerExecution == null) {

@@ -1,3 +1,20 @@
-[submodule "host/resourcesnew/slacer"]
-	path = host/resourcesnew/slacer
-	url = https://github.com/Kudo3D/SLAcer.js
+//https://github.com/Pi4J/pi4j/blob/master/pi4j-example/src/main/java/StepperMotorGpioExample.java
+var gpioFactoryClass = Java.type("com.pi4j.io.gpio.GpioFactory");
+var gpio = gpioFactoryClass.instance();
+
+var pins = [gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, PinState.LOW),
+	gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01, PinState.LOW),
+	gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, PinState.LOW),
+	gpio.provisionDigitalOutputPin(RaspiPin.GPIO_03, PinState.LOW)];
+
+var single_step_sequence = Java.to([parseInt('0001', 2),
+	parseInt('0010', 2),
+	parseInt('0100', 2),
+	parseInt('1000', 2)], "byte[]");
+
+var motor = new com.pi4j.component.motor.impl.GpioStepperMotorComponent(pins);
+motor.setStepInterval(2);
+motor.setStepSequence(single_step_sequence);
+motor.setStepsPerRevolution(2038);
+motor.step(2038);
+"success"

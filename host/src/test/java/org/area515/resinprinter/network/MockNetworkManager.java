@@ -3,6 +3,7 @@ package org.area515.resinprinter.network;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class MockNetworkManager implements NetworkManager {
 	@Override
@@ -57,5 +58,29 @@ public class MockNetworkManager implements NetworkManager {
 	public void connectToWirelessNetwork(WirelessNetwork net) {
 		//Pretty much do nothing...
 		//throw new IllegalArgumentException("There was a problem connecting to the network");
+	}
+
+	@Override
+	public String getCurrentSSID() {
+		return "test";
+	}
+
+	@Override
+	public String getHostname() {
+		return "test";
+	}
+	
+	@Override
+	public Map getIPs() { 
+		return null;
+	}
+
+	@Override
+	public Map getMACs() { 
+		return null;
+	}
+	
+	@Override
+	public void setHostname(String hostname){
 	}
 }

@@ -15,13 +15,14 @@ import org.area515.resinprinter.notification.NotificationManager;
 import org.area515.resinprinter.printer.MachineConfig;
 import org.area515.resinprinter.printer.Printer;
 import org.area515.resinprinter.serial.SerialManager;
+import org.area515.resinprinter.services.TestingResult;
 import org.area515.util.IOUtilities;
 import org.area515.util.IOUtilities.ParseState;
 import org.area515.util.TemplateEngine;
 
 import freemarker.template.TemplateException;
 
-public abstract class GCodeControl {
+public abstract class PrinterController {
 	public static Logger logger = LogManager.getLogger();
 	private int SUGGESTED_TIMEOUT_FOR_ONE_GCODE = 1000 * 60 * 2;//2 minutes
 	private Pattern GCODE_RESPONSE_PATTERN = Pattern.compile("(?i)(?:(o?k|e?rror:|a?larm:)(.*)|<?([^>]*)>|\\[?([^]]*)\\])\r?\n");
@@ -33,13 +34,13 @@ public abstract class GCodeControl {
     private int gcodeTimeout;
     private boolean restartSerialOnTimeout;
     
-    public GCodeControl(Printer printer) {
+    public PrinterController(Printer printer) {
     	this.printer = printer;
     	this.gcodeTimeout = printer.getConfiguration().getMachineConfig().getPrinterResponseTimeoutMillis() != null?printer.getConfiguration().getMachineConfig().getPrinterResponseTimeoutMillis():SUGGESTED_TIMEOUT_FOR_ONE_GCODE;
     	this.restartSerialOnTimeout = printer.getConfiguration().getMachineConfig().getRestartSerialOnTimeout() != null?printer.getConfiguration().getMachineConfig().getRestartSerialOnTimeout():false;
     }
 	
-    private Printer getPrinter() {
+    protected Printer getPrinter() {
     	return printer;
     }
     
@@ -82,7 +83,7 @@ public abstract class GCodeControl {
 		return responseRegEx != null && responseRegEx.trim().length() > 0 && matcher.group(2) != null && matcher.group(2).matches(responseRegEx);
 	}
 	
-	String sendGcodeAndRespectPrinter(PrintJob printJob, String cmd) throws IOException {
+	String sendCommandToFirmwareSerialPortAndRespectPrinter(PrintJob printJob, String cmd) throws IOException {
 		gCodeLock.lock();
         try {
         	if (!cmd.endsWith("\n")) {
@@ -126,7 +127,7 @@ public abstract class GCodeControl {
         }
     }
     
-    public String sendGcode(String cmd) {
+    public String executeSingleCommand(String cmd) {
 		gCodeLock.lock();
         try {
         	if (!cmd.endsWith("\n")) {
@@ -156,7 +157,7 @@ public abstract class GCodeControl {
      * @return
      * @throws IOException
      */
-    public String readWelcomeChitChat() throws IOException {
+    public String readWelcomeChitChatFromFirmwareSerialPort() throws IOException {
 		try {
 			StringBuilder builder = new StringBuilder();
 			builder.append(IOUtilities.readWithTimeout(getPrinter().getPrinterFirmwareSerialPort(), SerialManager.READ_TIME_OUT, SerialManager.CPU_LIMITING_DELAY));
@@ -166,40 +167,7 @@ public abstract class GCodeControl {
 			return null;
 		}
     }
-    public String executeSetAbsolutePositioning() {
-    	return sendGcode("G91\r\n");
-    }
-    public String executeSetRelativePositioning() {
-    	return sendGcode("G91\r\n");
-    }
-    public String executeMoveX(double dist) {
-    	return sendGcode(String.format("G1 X%1.3f\r\n", dist));
-    }
-    public String executeMoveY(double dist) {
-    	return sendGcode(String.format("G1 Y%1.3f\r\n", dist));
-    }
-    public String executeMoveZ(double dist) {
-    	return sendGcode(String.format("G1 Z%1.3f\r\n", dist));
-    }
-    public String executeMotorsOn() {
-    	return sendGcode("M17\r\n");
-    }
-    public String executeMotorsOff() {
-    	return sendGcode("M18\r\n");
-    }
-    public String executeXHome() {
-        return sendGcode("G28 X\r\n");
-    }
-    public String executeYHome() {
-        return sendGcode("G28 Y\r\n");
-    }
-    public String executeZHome() {
-        return sendGcode("G28 Z\r\n");
-    }
-    public String executeHomeAll() {
-        return sendGcode("G28\r\n");
-    }
-    
+
     private void parseCommentCommand(String comment) {
 		//If a comment was encountered, parse it to determine if something interesting was in there.
 		Pattern delayPattern = Pattern.compile(";\\s*<\\s*Delay\\s*>\\s*(\\d+).*", Pattern.CASE_INSENSITIVE);
@@ -216,20 +184,20 @@ public abstract class GCodeControl {
 		}
     }
     
-    public String executeGCodeWithTemplating(PrintJob printJob, String gcodes, boolean stopSendingGCodeWhenPrintInactive) throws InappropriateDeviceException {
+    public String executeCommands(PrintJob printJob, String commands, boolean stopSendingGCodeWhenPrintInactive) throws InappropriateDeviceException {
 		Pattern gCodePattern = Pattern.compile("\\s*([^;]*)\\s*(;.*)?", Pattern.CASE_INSENSITIVE);
 		try {
-			if (gcodes == null || gcodes.trim().isEmpty()) {
+			if (commands == null || commands.trim().isEmpty()) {
 				return null;
 			}
 			
 			StringBuilder buffer = new StringBuilder();
-			gcodes = TemplateEngine.buildData(printJob, printJob.getPrinter(), gcodes);
-			if (gcodes == null) {
+			commands = TemplateEngine.buildData(printJob, printJob.getPrinter(), commands);
+			if (commands == null) {
 				return null;
 			}
 			
-			for (String gcode : gcodes.split("[\r]?\n")) {
+			for (String gcode : commands.split("[\r]?\n")) {
 				if (stopSendingGCodeWhenPrintInactive && !printJob.getPrinter().isPrintActive()) {
 					break;
 				}
@@ -240,7 +208,7 @@ public abstract class GCodeControl {
 						String singleGCode = matcher.group(1);
 						String comment = matcher.group(2);
 						if (singleGCode != null && singleGCode.trim().length() > 0) {
-							buffer.append(sendGcodeAndRespectPrinter(printJob, singleGCode));
+							buffer.append(sendCommandToFirmwareSerialPortAndRespectPrinter(printJob, singleGCode));
 						}
 						if (comment != null) {
 							parseCommentCommand(comment);
@@ -254,4 +222,17 @@ public abstract class GCodeControl {
 			throw new InappropriateDeviceException(MachineConfig.NOT_CAPABLE, e);
 		}
     }
+    
+    abstract public String executeSetAbsolutePositioning();
+    abstract public String executeSetRelativePositioning();
+    abstract public String executeMoveX(double dist);
+    abstract public String executeMoveY(double dist);
+    abstract public String executeMoveZ(double dist);
+    abstract public String executeMotorsOn();
+    abstract public String executeMotorsOff();
+    abstract public String executeXHome();
+    abstract public String executeYHome();
+    abstract public String executeZHome();
+    abstract public String executeHomeAll();
+    abstract public TestingResult testTemplate(Printer printer, String scriptName, String commands);
 }
