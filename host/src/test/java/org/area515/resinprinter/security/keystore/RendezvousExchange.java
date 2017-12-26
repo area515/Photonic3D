@@ -77,8 +77,8 @@ public class RendezvousExchange {
 		
 		RendezvousPipe pipe = new RendezvousPipe(wsPort);
 		
-		File user1Keystore = new File("user1.keystore");
-		File user2Keystore = new File("user2.keystore");
+		File user1Keystore = File.createTempFile("user1","keystore");
+		File user2Keystore = File.createTempFile("user2","keystore");
 		
 		user1Keystore.delete();
 		user2Keystore.delete();
