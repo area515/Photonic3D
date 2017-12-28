@@ -1,6 +1,5 @@
 package org.area515.resinprinter.display.dispmanx;
 
-import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;

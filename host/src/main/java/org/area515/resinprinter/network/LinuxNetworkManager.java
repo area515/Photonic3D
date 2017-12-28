@@ -1,92 +1,33 @@
 package org.area515.resinprinter.network;
 
-import java.lang.StringBuilder;
-
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.UnknownHostException;
-
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.StringTokenizer;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.text.translate.AggregateTranslator;
 import org.apache.commons.lang3.text.translate.CharSequenceTranslator;
 import org.apache.commons.lang3.text.translate.EntityArrays;
 import org.apache.commons.lang3.text.translate.LookupTranslator;
 import org.apache.commons.lang3.text.translate.NumericEntityUnescaper;
 import org.apache.commons.lang3.text.translate.UnicodeUnescaper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.area515.util.IOUtilities;
 import org.area515.util.IOUtilities.ParseAction;
 import org.area515.util.IOUtilities.SearchStyle;
 
 public class LinuxNetworkManager implements NetworkManager {
 	public static final String WIFI_REGEX = "\\s*([A-Fa-f0-9:]+)\\s+(-?\\d+)\\s+(-?\\d+)\\s+([\\[\\]\\+\\-\\w]+)\\t(.+)";
+    private static final Logger logger = LogManager.getLogger();
 	
-	public Map getMACs(){
-		Map MACs = new HashMap();
-		
-		try {
-			for (Enumeration<NetworkInterface> networks = NetworkInterface.getNetworkInterfaces(); networks.hasMoreElements();){
-					NetworkInterface network = networks.nextElement();
-					byte[] mac = network.getHardwareAddress();
-					if (mac != null && mac.length > 0){
-						StringBuilder sb = new StringBuilder(18);
-						for (byte b : mac) {
-							if (sb.length() > 0) sb.append(':');
-							sb.append(String.format("%02x", b));
-						}
-						MACs.put(network.getName().trim(), sb.toString());
-					}
-			}
-		} catch (SocketException e){
-			// can't get the info
-		}
-		// no-one cares about loopback
-		if (MACs.containsKey("lo")) MACs.remove("lo");
-		// photocentric specific code
-		// if (MACs.containsKey("wlan1")) MACs.remove("wlan0");
-		return MACs;
-	}
-
-	public Map getIPs(){
-		Map IPs = new HashMap();
-		
-		try {
-			for (Enumeration<NetworkInterface> networks = NetworkInterface.getNetworkInterfaces(); networks.hasMoreElements();){
-					NetworkInterface network = networks.nextElement();
-					String IPaddress = null;
-					// find the IPv4 address in the Enumeration
-					for (Enumeration<InetAddress> ips = network.getInetAddresses(); ips.hasMoreElements();){
-						String check = ips.nextElement().getHostAddress();
-						if(check.indexOf(".")>=0 && check.indexOf(".") < 4){
-							IPaddress = check;
-						}
-					}
-					if (IPaddress != null) IPs.put(network.getName().trim(), IPaddress);
-			}
-		} catch (SocketException e){
-			// can't get the info
-		}
-		// noone cares about loopback
-		if (IPs.containsKey("lo")) IPs.remove("lo");
-		// photocentric specific code
-		// if (IPs.containsKey("wlan1")) IPs.remove("wlan0");
-		return IPs;
-	}
-	
-	public String getHostname(){
-		String[] output = IOUtilities.executeNativeCommand(new String[]{"hostname"}, null, (String) null);
-		return output[0];
-	}
-
     public static final CharSequenceTranslator UNESCAPE_UNIX = 
             new AggregateTranslator(
                 new LookupTranslator(EntityArrays.BASIC_UNESCAPE()),
@@ -106,7 +47,7 @@ public class LinuxNetworkManager implements NetworkManager {
                           })
             );
 	
-	private void buildWirelessInfo(String nicName, NetInterface netFace) {
+	private void buildWirelessInfo(String nicName, String connectedSSID, NetInterface netFace) {
 		Pattern networkEncryptionClass = Pattern.compile("\\[([\\+\\-\\w]+)\\]");
 
 		List<ParseAction> parseActions = new ArrayList<ParseAction>();
@@ -116,6 +57,7 @@ public class LinuxNetworkManager implements NetworkManager {
 		parseActions.add(new ParseAction(new String[]{"scan_results\n"}, "bssid.*", SearchStyle.RepeatUntilMatch));
 		parseActions.add(new ParseAction(new String[]{""}, WIFI_REGEX, SearchStyle.RepeatWhileMatching));
 		
+		boolean foundAssociatedSSID = false;
 		List<String[]> output = IOUtilities.communicateWithNativeCommand(parseActions, "^>|\n", true, null, nicName);
 		for (String[] lines : output) {
 			if (lines == null) {
@@ -127,6 +69,10 @@ public class LinuxNetworkManager implements NetworkManager {
 			currentWireless.setSsid(UNESCAPE_UNIX.translate(lines[4]));
 			if (currentWireless.getSsid().startsWith("\u0000")) {
 				currentWireless.setHidden(true);
+			}
+			if (currentWireless.getSsid().equalsIgnoreCase(connectedSSID)) {
+				currentWireless.setAssociated(true);
+				foundAssociatedSSID = true;
 			}
 			currentWireless.setParentInterfaceName(netFace.getName());
 			currentWireless.setSignalStrength(lines[2]);
@@ -157,6 +103,9 @@ public class LinuxNetworkManager implements NetworkManager {
 			}
 		}
 
+		if (!foundAssociatedSSID && connectedSSID != null) {
+			logger.error("Network: " + foundAssociatedSSID + " has wireless networks available:" + netFace.getWirelessNetworks() + " but we couldn't find the connectedSSID: " + connectedSSID);
+		}
 	}
 	
 	@Override
@@ -173,7 +122,13 @@ public class LinuxNetworkManager implements NetworkManager {
 			while (doneLookingForWifi == null || !doneLookingForWifi) {
 				String[] wpaSupplicants = IOUtilities.executeNativeCommand(new String[]{"wpa_cli", "-i", "{0}", "ping"}, null, nicName);
 				if (wpaSupplicants.length > 0 && wpaSupplicants[0].trim().equals("PONG")) {
-					buildWirelessInfo(nicName, netFace);
+					String connectedSSID = null;
+					String[] output = IOUtilities.executeNativeCommand(new String[]{"iwgetid", nicName, "-r"}, null, (String) null);
+					if (output != null && output.length > 0 && output[0] != null && output[0].trim().length() > 0) {
+						connectedSSID = UNESCAPE_UNIX.translate(output[0].trim());
+					}
+
+					buildWirelessInfo(nicName, connectedSSID, netFace);
 					doneLookingForWifi = true;
 				} else if (doneLookingForWifi == null) {
 					IOUtilities.executeNativeCommand(new String[]{"ifup", "{0}"}, null, nicName);
@@ -255,6 +210,67 @@ public class LinuxNetworkManager implements NetworkManager {
 		}
 	}
 	
+	@Override
+	public Map<String, String> getMACs(){
+		Map<String, String> MACs = new HashMap<>();
+		
+		try {
+			//TODO: This is too complicated
+			for (Enumeration<NetworkInterface> networks = NetworkInterface.getNetworkInterfaces(); networks.hasMoreElements();){
+					NetworkInterface network = networks.nextElement();
+					byte[] mac = network.getHardwareAddress();
+					if (!network.isLoopback() && mac != null && mac.length > 0){
+						StringBuilder sb = new StringBuilder(18);
+						for (byte b : mac) {
+							if (sb.length() > 0) {
+								sb.append(':');
+							}
+							sb.append(String.format("%02x", b));
+						}
+						
+						MACs.put(network.getName().trim(), sb.toString());
+					}
+			}
+		} catch (SocketException e){
+			logger.error("Couldn't retrieve network information", e);
+		}
+		
+		return MACs;
+	}
+
+	@Override
+	public Map<String, String> getIPs(){
+		Map<String, String> IPs = new HashMap<>();
+		
+		try {
+			//TODO: This is too complicated
+			for (Enumeration<NetworkInterface> networks = NetworkInterface.getNetworkInterfaces(); networks.hasMoreElements();) {
+					NetworkInterface network = networks.nextElement();
+					if (network.isLoopback()) {
+						continue;
+					}
+					
+					String numericIP = null;
+					// find the IPv4 address in the Enumeration
+					for (Enumeration<InetAddress> ips = network.getInetAddresses(); ips.hasMoreElements();){
+						String check = ips.nextElement().getHostAddress();
+						if(check.indexOf(".")>=0 && check.indexOf(".") < 4){
+							numericIP = check;
+						}
+					}
+					
+					if (numericIP != null) {
+						IPs.put(network.getName().trim(), numericIP);
+					}
+			}
+		} catch (SocketException e){
+			logger.error("Couldn't retrieve network information", e);
+		}
+		
+		return IPs;
+	}
+
+	@Override
 	public void setHostname(String newHostname){
 		// do the new /etc/hosts hostname first.
 		String[] macResults = IOUtilities.executeNativeCommand(new String[]{"bash", "-c", "sed -i \"s/$(hostname)/"+newHostname+"/g\" /etc/hosts"}, null, (String) null);
@@ -265,15 +281,9 @@ public class LinuxNetworkManager implements NetworkManager {
 		// how to handle restarts...? Perhaps hand that off to the user.
 	}
 	
-	//TODO: Should this use Unix escaping?
-	public String getCurrentSSID(){
-		// Can use iwgetid -r to get a basic SSID
-		String[] output = IOUtilities.executeNativeCommand(new String[]{"iwgetid", "-r"}, null, (String) null);
-		if (output.length > 0) {
-			return output[0];
-		}
-		else {
-			return null;
-		}
+	@Override
+	public String getHostname(){
+		String[] output = IOUtilities.executeNativeCommand(new String[]{"hostname"}, null, (String) null);
+		return output[0];
 	}
 }
