@@ -55,7 +55,7 @@ import org.area515.resinprinter.projector.HexCodeBasedProjector;
 import org.area515.resinprinter.projector.ProjectorModel;
 import org.area515.resinprinter.security.UserManagementException;
 import org.area515.resinprinter.security.keystore.KeystoreLoginService;
-import org.area515.resinprinter.serial.RXTXSynchronousReadBasedCommPort;
+import org.area515.resinprinter.serial.JSSCCommPort;
 import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.services.UserService;
 import org.area515.resinprinter.util.security.PhotonicUser;
@@ -266,7 +266,7 @@ public class HostProperties {
 		
 		String serialCommString = null;
 		try {
-			serialCommString = configurationProperties.getProperty("SerialCommunicationsImplementation", RXTXSynchronousReadBasedCommPort.class.getName());
+			serialCommString = configurationProperties.getProperty("SerialCommunicationsImplementation", JSSCCommPort.class.getName());
 			serialPortClass = (Class<SerialCommunicationsPort>)Class.forName(serialCommString);
 		} catch (ClassNotFoundException e) {
 			logger.error("Failed to load SerialCommunicationsImplementation:{}", serialCommString);

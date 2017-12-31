@@ -53,11 +53,6 @@ elif [ "${cpu}" = "aarch64" ]; then
 	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u101-b13/jdk-8u101-linux-arm64-vfp-hflt.tar.gz"
 fi
 
-if [ ! -f "/usr/lib/jni/librxtxSerial.so" ]; then
-	echo Installing RxTx
-	apt-get install --yes --force-yes librxtx-java
-fi
-
 #This application will always need to have the display set to the following
 export DISPLAY=:0.0
 xinitProcess=`ps -ef | grep grep -v | grep xinit`
