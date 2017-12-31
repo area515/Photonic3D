@@ -73,8 +73,6 @@ dependencies {
   compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.5'
   compile 'com.fasterxml.jackson.core:jackson-databind:2.4.5'
 
-  compile 'org.rxtx:rxtx:2.1.7'
-
   compile 'org.powermock:powermock-module-junit4:1.6.4'
   compile 'org.powermock:powermock-api-mockito:1.6.4'
 
