@@ -6,109 +6,84 @@ var currentslice=0;
 var elapsedtime=0;
 var starttime=0;
 var averageslicetime=0;
-var signalstrength = -100;
 var PRINTERONIMAGE = "images/printer-on.png";
 var PRINTEROFFIMAGE = "images/printer-off.png";
             
 function startpage(){
-        if (typeof Cookies.get('lastwifi') !== 'undefined'){
-                signalstrength = Cookies.get('lastwifi');
-                if (signalstrength > -45) {
-                        document.getElementById("wifi").src="images/wifi-3.png";
-                }
-                else if (signalstrength > -67) {
-                        document.getElementById("wifi").src="images/wifi-2.png";
-                }
-                else if (signalstrength > -72) {
-                        document.getElementById("wifi").src="images/wifi-1.png";
-                }
-                else if (signalstrength > -80) {
-                        document.getElementById("wifi").src="images/wifi-0.png";
-                }
-                else document.getElementById("wifi").src="images/wifi-nc.png";
-        }
-        else{
-                wifiupdate();
-        }
-        //handles page setup and the common things across all pages:
+        setInterval(function() {
+        	setTime();
+	        printredirect();
+	        printerStatus();
+        }, 1000);
         
-        if (typeof Cookies.get('printerstatus') !== 'undefined'){
-                document.getElementById("printerstatus").src = Cookies.get('printerstatus');
-        }
-        else{
-                printerStatus();
-        }
+        setInterval(function() {
+            wifiupdate();    
+        }, 3000);
         
-        
-        // do the first updates
-        //document.getElementById("time").innerHTML = moment().format("HH:mm:ss[<br>]DD-MMM-YY");
+        setTime();
+        wifiupdate();
         printredirect();
-       
-        setInterval(function() {
-                //time handling/updating
-		//document.getElementById("time").innerHTML = moment().format("HH:mm:ss[<br>]DD-MMM-YY");
-                //redirect to print dialogue on user initiating a print
-                printredirect();
-                printerStatus();
-	}, 1000);
-        
-        setInterval(function() {
-                //wifi updating
-                wifiupdate();    
-	}, 3000);
+        printerStatus();
+}
+
+function setTime() {
+	var timeElement = document.getElementById("time");
+	if (timeElement != null) {
+		timeElement.innerHTML = moment().format("HH:mm:ss[<br>]DD-MMM-YY");
+	}	
 }
 
 function printerStatus(){
-        if (document.getElementById("printerstatus").src.indexOf("midchange") == -1){
-                $.getJSON("/services/printers/get/"+encodeURI(printerName)).done(function (data){
-                        if (data.started)
-                        {
-                                Cookies.set('printerstatus',PRINTERONIMAGE);
-                                document.getElementById("printerstatus").src = PRINTERONIMAGE;
-                        }
-                        else
-                        {
-                                Cookies.set('printerstatus',PRINTEROFFIMAGE);
-                                document.getElementById("printerstatus").src = PRINTEROFFIMAGE;
-                        }
-                });
+    if (printerName == null || document.getElementById("printerstatus").src.indexOf("midchange") != -1){
+    	return;
+    }
+    
+    $.getJSON("/services/printers/get/"+encodeURI(printerName)).done(function (data){
+        if (data.started) {
+                Cookies.set('printerstatus',PRINTERONIMAGE);
+                document.getElementById("printerstatus").src = PRINTERONIMAGE;
+        } else {
+                Cookies.set('printerstatus',PRINTEROFFIMAGE);
+                document.getElementById("printerstatus").src = PRINTEROFFIMAGE;
         }
+    });
 }
 
+function updateWifiURL(signalstrength) {
+    //using this as a guide for decent signal strengths in dBm: https://support.metageek.com/hc/en-us/articles/201955754-Understanding-WiFi-Signal-Strength
+    if (signalstrength > -45) {
+    	wifiurl="images/wifi-3.png";
+    } else if (signalstrength > -67) {
+    	wifiurl="images/wifi-2.png";
+    } else if (signalstrength > -72) {
+    	wifiurl="images/wifi-1.png";
+    } else if (signalstrength > -80) {
+    	wifiurl="images/wifi-0.png";
+    } else {
+    	wifiurl="images/wifi-nc.png";
+    }
+
+    document.getElementById("wifi").src = wifiurl;
+}
 
 function wifiupdate(){
 	//TODO: JSON to query the server's wifi status and display it
-        
-        $.getJSON("../services/machine/wirelessNetworks/getWirelessStrength")
-        .done(function (data){
-		if ((typeof data !== 'undefined')&&(data !== null)){
-			signalstrength = parseInt(data);
-		}
-                else{
-                        signalstrength = -100;
-                }
-	});
-        Cookies.set('lastwifi',signalstrength);
-        
-	// in the meantime for testing purposes, choose a random number.
-	// signalstrength = Math.floor(Math.random() * -60)-30; //signal strength in dBm
-        
-        //using this as a guide for decent signal strengths in dBm: https://support.metageek.com/hc/en-us/articles/201955754-Understanding-WiFi-Signal-Strength
-        if (signalstrength > -45) {
-		wifiurl="images/wifi-3.png";
-        }
-        else if (signalstrength > -67) {
-                wifiurl="images/wifi-2.png";
-        }
-        else if (signalstrength > -72) {
-                wifiurl="images/wifi-1.png";
-        }
-        else if (signalstrength > -80) {
-                wifiurl="images/wifi-0.png";
-        }
-        else wifiurl="images/wifi-nc.png";
-
-	document.getElementById("wifi").src = wifiurl;
+    $.getJSON("../services/machine/wirelessNetworks/list")
+	    .done(function (data){
+	    	var signalStrength = Cookies.get('signalStrength');
+			if ((typeof data !== 'undefined') && (data !== null)) {
+				for (var t = 0; t < data.length; t++) {
+					if (data[t].associated) {
+						signalStrength = parseInt(data[t].signalStrength);
+					}
+				}
+			}
+				
+			updateWifiURL(signalStrength);
+	    })
+	    .error(function () {
+	    	updateWifiURL(0);
+	    })
 }
             
 function printredirect(){
