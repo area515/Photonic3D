@@ -133,14 +133,17 @@
 					var i = 0;
 					$.each(data, function (key, val) {
 						console.log(i + ": "+key+" "+val);
-						option = document.createElement('option');
-						option.id = option.text = option.value = val.ssid;
-						option.style = "background: url(images/wifi-tiny.png) no-repeat; padding-top: 2px; padding-right: 10px;";
-						select.add( option );
-						i = i+1;
+						if (!val.hidden) {
+							option = document.createElement('option');
+							option.id = option.text = option.value = val.ssid;
+//TODO: show wifi strength image for each ssid
+							option.style = "background: url(images/wifi-tiny.png) no-repeat; padding-top: 2px; padding-right: 10px;";
+							select.add( option );
+							i = i + 1;
+						}
 					});
 					$("#wifiselect").html($("#wifiselect option").sort(function (a, b) {
-					return a.text == b.text ? 0 : a.text.toLowerCase() < b.text.toLowerCase() ? -1 : 1
+						return a.text == b.text ? 0 : a.text.toLowerCase() < b.text.toLowerCase() ? -1 : 1
 					})) 
 				});
 			}
