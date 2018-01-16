@@ -66,27 +66,25 @@
 			<script>
 			var log="";
 			$.getJSON('../services/settings/releaseTagName').done(function (data){
-						var currentfirmwarerevision=data;
-						$.getJSON('https://api.github.com/repos/Photocentric3D/Photonic3D/releases/latest').done(function (remotedata){
-							var remotefirmwarerevision=remotedata.tag_name;
-							log="Local firmware version:\n&nbsp;&nbsp;&nbsp;&nbsp;"+currentfirmwarerevision+"\n";
-							log+="Server firmware version:\n&nbsp;&nbsp;&nbsp;&nbsp;"+remotefirmwarerevision+"\n\n";
-							var localFloat = currentfirmwarerevision.replace("Photocentric-","").replace("photocentric-","");
-							var remoteFloat = remotefirmwarerevision.replace("Photocentric-","").replace("photocentric-","");
-							if ((parseFloat(localFloat)) < (parseFloat(remoteFloat))){
-								log+="Your firmware needs an update. Restart the printer, and we will automatically update the printer";
-								window.location.href=("error.html?type=info&errorname=Firmware Update Available&errordetails=There is a new firmware update available. Please restart your printer when it is convenient to do so, and we will install it automatically");
-
-							}
-							else {
-								log+="Your firmware is up-to-date!";
+				var currentsoftwarerevision=data;
+				$.getJSON('../services/settings/printerProfileRepo').done(function (data) {
+						var repo = data;
+						$.getJSON('https://api.github.com/repos/'+repo+'/releases/latest').done(function (remotedata){
+							var remotesoftwarerevision = remotedata.tag_name;
+							log="Current Printer software version:\n&nbsp;&nbsp;&nbsp;&nbsp;"+currentsoftwarerevision+"\n";
+							log+="Server software version:\n&nbsp;&nbsp;&nbsp;&nbsp;"+remotesoftwarerevision+"\n\n";
+							if (remotesoftwarerevision != currentsoftwarerevision){
+								log+="Your printer software is different than the latest version. Restart the printer, and we will automatically update the printer";
+								window.location.href=("error.html?type=info&errorname=Printer Software Update Available&errordetails=There is a new software update available. Please restart your printer when it is convenient to do so, and we will install it automatically");
+							} else {
+								log+="Your printer software is up-to-date!";
 							}
 							document.getElementById("log").innerHTML=log;
-						})
-						.fail(function (){
-							document.getElementById("log").innerHTML="Could not access remote server to fetch remote firmware version.\n\nPlease try again later";
+						}) .fail(function (){
+							document.getElementById("log").innerHTML="Could not access remote server to fetch remote printer software version.\n\nPlease try again later";
 						});
 					});
+				});
 		</script>
         <div class="screen">
             <div class="main">

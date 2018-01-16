@@ -66,30 +66,25 @@
 			<script>
 			var log="";
 			$.getJSON('../services/settings/releaseTagName').done(function (data){
-						var currentsoftwarerevision=data;
-						if (typeof repo === 'undefined'){
-							repo = "Photocentric3D/Photonic3D";
-							//override to master repo if repo hasn't been populated by printerconfig.js
-						}
+				var currentsoftwarerevision=data;
+				$.getJSON('../services/settings/printerProfileRepo').done(function (data) {
+						var repo = data;
 						$.getJSON('https://api.github.com/repos/'+repo+'/releases/latest').done(function (remotedata){
-							var remotesoftwarerevision=remotedata.tag_name;
+							var remotesoftwarerevision = remotedata.tag_name;
 							log="Current Printer software version:\n&nbsp;&nbsp;&nbsp;&nbsp;"+currentsoftwarerevision+"\n";
 							log+="Server software version:\n&nbsp;&nbsp;&nbsp;&nbsp;"+remotesoftwarerevision+"\n\n";
-							var localFloat = currentsoftwarerevision.replace("Photocentric-","").replace("photocentric-","");
-							var remoteFloat = remotesoftwarerevision.replace("Photocentric-","").replace("photocentric-","");
-							if ((parseFloat(localFloat)) < (parseFloat(remoteFloat))){
-								log+="Your printer software needs an update. Restart the printer, and we will automatically update the printer";
+							if (remotesoftwarerevision != currentsoftwarerevision){
+								log+="Your printer software is different than the latest version. Restart the printer, and we will automatically update the printer";
 								window.location.href=("error.html?type=info&errorname=Printer Software Update Available&errordetails=There is a new software update available. Please restart your printer when it is convenient to do so, and we will install it automatically");
-							}
-							else {
+							} else {
 								log+="Your printer software is up-to-date!";
 							}
 							document.getElementById("log").innerHTML=log;
-						})
-						.fail(function (){
+						}) .fail(function (){
 							document.getElementById("log").innerHTML="Could not access remote server to fetch remote printer software version.\n\nPlease try again later";
 						});
 					});
+				});
 		</script>
         <div class="screen">
             <div class="main">
