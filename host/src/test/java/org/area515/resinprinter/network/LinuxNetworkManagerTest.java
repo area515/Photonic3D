@@ -39,7 +39,7 @@ public class LinuxNetworkManagerTest {
 		final Process findNetworkInterfacesProcess = Mockito.mock(Process.class);
 		Mockito.when(findNetworkInterfacesProcess.getInputStream()).thenReturn(new StringBufferInputStream(lanName));
 		Mockito.when(findNetworkInterfacesProcess.getOutputStream()).thenReturn(output);
-		Mockito.when(runtime.exec(Mockito.argThat(new MatchStringArray("ifconfig.*")))).then(new Answer<Process>() {
+		Mockito.when(runtime.exec(Mockito.argThat(new MatchStringArray("ip -o link.*")))).then(new Answer<Process>() {
 			@Override
 			public Process answer(InvocationOnMock invocation) throws Throwable {
 				return findNetworkInterfacesProcess;
