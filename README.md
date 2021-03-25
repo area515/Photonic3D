@@ -62,7 +62,15 @@ Feature List
 28. Automatic uploading of files from removable drives. (USB sticks)
 
 Linux Installation Quickstart
--------------------------------------------------------------------------------
+-------------------------------------------------------------------------------  
+NOTE: This is control software for a printer not a remote access system for
+printers.  Once it’s installed on a printer and configured properly then
+you’d use a browser from your desktop to access it.
+This means when you install this to your linux host/computer, your computer display will be used for the projector/LCD, your computer will send serial to the microcontroller on the printer, and your computer runs a web server to provide a GUI via browsers.  If you do not intend to dedicate your computer to the purpose of this software, you might want to find a raspberry pi to use for this software.  
+
+If you installed by mistake and want to uninstall, remove the init.d service by executing the following as root and restarting:  
+sudo update-rc.d -f cwhservice remove  
+
 If you are experienced with Linux, you can quickly install Photonic3D with the following commands:
 
 Latest stable:
