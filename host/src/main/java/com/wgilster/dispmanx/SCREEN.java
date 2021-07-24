@@ -1,5 +1,4 @@
-package org.area515.resinprinter.display.dispmanx;
-
+package com.wgilster.dispmanx;
 public enum SCREEN {
 	DISPMANX_ID_MAIN_LCD(0),
 	DISPMANX_ID_AUX_LCD(1),

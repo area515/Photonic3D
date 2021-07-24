@@ -51,7 +51,7 @@ import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
-import sun.security.x509.AlgorithmId;
+/*import sun.security.x509.AlgorithmId;
 import sun.security.x509.CertificateAlgorithmId;
 import sun.security.x509.CertificateIssuerName;
 import sun.security.x509.CertificateSerialNumber;
@@ -61,7 +61,7 @@ import sun.security.x509.CertificateVersion;
 import sun.security.x509.CertificateX509Key;
 import sun.security.x509.X500Name;
 import sun.security.x509.X509CertImpl;
-import sun.security.x509.X509CertInfo;
+import sun.security.x509.X509CertInfo;*/
 
 public class JettySecurityUtils {
     private static final Logger logger = LogManager.getLogger();

@@ -6,17 +6,16 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import org.area515.resinprinter.display.dispmanx.ALPHA;
-import org.area515.resinprinter.display.dispmanx.DispManX;
-import org.area515.resinprinter.display.dispmanx.PROTECTION;
-import org.area515.resinprinter.display.dispmanx.SCREEN;
-import org.area515.resinprinter.display.dispmanx.VC_DISPMANX_ALPHA_T;
-import org.area515.resinprinter.display.dispmanx.VC_IMAGE_TRANSFORM_T;
-import org.area515.resinprinter.display.dispmanx.VC_IMAGE_TYPE_T;
-import org.area515.resinprinter.display.dispmanx.VC_RECT_T;
-
 import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
+import com.wgilster.dispmanx.DISPMANX_FLAGS_ALPHA_T;
+import com.wgilster.dispmanx.DispManX;
+import com.wgilster.dispmanx.PROTECTION;
+import com.wgilster.dispmanx.SCREEN;
+import com.wgilster.dispmanx.VC_DISPMANX_ALPHA_T;
+import com.wgilster.dispmanx.VC_IMAGE_TRANSFORM_T;
+import com.wgilster.dispmanx.VC_IMAGE_TYPE_T;
+import com.wgilster.dispmanx.VC_RECT_T;
 
 public class DispManXLoadImage {
 	public static void displayInfo( int id, String name ) {
@@ -145,13 +144,13 @@ public class DispManXLoadImage {
 
         IntByReference ref = new IntByReference();
         int resourceHandle = dispMan.vc_dispmanx_resource_create( 
-        		VC_IMAGE_TYPE_T.VC_IMAGE_RGB565.getcIndex(), 
+        		VC_IMAGE_TYPE_T.VC_IMAGE_RGB565.getId(), 
         		width.getValue(), 
         		height.getValue(), 
         		ref );
         res( "resource write data", dispMan.vc_dispmanx_resource_write_data( 
         		resourceHandle, 
-        		VC_IMAGE_TYPE_T.VC_IMAGE_RGB565.getcIndex(), 
+        		VC_IMAGE_TYPE_T.VC_IMAGE_RGB565.getId(), 
         		pitch.getValue() , 
         		bitmap, 
         		destinationRect )
@@ -163,7 +162,7 @@ public class DispManXLoadImage {
         
         int update = dispMan.vc_dispmanx_update_start( 0 );
         VC_DISPMANX_ALPHA_T.ByReference alpha = new VC_DISPMANX_ALPHA_T.ByReference();
-        alpha.flags = ALPHA.DISPMANX_FLAGS_ALPHA_FROM_SOURCE.getFlag() | ALPHA.DISPMANX_FLAGS_ALPHA_FIXED_ALL_PIXELS.getFlag();
+        alpha.flags = DISPMANX_FLAGS_ALPHA_T.DISPMANX_FLAGS_ALPHA_FROM_SOURCE.getId();//| DISPMANX_FLAGS_ALPHA_T.DISPMANX_FLAGS_ALPHA_FIXED_ALL_PIXELS.getId();
         alpha.opacity = 255;
         
 
@@ -174,10 +173,10 @@ public class DispManXLoadImage {
         		destinationRect, 
         		resourceHandle, 
         		sourceRect, 
-        		PROTECTION.DISPMANX_PROTECTION_NONE.getcConst(), 
+        		PROTECTION.DISPMANX_PROTECTION_NONE.getId(), 
         		alpha, 
         		0, 
-        		VC_IMAGE_TRANSFORM_T.VC_IMAGE_ROT0.getcConst() );
+        		VC_IMAGE_TRANSFORM_T.VC_IMAGE_ROT0.getId() );
         
         res( "submit", dispMan.vc_dispmanx_update_submit_sync( update ) );
 

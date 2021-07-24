@@ -1,5 +1,4 @@
-package org.area515.resinprinter.display.dispmanx;
-
+package com.wgilster.dispmanx;
 public enum VC_IMAGE_TRANSFORM_T {
 	VC_IMAGE_ROT0(0),
 	VC_IMAGE_MIRROR_ROT0(TRANSFORM.TRANSFORM_HFLIP.getcConst()),
@@ -15,7 +14,7 @@ public enum VC_IMAGE_TRANSFORM_T {
 		this.cConst = cConst;
 	}
 
-	public int getcConst() {
+	public int getId() {
 		return cConst;
 	}
 }

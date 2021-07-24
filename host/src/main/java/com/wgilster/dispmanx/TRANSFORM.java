@@ -1,5 +1,4 @@
-package org.area515.resinprinter.display.dispmanx;
-
+package com.wgilster.dispmanx;
 public enum TRANSFORM {
 	TRANSFORM_HFLIP(1<<0),
 	TRANSFORM_VFLIP(1<<1),

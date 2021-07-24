@@ -1,5 +1,4 @@
-package org.area515.resinprinter.display.dispmanx;
-
+package com.wgilster.dispmanx;
 public enum VC_IMAGE_TYPE_T {
    VC_IMAGE_MIN(0), //bounds for error checking
 
@@ -73,7 +72,7 @@ public enum VC_IMAGE_TYPE_T {
 	   this.cIndex = cIndex;
    }
 
-   public int getcIndex() {
+   public int getId() {
 	   return cIndex;
    }
 }

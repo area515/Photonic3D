@@ -14,6 +14,15 @@ import org.area515.util.Log4jUtil;
 
 import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
+import com.wgilster.dispmanx.DISPMANX_FLAGS_ALPHA_T;
+import com.wgilster.dispmanx.DispManX;
+import com.wgilster.dispmanx.PROTECTION;
+import com.wgilster.dispmanx.SCREEN;
+import com.wgilster.dispmanx.VC_DISPMANX_ALPHA_T;
+import com.wgilster.dispmanx.VC_IMAGE_TRANSFORM_T;
+import com.wgilster.dispmanx.VC_IMAGE_TYPE_T;
+import com.wgilster.dispmanx.VC_RECT_T;
+import com.wgilster.dispmanx.window.NativeMemoryBackedBufferedImage;
 
 public class DispManXDevice implements GraphicsOutputInterface {
 	private static final String IMAGE_REALIZE_TIMER = "Image Realize";
@@ -49,6 +58,8 @@ public class DispManXDevice implements GraphicsOutputInterface {
 		//Call a harmless method to ensure that Dispmanx lib is initialized
         VC_RECT_T.ByReference sourceRect = new VC_RECT_T.ByReference();
         DispManX.INSTANCE.vc_dispmanx_rect_set(sourceRect, 0, 0, 0, 0);
+        alpha.flags = DISPMANX_FLAGS_ALPHA_T.DISPMANX_FLAGS_ALPHA_FROM_SOURCE.getId();// | ALPHA.DISPMANX_FLAGS_ALPHA_FIXED_ALL_PIXELS.getFlag();
+        alpha.opacity = 255;
 	}
     
     private static void bcmHostInit() {
@@ -100,9 +111,6 @@ public class DispManXDevice implements GraphicsOutputInterface {
 	    		throw new IllegalArgumentException("vc_dispmanx_display_open failed with:" + returnCode);
 	    	}
 	    	
-	        VC_DISPMANX_ALPHA_T.ByReference alpha = new VC_DISPMANX_ALPHA_T.ByReference();
-	        alpha.flags = ALPHA.DISPMANX_FLAGS_ALPHA_FROM_SOURCE.getFlag() | ALPHA.DISPMANX_FLAGS_ALPHA_FIXED_ALL_PIXELS.getFlag();
-	        alpha.opacity = 255;
 	        screenInitialized = true;
     	} finally {
     		displayLock.unlock();
@@ -130,7 +138,7 @@ public class DispManXDevice implements GraphicsOutputInterface {
         return ((x + (y)-1) & ~((y)-1));
     }
     
-	private Memory loadBitmapRGB565(BufferedImage image, Memory destPixels, IntByReference width, IntByReference height, IntByReference pitchByRef) {
+	/*private Memory loadBitmapRGB565(BufferedImage image, Memory destPixels, IntByReference width, IntByReference height, IntByReference pitchByRef) {
 		int bytesPerPixel = 2;
 		int pitch = getPitch(bytesPerPixel * image.getWidth(), 32);
 		pitchByRef.setValue(pitch);
@@ -168,7 +176,7 @@ public class DispManXDevice implements GraphicsOutputInterface {
         width.setValue(image.getWidth());
         height.setValue(image.getHeight());
         return destPixels;
-	}
+	}*/
 
 	@Override
 	public void showBlankImage() {
@@ -193,7 +201,7 @@ public class DispManXDevice implements GraphicsOutputInterface {
 			return;
 		}
 		
-		calibrationAndGridImage = NativeMemoryBackedBufferedImage.newInstance(bounds.width, bounds.height);
+		calibrationAndGridImage = NativeMemoryBackedBufferedImage.newInstance(bounds.width, bounds.height, true);
 	}
 	
 	@Override
@@ -231,8 +239,14 @@ public class DispManXDevice implements GraphicsOutputInterface {
 	        IntByReference imagePitch = new IntByReference();
 	        
 	        if (!(image instanceof NativeMemoryBackedBufferedImage)) {
-	        	memory = loadBitmapARGB8888(image, memory, imageWidth, imageHeight, imagePitch);
-	        } else {
+	        	//memory = loadBitmapARGB8888(image, memory, imageWidth, imageHeight, imagePitch);
+	        	NativeMemoryBackedBufferedImage nativeImage = NativeMemoryBackedBufferedImage.newInstance(image.getWidth(), image.getHeight(), false);
+	        	nativeImage.getGraphics().drawImage(image, 0, 0, null);
+	        	memory = nativeImage.getMemory();
+	    		imagePitch.setValue(nativeImage.getPitch());
+	    		imageWidth.setValue(image.getWidth());
+	    		imageHeight.setValue(image.getHeight());
+	    	} else {
 	        	memory = ((NativeMemoryBackedBufferedImage)image).getMemory();
 	    		int bytesPerPixel = 4;
 	    		int pitch = getPitch(bytesPerPixel * image.getWidth(), 32);
@@ -246,7 +260,7 @@ public class DispManXDevice implements GraphicsOutputInterface {
 	        
 	        IntByReference nativeImageReference = new IntByReference();
 	        imageResourceHandle = DispManX.INSTANCE.vc_dispmanx_resource_create(
-	        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), 
+	        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getId(), 
 	        		imageWidth.getValue(), 
 	        		imageHeight.getValue(), 
 	        		nativeImageReference);
@@ -260,7 +274,7 @@ public class DispManXDevice implements GraphicsOutputInterface {
 	        DispManX.INSTANCE.vc_dispmanx_rect_set(sizeRect, 0, 0, imageWidth.getValue(), imageHeight.getValue());
 	        int returnCode = DispManX.INSTANCE.vc_dispmanx_resource_write_data( 
 	        		imageResourceHandle, 
-	        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), 
+	        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getId(), 
 	        		imagePitch.getValue() , 
 	        		memory, 
 	        		sizeRect);
@@ -287,10 +301,10 @@ public class DispManXDevice implements GraphicsOutputInterface {
 	        		destinationRect, 
 	        		imageResourceHandle, 
 	        		sourceRect, 
-	        		PROTECTION.DISPMANX_PROTECTION_NONE.getcConst(), 
+	        		PROTECTION.DISPMANX_PROTECTION_NONE.getId(), 
 	        		alpha, 
 	        		0, 
-	        		VC_IMAGE_TRANSFORM_T.VC_IMAGE_ROT0.getcConst());
+	        		VC_IMAGE_TRANSFORM_T.VC_IMAGE_ROT0.getId());
 	        if (updateHandle == 0) {
 	        	throw new IllegalArgumentException("Couldn't vc_dispmanx_element_add for dispmanx");
 	        }
@@ -352,6 +366,6 @@ public class DispManXDevice implements GraphicsOutputInterface {
 
 	@Override
 	public BufferedImage buildBufferedImage(int x, int y) {
-		return NativeMemoryBackedBufferedImage.newInstance(x,  y);
+		return NativeMemoryBackedBufferedImage.newInstance(x,  y, true);
 	}
 }

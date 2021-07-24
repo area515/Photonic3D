@@ -1,5 +1,4 @@
-package org.area515.resinprinter.display.dispmanx;
-
+package com.wgilster.dispmanx;
 public enum PROTECTION {
 	DISPMANX_PROTECTION_MAX(0x0f),
 	DISPMANX_PROTECTION_NONE(0),
@@ -10,7 +9,7 @@ public enum PROTECTION {
 		this.cConst = cConst;
 	}
 	
-	public int getcConst() {
+	public int getId() {
 		return cConst;
 	}
 }

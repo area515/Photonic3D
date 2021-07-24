@@ -14,16 +14,16 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Hashtable;
 
-import org.area515.resinprinter.display.dispmanx.ALPHA;
-import org.area515.resinprinter.display.dispmanx.DispManX;
-import org.area515.resinprinter.display.dispmanx.PROTECTION;
-import org.area515.resinprinter.display.dispmanx.VC_DISPMANX_ALPHA_T;
-import org.area515.resinprinter.display.dispmanx.VC_IMAGE_TRANSFORM_T;
-import org.area515.resinprinter.display.dispmanx.VC_IMAGE_TYPE_T;
-import org.area515.resinprinter.display.dispmanx.VC_RECT_T;
+import org.area515.resinprinter.display.DispManXTestSelfContained.ALPHA;
 
 import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
+import com.wgilster.dispmanx.DispManX;
+import com.wgilster.dispmanx.PROTECTION;
+import com.wgilster.dispmanx.VC_DISPMANX_ALPHA_T;
+import com.wgilster.dispmanx.VC_IMAGE_TRANSFORM_T;
+import com.wgilster.dispmanx.VC_IMAGE_TYPE_T;
+import com.wgilster.dispmanx.VC_RECT_T;
 
 public class DispManXDirectMemory {
 	public static void res( String str, int val ) {
@@ -134,7 +134,7 @@ System.out.println("time taken to create NativeMemoryBackedBufferedImage: " +  (
 
         IntByReference ref = new IntByReference();
         int resourceHandle = dispMan.vc_dispmanx_resource_create( 
-        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), 
+        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getId(), 
         		width.getValue(), 
         		height.getValue(), 
         		ref );
@@ -146,7 +146,7 @@ timer = System.currentTimeMillis();
 //copyFrom.copyData(nativeImage.getRaster());
         res( "resource write data", dispMan.vc_dispmanx_resource_write_data( 
         		resourceHandle, 
-        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getcIndex(), 
+        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getId(), 
         		pitch, 
         		nativeImage.getMemory(), 
         		destinationRect )
@@ -167,10 +167,10 @@ timer = System.currentTimeMillis();
         		destinationRect, 
         		resourceHandle, 
         		sourceRect, 
-        		PROTECTION.DISPMANX_PROTECTION_NONE.getcConst(), 
+        		PROTECTION.DISPMANX_PROTECTION_NONE.getId(), 
         		alpha, 
         		0, 
-        		VC_IMAGE_TRANSFORM_T.VC_IMAGE_ROT0.getcConst() );
+        		VC_IMAGE_TRANSFORM_T.VC_IMAGE_ROT0.getId() );
         
         res( "submit", dispMan.vc_dispmanx_update_submit_sync( update ) );
 
