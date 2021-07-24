@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<project name="cwh" basedir="." default="build">
+<project name="cwh" basedir="." default="initialization">
   <import file="BuildCWH.xml"/>
 
   <property name="build" location="srcbin"/>
@@ -35,7 +35,7 @@
     <pathelement location="${build}"/>
   </path>
 
-  <target name="init">
+  <target name="initialization">
     <tstamp />
     <echo>System = ${os.name} ${os.arch}</echo>
   </target>
@@ -47,8 +47,9 @@
     </delete>
   </target>
 
-  <target name="setup" depends="init">
+  <target name="setup" depends="initialization">
     <mkdir dir="${build}"/>
     <!-- <mkdir dir="${testbuild}"/> -->
   </target>
+	
 </project>

@@ -1,12 +1,29 @@
+
+buildscript {
+  dependencies {
+    configurations.classpath.exclude group: 'xerces', module: 'xercesImpl'
+  }
+}
+
 // PROJECT CONFIG
 // --------------
 plugins {
   id "application"
   id "eclipse"
+  id "java"
   id "co.riiid.gradle" version "0.4.2"
   id 'org.ajoberstar.grgit' version '1.5.0'
   id 'org.ajoberstar.github-pages' version '1.5.0'
   id 'com.google.osdetector' version '1.4.0'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(8))
+  }
 }
 
 configurations {
@@ -16,70 +33,70 @@ configurations {
 repositories {
   maven {
     url 'http://4thline.org/m2'
+    allowInsecureProtocol true
   }
   mavenCentral()
-  jcenter()
 }
 
 dependencies {
-  compile(group: 'io.swagger', name: 'swagger-jaxrs', version: '1.5.8') {
+  implementation('io.swagger:swagger-jaxrs:1.5.8') {
     exclude module: 'jsr311-api'
   }
 
-  compile 'commons-beanutils:commons-beanutils:1.9.3'
-  compile 'com.pi4j:pi4j-core:1.1'
-  compile 'net.java.dev.jna:jna:4.2.2'
-  compile 'org.apache.xmlgraphics:xmlgraphics-commons:1.5'
-  compile 'org.apache.xmlgraphics:batik-transcoder:1.8'
-  compile 'com.sun.mail:javax.mail:1.5.5'
-  compile 'se.sawano.java:alphanumeric-comparator:1.4.1'
-  compile 'org.fourthline.cling:cling-core:2.0.1'
-  compile 'org.fourthline.cling:cling-support:2.0.1'
-  compile 'org.apache.httpcomponents:httpclient:4.3.3'
+  implementation 'commons-beanutils:commons-beanutils:1.9.3'
+  implementation 'com.pi4j:pi4j-core:1.1'
+  implementation 'net.java.dev.jna:jna:5.5.0'
+  implementation 'org.apache.xmlgraphics:xmlgraphics-commons:1.5'
+  implementation 'org.apache.xmlgraphics:batik-transcoder:1.8'
+  implementation 'com.sun.mail:javax.mail:1.5.5'
+  implementation 'se.sawano.java:alphanumeric-comparator:1.4.1'
+  implementation 'org.fourthline.cling:cling-core:2.0.1'
+  implementation 'org.fourthline.cling:cling-support:2.0.1'
+  implementation 'org.apache.httpcomponents:httpclient:4.3.3'
 
-  compile 'org.jmonkeyengine:jme3-core:3.1.0-beta1'
-  compile 'org.apache.commons:commons-math3:3.6.1'
-  compile 'commons-cli:commons-cli:1.2'
-  compile 'commons-codec:commons-codec:1.5'
-  compile 'commons-io:commons-io:2.4'
-  compile 'commons-logging:commons-logging:1.2'
+  implementation 'org.jmonkeyengine:jme3-core:3.1.0-beta1'
+  implementation 'org.apache.commons:commons-math3:3.6.1'
+  implementation 'commons-cli:commons-cli:1.2'
+  implementation 'commons-codec:commons-codec:1.5'
+  implementation 'commons-io:commons-io:2.4'
+  implementation 'commons-logging:commons-logging:1.2'
 
-  compile 'org.freemarker:freemarker:2.3.23'
+  implementation 'org.freemarker:freemarker:2.3.23'
 
-  compile 'com.google.guava:guava:19.0'
+  implementation 'com.google.guava:guava:19.0'
 
-  compile 'org.eclipse.jetty:jetty-server:9.3.7.v20160115'
-  compile 'org.eclipse.jetty:jetty-servlet:9.3.7.v20160115'
-  compile 'org.eclipse.jetty:jetty-rewrite:9.3.7.v20160115'
-  compile 'org.jboss.weld.servlet:weld-servlet-core:2.4.1.Final'
-  compile 'org.eclipse.jetty.websocket:javax-websocket-server-impl:9.3.7.v20160115'
+  implementation 'org.eclipse.jetty:jetty-server:9.3.7.v20160115'
+  implementation 'org.eclipse.jetty:jetty-servlet:9.3.7.v20160115'
+  implementation 'org.eclipse.jetty:jetty-rewrite:9.3.7.v20160115'
+  implementation 'org.jboss.weld.servlet:weld-servlet-core:2.4.1.Final'
+  implementation 'org.eclipse.jetty.websocket:javax-websocket-server-impl:9.3.7.v20160115'
 
-  compile 'com.jcraft:jsch:0.1.53'
-  compile 'org.scream3r:jssc:2.8.0'
-  compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.8.2'
-  compile 'org.apache.logging.log4j:log4j-api:2.8.2'
-  compile 'org.apache.logging.log4j:log4j-core:2.8.2'
+  implementation 'com.jcraft:jsch:0.1.53'
+  implementation 'org.scream3r:jssc:2.8.0'
+  implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.8.2'
+  implementation 'org.apache.logging.log4j:log4j-api:2.8.2'
+  implementation 'org.apache.logging.log4j:log4j-core:2.8.2'
 
-  compile 'org.apache.james:apache-mime4j:0.6.1'
+  implementation 'org.apache.james:apache-mime4j:0.6.1'
 
-  compile 'org.jboss.resteasy:jaxrs-api:3.0.9.Final'
-  compile 'org.jboss.resteasy:resteasy-jaxrs:3.0.9.Final'
-  compile 'org.jboss.resteasy:resteasy-jackson2-provider:3.0.9.Final'
-  compile('org.jboss.resteasy:resteasy-multipart-provider:3.0.9.Final') {
+  implementation 'org.jboss.resteasy:jaxrs-api:3.0.9.Final'
+  implementation 'org.jboss.resteasy:resteasy-jaxrs:3.0.9.Final'
+  implementation 'org.jboss.resteasy:resteasy-jackson2-provider:3.0.9.Final'
+  implementation('org.jboss.resteasy:resteasy-multipart-provider:3.0.9.Final') {
     exclude module: 'mail'
   }
 
-  compile 'com.fasterxml.jackson.core:jackson-core:2.4.5'
-  compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.5'
-  compile 'com.fasterxml.jackson.core:jackson-databind:2.4.5'
+  implementation 'com.fasterxml.jackson.core:jackson-core:2.4.5'
+  implementation 'com.fasterxml.jackson.core:jackson-annotations:2.4.5'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.4.5'
 
-  compile 'org.powermock:powermock-module-junit4:1.6.4'
-  compile 'org.powermock:powermock-api-mockito:1.6.4'
+  implementation 'org.powermock:powermock-module-junit4:1.6.4'
+  implementation 'org.powermock:powermock-api-mockito:1.6.4'
 
-  compile 'junit:junit:4.12'   
+  implementation 'junit:junit:4.12'
 
-  compile fileTree(dir: 'libs', include: '**/*.jar')
-  compile files('conf')
+  implementation fileTree(dir: 'libs', include: '**/*.jar')
+  implementation files('conf')
 
   doclet 'com.tenxerconsulting:swagger-doclet:1.1.3'
   doclet 'javax.ws.rs:javax.ws.rs-api:2.0'
@@ -96,7 +113,7 @@ sourceSets {
 compileJava {
   options.compilerArgs << '-XDignore.symbol.file'
   options.fork = true
-  options.forkOptions.executable = 'javac'
+  //options.forkOptions.executable = 'javac'
 }
 
 github {
@@ -130,7 +147,7 @@ def commitVersion = "unknown";
 mainClassName = "org.area515.resinprinter.server.Main"
 applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=conf/eclipselog4j2.properties"]
 applicationName = 'photonic3d'
-jar.archiveName = 'photonic3d.jar'
+jar.archiveFileName = 'photonic3d.jar'
 
 // TASK CONFIG
 // -----------
@@ -161,20 +178,22 @@ githubPages {
 
 // TASK EXECUTION DEFS
 // -------------------
-task repoVersion() << {
-  commitVersion = grgit.describe()
+task repoVersion()  {
+    doLast {
+      commitVersion = grgit.describe()
 
-  if (commitVersion == null) {
-    commitVersion = currentCommitHash();
+ 	if (commitVersion == null) {
+    	commitVersion = currentCommitHash();
+  	}
+
+ 	ant.properties['repo.version'] = commitVersion
+
+  	println("Git Commit Description: "+commitVersion)
   }
-
-  ant.properties['repo.version'] = commitVersion
-
-  println("Git Commit Description: "+commitVersion)
 };
 
 task testJar(type: Jar) {
-  baseName = "photonic3d"
+  archiveBaseName = "photonic3d"
   classifier = "tests"
   from sourceSets.test.output
 }
@@ -187,30 +206,33 @@ task dist(dependsOn: ['preDist', 'BuildCWH']) {
 
 };
 
-task setupRemote << {
-  def matchingRemotes = grgit.remote.list().findAll({it.name==releaseRepoRemoteName});
-  if (matchingRemotes.size < 1) {
-    throw new GradleException("No configured remotes match the the remote named: ${releaseRepoRemoteName}");
+task setupRemote  {
+    doLast {
+  		def matchingRemotes = grgit.remote.list().findAll({it.name==releaseRepoRemoteName});
+  		if (matchingRemotes.size < 1) {
+    		throw new GradleException("No configured remotes match the the remote named: ${releaseRepoRemoteName}");
+  		}
+
+  		def remote = matchingRemotes;
+  		//def releaseUrl = "https://github.com/${github.owner}/${github.repo}"
+  		def releaseUrl = remote.url;
+  		println("Releasing to: "+releaseUrl);
+
+  		def repoMatch = (releaseUrl =~ /github\.com[\/\:]([^\/]+)\/([^\/]*?)(\.git)?.?$/);
+
+  		def repoOwner = repoMatch[0][1];
+  		def repoName = repoMatch[0][2];
+
+  		println("Repo Owner: ${repoOwner} / Repo Name: ${repoName}");
+
+  		github.owner = repoOwner;
+ 		github.repo = repoName;
   }
-
-  def remote = matchingRemotes;
-  //def releaseUrl = "https://github.com/${github.owner}/${github.repo}"
-  def releaseUrl = remote.url;
-  println("Releasing to: "+releaseUrl);
-
-  def repoMatch = (releaseUrl =~ /github\.com[\/\:]([^\/]+)\/([^\/]*?)(\.git)?.?$/);
-
-  def repoOwner = repoMatch[0][1];
-  def repoName = repoMatch[0][2];
-
-  println("Repo Owner: ${repoOwner} / Repo Name: ${repoName}");
-
-  github.owner = repoOwner;
-  github.repo = repoName;
 }
 
 
-task setupRelease(dependsOn: ['setupRemote']) << {
+task setupRelease(dependsOn: ['setupRemote'])   {
+    doLast {
   grgit = Grgit.open(project.file('..'), new Credentials(username: github.owner, password: github.token));
 
   if (releaseRepoToken.equals('GITHUB_API_TOKEN')) {
@@ -240,23 +262,28 @@ task setupRelease(dependsOn: ['setupRemote']) << {
   github.tagName = tagName;
   grgit.tag.add(name: tagName);
   println("Added tag: ${tagName}");
+  }
 }
 
-task releaseDist (dependsOn: ['dist']) << {
+task releaseDist (dependsOn: ['dist'])   {
+    doLast {
   github.assets = fileTree(dir: '.', include: '*.zip', exclude: 'cwh-0.298.zip') as List;
   if (github.assets.size() < 1) {
     throw new GradleException("There are no zip files to release in the project directory.")
   }
   println("Releasing the following files: "+github.assets);
+  }
 }
 
-task fullRelease(dependsOn: ['setupRelease', 'githubRelease']) << {
+task fullRelease(dependsOn: ['setupRelease', 'githubRelease'])   {
+    doLast {
   grgit.push(tags: true, remote: releaseRepoRemoteName);
+  }
 }
 
 task runSliceBrowser(type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
-  main = "org.area515.resinprinter.slice.SliceBrowser"
+  mainClass = "org.area515.resinprinter.slice.SliceBrowser"
 }
 
 task apidoc(type: Javadoc) {
