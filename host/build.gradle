@@ -20,11 +20,11 @@ plugins {
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-java {
+/*java {
   toolchain {
     languageVersion.set(JavaLanguageVersion.of(8))
   }
-}
+}*/
 
 configurations {
   doclet
