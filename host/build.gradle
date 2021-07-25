@@ -199,11 +199,9 @@ task testJar(type: Jar) {
 }
 
 task preDist(dependsOn: ['installDist', 'repoVersion']) {
-
 }
 
 task dist(dependsOn: ['preDist', 'BuildCWH']) {
-
 };
 
 task setupRemote  {
