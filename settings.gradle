@@ -1,2 +1,2 @@
 rootProject.name = "photonic3d"
-rootProject.projectDir = "host"
+rootProject.projectDir = new File("host")
