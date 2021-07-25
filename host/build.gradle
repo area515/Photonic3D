@@ -11,7 +11,7 @@ plugins {
   id "application"
   id "eclipse"
   id "java"
-  id "co.riiid.gradle" version "0.4.2"
+  id "com.github.breadmoirai.github-release" version "2.2.12"
   id 'org.ajoberstar.grgit' version '1.5.0'
   id 'org.ajoberstar.github-pages' version '1.5.0'
   id 'com.google.osdetector' version '1.4.0'
@@ -116,18 +116,6 @@ compileJava {
   //options.forkOptions.executable = 'javac'
 }
 
-github {
-  // owner and repo will be determined from the origin
-  // owner = releaseRepoOwner
-  // repo = releaseRepoName
-
-  // Set token in gradle.properties
-  token = releaseRepoToken;
-  // tagName = 'd001'
-  // Must compute assets in task, otherwise you can't release with dist
-  // assets = ant.path {fileset(dir: '.', includes: '*.zip')} . list()
-};
-
 eclipse {
   classpath {
     defaultOutputDir = file('srcbin')
@@ -180,11 +168,11 @@ githubPages {
 // -------------------
 task repoVersion()  {
     doLast {
-      commitVersion = grgit.describe()
+      /*commitVersion = grgit.describe()
 
- 	if (commitVersion == null) {
+ 	if (commitVersion == null) {*/
     	commitVersion = currentCommitHash();
-  	}
+  	//}
 
  	ant.properties['repo.version'] = commitVersion
 
@@ -223,15 +211,19 @@ task setupRemote  {
 
   		println("Repo Owner: ${repoOwner} / Repo Name: ${repoName}");
 
-  		github.owner = repoOwner;
- 		github.repo = repoName;
+  		githubRelease.owner = repoOwner;
+ 		githubRelease.repo = repoName;
+        githubRelease.draft = true;
+        githubRelease.prerelease = true;
+        project.ext.set("owner", repoOwner)
+        project.ext.set("repo", repoName)
   }
 }
 
 
 task setupRelease(dependsOn: ['setupRemote'])   {
     doLast {
-  grgit = Grgit.open(project.file('..'), new Credentials(username: github.owner, password: github.token));
+  grgit = Grgit.open(project.file('..'), new Credentials(username: project.ext.owner, password: releaseRepoToken));
 
   if (releaseRepoToken.equals('GITHUB_API_TOKEN')) {
     throw new GradleException("Please setup your gradle.properties for GitHub Releases")
@@ -252,12 +244,12 @@ task setupRelease(dependsOn: ['setupRemote'])   {
   ant.input(message: "Press <return> to continue...")
 
   if (tagName == "${null}") {
-    println("Recommended development release tag: ${github.owner}-${currentCommitHash()}")
+    println("Recommended development release tag: ${project.ext.owner}-${currentCommitHash()}")
     ant.input(message: "Enter the tag to create for this release > ", addproperty: "tagName")
     tagName = ant.tagName
   }
 
-  github.tagName = tagName;
+  githubRelease.tagName = tagName;
   grgit.tag.add(name: tagName);
   println("Added tag: ${tagName}");
   }
@@ -265,11 +257,11 @@ task setupRelease(dependsOn: ['setupRemote'])   {
 
 task releaseDist (dependsOn: ['dist'])   {
     doLast {
-  github.assets = fileTree(dir: '.', include: '*.zip', exclude: 'cwh-0.298.zip') as List;
-  if (github.assets.size() < 1) {
+  githubRelease.assets = fileTree(dir: '.', include: '*.zip', exclude: 'cwh-0.298.zip') as List;
+  if (githubRelease.assets.size() < 1) {
     throw new GradleException("There are no zip files to release in the project directory.")
   }
-  println("Releasing the following files: "+github.assets);
+  println("Releasing the following files: "+githubRelease.assets);
   }
 }
 
@@ -287,7 +279,6 @@ task runSliceBrowser(type: JavaExec) {
 task apidoc(type: Javadoc) {
   source = sourceSets.main.allJava
   destinationDir = file("${project.docsDir}/apidoc")
-  options.classpath = configurations.doclet.files.asType(List)
   options.docletpath = configurations.doclet.files.asType(List)
   options.doclet = "com.tenxerconsulting.swagger.doclet.ServiceDoclet"
   options.addStringOption("apiVersion", "1")
@@ -318,11 +309,13 @@ prepareGhPages.doFirst {
 
 // PROJECT POST-SETUP SCRIPT
 // -------------------------
-githubRelease.dependsOn releaseDist
 dist.mustRunAfter setupRelease
 BuildCWH.mustRunAfter preDist
 publishGhPages.dependsOn javadoc
 publishGhPages.dependsOn apidoc
+tasks.named('githubRelease').configure {
+    dependsOn setupRelease
+}
 
 applicationDistribution.from(testJar) {
   into "lib"
@@ -334,4 +327,24 @@ applicationDistribution.from(testJar) {
 String currentCommitHash() {
   def history = grgit.log(maxCommits: 1)
   return history[0].id.take(7)
+}
+
+githubRelease {
+    authorization releaseRepoToken
+    token releaseRepoToken // This is your personal access token with Repo permissions
+                         // You get this from your user settings > developer settings > Personal Access Tokens
+    //owner "WesGilster" // default is the last part of your group. Eg group: "com.github.breadmoirai" => owner: "breadmoirai"
+    //repo "Photonic3D" // by default this is set to your project name
+	//tagName "cwh-${repoOwner}-${currentCommitHash()}" // by default this is set to "v${project.version}"
+    //targetCommitish "master" // by default this is set to "master"
+    //releaseName "WesGilster" // Release title, by default this is the same as the tagName
+    //body "" // by default this is empty
+    draft true // by default this is false
+    prerelease true // by default this is false
+    //releaseAssets jar.destinationDir.listFiles // this points to which files you want to upload as assets with your release
+
+    overwrite false // by default false; if set to true, will delete an existing release with the same tag and name
+    dryRun false // by default false; you can use this to see what actions would be taken without making a release
+    //apiEndpoint "https://api.github.com" // should only change for github enterprise users
+    client // This is the okhttp client used for http requests
 }

@@ -21,7 +21,19 @@ jobs:
       with:
         java-version: '8'
         distribution: 'adopt'
+    - uses: release-drafter/release-drafter@v5
+        # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
+        # with:
+        #   config-name: my-config.yml
+        #   disable-autolabeler: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Grant execute permission for gradlew
       run: chmod +x ./host/gradlew
+    - name: Assemble build
+      run: ./host/gradlew assemble
     - name: Build distribution
-      run: ./host/gradlew dist --stacktrace
+      run: ./host/gradlew dist
+        env:
+          USERNAME: ${{ github.actor }}
+          releaseRepoToken: ${{ secrets.GITHUB_TOKEN }}
