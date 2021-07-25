@@ -22,8 +22,8 @@ jobs:
         java-version: '8'
         distribution: 'adopt'
     - name: Grant execute permission for gradlew
-      run: chmod +x ./gradlew
+      run: chmod +x ./host/gradlew
     - name: Show tasks
-      run: ./gradlew tasks
+      run: ./host/gradlew tasks
     - name: Build distribution
-      run: ./gradlew dist
+      run: ./host/gradlew dist
