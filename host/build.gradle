@@ -235,13 +235,14 @@ task setupRelease(dependsOn: ['setupRemote'])   {
   println("UNCOMMITTED UNSTAGED CHANGES: "+status.unstaged)
   println("----------------------------------------------")
 
-  def tagName = "$System.env.tagName";
+  //def tagName = "$System.env.tagName";
+  def tagName = "${project.ext.owner}-${currentCommitHash()}";
 
   println("Dry-Run Git Push to ${releaseRepoRemoteName}:")
   grgit.push(dryRun: true, remote: releaseRepoRemoteName);
-  println("----------------------------------------------")
-  println("Check the above git push dry run to ensure that your push will succeed!");
-  ant.input(message: "Press <return> to continue...")
+  //println("----------------------------------------------")
+  //println("Check the above git push dry run to ensure that your push will succeed!");
+  //ant.input(message: "Press <return> to continue...")
 
   if (tagName == "${null}") {
     println("Recommended development release tag: ${project.ext.owner}-${currentCommitHash()}")
