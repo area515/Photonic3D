@@ -315,6 +315,7 @@ publishGhPages.dependsOn javadoc
 publishGhPages.dependsOn apidoc
 tasks.named('githubRelease').configure {
     dependsOn setupRelease
+    dependsOn releaseDist
 }
 
 applicationDistribution.from(testJar) {
