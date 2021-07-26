@@ -33,7 +33,7 @@ jobs:
     - name: Assemble build
       run: ./host/gradlew assemble
     - name: Build distribution
-      run: ./host/gradlew dist
+      run: ./host/gradlew fullRelease
         env:
           USERNAME: ${{ github.actor }}
           releaseRepoToken: ${{ secrets.GITHUB_TOKEN }}
