@@ -250,6 +250,8 @@ task setupRelease(dependsOn: ['setupRemote'])   {
   }
 
   githubRelease.tagName = tagName;
+  githubRelease.releaseName = grgit.head().getFullMessage();
+  githubRelease.body = grgit.head().getShortMessage();
   grgit.tag.add(name: tagName);
   println("Added tag: ${tagName}");
   }
