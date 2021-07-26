@@ -168,9 +168,9 @@ githubPages {
 // -------------------
 task repoVersion()  {
     doLast {
-      /*commitVersion = grgit.describe()
+      commitVersion = grgit.describe()
 
- 	if (commitVersion == null) {*/
+ 	//if (commitVersion == null) {*/
     	commitVersion = currentCommitHash();
   	//}
 
@@ -257,11 +257,11 @@ task setupRelease(dependsOn: ['setupRemote'])   {
 
 task releaseDist (dependsOn: ['dist'])   {
     doLast {
-  githubRelease.assets = fileTree(dir: '.', include: '*.zip', exclude: 'cwh-0.298.zip') as List;
-  if (githubRelease.assets.size() < 1) {
+  githubRelease.releaseAssets = fileTree(dir: '.', include: '*.zip', exclude: 'cwh-0.298.zip') as List;
+  if (githubRelease.releaseAssets.size() < 1) {
     throw new GradleException("There are no zip files to release in the project directory.")
   }
-  println("Releasing the following files: "+githubRelease.assets);
+  println("Releasing the following files: "+githubRelease.releaseAssets);
   }
 }
 
