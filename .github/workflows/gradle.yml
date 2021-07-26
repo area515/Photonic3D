@@ -30,8 +30,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Grant execute permission for gradlew
       run: chmod +x ./host/gradlew
-    - name: Assemble build
-      run: ./host/gradlew assemble
     - name: Build distribution
       run: ./host/gradlew fullRelease
         env:
