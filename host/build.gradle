@@ -170,9 +170,9 @@ task repoVersion()  {
     doLast {
       commitVersion = grgit.describe()
 
- 	//if (commitVersion == null) {*/
+ 	if (commitVersion == null) {
     	commitVersion = currentCommitHash();
-  	//}
+  	}
 
  	ant.properties['repo.version'] = commitVersion
 
