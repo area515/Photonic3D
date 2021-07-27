@@ -3,6 +3,12 @@
 if [[ $UID != 0 ]]; then
     echo "Please run this script with sudo:"
     echo "sudo $0 $*"
+    echo "Here are some other usages:"
+    echo "sudo ./start.sh area515/Photonic3D"
+    echo "sudo ./start.sh WesGilster/Photonic3D TestKit"
+    echo "sudo ./start.sh WesGilster/Photonic3D force"
+    echo "sudo ./start.sh WesGilster/Photonic3D debug"
+    echo "sudo ./start.sh WesGilster/Photonic3D forceprerelease"
     exit 1
 fi
 
@@ -105,10 +111,13 @@ fi
 echo Checking for new version from Github Repo: ${repo}
 cd ${installDirectory}
 LOCAL_TAG=$(grep repo.version build.number | cut -d = -f 2 | tr -d '\r')
-NETWORK_TAG=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'tag_name' | cut -d\" -f4)
-
+if [ "$2" == "forceprerelease" ]; then
+   NETWORK_TAG=$(curl -L -s https://api.github.com/repos/${repo}/releases | grep -m 1 -B 30 '"prerelease": true' | grep 'tag_name' | cut -d\" -f4)
+else
+   NETWORK_TAG=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'tag_name' | cut -d\" -f4)
+fi
 echo Local Tag: ${LOCAL_TAG}
-echo Network Tag: ${NETWORK_TAG}
+echo Latest Network Tag: ${NETWORK_TAG}
 
 if [ -f ${downloadPrefix}.*.zip ]; then
 	OFFLINE_FILE=$(ls ${downloadPrefix}.*.zip)
@@ -124,14 +133,19 @@ if [ -f ${downloadPrefix}.*.zip ]; then
 	rm ${OFFLINE_FILE}
 elif [ -z "${NETWORK_TAG}" ]; then
 	echo "Couldn't fetch version from GitHub, launching existing install."
-elif [ "${NETWORK_TAG}" != "${LOCAL_TAG}" -o "$2" == "force" ]; then
-	echo Installing latest version of ${downloadPrefix}: ${NETWORK_TAG}
-
-	DL_URL=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'browser_' | cut -d\" -f4 | grep -- -${NETWORK_TAG})
+elif [ "${NETWORK_TAG}" != "${LOCAL_TAG}" -o "$2" == "force" -o "$2" == "forceprerelease" ]; then
+	if [ "$2" == "forceprerelease" ]; then
+		DL_URL=$(curl -L -s https://api.github.com/repos/${repo}/releases | grep -m 1 -A 36 '"prerelease": true' | grep 'browser_' | cut -d\" -f4 | grep -- -${NETWORK_TAG})
+	else 
+		DL_URL=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'browser_' | cut -d\" -f4 | grep -- -${NETWORK_TAG})
+	fi
+	
+	echo Installing from: ${DL_URL}
+	
 	DL_FILE=${DL_URL##*/}
 	rm -f "/tmp/${DL_FILE}"
 	wget -P /tmp "${DL_URL}"
-  if [ $? -ne 0 ]; then
+  	if [ $? -ne 0 ]; then
 		echo "wget of ${DL_FILE} failed. Aborting update."
 		exit 1
 	fi
@@ -167,7 +181,7 @@ if [ ! -f "/etc/init.d/cwhservice" ]; then
 	update-rc.d cwhservice defaults
 fi
 
-echo Determinging if one time install has occurred
+echo Determining if one time install has occurred
 performedOneTimeInstall=$(grep performedOneTimeInstall ${CONFIG_PROPS} | awk -F= '{print $2}')
 if [ -f "oneTimeInstall.sh" -a [${performedOneTimeInstall} != "true"] ]; then
 	./oneTimeInstall.sh
