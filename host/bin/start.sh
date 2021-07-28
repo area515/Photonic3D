@@ -9,6 +9,8 @@ if [[ $UID != 0 ]]; then
     echo "sudo ./start.sh WesGilster/Photonic3D force"
     echo "sudo ./start.sh WesGilster/Photonic3D debug"
     echo "sudo ./start.sh WesGilster/Photonic3D forceprerelease"
+    echo "sudo ./start.sh WesGilster/Photonic3D prerelease"
+    echo "sudo ./start.sh WesGilster/Photonic3D debugprerelease"
     exit 1
 fi
 
@@ -111,7 +113,7 @@ fi
 echo Checking for new version from Github Repo: ${repo}
 cd ${installDirectory}
 LOCAL_TAG=$(grep repo.version build.number | cut -d = -f 2 | tr -d '\r')
-if [ "$2" == "forceprerelease" -o "prerelease" ]; then
+if [ "$2" == "forceprerelease" -o "$2" == "prerelease" -o "$2" == "debugprerelease" ]; then
    NETWORK_TAG=$(curl -L -s https://api.github.com/repos/${repo}/releases | grep -m 1 -B 30 '"prerelease": true' | grep 'tag_name' | cut -d\" -f4)
 else
    NETWORK_TAG=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'tag_name' | cut -d\" -f4)
@@ -191,7 +193,7 @@ if [ -f "eachStart.sh" ]; then
 	./eachStart.sh
 fi
 
-if [ "$2" == "debug" ]; then
+if [ "$2" == "debug" "$2" == "debugprerelease"]; then
 	pkill -9 -f "org.area515.resinprinter.server.Main"
 	echo "Starting printer host server($2)"
 	java -Xmx512m -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Dlog4j.configurationFile=debuglog4j2.properties -Djava.library.path=/usr/lib/jni -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
