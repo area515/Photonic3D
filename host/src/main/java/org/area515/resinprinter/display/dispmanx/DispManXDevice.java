@@ -34,7 +34,7 @@ public class DispManXDevice implements GraphicsOutputInterface {
     private ReentrantLock activityLock = new ReentrantLock(true);
     private Rectangle bounds = new Rectangle();
     private SCREEN screen;
-    private VC_DISPMANX_ALPHA_T.ByReference alpha;
+    private VC_DISPMANX_ALPHA_T.ByReference alpha = new VC_DISPMANX_ALPHA_T.ByReference();
     private int displayHandle;
     private boolean screenInitialized = false;
     private String displayName;
