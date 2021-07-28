@@ -343,7 +343,7 @@ githubRelease {
     //targetCommitish "master" // by default this is set to "master"
     //releaseName "WesGilster" // Release title, by default this is the same as the tagName
     //body "" // by default this is empty
-    draft true // by default this is false
+    draft false // by default this is false
     prerelease true // by default this is false
     //releaseAssets jar.destinationDir.listFiles // this points to which files you want to upload as assets with your release
 
