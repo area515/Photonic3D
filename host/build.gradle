@@ -192,7 +192,7 @@ task preDist(dependsOn: ['installDist', 'repoVersion']) {
 task dist(dependsOn: ['preDist', 'BuildCWH']) {
 };
 
-task setupRemote  {
+task setupRemote(dependsOn: ['localclean']) {
     doLast {
   		def matchingRemotes = grgit.remote.list().findAll({it.name==releaseRepoRemoteName});
   		if (matchingRemotes.size < 1) {
