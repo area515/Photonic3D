@@ -193,7 +193,7 @@ if [ -f "eachStart.sh" ]; then
 	./eachStart.sh
 fi
 
-if [ "$2" == "debug" -o "$2" == "debugprerelease"]; then
+if [ "$2" == "debug" -o "$2" == "debugprerelease" ]; then
 	pkill -9 -f "org.area515.resinprinter.server.Main"
 	echo "Starting printer host server($2)"
 	java -Xmx512m -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Dlog4j.configurationFile=debuglog4j2.properties -Djava.library.path=/usr/lib/jni -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
