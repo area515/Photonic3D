@@ -242,7 +242,9 @@ public class SchedulingPattern {
 			hasRunReboot = false;
 			return;
 		}
-		
+		if (asString.equals("@stop")) {
+			return;
+		}
 		StringTokenizer st1 = new StringTokenizer(pattern, "|");
 		if (st1.countTokens() < 1) {
 			throw new InvalidPatternException("invalid pattern: \"" + pattern + "\"");

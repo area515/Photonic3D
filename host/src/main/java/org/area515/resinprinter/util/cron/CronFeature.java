@@ -192,6 +192,15 @@ public class CronFeature implements Feature {
 	@Override
 	public void stop() {
 		for (CronTask task : taskList) {
+			if (task.getCronString().equals("@stop")) {
+				try {
+					task.call();
+				} catch (Exception e) {
+					logger.error("Couldn't execute task:" + task.getTaskName(), e);
+				}
+			}
+		}
+		for (CronTask task : taskList) {
 			task.cancel();
 		}
 	}

@@ -240,7 +240,7 @@ public class Main {
 		try {
 			FeatureManager.shutdown();
 		} catch (Exception e) {
-			logger.error("Error shutting down BroadcastManager", e);
+			logger.error("Error shutting down FeatureManager", e);
 		}
 		try {
 			NotificationManager.shutdown();
