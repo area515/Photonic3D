@@ -111,7 +111,7 @@ fi
 echo Checking for new version from Github Repo: ${repo}
 cd ${installDirectory}
 LOCAL_TAG=$(grep repo.version build.number | cut -d = -f 2 | tr -d '\r')
-if [ "$2" == "forceprerelease" ]; then
+if [ "$2" == "forceprerelease" -o "prerelease" ]; then
    NETWORK_TAG=$(curl -L -s https://api.github.com/repos/${repo}/releases | grep -m 1 -B 30 '"prerelease": true' | grep 'tag_name' | cut -d\" -f4)
 else
    NETWORK_TAG=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'tag_name' | cut -d\" -f4)

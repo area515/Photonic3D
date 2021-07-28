@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./start.sh "WesGilster/Creation-Workshop-Host" forceprerelease
+./start.sh "WesGilster/Creation-Workshop-Host" prerelease
