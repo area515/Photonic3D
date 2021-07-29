@@ -82,7 +82,7 @@ public abstract class CurrentImageRenderer implements Callable<RenderingContext>
 			pixLen = 4;
 			ByteBuffer buffer = ((ByteDataBuffer) image.getRaster().getDataBuffer()).getData();
 			for (int i = 0; i<buffer.capacity(); i+=pixLen) {
-				if (buffer.get(i+1) != 0 || buffer.get(i+2) != 0 || buffer.get(i+3) != 0) {
+				if (buffer.get(i) != 0 || buffer.get(i+1) != 0 || buffer.get(i+2) != 0) {
 					area++;
 				}
 			}

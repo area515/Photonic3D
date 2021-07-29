@@ -213,7 +213,6 @@ task setupRemote(dependsOn: ['localclean']) {
 
   		githubRelease.owner = repoOwner;
  		githubRelease.repo = repoName;
-        githubRelease.draft = true;
         githubRelease.prerelease = true;
         project.ext.set("owner", repoOwner)
         project.ext.set("repo", repoName)
