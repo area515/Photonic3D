@@ -16,6 +16,7 @@ import org.area515.resinprinter.job.JobManagerException;
 import org.area515.util.Log4jUtil;
 
 import com.wgilster.dispmanx.window.NativeMemoryBackedBufferedImage;
+import com.wgilster.dispmanx.window.NativeMemoryBackedBufferedImage.ByteDataBuffer;
 
 public abstract class CurrentImageRenderer implements Callable<RenderingContext> {
 	private static final Logger logger = LogManager.getLogger();
@@ -75,9 +76,11 @@ public abstract class CurrentImageRenderer implements Callable<RenderingContext>
 		int type = image.getType();
 		int pixLen = 3;
 		long area = 0;
-
+		byte[] pixels;
+		
 		if (image instanceof NativeMemoryBackedBufferedImage) {
 			pixLen = 4;
+			pixels = ((ByteDataBuffer) image.getRaster().getDataBuffer()).getData();
 		} else if (type != BufferedImage.TYPE_3BYTE_BGR
 					&& type != BufferedImage.TYPE_4BYTE_ABGR
 					&& type != BufferedImage.TYPE_4BYTE_ABGR_PRE
@@ -104,9 +107,9 @@ public abstract class CurrentImageRenderer implements Callable<RenderingContext>
 			if (type == BufferedImage.TYPE_BYTE_GRAY) {
 				pixLen = 1;
 			}
+			pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
 		}
 		
-		byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
 		
 		// Iterate linearly across the pixels, summing up cases where the color
 		// is not black (e.g. any color channel nonzero)

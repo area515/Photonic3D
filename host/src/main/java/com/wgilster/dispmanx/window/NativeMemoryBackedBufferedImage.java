@@ -15,6 +15,71 @@ import com.sun.jna.Memory;
 public class NativeMemoryBackedBufferedImage extends BufferedImage {
 	private Memory memory;
 	
+	public static class ByteDataBuffer extends DataBuffer {
+		private int pitch;
+		private int width;
+		private int bytesPerPixel;
+		private ByteBuffer buffer;
+		
+		protected ByteDataBuffer(int dataType, int width, int height, int pitch, int bytesPerPixel, Memory pixelMemory) {
+			super(dataType, width * height);
+			this.pitch = pitch;
+			this.width = width;
+			this.bytesPerPixel = bytesPerPixel;
+			this.buffer = pixelMemory.getByteBuffer(0, pixelMemory.size());
+		}
+
+		public byte[] getData() {
+			return buffer.array();
+		}
+		
+		@Override
+		public int getElem(int bank, int i) {
+			int y = (i / width);
+			int x = (i % width);
+			int index = y*(pitch * bytesPerPixel) + x * bytesPerPixel;
+			
+			return (buffer.get(index) & 0xFF) | ((buffer.get(index + 1) & 0xFF) << 8) | ((buffer.get(index + 2) & 0xFF) << 16) | ((buffer.get(index + 3) & 0xFF) << 24);
+		}
+		
+		@Override
+		public void setElem(int bank, int i, int val) {
+			int y = (i / width);
+			int x = (i % width);
+			int index = y*(pitch * bytesPerPixel) + x * bytesPerPixel;
+
+				buffer.put(index + 0, (byte)(val));				//b
+				buffer.put(index + 1, (byte)((val >> 8)));		//g
+				buffer.put(index + 2, (byte)((val >> 16)));		//r
+				buffer.put(index + 3, (byte)((val >> 24)));		//a
+			
+			//Red dot debugging
+			/*y = (redIndex / width);
+			x = (redIndex % width);
+			int red = y*(pitch * bytesPerPixel) + x * bytesPerPixel;
+			buffer.put(red + 0, (byte)0);				//b
+			buffer.put(red + 1, (byte)0);		//g
+			buffer.put(red + 2, (byte)0xFF);		//r
+			buffer.put(red + 3, (byte)0xFF);		//a*/
+			
+			
+			
+			/*if (i == redIndex) {
+        		System.out.println("X:" + x + " Y:" + y + " i:" + i + " index:" + (index));
+				System.out.println("val:" + Integer.toBinaryString((byte)val)); //1 0 1 0 = g | 1 1 0 0 = r | 1 0 0 1 = b
+				if (breakForException) {
+					try {
+						throw new RuntimeException("Inspect");
+					} catch (RuntimeException e) {
+						e.printStackTrace();
+					}
+				}
+			}*/
+		}
+
+		
+	}
+	
 	public NativeMemoryBackedBufferedImage(Memory memory, ColorModel cm, WritableRaster raster, boolean isRasterPremultiplied, Hashtable<?, ?> properties) {
 		super(cm, raster, isRasterPremultiplied, properties);
 		this.memory = memory;
@@ -96,52 +161,7 @@ System.out.println("pitch:" + pitch);
 System.out.println("width:" + width);
 System.out.println("height:" + height);
 System.out.println("size:" + pixelMemory.size());*/
-		final ByteBuffer buffer = pixelMemory.getByteBuffer(0, pixelMemory.size());
-		DataBuffer nativeScreenBuffer = new DataBuffer(DataBuffer.TYPE_INT, width * height) {
-			@Override
-			public int getElem(int bank, int i) {
-				int y = (i / width);
-				int x = (i % width);
-				int index = y*(pitch * bytesPerPixel) + x * bytesPerPixel;
-				
-				return (buffer.get(index) & 0xFF) | ((buffer.get(index + 1) & 0xFF) << 8) | ((buffer.get(index + 2) & 0xFF) << 16) | ((buffer.get(index + 3) & 0xFF) << 24);
-			}
-			
-			@Override
-			public void setElem(int bank, int i, int val) {
-				int y = (i / width);
-				int x = (i % width);
-				int index = y*(pitch * bytesPerPixel) + x * bytesPerPixel;
-
-					buffer.put(index + 0, (byte)(val));				//b
-					buffer.put(index + 1, (byte)((val >> 8)));		//g
-					buffer.put(index + 2, (byte)((val >> 16)));		//r
-					buffer.put(index + 3, (byte)((val >> 24)));		//a
-				
-				//Red dot debugging
-				/*y = (redIndex / width);
-				x = (redIndex % width);
-				int red = y*(pitch * bytesPerPixel) + x * bytesPerPixel;
-				buffer.put(red + 0, (byte)0);				//b
-				buffer.put(red + 1, (byte)0);		//g
-				buffer.put(red + 2, (byte)0xFF);		//r
-				buffer.put(red + 3, (byte)0xFF);		//a*/
-				
-				
-				
-				/*if (i == redIndex) {
-	        		System.out.println("X:" + x + " Y:" + y + " i:" + i + " index:" + (index));
-					System.out.println("val:" + Integer.toBinaryString((byte)val)); //1 0 1 0 = g | 1 1 0 0 = r | 1 0 0 1 = b
-					if (breakForException) {
-						try {
-							throw new RuntimeException("Inspect");
-						} catch (RuntimeException e) {
-							e.printStackTrace();
-						}
-					}
-				}*/
-			}
-		};
+		ByteDataBuffer nativeScreenBuffer = new ByteDataBuffer(DataBuffer.TYPE_INT, width, height, pitch, bytesPerPixel, pixelMemory);
 	
 		SampleModel argb = new SinglePixelPackedSampleModel(
 		    DataBuffer.TYPE_INT, 
