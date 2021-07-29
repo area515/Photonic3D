@@ -2,6 +2,7 @@ package org.area515.resinprinter.job.render;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.nio.ByteBuffer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -76,12 +77,19 @@ public abstract class CurrentImageRenderer implements Callable<RenderingContext>
 		int type = image.getType();
 		int pixLen = 3;
 		long area = 0;
-		byte[] pixels;
 		
 		if (image instanceof NativeMemoryBackedBufferedImage) {
 			pixLen = 4;
-			pixels = ((ByteDataBuffer) image.getRaster().getDataBuffer()).getData();
-		} else if (type != BufferedImage.TYPE_3BYTE_BGR
+			ByteBuffer buffer = ((ByteDataBuffer) image.getRaster().getDataBuffer()).getData();
+			for (int i = 0; i<buffer.capacity(); i+=pixLen) {
+				if (buffer.get(i+1) != 0 || buffer.get(i+2) != 0 || buffer.get(i+3) != 0) {
+					area++;
+				}
+			}
+			return area;
+		}
+		
+		if (type != BufferedImage.TYPE_3BYTE_BGR
 					&& type != BufferedImage.TYPE_4BYTE_ABGR
 					&& type != BufferedImage.TYPE_4BYTE_ABGR_PRE
 					&& type != BufferedImage.TYPE_BYTE_GRAY) {
@@ -107,14 +115,13 @@ public abstract class CurrentImageRenderer implements Callable<RenderingContext>
 			if (type == BufferedImage.TYPE_BYTE_GRAY) {
 				pixLen = 1;
 			}
-			pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+			
 		}
-		
 		
 		// Iterate linearly across the pixels, summing up cases where the color
 		// is not black (e.g. any color channel nonzero)
-		int inc = Math.abs(pixLen);
-		for (int i = 0; i<pixels.length; i+=inc) {
+		byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+		for (int i = 0; i<pixels.length; i+=pixLen) {
 			if (pixLen == 3) {
 				if (pixels[i] != 0 || pixels[i+1] != 0 || pixels[i+2] != 0) {
 					area++;

@@ -29,8 +29,8 @@ public class NativeMemoryBackedBufferedImage extends BufferedImage {
 			this.buffer = pixelMemory.getByteBuffer(0, pixelMemory.size());
 		}
 
-		public byte[] getData() {
-			return buffer.array();
+		public ByteBuffer getData() {
+			return buffer;
 		}
 		
 		@Override
