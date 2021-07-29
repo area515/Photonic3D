@@ -70,8 +70,8 @@ public class DisplayManager {
 			for (GraphicsDevice device : getGraphicsEnvironment().getScreenDevices()) {
 				devices.add(new GraphicsDeviceOutputInterface(device.getIDstring(), device));
 			}
-		} catch (InappropriateDeviceException e) {
-			logger.error("Continuing after error...", e);
+		} catch (Exception e) {
+			logger.error("Failure loading OS screen devices...", e);
 		}
 		
 		devices.addAll(HostProperties.Instance().getDisplayDevices());
