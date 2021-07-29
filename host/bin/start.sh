@@ -136,7 +136,7 @@ if [ -f ${downloadPrefix}.*.zip ]; then
 elif [ -z "${NETWORK_TAG}" ]; then
 	echo "Couldn't fetch version from GitHub, launching existing install."
 elif [ "${NETWORK_TAG}" != "${LOCAL_TAG}" -o "$2" == "force" -o "$2" == "forceprerelease" ]; then
-	if [ "$2" == "forceprerelease" ]; then
+	if [ "$2" == "forceprerelease" -o "$2" == "debugprerelease" -o "$2" == "prerelease" ]; then
 		DL_URL=$(curl -L -s https://api.github.com/repos/${repo}/releases | grep -m 1 -A 36 '"prerelease": true' | grep 'browser_' | cut -d\" -f4 | grep -- -${NETWORK_TAG})
 	else 
 		DL_URL=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'browser_' | cut -d\" -f4 | grep -- -${NETWORK_TAG})
@@ -195,7 +195,7 @@ fi
 
 if [ "$2" == "debug" -o "$2" == "debugprerelease" ]; then
 	pkill -9 -f "org.area515.resinprinter.server.Main"
-	echo "Starting printer host server($2)"
+	echo Starting printer host server in debug mode
 	java -Xmx512m -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Dlog4j.configurationFile=debuglog4j2.properties -Djava.library.path=/usr/lib/jni -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
 elif [ "$2" == "TestKit" ]; then
 	pkill -9 -f "org.area515.resinprinter.test.HardwareCompatibilityTestSuite"
