@@ -22,7 +22,7 @@ import com.wgilster.dispmanx.VC_RECT_T;
 public class Display {
 	public static boolean hasInitialized;
 	private int displayHandle;
-	private int defaultLayer = 11000;//Retroarch looks like it's at layer 10,000 which means we need to be higher
+	public static final int APPLICATION_LAYER = 11000;//Retroarch looks like it's at layer 10,000 which means we need to be higher
 	private DISPMANX_MODEINFO_T modeInfo;
 	private List<DisplayListener> listeners = new ArrayList<DisplayListener>();
 	
@@ -148,7 +148,7 @@ public class Display {
         int element = DispManX.INSTANCE.vc_dispmanx_element_add(
         		update, 
         		displayHandle, 
-        		defaultLayer + layer, 
+        		layer, 
         		destinationRect, 
         		resourceHandle.getResourceHandle(), 
         		sourceRect, 
@@ -189,7 +189,7 @@ public class Display {
         int element = DispManX.INSTANCE.vc_dispmanx_element_add(
         		update, 
         		displayHandle, 
-        		defaultLayer + layer, 
+        		layer, 
         		destinationRect, 
         		showResourceHandle.getResourceHandle(), 
         		sourceRect, 
