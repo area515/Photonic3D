@@ -210,7 +210,7 @@ public class Printer implements Named {
 		return displayDeviceID;
 	}
 	
-	public void showBlankImage() {	
+	public void showBlankImage() {
 		refreshFrame.showBlankImage();
 	}
 	

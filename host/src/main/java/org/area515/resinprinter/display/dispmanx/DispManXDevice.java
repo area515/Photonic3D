@@ -12,44 +12,31 @@ import org.area515.resinprinter.display.InappropriateDeviceException;
 import org.area515.resinprinter.printer.PrinterConfiguration;
 import org.area515.util.Log4jUtil;
 
-import com.sun.jna.Memory;
-import com.sun.jna.ptr.IntByReference;
-import com.wgilster.dispmanx.DISPMANX_FLAGS_ALPHA_T;
+import com.wgilster.dispmanx.DISPMANX_MODEINFO_T;
 import com.wgilster.dispmanx.DispManX;
-import com.wgilster.dispmanx.PROTECTION;
 import com.wgilster.dispmanx.SCREEN;
-import com.wgilster.dispmanx.VC_DISPMANX_ALPHA_T;
-import com.wgilster.dispmanx.VC_IMAGE_TRANSFORM_T;
-import com.wgilster.dispmanx.VC_IMAGE_TYPE_T;
 import com.wgilster.dispmanx.VC_RECT_T;
+import com.wgilster.dispmanx.window.Display;
 import com.wgilster.dispmanx.window.NativeMemoryBackedBufferedImage;
+import com.wgilster.dispmanx.window.Resource;
+import com.wgilster.dispmanx.window.Sprite;
 
 public class DispManXDevice implements GraphicsOutputInterface {
-	private static final String IMAGE_REALIZE_TIMER = "Image Realize";
+	private static final String IMAGE_TIMER = "Image Realize";
+	private static final String CALIBRATION_TIMER = "Calibration Realize";
+	private static final String GRID_TIMER = "Grid Realize";
     private static final Logger logger = LogManager.getLogger();
-    private static boolean BCM_INIT = false;
-    private static ReentrantLock BCM_LOCK = new ReentrantLock(true);
-
-    private ReentrantLock displayLock = new ReentrantLock(true);
-    private ReentrantLock activityLock = new ReentrantLock(true);
-    private Rectangle bounds = new Rectangle();
-    private SCREEN screen;
-    private VC_DISPMANX_ALPHA_T.ByReference alpha = new VC_DISPMANX_ALPHA_T.ByReference();
-    private int displayHandle;
-    private boolean screenInitialized = false;
+    private int BLANK_LAYER = Integer.MAX_VALUE - 10;
     private String displayName;
-    
-    //For dispmanx
-    private int imageResourceHandle;
-    private int imageElementHandle;
-    
-    //For Calibration and Grid
-    private NativeMemoryBackedBufferedImage calibrationAndGridImage;
-    
-    //This is a cache for when callers use this class without a NativeMemoryBackedBufferedImage
-    private Memory imagePixels;
-    private int imageWidth;
-    private int imageHeight;
+    private SCREEN screen;
+    private Display display = null;
+    private DISPMANX_MODEINFO_T displaySettings;
+    private ReentrantLock displayLock = new ReentrantLock(true);
+    private Resource blankScreenResource;
+    private Sprite blankScreenSprite;
+    private Resource displayImageResource;
+    private Sprite displayedImageSprite;
+    private NativeMemoryBackedBufferedImage calGridImage;
     
     public DispManXDevice(String displayName, SCREEN screen) throws InappropriateDeviceException {
 		this.displayName = displayName;
@@ -58,279 +45,116 @@ public class DispManXDevice implements GraphicsOutputInterface {
 		//Call a harmless method to ensure that Dispmanx lib is initialized
         VC_RECT_T.ByReference sourceRect = new VC_RECT_T.ByReference();
         DispManX.INSTANCE.vc_dispmanx_rect_set(sourceRect, 0, 0, 0, 0);
-        alpha.flags = DISPMANX_FLAGS_ALPHA_T.DISPMANX_FLAGS_ALPHA_FROM_SOURCE.getId();// | ALPHA.DISPMANX_FLAGS_ALPHA_FIXED_ALL_PIXELS.getFlag();
-        alpha.opacity = 255;
 	}
-    
-    private static void bcmHostInit() {
-    	if (BCM_INIT) {
-    		return;
-    	}
-    	
-    	BCM_LOCK.lock();
-    	try {
-	    	if (BCM_INIT) {
-	    		return;
-	    	}
-	    	
-	    	logger.info("initialize bcm host");
-	    	int returnCode = DispManX.INSTANCE.bcm_host_init();
-	    	if (returnCode != 0) {
-	    		throw new IllegalArgumentException("bcm_host_init failed with:" + returnCode);
-	    	}
-	    	BCM_INIT = true;
-    	} finally {
-    		BCM_LOCK.unlock();
-    	}
-    }
-    
-    private void initializeScreen() {
-    	if (screenInitialized) {
-    		return;
-    	}
-    	
-    	displayLock.lock();
-    	try {
-        	if (screenInitialized) {
-        		return;
-        	}
-
-        	logger.info("initialize screen");
-	    	bcmHostInit();
-	    	
-	        IntByReference width = new IntByReference();
-	        IntByReference height = new IntByReference();
-	    	int returnCode = DispManX.INSTANCE.graphics_get_display_size(screen.getId(), width, height);
-	    	if (returnCode != 0) {
-	    		throw new IllegalArgumentException("graphics_get_display_size failed with:" + returnCode);
-	    	}
-	    	bounds.setBounds(0, 0, width.getValue(), height.getValue());
-	    	
-	    	displayHandle = DispManX.INSTANCE.vc_dispmanx_display_open(screen.getId());
-	    	if (displayHandle == 0) {
-	    		throw new IllegalArgumentException("vc_dispmanx_display_open failed with:" + returnCode);
-	    	}
-	    	
-	        screenInitialized = true;
-    	} finally {
-    		displayLock.unlock();
-    	}
-    }
     
 	@Override
 	public void dispose() {
+		if (display == null) {
+			logger.warn("Display already closed. Nothing to dispose");
+			return;
+		}
+		
     	displayLock.lock();
     	try {
-			logger.info("dispose screen");
-			removeAllElementsFromScreen();
-	    	logger.info("vc_dispmanx_display_close result:" + DispManX.INSTANCE.vc_dispmanx_display_close(displayHandle));
-	    	imagePixels = null;
-	    	calibrationAndGridImage = null;
-	    	imageWidth = 0;
-	    	imageHeight = 0;
-	    	screenInitialized = false;
+    		if (display != null) {
+    			removeNonBlankElementsFromScreen();
+    			blankScreenResource.release();
+    			display.removeNow(blankScreenSprite);
+		    	display.close();
+		    	display = null;
+    		}
     	} finally {
     		displayLock.unlock();
     	}
 	}
-	
-    public static int getPitch( int x, int y ) {
-        return ((x + (y)-1) & ~((y)-1));
-    }
     
-	/*private Memory loadBitmapRGB565(BufferedImage image, Memory destPixels, IntByReference width, IntByReference height, IntByReference pitchByRef) {
-		int bytesPerPixel = 2;
-		int pitch = getPitch(bytesPerPixel * image.getWidth(), 32);
-		pitchByRef.setValue(pitch);
-		if (destPixels == null) {
-			destPixels = new Memory(pitch * image.getHeight());
-		}
-		
-        for (int y = 0; y < image.getHeight(); y++) {
-            for (int x = 0; x < image.getWidth(); x++) {
-        		int rgb = image.getRGB(x, y);
-        		destPixels.setShort((y*(pitch / bytesPerPixel) + x) * bytesPerPixel, (short)(((rgb & 0xf80000) >>> 8) | ((rgb & 0xfc00) >>> 5) | (rgb & 0xf8 >>> 3)));
-            }
-        }
-        width.setValue(image.getWidth());
-        height.setValue(image.getHeight());
-        return destPixels;
-	}
-
-	private Memory loadBitmapARGB8888(BufferedImage image, Memory destPixels, IntByReference width, IntByReference height, IntByReference pitchByRef) {
-		int bytesPerPixel = 4;
-		int pitch = getPitch(bytesPerPixel * image.getWidth(), 32);
-		pitchByRef.setValue(pitch);
-		if (destPixels == null) {
-			destPixels = new Memory(pitch * image.getHeight());
-		}
-		
-		logger.debug("loadBitmapARGB8888 alg started:{}", () -> Log4jUtil.splitTimer(IMAGE_REALIZE_TIMER));
-        for (int y = 0; y < image.getHeight(); y++) {
-            for (int x = 0; x < image.getWidth(); x++) {
-        		destPixels.setInt((y*(pitch / bytesPerPixel) + x) * bytesPerPixel, image.getRGB(x, y));
-            }
-        }
-		logger.debug("loadBitmapARGB8888 alg complete:{}", () -> Log4jUtil.splitTimer(IMAGE_REALIZE_TIMER));
-
-        width.setValue(image.getWidth());
-        height.setValue(image.getHeight());
-        return destPixels;
-	}*/
-
 	@Override
 	public void showBlankImage() {
-		initializeScreen();
-		removeAllElementsFromScreen();
+		removeNonBlankElementsFromScreen();
 	}
 
-	private void removeAllElementsFromScreen() {
-		logger.info("screen cleanup started");
-        int updateHandle = DispManX.INSTANCE.vc_dispmanx_update_start( 0 );
-        if (updateHandle == 0) {
-        	logger.info("vc_dispmanx_update_start failed");
-        } else {
-        	logger.debug("image vc_dispmanx_element_remove result:" + DispManX.INSTANCE.vc_dispmanx_element_remove(updateHandle, imageElementHandle));
-        	logger.debug("vc_dispmanx_update_submit_sync result:" + DispManX.INSTANCE.vc_dispmanx_update_submit_sync(updateHandle));
-        	logger.debug("image vc_dispmanx_resource_delete result:" + DispManX.INSTANCE.vc_dispmanx_resource_delete(imageResourceHandle));
-        }
-	}
-	
-	private void initializeCalibrationAndGridImage() {
-		if (calibrationAndGridImage != null) {
-			return;
-		}
-		
-		calibrationAndGridImage = NativeMemoryBackedBufferedImage.newInstance(bounds.width, bounds.height, true);
+	private void removeNonBlankElementsFromScreen() {
+		logger.info("Screen cleanup started");
+    	displayLock.lock();
+    	try {
+    		if (displayedImageSprite != null) {
+    			display.removeNow(displayedImageSprite);
+    		}
+    		if (displayImageResource != null) {
+    			displayImageResource.release();
+    		}
+    		displayedImageSprite = null;
+    		displayImageResource = null;
+    	} finally {
+    		displayLock.unlock();
+    	}
 	}
 	
 	@Override
 	public void showCalibrationImage(int xPixels, int yPixels) {
-		logger.debug("Calibration assigned:{}", () -> Log4jUtil.startTimer(IMAGE_REALIZE_TIMER));
-		showBlankImage();
-		initializeCalibrationAndGridImage();
-		Graphics2D graphics = (Graphics2D)calibrationAndGridImage.createGraphics();
-		GraphicsOutputInterface.showCalibration(graphics, bounds, xPixels, yPixels);
+		logger.debug("Calibration assigned:{}", () -> Log4jUtil.startTimer(CALIBRATION_TIMER));
+		if (calGridImage == null) {
+			calGridImage = (NativeMemoryBackedBufferedImage)buildBufferedImage(displaySettings.width, displaySettings.height);
+		}
+		Graphics2D graphics = (Graphics2D)calGridImage.createGraphics();
+		GraphicsOutputInterface.showCalibration(graphics, new Rectangle(displaySettings.width, displaySettings.height), xPixels, yPixels);
 		graphics.dispose();
-		showImage(null, calibrationAndGridImage);
-		logger.debug("Calibration realized:{}", () -> Log4jUtil.completeTimer(IMAGE_REALIZE_TIMER));
+		showImage(calGridImage, true);		
+		logger.debug("Calibration realized:{}", () -> Log4jUtil.completeTimer(CALIBRATION_TIMER));
 	}
 	
 	@Override
 	public void showGridImage(int pixels) {
-		logger.debug("Grid assigned:{}", () -> Log4jUtil.startTimer(IMAGE_REALIZE_TIMER));
-		showBlankImage();
-		initializeCalibrationAndGridImage();
-		Graphics2D graphics = (Graphics2D)calibrationAndGridImage.createGraphics();
-		GraphicsOutputInterface.showGrid(graphics, bounds, pixels);
-		graphics.dispose();
-		
-		showImage(null, calibrationAndGridImage);		
-		logger.debug("Grid realized:{}", () -> Log4jUtil.completeTimer(IMAGE_REALIZE_TIMER));
-	}
-	
-	private Memory showImage(Memory memory, BufferedImage image) {
-		activityLock.lock();
-		try {
-			showBlankImage();//delete the old resources, this is lightning fast...
-			
-	        IntByReference imageWidth = new IntByReference();
-	        IntByReference imageHeight = new IntByReference();
-	        IntByReference imagePitch = new IntByReference();
-	        
-	        if (!(image instanceof NativeMemoryBackedBufferedImage)) {
-	        	//memory = loadBitmapARGB8888(image, memory, imageWidth, imageHeight, imagePitch);
-	        	NativeMemoryBackedBufferedImage nativeImage = NativeMemoryBackedBufferedImage.newInstance(image.getWidth(), image.getHeight(), false);
-	        	nativeImage.getGraphics().drawImage(image, 0, 0, null);
-	        	memory = nativeImage.getMemory();
-	    		imagePitch.setValue(nativeImage.getPitch());
-	    		imageWidth.setValue(image.getWidth());
-	    		imageHeight.setValue(image.getHeight());
-	    	} else {
-	        	memory = ((NativeMemoryBackedBufferedImage)image).getMemory();
-	    		int bytesPerPixel = 4;
-	    		int pitch = getPitch(bytesPerPixel * image.getWidth(), 32);
-	    		imagePitch.setValue(pitch);
-	    		imageWidth.setValue(image.getWidth());
-	    		imageHeight.setValue(image.getHeight());
-	        }
-	        
-	        VC_RECT_T.ByReference sourceRect = new VC_RECT_T.ByReference();
-	        DispManX.INSTANCE.vc_dispmanx_rect_set(sourceRect, 0, 0, imageWidth.getValue()<<16, imageHeight.getValue()<<16);//Shifting by 16 is a zoom factor of zero
-	        
-	        IntByReference nativeImageReference = new IntByReference();
-	        imageResourceHandle = DispManX.INSTANCE.vc_dispmanx_resource_create(
-	        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getId(), 
-	        		imageWidth.getValue(), 
-	        		imageHeight.getValue(), 
-	        		nativeImageReference);
-	        if (imageResourceHandle == 0) {
-	        	throw new IllegalArgumentException("Couldn't create resourceHandle for dispmanx");
-	        }
-	        
-	        logger.debug("ScreenWidth:" + bounds.getWidth() + " ScreenHeight:" + bounds.getHeight() + " ImageWidth:"+ imageWidth.getValue() + " ImageHeight:" + imageHeight.getValue());
-	        
-	        VC_RECT_T.ByReference sizeRect = new VC_RECT_T.ByReference();
-	        DispManX.INSTANCE.vc_dispmanx_rect_set(sizeRect, 0, 0, imageWidth.getValue(), imageHeight.getValue());
-	        int returnCode = DispManX.INSTANCE.vc_dispmanx_resource_write_data( 
-	        		imageResourceHandle, 
-	        		VC_IMAGE_TYPE_T.VC_IMAGE_ARGB8888.getId(), 
-	        		imagePitch.getValue() , 
-	        		memory, 
-	        		sizeRect);
-	        if (returnCode != 0) {
-	        	throw new IllegalArgumentException("Couldn't vc_dispmanx_resource_write_data for dispmanx:" + returnCode);
-	        }
-	        
-	        int updateHandle = DispManX.INSTANCE.vc_dispmanx_update_start(0);  //This method should be called create update
-	        if (updateHandle == 0) {
-	        	throw new IllegalArgumentException("Couldn't vc_dispmanx_update_start for dispmanx");
-	        }
-	
-	        VC_RECT_T.ByReference destinationRect = new VC_RECT_T.ByReference();
-	        DispManX.INSTANCE.vc_dispmanx_rect_set(
-	        		destinationRect, 
-	        		(bounds.width - imageWidth.getValue()) / 2, 
-	        		(bounds.height - imageHeight.getValue()) / 2, 
-	        		imageWidth.getValue(), 
-	        		imageHeight.getValue());
-	        imageElementHandle = DispManX.INSTANCE.vc_dispmanx_element_add(     //Creates and adds the element to the current screen update
-	        		updateHandle, 
-	        		displayHandle, 
-	        		1, 
-	        		destinationRect, 
-	        		imageResourceHandle, 
-	        		sourceRect, 
-	        		PROTECTION.DISPMANX_PROTECTION_NONE.getId(), 
-	        		alpha, 
-	        		0, 
-	        		VC_IMAGE_TRANSFORM_T.VC_IMAGE_ROT0.getId());
-	        if (updateHandle == 0) {
-	        	throw new IllegalArgumentException("Couldn't vc_dispmanx_element_add for dispmanx");
-	        }
-	
-	        returnCode = DispManX.INSTANCE.vc_dispmanx_update_submit_sync(updateHandle);//Wait for the update to complete
-	        if (returnCode != 0) {
-	        	throw new IllegalArgumentException("Couldn't vc_dispmanx_update_submit_sync for dispmanx:" + returnCode);
-	        }
-	        
-	        return memory;
-		} finally {
-			activityLock.unlock();
+		logger.debug("Grid assigned:{}", () -> Log4jUtil.startTimer(GRID_TIMER));
+		if (calGridImage == null) {
+			calGridImage = (NativeMemoryBackedBufferedImage)buildBufferedImage(displaySettings.width, displaySettings.height);
 		}
+		Graphics2D graphics = (Graphics2D)calGridImage.createGraphics();
+		GraphicsOutputInterface.showGrid(graphics, new Rectangle(displaySettings.width, displaySettings.height), pixels);
+		graphics.dispose();
+		showImage(calGridImage, true);		
+		logger.debug("Grid realized:{}", () -> Log4jUtil.completeTimer(GRID_TIMER));
 	}
 	
 	@Override
+	//This method will not stack images. It will only remove the previous layer and display the next
+	//If the previous layer doesn't exist, it will simply display the next layer
 	public void showImage(BufferedImage image, boolean performFullUpdate) {
-		logger.debug("Image assigned:{}", () -> Log4jUtil.startTimer(IMAGE_REALIZE_TIMER));
-		if (image.getWidth() == imageWidth && image.getHeight() == imageHeight) {
-			imagePixels = showImage(imagePixels, image);
-		} else {
-			imagePixels = showImage(null, image);
-		}
-		imageWidth = image.getWidth();
-		imageHeight = image.getHeight();
-		logger.debug("Image realized:{}", () -> Log4jUtil.completeTimer(IMAGE_REALIZE_TIMER));
+		logger.debug("Image assigned:{}", () -> Log4jUtil.startTimer(IMAGE_TIMER));
+    	displayLock.lock();
+    	try {
+    		NativeMemoryBackedBufferedImage nativeImage = null;
+			if (image instanceof NativeMemoryBackedBufferedImage) {
+				nativeImage = (NativeMemoryBackedBufferedImage)image;
+			} else {
+				nativeImage = (NativeMemoryBackedBufferedImage)buildBufferedImage(image.getWidth(), image.getHeight());
+				nativeImage.getGraphics().drawImage(image, 0, 0, null);
+			}
+    		int x = 0;
+    		int y = 0;
+    		if (nativeImage.getWidth() > displaySettings.width) {
+    			x = 0;
+    		} else {
+    			x = (displaySettings.width - nativeImage.getWidth()) / 2;
+    		}
+    		if (nativeImage.getHeight() > displaySettings.height) {
+    			y = 0;
+    		} else {
+    			y = (displaySettings.height - nativeImage.getHeight()) / 2;
+    		}
+			Resource newResource = display.createResource(nativeImage);
+    		if (displayImageResource != null && displayedImageSprite != null) {
+    			displayedImageSprite = display.animate(displayedImageSprite, newResource, x, y, BLANK_LAYER+1);
+    			displayImageResource.release();
+    			displayImageResource = newResource;
+    		} else {
+    			displayedImageSprite = display.showNow(newResource, x, y, BLANK_LAYER+1);
+    			displayImageResource = newResource;
+    		}
+    	} finally {
+    		displayLock.unlock();
+    	}
+		logger.debug("Image realized:{}", () -> Log4jUtil.completeTimer(IMAGE_TIMER));
 	}
 	
 	@Override
@@ -340,13 +164,12 @@ public class DispManXDevice implements GraphicsOutputInterface {
 
 	@Override
 	public Rectangle getBoundary() {
-		initializeScreen();
-		return bounds;
+		return new Rectangle(displaySettings.width, displaySettings.height);
 	}
 
 	@Override
 	public boolean isDisplayBusy() {
-		return activityLock.isLocked();
+		return displayLock.isLocked();
 	}
 
 	@Override
@@ -361,6 +184,22 @@ public class DispManXDevice implements GraphicsOutputInterface {
 
 	@Override
 	public GraphicsOutputInterface initializeDisplay(String displayId, PrinterConfiguration configuration) {
+    	if (display != null) {
+			logger.warn("Display already inititalized. Nothing to initialize");
+    		return this;
+    	}
+
+    	displayLock.lock();
+    	try {
+    		if (display == null) {
+    			display = new Display(screen);
+    		}
+    		displaySettings = display.getScreenInfo();
+    		blankScreenResource = display.createResource((NativeMemoryBackedBufferedImage)buildBufferedImage(displaySettings.width, displaySettings.height));
+    		blankScreenSprite = display.showNow(blankScreenResource, 0, 0, BLANK_LAYER);
+    	} finally {
+    		displayLock.unlock();
+    	}
 		return this;
 	}
 
