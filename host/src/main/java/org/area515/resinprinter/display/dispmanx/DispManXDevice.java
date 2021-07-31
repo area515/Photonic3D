@@ -200,7 +200,8 @@ public class DispManXDevice implements GraphicsOutputInterface {
     		NativeMemoryBackedBufferedImage image = (NativeMemoryBackedBufferedImage)buildBufferedImage(displaySettings.width, displaySettings.height);
     		Graphics graphics = image.getGraphics();
     		graphics.setColor(Color.BLACK);
-    		graphics.drawRect(0, 0, displaySettings.width, displaySettings.height);
+    		graphics.fillRect(0, 0, displaySettings.width, displaySettings.height);
+    		graphics.dispose();
     		blankScreenResource = display.createResource(image);
     		blankScreenSprite = display.showNow(blankScreenResource, 0, 0, BLANK_LAYER);
     	} finally {
