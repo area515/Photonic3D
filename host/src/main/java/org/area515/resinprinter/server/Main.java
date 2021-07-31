@@ -90,8 +90,12 @@ public class Main {
 	
 	public static void startServer() {
 		logger.info("=================================================================");
-		logger.info("=================================================================");
-		logger.info("Photonic3D started");
+		logger.info("=================================================================\r\n");
+		logger.info("  ____  _           _              _      _____ ____  \r\n" + 
+				" |  _ \\| |__   ___ | |_ ___  _ __ (_) ___|___ /|  _ \\ \r\n" + 
+				" | |_) | '_ \\ / _ \\| __/ _ \\| '_ \\| |/ __| |_ \\| | | |\r\n" + 
+				" |  __/| | | | (_) | || (_) | | | | | (__ ___) | |_| |\r\n" + 
+				" |_|   |_| |_|\\___/ \\__\\___/|_| |_|_|\\___|____/|____/ ");
 		logger.info("=================================================================");
 		logger.info("=================================================================");
 
@@ -225,10 +229,14 @@ public class Main {
 		
 		//Startup all printers that should be autostarted
 		List<PrinterConfiguration> configurations = HostProperties.Instance().getPrinterConfigurations();
-		logger.info(configurations);
+		logger.info("Checking autostart for:" + configurations);
 		for (PrinterConfiguration configuration : configurations) {
 			if (configuration.isAutoStart()) {
-				PrinterService.INSTANCE.startPrinter(configuration.getName());
+				try {
+					PrinterService.INSTANCE.startPrinter(configuration.getName());
+				} catch (Exception e) {
+					logger.error("Failed to start server:" + configuration.getName(), e);
+				}
 			}
 		}
 
