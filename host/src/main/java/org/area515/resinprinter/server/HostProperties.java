@@ -38,7 +38,6 @@ import org.apache.logging.log4j.Logger;
 import org.area515.resinprinter.display.AlreadyAssignedException;
 import org.area515.resinprinter.display.GraphicsOutputInterface;
 import org.area515.resinprinter.display.InappropriateDeviceException;
-import org.area515.resinprinter.gcode.PrinterController;
 import org.area515.resinprinter.gcode.PrinterDriver;
 import org.area515.resinprinter.job.Customizer;
 import org.area515.resinprinter.job.PrintFileProcessor;
@@ -792,7 +791,7 @@ public class HostProperties {
 		}
 	}
 	
-	public List<PrinterConfiguration> getPrinterConfigurations() {
+	public synchronized List<PrinterConfiguration> getPrinterConfigurations() {
 		if (configurations != null) {
 			return new ArrayList<PrinterConfiguration>(configurations.values());
 		}
@@ -841,7 +840,7 @@ public class HostProperties {
 				configurations.put(configuration.getName(), configuration);
 				
 				logger.info("Loaded printer configuration for:{}", configuration);
-			} catch (JAXBException e) {
+			} catch (Exception e) {
 				logger.error("Problem marshalling printer configurations from:" + currentFile, e);
 			}
 		}
