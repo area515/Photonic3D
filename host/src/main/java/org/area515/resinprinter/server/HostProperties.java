@@ -75,7 +75,7 @@ public class HostProperties {
 	public static String MACHINE_EXTENSION = ".machine";
 	public File MACHINE_DIR = new File(System.getProperty("user.home"), "Machines");
 	public static String PRINTER_EXTENSION = ".printer";
-	public File PRINTER_DIR = new File(System.getProperty("user.home"), "3dPrinters");	
+	public final File PRINTER_DIR = new File(System.getProperty("user.home"), "3dPrinters");	
 	public static String CUSTOMIZER_EXTENSION = ".customizer";
 	public File CUSTOMIZER_DIR = new File(System.getProperty("user.home"), "Customizers");
 	

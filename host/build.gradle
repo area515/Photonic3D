@@ -50,8 +50,13 @@ dependencies {
   implementation 'org.apache.xmlgraphics:batik-transcoder:1.8'
   implementation 'com.sun.mail:javax.mail:1.5.5'
   implementation 'se.sawano.java:alphanumeric-comparator:1.4.1'
+
   implementation 'org.fourthline.cling:cling-core:2.0.1'
   implementation 'org.fourthline.cling:cling-support:2.0.1'
+//These next are for service discovery(UPNP, IPP)
+//  implementation 'com.hp.jipp:jipp-core:0.7.11'
+//  implementation 'org.jmdns:jmdns:3.5.7'
+  
   implementation 'org.apache.httpcomponents:httpclient:4.3.3'
 
   implementation 'org.jmonkeyengine:jme3-core:3.1.0-beta1'
