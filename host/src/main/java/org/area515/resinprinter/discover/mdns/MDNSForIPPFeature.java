@@ -6,8 +6,8 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.UUID;
 
-import javax.jmdns.JmDNS;
-import javax.jmdns.ServiceInfo;
+//import javax.jmdns.JmDNS;
+//import javax.jmdns.ServiceInfo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,8 +16,8 @@ import org.area515.resinprinter.plugin.Feature;
 import org.area515.resinprinter.server.HostInformation;
 import org.area515.resinprinter.server.HostProperties;
 
-public class MDNSForIPPFeature implements Feature {
-    private static final Logger logger = LogManager.getLogger();
+public class MDNSForIPPFeature {//implements Feature {
+/*    private static final Logger logger = LogManager.getLogger();
 	private JmDNS jmdns = null;
 	
 	@Override
@@ -65,7 +65,7 @@ public class MDNSForIPPFeature implements Feature {
 	            properties.put("ty", "Pepsum");
 	            properties.put("Color", "T");*/
 	            
-	            // Register a service
+/*	            // Register a service
 	            ServiceInfo serviceInfo = ServiceInfo.create("_ipps-3d", "Photonic3DPrintService", 631, 0, 0, properties);
 	            jmdns.registerService(serviceInfo);
 	            serviceInfo = ServiceInfo.create("_ipps", "Photonic2DPrintService", 631, 0, 0, properties);
@@ -80,5 +80,5 @@ public class MDNSForIPPFeature implements Feature {
 	public void stop() {
         // Unregister all services
         jmdns.unregisterAllServices();
-	}
+	}*/
 }

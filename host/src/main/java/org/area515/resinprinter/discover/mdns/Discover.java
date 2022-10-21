@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import javax.jmdns.JmDNS;
+/*import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
-import javax.jmdns.ServiceListener;
+import javax.jmdns.ServiceListener;*/
 
 public class Discover {
-    private static class SampleListener implements ServiceListener {
+    /*private static class SampleListener implements ServiceListener {
         @Override
         public void serviceAdded(ServiceEvent event) {
             System.out.println("Service added: " + event.getInfo());
@@ -41,6 +41,6 @@ public class Discover {
 	        } catch (IOException e) {
 	            System.out.println(e.getMessage());
 	        }
-	    }
+	    }*/
 	
 }
