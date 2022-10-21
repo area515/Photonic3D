@@ -46,7 +46,7 @@ import org.fourthline.cling.protocol.async.SendingNotificationAlive;
 import org.fourthline.cling.support.connectionmanager.AbstractPeeringConnectionManagerService;
 import org.fourthline.cling.transport.RouterException;
 
-import com.hp.jipp.encoding.IppPacket;
+//import com.hp.jipp.encoding.IppPacket;
 
 public class UPNPAdvertiser implements Feature {
 	private static final Logger logger = LogManager.getLogger();
@@ -266,7 +266,7 @@ public class UPNPAdvertiser implements Feature {
 				}
 			}
 			
-			IppPacket d;
+			//IppPacket d;
 		} catch (Exception e) {
 			logger.error("Couldn't advertise URI:" + webPresentationURI, e);
 			throw new RuntimeException("Couldn't advertise URI:" + webPresentationURI);

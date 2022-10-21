@@ -40,6 +40,9 @@ import sun.security.x509.X509CertImpl;
 import sun.security.x509.X509CertInfo;
 
 public class KeystoreUtilities {
+	private static final String RANDOM_ALG = "SHA1PRNG";
+	private static final String CERT_ALG = "SHA256WITHRSA";
+	
 	public static void saveKeystore(File keyFile, KeyStore keyStore, String keystorePassword) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
 		FileOutputStream outputStream = new FileOutputStream(keyFile);
 		try {
@@ -56,7 +59,7 @@ public class KeystoreUtilities {
 		X509CertInfo info = new X509CertInfo();
 		Date from = new Date();
 		CertificateValidity interval = new CertificateValidity(from, to);
-		BigInteger sn = new BigInteger(64, SecureRandom.getInstance("SHA1PRNG"));
+		BigInteger sn = new BigInteger(64, SecureRandom.getInstance(RANDOM_ALG));
 		X500Name owner = new X500Name(dn.toString());
 
 		info.set(X509CertInfo.VALIDITY, interval);
@@ -83,7 +86,8 @@ public class KeystoreUtilities {
 		//1.2.840.113549.1.1.X RSA Encryption
 		//1.2.840.113549.2.X Signing Algorithms
 		//AlgorithmId algo = new AlgorithmId(AlgorithmId.DH_oid);
-		AlgorithmId algo = new AlgorithmId(AlgorithmId.sha256WithRSAEncryption_oid);
+		//AlgorithmId algo = new AlgorithmId(AlgorithmId.sha256WithRSAEncryption_oid);
+		AlgorithmId algo = AlgorithmId.get(CERT_ALG);
 		info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(algo));
 		
 		// Sign the cert to identify the algorithm that's used.
@@ -100,7 +104,7 @@ public class KeystoreUtilities {
 	
 	public static PrivateKeyEntry generateCertAndKeyPair(LdapName fullyQualifiedDN, Date endDate) throws GeneralSecurityException, IOException, InvalidNameException {
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+		SecureRandom random = SecureRandom.getInstance(RANDOM_ALG);
 		keyGen.initialize(2048, random);
 		
 		KeyPair keyPair = keyGen.generateKeyPair();
@@ -110,7 +114,7 @@ public class KeystoreUtilities {
 		}
 		
 		fullyQualifiedDN.add(new Rdn("uid", UUID.nameUUIDFromBytes(keyPair.getPublic().getEncoded()).toString()));
-		X509Certificate cert = generateX509Certificate(fullyQualifiedDN, keyPair, endDate, "SHA256withRSA");
+		X509Certificate cert = generateX509Certificate(fullyQualifiedDN, keyPair, endDate, CERT_ALG);
 		return new PrivateKeyEntry(keyPair.getPrivate(), new Certificate[]{cert});
 	}
 
