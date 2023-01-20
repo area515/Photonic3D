@@ -448,6 +448,9 @@ public class HostProperties {
 				return false;
 			}
 		});
+		if (fileList == null) {
+			return;
+		}
 		for (File currentFile : fileList) {
 			IOUtilities.zipFile(currentFile, zipOutputStream);
 		}
