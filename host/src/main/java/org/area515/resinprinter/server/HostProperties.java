@@ -59,6 +59,7 @@ import org.area515.resinprinter.serial.SerialCommunicationsPort;
 import org.area515.resinprinter.services.UserService;
 import org.area515.resinprinter.util.security.PhotonicUser;
 import org.area515.util.IOUtilities;
+import org.area515.util.TemplateEngine;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -886,6 +887,17 @@ public class HostProperties {
 				if (focusedSave != null && currentConfiguration.getSlicingProfileName().equals(focusedSave.getSlicingProfileName())) {
 					slicingProfile = deepCopyJAXB(focusedSave.getSlicingProfile(), SlicingProfile.class);
 					slicingProfile.setName(focusedSave.getSlicingProfileName());
+					if (slicingProfile.getDontCanonicalizeGCodeVariables() == null || !slicingProfile.getDontCanonicalizeGCodeVariables()) {
+						slicingProfile.setgCodeFooter(TemplateEngine.convertToFreeMarkerTemplate(slicingProfile.getgCodeFooter()));
+						slicingProfile.setgCodeHeader(TemplateEngine.convertToFreeMarkerTemplate(slicingProfile.getgCodeHeader()));
+						slicingProfile.setgCodeLift(TemplateEngine.convertToFreeMarkerTemplate(slicingProfile.getgCodeLift()));
+						slicingProfile.setgCodePause(TemplateEngine.convertToFreeMarkerTemplate(slicingProfile.getgCodePause()));
+						slicingProfile.setgCodePreslice(TemplateEngine.convertToFreeMarkerTemplate(slicingProfile.getgCodePreslice()));
+						slicingProfile.setgCodeResume(TemplateEngine.convertToFreeMarkerTemplate(slicingProfile.getgCodeResume()));
+						slicingProfile.setgCodeShutter(TemplateEngine.convertToFreeMarkerTemplate(slicingProfile.getgCodeShutter()));
+						slicingProfile.setZLiftDistanceGCode(TemplateEngine.convertToFreeMarkerTemplate(slicingProfile.getZLiftDistanceGCode()));
+						slicingProfile.setZLiftSpeedGCode(TemplateEngine.convertToFreeMarkerTemplate(slicingProfile.getZLiftSpeedGCode()));
+					}
 					currentConfiguration.setSlicingProfile(slicingProfile);
 				}
 

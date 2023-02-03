@@ -19,6 +19,7 @@ public class JavascriptControl extends PrinterController {
 
 	public JavascriptControl(Printer printer) {
 		super(printer);
+		printer.getConfiguration().getSlicingProfile().setDontCanonicalizeGCodeVariables(true);
 	}
 
     @Override
