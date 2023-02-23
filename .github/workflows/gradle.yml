@@ -32,4 +32,3 @@ jobs:
       run: chmod +x ./host/gradlew
     - name: Build distribution
       run: ./host/gradlew fullRelease
-        env:
