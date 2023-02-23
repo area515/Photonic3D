@@ -26,8 +26,8 @@ jobs:
         # with:
         #   config-name: my-config.yml
         #   disable-autolabeler: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Grant execute permission for gradlew
       run: chmod +x ./host/gradlew
     - name: Build distribution
