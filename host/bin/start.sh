@@ -3,6 +3,14 @@
 if [[ $UID != 0 ]]; then
     echo "Please run this script with sudo:"
     echo "sudo $0 $*"
+    echo "Here are some other usages:"
+    echo "sudo ./start.sh area515/Photonic3D"
+    echo "sudo ./start.sh WesGilster/Photonic3D TestKit"
+    echo "sudo ./start.sh WesGilster/Photonic3D force"
+    echo "sudo ./start.sh WesGilster/Photonic3D debug"
+    echo "sudo ./start.sh WesGilster/Photonic3D forceprerelease"
+    echo "sudo ./start.sh WesGilster/Photonic3D prerelease"
+    echo "sudo ./start.sh WesGilster/Photonic3D debugprerelease"
     exit 1
 fi
 
@@ -51,11 +59,6 @@ elif [ "${cpu}" = "x86_64" ]; then
 	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jdk-8u102-linux-x64.tar.gz"
 elif [ "${cpu}" = "aarch64" ]; then
 	javaURL="http://download.oracle.com/otn-pub/java/jdk/8u101-b13/jdk-8u101-linux-arm64-vfp-hflt.tar.gz"
-fi
-
-if [ ! -f "/usr/lib/jni/librxtxSerial.so" ]; then
-	echo Installing RxTx
-	apt-get install --yes --force-yes librxtx-java
 fi
 
 #This application will always need to have the display set to the following
@@ -110,10 +113,13 @@ fi
 echo Checking for new version from Github Repo: ${repo}
 cd ${installDirectory}
 LOCAL_TAG=$(grep repo.version build.number | cut -d = -f 2 | tr -d '\r')
-NETWORK_TAG=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'tag_name' | cut -d\" -f4)
-
+if [ "$2" == "forceprerelease" -o "$2" == "prerelease" -o "$2" == "debugprerelease" ]; then
+   NETWORK_TAG=$(curl -L -s https://api.github.com/repos/${repo}/releases | grep -m 1 -B 30 '"prerelease": true' | grep 'tag_name' | cut -d\" -f4)
+else
+   NETWORK_TAG=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'tag_name' | cut -d\" -f4)
+fi
 echo Local Tag: ${LOCAL_TAG}
-echo Network Tag: ${NETWORK_TAG}
+echo Latest Network Tag: ${NETWORK_TAG}
 
 if [ -f ${downloadPrefix}.*.zip ]; then
 	OFFLINE_FILE=$(ls ${downloadPrefix}.*.zip)
@@ -129,14 +135,19 @@ if [ -f ${downloadPrefix}.*.zip ]; then
 	rm ${OFFLINE_FILE}
 elif [ -z "${NETWORK_TAG}" ]; then
 	echo "Couldn't fetch version from GitHub, launching existing install."
-elif [ "${NETWORK_TAG}" != "${LOCAL_TAG}" -o "$2" == "force" ]; then
-	echo Installing latest version of ${downloadPrefix}: ${NETWORK_TAG}
-
-	DL_URL=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'browser_' | cut -d\" -f4 | grep -- -${NETWORK_TAG})
+elif [ "${NETWORK_TAG}" != "${LOCAL_TAG}" -o "$2" == "force" -o "$2" == "forceprerelease" ]; then
+	if [ "$2" == "forceprerelease" -o "$2" == "debugprerelease" -o "$2" == "prerelease" ]; then
+		DL_URL=$(curl -L -s https://api.github.com/repos/${repo}/releases | grep -m 1 -A 36 '"prerelease": true' | grep 'browser_' | cut -d\" -f4 | grep -- -${NETWORK_TAG})
+	else 
+		DL_URL=$(curl -L -s https://api.github.com/repos/${repo}/releases/latest | grep 'browser_' | cut -d\" -f4 | grep -- -${NETWORK_TAG})
+	fi
+	
+	echo Installing from: ${DL_URL}
+	
 	DL_FILE=${DL_URL##*/}
 	rm -f "/tmp/${DL_FILE}"
 	wget -P /tmp "${DL_URL}"
-  if [ $? -ne 0 ]; then
+  	if [ $? -ne 0 ]; then
 		echo "wget of ${DL_FILE} failed. Aborting update."
 		exit 1
 	fi
@@ -172,7 +183,7 @@ if [ ! -f "/etc/init.d/cwhservice" ]; then
 	update-rc.d cwhservice defaults
 fi
 
-echo Determinging if one time install has occurred
+echo Determining if one time install has occurred
 performedOneTimeInstall=$(grep performedOneTimeInstall ${CONFIG_PROPS} | awk -F= '{print $2}')
 if [ -f "oneTimeInstall.sh" -a [${performedOneTimeInstall} != "true"] ]; then
 	./oneTimeInstall.sh
@@ -182,16 +193,16 @@ if [ -f "eachStart.sh" ]; then
 	./eachStart.sh
 fi
 
-if [ "$2" == "debug" ]; then
+if [ "$2" == "debug" -o "$2" == "debugprerelease" ]; then
 	pkill -9 -f "org.area515.resinprinter.server.Main"
-	echo "Starting printer host server($2)"
-	java -Xmx512m -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Dlog4j.configurationFile=debuglog4j2.properties -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
+	echo Starting printer host server in debug mode
+	java -Xmx512m -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Dlog4j.configurationFile=debuglog4j2.properties -Djava.library.path=/usr/lib/jni -cp .:lib/* org.area515.resinprinter.server.Main > log.out 2> log.err &
 elif [ "$2" == "TestKit" ]; then
 	pkill -9 -f "org.area515.resinprinter.test.HardwareCompatibilityTestSuite"
 	echo Starting test kit
-	java -Xmx512m -Dlog4j.configurationFile=testlog4j2.properties -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.junit.runner.JUnitCore org.area515.resinprinter.test.HardwareCompatibilityTestSuite &
+	java -Xmx512m -Dlog4j.configurationFile=testlog4j2.properties -Djava.library.path=/usr/lib/jni -cp .:lib/* org.junit.runner.JUnitCore org.area515.resinprinter.test.HardwareCompatibilityTestSuite &
 else
 	pkill -9 -f "org.area515.resinprinter.server.Main"
 	echo Starting printer host server
-	java -Xmx512m -Dlog4j.configurationFile=log4j2.properties -Djava.library.path=/usr/lib/jni:os/Linux/${cpu} -cp lib/*:. org.area515.resinprinter.server.Main > log.out 2> log.err &
+	java -Xmx512m -Dlog4j.configurationFile=log4j2.properties -Djava.library.path=/usr/lib/jni -cp .:lib/* org.area515.resinprinter.server.Main > log.out 2> log.err &
 fi

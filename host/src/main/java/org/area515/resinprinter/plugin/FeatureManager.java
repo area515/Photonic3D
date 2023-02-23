@@ -37,14 +37,18 @@ public class FeatureManager {
 			try {
 				currentFeature.getKey().start(uri, currentFeature.getValue());
 			} catch (Exception e) {
-				logger.error("Couldn't start feature", e);
+				logger.error("Couldn't start feature:" + currentFeature, e);
 			}
 		}
 	}
 	
 	public static void shutdown() {
 		for (Feature currentFeature : features.keySet()) {
-			currentFeature.stop();
+			try {
+				currentFeature.stop();
+			} catch (Exception e) {
+				logger.error("Couldn't stop feature:" + currentFeature, e);
+			}
 		}
 	}
 	

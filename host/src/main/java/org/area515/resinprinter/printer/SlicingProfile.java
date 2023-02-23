@@ -273,6 +273,8 @@ public class SlicingProfile implements Named {
 	private boolean flipY;
     @XmlElement(name="Notes")
 	private String notes;
+	private String gCodePause;
+	private String gCodeResume;
 	private String gCodeHeader;
 	private String gCodeFooter;
 	private String gCodePreslice;
@@ -299,7 +301,8 @@ public class SlicingProfile implements Named {
     @XmlElement(name="TwoDimensionalSettings")
     private TwoDimensionalSettings twoDimensionalSettings;
     private String name;
-    
+    private Boolean dontCanonicalizeGCodeVariables;
+	
 	@XmlTransient
 	@JsonProperty
 	public String getName() {
@@ -405,39 +408,60 @@ public class SlicingProfile implements Named {
 		this.twoDimensionalSettings = twoDimensionalSettings;
 	}
 	
+	public Boolean getDontCanonicalizeGCodeVariables() {
+		return dontCanonicalizeGCodeVariables;
+	}
+	public void setDontCanonicalizeGCodeVariables(Boolean dontCanonicalizeGCodeVariables) {
+		this.dontCanonicalizeGCodeVariables = dontCanonicalizeGCodeVariables;
+	}
+
 	public String getgCodeHeader() {
 		return gCodeHeader;
 	}
 	public void setgCodeHeader(String gCodeHeader) {
-		this.gCodeHeader = TemplateEngine.convertToFreeMarkerTemplate(gCodeHeader);
+		this.gCodeHeader = gCodeHeader;
+	}
+	
+	public String getgCodePause() {
+		return gCodePause;
+	}
+	public void setgCodePause(String gCodePause) {
+		this.gCodePause = gCodePause;
+	}
+	
+	public String getgCodeResume() {
+		return gCodeResume;
+	}
+	public void setgCodeResume(String gCodeResume) {
+		this.gCodeResume = gCodeResume;
 	}
 	
 	public String getgCodeFooter() {
 		return gCodeFooter;
 	}
 	public void setgCodeFooter(String gCodeFooter) {
-		this.gCodeFooter = TemplateEngine.convertToFreeMarkerTemplate(gCodeFooter);
+		this.gCodeFooter = gCodeFooter;
 	}
 	
 	public String getgCodePreslice() {
 		return gCodePreslice;
 	}
 	public void setgCodePreslice(String gCodePreslice) {
-		this.gCodePreslice = TemplateEngine.convertToFreeMarkerTemplate(gCodePreslice);
+		this.gCodePreslice = gCodePreslice;
 	}
 	
 	public String getgCodeLift() {
 		return gCodeLift;
 	}
 	public void setgCodeLift(String gCodeLift) {
-		this.gCodeLift = TemplateEngine.convertToFreeMarkerTemplate(gCodeLift);
+		this.gCodeLift = gCodeLift;
 	}
 	
 	public String getgCodeShutter() {
 		return gCodeShutter;
 	}
 	public void setgCodeShutter(String gCodeShutter) {
-		this.gCodeShutter = TemplateEngine.convertToFreeMarkerTemplate(gCodeShutter);
+		this.gCodeShutter = gCodeShutter;
 	}
 	
 	@XmlTransient
@@ -486,14 +510,14 @@ public class SlicingProfile implements Named {
 		return this.zLiftSpeedGCode;
 	}
 	public void setZLiftSpeedGCode(String gcodes) {
-		this.zLiftSpeedGCode = TemplateEngine.convertToFreeMarkerTemplate(gcodes);
+		this.zLiftSpeedGCode = gcodes;
 	}
 	
 	public String getZLiftDistanceGCode() {
 		return this.zLiftDistanceGCode;
 	}
 	public void setZLiftDistanceGCode(String gcodes) {
-		this.zLiftDistanceGCode = TemplateEngine.convertToFreeMarkerTemplate(gcodes);
+		this.zLiftDistanceGCode = gcodes;
 	}
 	
 	@XmlTransient

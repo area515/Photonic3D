@@ -1,0 +1,6 @@
+host/resourcesnew/printflow/js/printerconfig.js
+host/photocentric/printflow/js/printerconfig.js
+*.keystore
+host/bin/log.err
+/bin/
+/.gradle/

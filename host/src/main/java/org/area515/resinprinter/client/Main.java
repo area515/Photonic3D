@@ -63,6 +63,8 @@ import com.jcraft.jsch.JSchException;
 
 public class Main {
 	public static final String PRINTER_TYPE = "3DPrinterHost";
+	//We need to change this when we want our printer to be seen as a 3d printer...
+	//public static final String PRINTER_TYPE = "urn:pwg-org:IPP:1.1";
 	public static final String PRINTERS_DIRECTORY = "printers";
 	public static final String BRANCH = "master";
 	public static String REPO = "area515/Photonic3D";

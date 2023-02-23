@@ -640,8 +640,8 @@ public class ZSlicer {
 					  logger.debug("No geometrical intersection");
 				  }
 			  } else {
-				  logger.debug("Intersection was optimized out");
-			  }//*/
+				  //logger.debug("Intersection was optimized out");
+			  }
 		  }
 		  
 		  logger.info("IntersectionTime:{}", ()->Log4jUtil.splitTimer("sliceTime"));
