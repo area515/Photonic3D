@@ -33,5 +33,5 @@ jobs:
     - name: Build distribution
       run: ./host/gradlew fullRelease
         env:
-         USERNAME: ${{ github.actor }}
-         releaseRepoToken: ${{ secrets.GITHUB_TOKEN }}
+                  USERNAME: ${{ github.actor }}
+                  releaseRepoToken: ${{ secrets.GITHUB_TOKEN }}
