@@ -2,8 +2,9 @@ package org.area515.resinprinter.discover;
 
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.model.Namespace;
-import org.fourthline.cling.transport.spi.NetworkAddressFactory;
-import org.fourthline.cling.transport.spi.StreamServer;
+import org.fourthline.cling.transport.impl.apache.StreamClientConfigurationImpl;
+import org.fourthline.cling.transport.impl.apache.StreamClientImpl;
+import org.fourthline.cling.transport.spi.StreamClient;
 
 public class PhotonicUpnpServiceConfiguration extends DefaultUpnpServiceConfiguration {
 	public PhotonicUpnpServiceConfiguration(int streamListenPort) {
@@ -19,4 +20,7 @@ public class PhotonicUpnpServiceConfiguration extends DefaultUpnpServiceConfigur
     	
 		return null;
     }*/
+    public StreamClient createStreamClient() {
+        return new StreamClientImpl(new StreamClientConfigurationImpl(getSyncProtocolExecutorService()));
+    }
 }

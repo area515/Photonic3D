@@ -17,5 +17,5 @@
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="photonic3d"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-t 255,255,255,255 -w PhotonicSplash.png"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="photonic3d"/>
-    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dlog4j.configurationFile=${workspace_loc:photonic3d\conf\eclipselog4j2.properties} -Djava.library.path=${workspace_loc} -XX:+UnlockCommercialFeatures -XX:+FlightRecorder"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dlog4j.configurationFile=${workspace_loc:photonic3d\conf\eclipselog4j2.properties} -Djava.library.path=${workspace_loc}"/>
 </launchConfiguration>

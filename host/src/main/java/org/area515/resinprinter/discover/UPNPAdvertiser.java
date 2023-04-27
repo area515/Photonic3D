@@ -3,11 +3,7 @@ package org.area515.resinprinter.discover;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLStreamHandler;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +21,6 @@ import org.fourthline.cling.UpnpServiceImpl;
 import org.fourthline.cling.binding.annotations.AnnotationLocalServiceBinder;
 import org.fourthline.cling.controlpoint.ControlPoint;
 import org.fourthline.cling.model.DefaultServiceManager;
-import org.fourthline.cling.model.Location;
-import org.fourthline.cling.model.NetworkAddress;
-import org.fourthline.cling.model.message.discovery.OutgoingNotificationRequest;
 import org.fourthline.cling.model.message.header.STAllHeader;
 import org.fourthline.cling.model.meta.DeviceDetails;
 import org.fourthline.cling.model.meta.DeviceIdentity;
@@ -39,12 +32,9 @@ import org.fourthline.cling.model.meta.ModelDetails;
 import org.fourthline.cling.model.resource.Resource;
 import org.fourthline.cling.model.types.DLNADoc;
 import org.fourthline.cling.model.types.DeviceType;
+import org.fourthline.cling.model.types.UDADeviceType;
 import org.fourthline.cling.model.types.UDN;
-import org.fourthline.cling.protocol.ProtocolFactory;
-import org.fourthline.cling.protocol.ProtocolFactoryImpl;
-import org.fourthline.cling.protocol.async.SendingNotificationAlive;
 import org.fourthline.cling.support.connectionmanager.AbstractPeeringConnectionManagerService;
-import org.fourthline.cling.transport.RouterException;
 
 //import com.hp.jipp.encoding.IppPacket;
 
@@ -60,7 +50,7 @@ public class UPNPAdvertiser implements Feature {
 		private String deviceReleaseString = HostProperties.Instance().getReleaseTagName();
 		private int deviceVersion = HostProperties.Instance().getVersionNumber();
 		private String deviceType = Main.PRINTER_TYPE;
-		private int upnpStreamPort = 5001;
+		private int upnpStreamPort = Main.UPNP_STREAM_PORT;
 		
 		public UPNPSetup(HostInformation info) {
 			this.deviceName = info.getDeviceName();
@@ -95,7 +85,7 @@ public class UPNPAdvertiser implements Feature {
 				public String toString() {
 					return getSetup().deviceType;
 				}
-			};
+			};//*/
 			DeviceDetails details = new DeviceDetails(getSetup().deviceName,
 					new ManufacturerDetails(getSetup().manufacturer), 
 						new ModelDetails(
@@ -252,17 +242,18 @@ public class UPNPAdvertiser implements Feature {
 			// Add the bound local device to the registry
 			upnpService.getRegistry().addDevice(printerDevice);
 			
-			//NetworkAddress hooked = upnpService.getRouter().getActiveStreamServers(upnpService.getRouter().getNetworkAddressFactory().getBindAddresses()[0]).get(0);
+			//NetworkAddress hooked = upnpService.getRouter().getActiveStreamServers(upnpService.getRouter().getConfiguration().createNetworkAddressFactory().getBindAddresses().next()).get(0);
 			
+			//upnpService.getRouter().getConfiguration().createNetworkAddressFactory().getBindAddresses()
 			//By this point the externallyAccessableIP will be setup with the local IP if it started off null
 			for (Resource device : upnpService.getRegistry().getResources()) {
 				if (device.getModel() instanceof LocalDevice) {
-					logger.debug("===========");
-					logger.debug("{} exposed on: {}", device.getModel(), device.getPathQuery());
+					logger.info("===========");
+					logger.info("{} exposed on: {}", device.getModel(), device.getPathQuery());
 					logger.info("Relative UPNP root descriptor: {}", device.getPathQuery());
-					logger.debug("===========");
+					logger.info("===========");
 				} else {
-					logger.debug("{} exposed on: {}", device.getModel(), device.getPathQuery());
+					logger.info("{} exposed on: {}", device.getModel(), device.getPathQuery());
 				}
 			}
 			

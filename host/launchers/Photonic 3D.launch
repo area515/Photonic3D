@@ -9,9 +9,13 @@
     <listAttribute key="org.eclipse.debug.ui.favoriteGroups">
         <listEntry value="org.eclipse.debug.ui.launchGroup.debug"/>
     </listAttribute>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_ATTR_USE_ARGFILE" value="false"/>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
+    <stringAttribute key="org.eclipse.jdt.launching.ATTR_SPECIAL_ADD_MODULES" value="ALL-SYSTEM"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.area515.resinprinter.server.Main"/>
+    <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="photonic3d"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="photonic3d"/>
-    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx100M -Dlog4j.configurationFile=${workspace_loc:photonic3d\conf\eclipselog4j2.properties} -Djava.library.path=${workspace_loc}"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx100M -Dlog4j.configurationFile=${workspace_loc:photonic3d\conf\eclipselog4j2.properties} -Djava.library.path=${workspace_loc} --add-opens java.base/java.lang=ALL-UNNAMED"/>
 </launchConfiguration>

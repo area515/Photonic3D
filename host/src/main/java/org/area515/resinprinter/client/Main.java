@@ -49,6 +49,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.area515.resinprinter.client.SubnetScanner.Box;
+import org.area515.resinprinter.discover.PhotonicUpnpServiceConfiguration;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.UpnpServiceImpl;
 import org.fourthline.cling.model.message.header.STAllHeader;
@@ -62,9 +63,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.JSchException;
 
 public class Main {
-	public static final String PRINTER_TYPE = "3DPrinterHost";
+	//public static final String PRINTER_TYPE = "3DPrinterHost";
 	//We need to change this when we want our printer to be seen as a 3d printer...
-	//public static final String PRINTER_TYPE = "urn:pwg-org:IPP:1.1";
+	public static final int UPNP_STREAM_PORT = 5001;
+	public static final String PRINTER_TYPE = "urn:pwg-org:IPP:1.1";
 	public static final String PRINTERS_DIRECTORY = "printers";
 	public static final String BRANCH = "master";
 	public static String REPO = "area515/Photonic3D";
@@ -566,7 +568,9 @@ public class Main {
 				@Override
 				public void run() {
 					try {
-						UpnpService upnpService = new UpnpServiceImpl();
+						PhotonicUpnpServiceConfiguration serviceConfiguration = new PhotonicUpnpServiceConfiguration(UPNP_STREAM_PORT);
+						UpnpService upnpService = new UpnpServiceImpl(serviceConfiguration);
+						
 						upnpService.getControlPoint().search(new STAllHeader());
 						long timeStarted = System.currentTimeMillis();
 						while ((foundDevices.size() > 0 && System.currentTimeMillis() - timeStarted < maxLengthToWait) ||
