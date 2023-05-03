@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-        <listEntry value="/photonic3d/src/main/java/org/area515/resinprinter/server/Main.java"/>
+        <listEntry value="/host/src/main/java/org/area515/resinprinter/server/Main.java"/>
     </listAttribute>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
         <listEntry value="1"/>
@@ -15,7 +15,7 @@
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.area515.resinprinter.server.Main"/>
-    <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="photonic3d"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="photonic3d"/>
-    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx100M -Dlog4j.configurationFile=${workspace_loc:photonic3d\conf\eclipselog4j2.properties} -Djava.library.path=${workspace_loc} --add-opens java.base/java.lang=ALL-UNNAMED"/>
+    <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="Photonic3D"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="host"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx100M -Dlog4j.configurationFile=${workspace_loc:\host\conf\eclipselog4j2.properties} -Djava.library.path=${workspace_loc} --add-opens java.base/java.lang=ALL-UNNAMED"/>
 </launchConfiguration>
