@@ -458,7 +458,16 @@ public class HostProperties {
 	}
 	
 	public ScriptEngine buildScriptEngine() {
-		return new ScriptEngineManager().getEngineByExtension(scriptEngineLanguage);
+		System.setProperty("polyglot.js.nashorn-compat", "true");
+		ScriptEngine manager = new ScriptEngineManager().getEngineByExtension(scriptEngineLanguage);
+		
+		/*Context context = Context.newBuilder("js")
+		        .allowHostClassLookup(s -> true)
+		        .allowHostAccess(HostAccess.ALL)
+		        .build();
+		context.
+		manager.setContext((ScriptContext)context);*/
+		return manager;
 	}
 	
 	public String getSecurityRealmName() {
